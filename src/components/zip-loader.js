@@ -57,7 +57,7 @@ AFRAME.registerComponent('zip-loader', {
 
     // Process info first.
     Object.keys(loader.files).forEach(filename => {
-      if (filename.endsWith('info.dat')) {
+      if (filename.toLowerCase().endsWith('info.dat')) {
         event.info = jsonParseClean(loader.extractAsText(filename));
       }
     });
@@ -129,14 +129,14 @@ AFRAME.registerComponent('zip-loader', {
    * Read API first to get hash and URLs.
    */
   fetchData: function (id) {
-    return fetch(`https://beatsaver.com/api/maps/detail/${id}/`).then(res => {
+    return fetch(`https://beatsaver.com/api/maps/id/${id}`).then(res => {
       res.json().then(data => {
-        this.hash = data.hash;
+        this.hash = data.versions[0].hash;
         this.el.sceneEl.emit(
           'challengeimage',
-          `https://beatsaver.com${data.coverURL}`
+          `${data.versions[0].coverURL}`
         );
-        this.fetchZip(zipUrl || `https://beatsaver.com/${data.directDownload}`);
+        this.fetchZip(zipUrl || `${data.versions[0].downloadURL}`);
       });
     });
   },
@@ -182,7 +182,7 @@ AFRAME.registerComponent('zip-loader', {
     this.el.emit('challengeloadstart', '', false);
     ZipLoader.unzip(file).then(loader => {
       Object.keys(loader.files).forEach(filename => {
-        if (filename.endsWith('info.dat')) {
+        if (filename.toLowerCase().endsWith('info.dat')) {
           const id = jsonParseClean(loader.extractAsText(filename)).id;
           this.el.emit('challengeloadstart', id, false);
         }

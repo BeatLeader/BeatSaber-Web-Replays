@@ -39,7 +39,6 @@
     "css-loader": "^0.23.1",
     "debug": "^4.1.0",
     "drag-drop": "^6.0.0",
-    "firebase": "^5.5.8",
     "fswatch": "^0.1.4",
     "html-entities": "^1.2.1",
     "html-minifier": "^3.5.11",
@@ -55,10 +54,9 @@
     "uglify-js": "git://github.com/mishoo/UglifyJS2#harmony",
     "uglifyjs-webpack-plugin": "0.4.6",
     "url-loader": "^1.1.2",
-    "webpack": "2.3.3",
     "webpack-glsl-loader": "^1.0.1",
     "webpack-sources": "1.0.1",
-    "zip-loader": "github:ngokevin/ZipLoader#beatviewer"
+    "zip-loader": "github:radulov/ZipLoader#test"
   },
   "devDependencies": {
     "cross-env": "4.0.0",
@@ -67,7 +65,8 @@
     "shx": "^0.2.2",
     "snazzy": "7.0.0",
     "superagent": "^3.8.2",
-    "webpack-dev-server": "2.4.4"
+    "webpack": "^2.3.3",
+    "webpack-dev-server": "^2.4.4"
   },
   "semistandard": {
     "globals": [

@@ -84,7 +84,10 @@ AFRAME.registerComponent('beat-generator', {
     if ((oldData.difficulty && oldData.difficulty !== this.data.difficulty) ||
         (oldData.mode && oldData.mode !== this.data.mode)) {
       this.beatData = this.beatmaps[this.data.mode][this.data.difficulty];
-      this.processBeats();
+      if (this.beatData) {
+        this.processBeats();
+      }
+      
     }
   },
 

@@ -87,12 +87,12 @@ class Search extends Component {
           <h3>Search Results (beatsaver.com)</h3>
           <ul id="searchResults">
             {this.state.results.map((result, i) => (
-              <li class="searchResult" data-id={result.key} onClick={this.selectSong}
-                  key={result.key} data-i={i}>
-                <img src={`https://beatsaver.com${result.coverURL}`}/>
+              <li class="searchResult" data-id={result.id} onClick={this.selectSong}
+                  key={result.id} data-i={i}>
+                <img src={result.versions[0].coverURL}/>
                 <p>
                   {result.metadata.songSubName && truncate(result.metadata.songSubName, 20) + ' \u2014 ' || '' }
-                  {truncate(result.metadata.songName, 25)}</p>
+                  {truncate(result.name, 25)}</p>
               </li>
             ))}
           </ul>

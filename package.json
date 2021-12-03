@@ -56,7 +56,7 @@
     "url-loader": "^1.1.2",
     "webpack-glsl-loader": "^1.0.1",
     "webpack-sources": "1.0.1",
-    "zip-loader": "github:radulov/ZipLoader#test"
+    "zip-loader": "git+https://github.com/radulov/ZipLoader.git#280005fa0b6c5d78f2025c800a9691f88ffeaeb9"
   },
   "devDependencies": {
     "cross-env": "4.0.0",

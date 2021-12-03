@@ -10,7 +10,7 @@ class Search extends Component {
     this.state = {
       open: false,
       results: [],
-      url: 'supermedium.com/beatsaver-viewer'
+      url: 'preview.beatleader.xyz/'
     };
 
     // Close search when clicking anywhere else.
@@ -36,7 +36,7 @@ class Search extends Component {
     scene.addEventListener('challengeset', evt => {
       const id = evt.detail;
       if (!id) { return; }
-      this.setState({url: `supermedium.com/beatsaver-viewer?id=${id}`});
+      this.setState({url: `preview.beatleader.xyz/?id=${id}`});
       setIdQueryParam(id);
     });
 

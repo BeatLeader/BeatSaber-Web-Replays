@@ -1,4 +1,5 @@
 import {h, render, Component} from 'preact';
+const utils = require('../utils');
 
 let scene;
 
@@ -89,7 +90,7 @@ class Search extends Component {
             {this.state.results.map((result, i) => (
               <li class="searchResult" data-id={result.id} onClick={this.selectSong}
                   key={result.id} data-i={i}>
-                <img src={result.versions[0].coverURL}/>
+                <img src={utils.beatsaverCdnCors(result.versions[0].coverURL)}/>
                 <p>
                   {result.metadata.songSubName && truncate(result.metadata.songSubName, 20) + ' \u2014 ' || '' }
                   {truncate(result.name, 25)}</p>

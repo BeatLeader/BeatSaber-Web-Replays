@@ -134,7 +134,7 @@ AFRAME.registerComponent('zip-loader', {
         this.hash = data.versions[0].hash;
         this.el.sceneEl.emit(
           'challengeimage',
-          `${data.versions[0].coverURL}`
+          `${utils.beatsaverCdnCors(data.versions[0].coverURL)}`
         );
         this.fetchZip(zipUrl || `${data.versions[0].downloadURL}`);
       });

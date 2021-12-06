@@ -13,7 +13,8 @@
 
 <!-- Titles. -->
 <a-entity id="inGameMenuTitles" position="0 1.7 -2.3">
-  <a-entity mixin="gameMenuButtonText" text="value: PAUSED; color: #FAFAFA; width: 4" bind__visible="isPaused"></a-entity>
+  <a-entity mixin="gameMenuButtonText" text="value: PAUSED; color: #FAFAFA; width: 4" bind__visible="isPaused && !isFinished"></a-entity>
+  <a-entity mixin="gameMenuButtonText" text="value: THE END; color: #FAFAFA; width: 4" bind__visible="isFinished"></a-entity>
 </a-entity>
 
 <a-entity
@@ -27,7 +28,7 @@
   <a-entity
     id="resumeButton"
     mixin="gameMenuButton"
-    bind__visible-raycastable="isPaused"
+    bind__visible-raycastable="isPaused && !isFinished"
     position="0 0.35 0"
     proxy-event="event: click; to: a-scene; as: gamemenuresume">
     <a-entity mixin="gameMenuButtonText" text="value: RESUME"></a-entity>

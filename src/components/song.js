@@ -58,9 +58,9 @@ AFRAME.registerComponent('song', {
     if (oldData.isPaused && !data.isPaused) {
       if (navigator.userAgent.indexOf('Chrome') !== -1) {
         this.source.playbackRate.value = 1;
-      } else {
-        this.audioAnalyser.resumeContext();
       }
+
+        this.audioAnalyser.resumeContext();
       this.isPlaying = true;
     }
 
@@ -89,9 +89,8 @@ AFRAME.registerComponent('song', {
       if (navigator.userAgent.indexOf('Chrome') !== -1) {
         // Stupid Chrome audio policies. Can't resume.
         this.source.playbackRate.value = 0.000000001;
-      } else {
-        this.audioAnalyser.suspendContext();
       }
+      this.audioAnalyser.suspendContext();
       this.isPlaying = false;
     }
   },
@@ -148,7 +147,7 @@ AFRAME.registerComponent('song', {
     this.data.analyserEl.addEventListener('audioanalyserbuffersource', evt => {
       this.source = evt.detail;
       this.el.sceneEl.emit('songprocessingfinish', null, false);
-      if (this.data.isPlaying && this.data.isBeatsPreloaded) {
+      if (this.data.isPlaying) {
         this.startAudio();
       }
     }, ONCE);
@@ -156,10 +155,10 @@ AFRAME.registerComponent('song', {
   },
 
   startAudio: function (time) {
+    this.isPlaying = true;
     const playTime = time || skipDebug || 0;
     this.songStartTime = this.context.currentTime - playTime;
     this.source.start(0, playTime);
-    this.isPlaying = true;
     this.el.emit('songstartaudio');
   },
 

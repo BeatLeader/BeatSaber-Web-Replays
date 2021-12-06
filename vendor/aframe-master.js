@@ -26330,7 +26330,7 @@ function rebuildAttribute (attrib, data, itemSize) {
 			_width = _canvas.width,
 			_height = _canvas.height,
 
-			_pixelRatio = 1,
+			_pixelRatio = 2,
 
 			_viewport = new Vector4( 0, 0, _width, _height ),
 			_scissor = new Vector4( 0, 0, _width, _height ),

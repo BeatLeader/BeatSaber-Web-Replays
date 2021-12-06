@@ -121,9 +121,9 @@ AFRAME.registerComponent('beat-generator', {
    * Generate beats and stuff according to timestamp.
    */
   tick: function (time, delta) {
+    const song = this.el.components.song;
     if (!this.data.isPlaying || !this.beatData) { return; }
 
-    const song = this.el.components.song;
     const prevBeatsTime = this.beatsTime + skipDebug;
     const prevEventsTime = this.eventsTime + skipDebug;
 

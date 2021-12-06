@@ -51,6 +51,7 @@ AFRAME.registerState({
     inVR: false,
     isPaused: false,  // Playing, but paused.
     isPlaying: false,  // Actively playing.
+    isFinished: false,
     isSafari: isSafari,
     isSongBufferProcessing: false,
   },
@@ -122,6 +123,7 @@ AFRAME.registerState({
       state.challenge.difficulty = payload;
       state.challenge.isBeatsPreloaded = false;
       state.isPaused = false;
+      state.isFinished = false;
     },
 
     gamemenuresume: state => {
@@ -131,6 +133,7 @@ AFRAME.registerState({
     gamemenurestart: state => {
       state.challenge.isBeatsPreloaded = false;
       state.isPaused = false;
+      state.isFinished = false;
       state.isSongBufferProcessing = true;
     },
 
@@ -138,6 +141,7 @@ AFRAME.registerState({
       state.challenge.mode = payload;
       state.challenge.isBeatsPreloaded = false;
       state.isPaused = false;
+      state.isFinished = false;
 
       state.challenge.difficulties = difficulties[payload];
       state.challenge.difficulty = state.challenge.difficulties[0]._difficulty;
@@ -146,6 +150,12 @@ AFRAME.registerState({
     pausegame: state => {
       if (!state.isPlaying) { return; }
       state.isPaused = true;
+    },
+
+    finishgame: state => {
+      if (!state.isPlaying) { return; }
+      state.isPaused = true;
+      state.isFinished = true;
     },
 
     songprocessingfinish: state => {
@@ -174,6 +184,7 @@ AFRAME.registerState({
 
       state.hasReceivedUserGesture = false;
       state.isPaused = false;
+      state.isFinished = false;
       state.isSongBufferProcessing = false;
     },
 

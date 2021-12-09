@@ -1,0 +1,54 @@
+<a-mixin
+  id="scoreText"
+  mixin="font"
+  text="color: #FFF; letterSpacing: -2; align: center"></a-mixin>
+
+<a-entity
+  id="scoreContainer"
+  bind__score-texts="isSongLoading: isSongLoading"
+  bind__visible="isPlaying || isPaused">
+
+  <a-entity id="scoreTextContainer" position="0 -0.3068215621073873 -6.25">
+    <a-entity
+      id="score"
+      mixin="scoreText"
+      bind__text="value: score.score"
+      text="width: 4; color: #FAFAFA">
+    </a-entity>
+  </a-entity>
+
+  <a-entity
+    id="combo"
+    mixin="scoreText"
+    bind__text="value: 'COMBO\n' + score.combo"
+    text="width: 1; lineHeight: 40"
+    position="-1.8 1.2 -4"
+    scale="5 5 5">
+  </a-entity>
+
+  <a-entity
+    id="playerText"
+    mixin="scoreText"
+    bind__text="value: player.name"
+    text="width: 1; lineHeight: 40"
+    position="-1.8 0 -2"
+    scale="5 5 5">
+  </a-entity>
+
+  <a-entity position="1.8 1.2 -4">
+    <a-entity
+      id="multiplier"
+      mixin="scoreText"
+      bind__text="value: score.multiplier + 'x'"
+      text="width: 1"
+      scale="5 5 5">
+    </a-entity>
+
+   <a-entity
+      id="multiplierRing"
+      bind__multiplier-ring="combo: score.combo; multiplier: score.multiplier"
+      geometry="primitive: plane; width: 0.5; height: 0.5"
+      material="shader: ring; transparent: true; color: #88A; radiusInner: 0.7; progress: 0"
+      position="0 0.17 0"></a-entity>
+  </a-entity>
+</a-entity>

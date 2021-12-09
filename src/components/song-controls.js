@@ -43,6 +43,7 @@ AFRAME.registerComponent('song-controls', {
     });
 
     this.songProgress = document.getElementById('songProgress');
+    this.songSpeedPercent = document.getElementById('songSpeedPercent');
   },
 
   update: function (oldData) {
@@ -113,7 +114,7 @@ AFRAME.registerComponent('song-controls', {
       // Start audio at seek time.
       const time = percent * this.song.source.buffer.duration;
       this.seek(time);
-      setTimeQueryParam(time);
+      // setTimeQueryParam(time);
     });
 
     // Seek hover.
@@ -137,13 +138,13 @@ AFRAME.registerComponent('song-controls', {
     });
 
     // Difficulty dropdown.
-    this.difficulty.addEventListener('click', () => {
-      controls.classList.remove('modeOptionsActive');
-      controls.classList.toggle('difficultyOptionsActive');
-    });
-    this.el.sceneEl.addEventListener('click', evt => {
-      controls.classList.remove('difficultyOptionsActive');
-    });
+    // this.difficulty.addEventListener('click', () => {
+    //   controls.classList.remove('modeOptionsActive');
+    //   controls.classList.toggle('difficultyOptionsActive');
+    // });
+    // this.el.sceneEl.addEventListener('click', evt => {
+    //   controls.classList.remove('difficultyOptionsActive');
+    // });
 
     // Difficulty select.
     this.difficultyOptions.addEventListener('click', evt => {
@@ -155,22 +156,22 @@ AFRAME.registerComponent('song-controls', {
     });
 
     // Mode dropdown.
-    this.modeDropdownEl.addEventListener('click', () => {
-      controls.classList.remove('difficultyOptionsActive');
-      controls.classList.toggle('modeOptionsActive');
-    });
-    this.el.sceneEl.addEventListener('click', evt => {
-      controls.classList.remove('modeOptionsActive');
-    });
+    // this.modeDropdownEl.addEventListener('click', () => {
+    //   controls.classList.remove('difficultyOptionsActive');
+    //   controls.classList.toggle('modeOptionsActive');
+    // });
+    // this.el.sceneEl.addEventListener('click', evt => {
+    //   controls.classList.remove('modeOptionsActive');
+    // });
 
     // Mode select.
-    this.modeOptionEls.addEventListener('click', evt => {
-      this.songProgress.innerHTML = formatSeconds(0);
-      this.playhead.style.width = '0%';
-      this.el.sceneEl.emit('modeselect', evt.target.dataset.mode, false);
-      this.modeDropdownEl.innerHTML = evt.target.innerHTML;
-      controls.classList.remove('modeOptionsActive');
-    });
+    // this.modeOptionEls.addEventListener('click', evt => {
+    //   this.songProgress.innerHTML = formatSeconds(0);
+    //   this.playhead.style.width = '0%';
+    //   this.el.sceneEl.emit('modeselect', evt.target.dataset.mode, false);
+    //   this.modeDropdownEl.innerHTML = evt.target.innerHTML;
+    //   controls.classList.remove('modeOptionsActive');
+    // });
 
     document.addEventListener('searchOpen', () => {
       controls.classList.remove('difficultyOptionsActive');
@@ -198,6 +199,11 @@ AFRAME.registerComponent('song-controls', {
       this.song.audioAnalyser.gainNode.gain.value = evt.target.value;
       document.getElementById('beatContainer').components['beat-hit-sound']
         .setVolume(evt.target.value);
+    });
+
+    document.getElementById('speedSlider').addEventListener('change', evt => {
+      this.song.source.playbackRate.value = evt.target.value;
+      this.songSpeedPercent.innerHTML = (evt.target.value * 100) + "%";
     });
   },
 

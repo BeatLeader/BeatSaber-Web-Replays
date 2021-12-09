@@ -44,6 +44,10 @@
       pool__beat-dot-red="mixin: dotRedBeat; size: 50; container: #beatContainer; dynamic: true"
       pool__beat-mine="mixin: mine; size: 50; container: #beatContainer; dynamic: true"
       pool__beat-glow="mixin: beatGlow; size: 20; container: #glowContainer; dynamic: true"
+      pool__beatscoreok="mixin: beatScoreOk; size: 10; container: #beatContainer"
+      pool__beatscoregood="mixin: beatScoreGood; size: 10; container: #beatContainer"
+      pool__beatscoregreat="mixin: beatScoreGreat; size: 10; container: #beatContainer"
+      pool__beatscoresuper="mixin: beatScoreSuper; size: 10; container: #beatContainer"
       pool__wall="mixin: wall; size: 30; container: #beatContainer"
       proxy-event__cleargame="event: gamemenurestart; as: cleargame; to: a-scene"
       proxy-event__pausegame="event: pausegame; as: textglowoff; to: a-scene"
@@ -53,7 +57,8 @@
       stats-param
       user-gesture
       vr-mode-ui="enabled: false"
-      tutorial-2d>
+      tutorial-2d
+      replay-loader>
 
       <a-assets timeout="10000">
         {% include './assets.html' %}
@@ -71,10 +76,23 @@
 
       {% include './templates/stage.html' %}
       {% include './templates/gameMenu.html' %}
-
+      {% include './templates/score.html' %}
       {% include './templates/loading.html' %}
 
       <a-entity id="glowContainer"></a-entity>
+
+      <!-- super cut fx rings -->
+      {% for i in range(1, 5) %}
+        <a-entity class="superCutFx" mixin="superCut"></a-entity>
+      {% endfor %}
+
+      <!-- Wrong + miss beat visual indicators. -->
+      <a-entity id="badContainer" bind__visible="isPlaying">
+        <a-entity id="wrongLeft" mixin='beatWrong'></a-entity>
+        <a-entity id="wrongRight" mixin='beatWrong'></a-entity>
+        <a-entity id="missLeft" mixin='beatMiss'></a-entity>
+        <a-entity id="missRight" mixin='beatMiss'></a-entity>
+      </a-entity>
 
       <a-entity
         id="saberParticles"
@@ -86,6 +104,90 @@
         id="sparkParticles"
         particleplayer="src: #sparksJSON; color: #fcc; pscale: 0.5; on: explode; scale: 0.12; loop: false; img: #spark2Img; dur: 700; count: 50%; animateScale: true; initialScale: 3 0.5 1; finalScale: 0.1 0.5 1"></a-entity>
 
+      <a-entity
+        id="controllerRig"
+        proxy-event="event: recentered; to: #cameraRig; captureBubbles: true; as: recenter">
+        {% macro saber (hand, otherHand, bladeColor, beamColor) %}
+          <a-entity id="{{ hand }}Hand"
+            class="saber"
+            mixin="raycaster"
+            bind__hand-swapper="enabled: {{ otherHand }}RaycasterActive"
+            bind__pauser="enabled: isPlaying"
+            bind__raycaster="enabled: {{ hand }}RaycasterActive"
+            bind__raycaster-game="enabled: isPlaying"
+            bind__saber-controls="bladeEnabled: isPlaying; isPaused: isPaused"
+            bind__saber-particles="enabled: isPlaying"
+            bind__trail="enabled: isPlaying"
+            haptics="events: mouseenter; dur: 35; force: 0.075"
+            haptics__beat="eventsFrom: #beatContainer; events: beatcollide{{ hand }}; dur: 80; force: 0.2"
+            haptics__draw="events: drawblade; dur: 750; force: 0.025"
+            haptics-saber
+            haptics-wall
+            raycaster="objects: [raycastable]; far: 5"
+            raycaster__game="objects: [raycastable-game]:not(.blade{{ hand }}); far: 1; interval: 50"
+            saber-particles="hand: {{ hand }}"
+            saber-controls="hand: {{ hand }}"
+            thumb-controls
+            thumb-controls-debug="enabled: false; hand: {{ hand }}; controllerType: vive-controls"
+            trail="color: {{ bladeColor }}; hand: {{ hand }}">
+
+            <a-entity class="saberContainer" rotation="90 0 0">
+              <a-entity
+                class="bladeContainer"
+                bind__visible="isPlaying"
+                animation="property: scale; from: 0 0 0; to: 1 1 1; dur: 750; easing: linear; startEvents: drawblade"
+                scale="0.001 0.001 0.001">
+                <a-entity
+                  class="blade blade{{ hand }}"
+                  {% if hand === 'right' %}data-saber-particles{% endif %}
+                  geometry="primitive: box; height: 0.9; depth: 0.02; width: 0.02"
+                  material="shader: flat; color: #fff"
+                  raycastable-game
+                  position="0 -0.55 0"></a-entity>
+                <a-entity
+                  class="saberglow"
+                  obj-model="obj: #saberGlowObj"
+                  material="shader: flat; color: {{ bladeColor }}; blending: additive; opacity: 0.08"
+                  position="0 -0.55 0"></a-entity>
+              </a-entity>
+              <a-entity
+                class="saberHandle"
+                geometry="primitive: box; height: 0.2; depth: 0.025; width: 0.025"
+                material="shader: flat; color: #151515">
+                <a-entity
+                  class="highlightTop"
+                  geometry="primitive: box; height: 0.18; depth: 0.005; width: 0.005"
+                  material="shader: flat; color: #FAFAFA"
+                  position="0 0 0.0125"></a-entity>
+                <a-entity
+                  class="highlightBottom"
+                  geometry="primitive: box; height: 0.18; depth: 0.005; width: 0.005"
+                  material="shader: flat; color: #FAFAFA"
+                  position="0 0 -0.0125"></a-entity>
+              </a-entity>
+            </a-entity>
+
+            <a-entity
+              class="fakeGlow"
+              fake-glow="color: {{ hand == 'right' and COLORS.NEON_BRIGHTBLUE or COLORS.NEON_BRIGHTRED }}"
+              position="0 0.01 0"
+              rotation="90 0 0"
+              bind__visible="!isPlaying">
+            </a-entity>
+          </a-entity>
+
+          <a-entity
+            id="{{ hand }}CursorMesh"
+            mixin="cursorMesh"
+            bind__cursor-mesh="active: {{ hand }}RaycasterActive && !isPlaying"
+            cursor-mesh="cursorEl: #{{ hand }}Hand"
+            material="color: {{ beamColor }}"
+            scale="1.3 1.3 1.3"></a-entity>
+        {% endmacro %}
+
+        {{ saber('left', 'right', '#850e3e', 'pink') }}
+        {{ saber('right', 'left', '#256c43', 'cyan') }}
+      </a-entity>
       <a-mixin
         id="cursorMesh"
         material="shader: flat; transparent: true; src: #cursorMeshImg; depthTest: false"

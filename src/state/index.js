@@ -1,6 +1,9 @@
 /* global localStorage */
 var utils = require('../utils');
 
+const DAMAGE_DECAY = 0.25;
+const DAMAGE_MAX = 10;
+
 const DEBUG_CHALLENGE = {
   author: 'Superman',
   difficulty: 'Expert',
@@ -41,12 +44,30 @@ let difficulties;
  */
 AFRAME.registerState({
   initialState: {
+    activeHand: localStorage.getItem('hand') || 'right',
     challenge: Object.assign({  // Actively playing challenge.
       hasLoadError: isSafari,
       isLoading: false,
       isBeatsPreloaded: false,  // Whether we have passed the negative time.
       loadErrorText: isSafari ? 'iOS and Safari support coming soon! We need to convert songs to MP3 first.' : '',
     }, emptyChallenge),
+    score: {
+      accuracy: 0,  // Out of 100.
+      beatsHit: 0,
+      beatsMissed: 0,
+      beatsText: '',
+      combo: 0,
+      maxCombo: 0,
+      multiplier: 1,
+      rank: '',  // Grade (S to F).
+      score: 0
+    },
+    player: {
+      name: '',
+      avatar: ''
+    },
+    controllerType: '',
+    damage: 0,
     hasReceivedUserGesture: false,
     inVR: false,
     isPaused: false,  // Playing, but paused.
@@ -89,7 +110,7 @@ AFRAME.registerState({
       if (payload.image) {
         state.challenge.image = payload.image;
       }
-      state.challenge.isLoading = false;
+      
       state.challenge.songName = payload.info._songName;
       state.challenge.songNameShort = truncate(payload.info._songName, 18);
       state.challenge.songNameMedium = truncate(payload.info._songName, 30);
@@ -97,7 +118,17 @@ AFRAME.registerState({
       state.challenge.songSubName = payload.info._songSubName || payload.info._songAuthorName;
       state.challenge.songSubNameShort = truncate(state.challenge.songSubName, 21);
 
-      document.title = `BeatSaver Viewer | ${payload.info._songName}`;
+      document.title = `ScoreSaber Replays | ${state.player.name} | ${payload.info._songName}`;
+    },
+
+    replayloaded: (state, payload) => {
+      state.challenge.isLoading = false;
+    },
+
+    userloaded: (state, payload) => {
+      state.player = payload;
+
+      document.title = `ScoreSaber Replays | ${state.player.name} | ${payload.info._songName}`;
     },
 
     challengeloaderror: (state, payload) => {
@@ -108,6 +139,93 @@ AFRAME.registerState({
 
     controllerconnected: (state, payload) => {
       state.controllerType = payload.name;
+    },
+
+    beathit: (state, payload) => {
+      if (state.damage > DAMAGE_DECAY) {
+        state.damage -= DAMAGE_DECAY;
+      }
+      state.score.beatsHit++;
+      state.score.combo++;
+      if (state.score.combo > state.score.maxCombo) {
+        state.score.maxCombo = state.score.combo;
+      }
+
+      payload.score = isNaN(payload.score) ? 100 : payload.score;
+      state.score.score += Math.floor(payload.score * state.score.multiplier);
+
+      // Might be a math formula for this, but the multiplier system is easy reduced.
+      if (state.score.combo < 2) {
+        state.score.multiplier = 1;
+      } else if (state.score.combo < 6) {
+        state.score.multiplier = 2;
+      } else if (state.score.combo < 14) {
+        state.score.multiplier = 4;
+      } else {
+        state.score.multiplier = 8;
+      }
+
+      updateScoreAccuracy(state);
+    },
+
+    beatmiss: state => {
+      state.score.beatsMissed++;
+      takeDamage(state);
+      updateScoreAccuracy(state);
+    },
+
+    beatwrong: state => {
+      state.score.beatsMissed++;
+      takeDamage(state);
+      updateScoreAccuracy(state);
+    },
+
+    minehit: state => {
+      takeDamage(state);
+    },
+
+    victory: function (state) {
+      state.isVictory = true;
+
+      // Percentage is score divided by total possible score.
+      const accuracy = (state.score.score / (state.challenge.numBeats * 110)) * 100;
+      state.score.accuracy = isNaN(accuracy) ? 0 : accuracy;
+      state.score.score = isNaN(state.score.score) ? 0 : state.score.score;
+
+      if (accuracy >= 95) {
+        state.score.rank = 'S';
+      } else if (accuracy >= 93) {
+        state.score.rank = 'A';
+      } else if (accuracy >= 90) {
+        state.score.rank = 'A-';
+      } else if (accuracy >= 88) {
+        state.score.rank = 'B+';
+      } else if (accuracy >= 83) {
+        state.score.rank = 'B';
+      } else if (accuracy >= 80) {
+        state.score.rank = 'B-';
+      } else if (accuracy >= 78) {
+        state.score.rank = 'C+';
+      } else if (accuracy >= 73) {
+        state.score.rank = 'C';
+      } else if (accuracy >= 70) {
+        state.score.rank = 'C-';
+      } else if (accuracy >= 60) {
+        state.score.rank = 'D';
+      } else {
+        state.score.rank = 'F';
+      }
+
+      computeBeatsText(state);
+    },
+
+    victoryfake: function (state) {
+      state.score.accuracy = '74.99';
+      state.score.rank = 'C';
+    },
+
+    wallhitstart: function (state) {
+      takeDamage(state);
     },
 
     /**
@@ -218,3 +336,21 @@ function truncate (str, length) {
   }
   return str;
 }
+
+function takeDamage (state) {
+  if (!state.isPlaying) { return; }
+  state.score.combo = 0;
+  state.score.multiplier = state.score.multiplier > 1
+    ? Math.ceil(state.score.multiplier / 2)
+    : 1;
+  if (AFRAME.utils.getUrlParameter('godmode')) { return; }
+  state.damage++;
+  // checkGameOver(state);
+}
+
+function updateScoreAccuracy (state) {
+  // Update live accuracy.
+  const currentNumBeats = state.score.beatsHit + state.score.beatsMissed;
+  state.score.accuracy = (state.score.score / (currentNumBeats * 110)) * 100;
+}
+

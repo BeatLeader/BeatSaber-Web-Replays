@@ -52,6 +52,22 @@ html
       padding 0
       width 100px
 
+  #speedSliderContainer
+    background rgba(0, 0, 0, 0.85)
+    border-radius 0 5px 5px 0
+    bottom 5px
+    cursor pointer
+    display none
+    left 90px
+    padding-top 4px
+    z-index 999999999
+    display block
+
+    input
+      cursor pointer
+      padding 0
+      width 100px
+
   #pause
     cursor pointer
     display flex
@@ -96,6 +112,13 @@ html
   margin-left 15px
   margin-right 0
   width 70px
+  
+#songSpeed
+  color $gray
+  font-size 11px
+  margin-left 5px
+  margin-right 0
+  width 30px
 
 #songInfoContainer
   align-items center
@@ -112,7 +135,7 @@ html
   #songInfo
     display flex
     flex-direction column
-    padding-left 10px
+    padding-left 5px
   #songName
     color $gray
     font-weight bold
@@ -138,14 +161,6 @@ html
     transition all .1s
     p
       font-family $font
-    &:after
-      content '\25B2'
-      display inline-block
-      font-size 11px
-      margin-left 5px
-    &:hover
-      border-color $white
-      color $white
 
   #controlsMode
     margin-right 5px

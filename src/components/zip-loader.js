@@ -136,6 +136,7 @@ AFRAME.registerComponent('zip-loader', {
           'challengeimage',
           `${utils.beatsaverCdnCors(data.versions[0].coverURL)}`
         );
+        this.el.sceneEl.emit('songFetched', this.hash);
         this.fetchZip(zipUrl || `${data.versions[0].downloadURL}`);
       });
     });

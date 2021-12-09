@@ -135,6 +135,7 @@ AFRAME.registerComponent('song', {
 
   onRestart: function () {
     this.isPlaying = false;
+    this.lastCurrentTime = null;
 
     // Restart, get new buffer source node and play.
     if (this.source) { this.source.disconnect(); }
@@ -160,9 +161,21 @@ AFRAME.registerComponent('song', {
     this.songStartTime = this.context.currentTime - playTime;
     this.source.start(0, playTime);
     this.el.emit('songstartaudio');
+    this.lastCurrentTime = null;
   },
 
   getCurrentTime: function () {
-    return this.context.currentTime - this.songStartTime;
+    let lastCurrentTime = this.lastCurrentTime;
+    var newCurrent
+    if (lastCurrentTime) {
+      newCurrent = lastCurrentTime + (this.context.currentTime - this.lastContextTime) * this.source.playbackRate.value;
+    } else {
+      newCurrent = (this.context.currentTime - this.songStartTime) * this.source.playbackRate.value;
+    }
+
+    this.lastCurrentTime = newCurrent;
+    this.lastContextTime = this.context.currentTime;
+
+    return newCurrent;
   }
 });

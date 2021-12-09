@@ -47,7 +47,7 @@ AFRAME.registerComponent('replay-loader', {
     songFetched: function (hash) {
       fetch(`https://beatsaver.com/api/scores/${hash}/1?difficulty=${this.difficultyNumber(this.data.difficulty)}&gameMode=0`).then(res => {
         res.json().then(leaderbord => {
-          fetch(`http://sspreviewdecode.azurewebsites.net/?playerID=${this.data.playerID}&songID=${leaderbord.uid}`).then(res => {
+          fetch(`https://sspreviewdecode.azurewebsites.net/?playerID=${this.data.playerID}&songID=${leaderbord.uid}`).then(res => {
               res.json().then(data => {
                   this.replay = JSON.parse(data);
                   this.el.sceneEl.emit('replayloaded', null);

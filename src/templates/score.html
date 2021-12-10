@@ -20,7 +20,7 @@
   <a-entity
     id="combo"
     mixin="scoreText"
-    bind__text="value: 'COMBO\n' + score.combo"
+    bind__text="value: 'COMBO\n' + score.combo + '\n\n' + score.accuracy"
     text="width: 1; lineHeight: 40"
     position="-1.8 1.2 -4"
     scale="5 5 5">
@@ -34,6 +34,14 @@
     position="-1.8 0 -2"
     scale="5 5 5">
   </a-entity>
+
+  <a-entity 
+    id="playerAvatar"
+    bind__blob-texture="src: player.avatar"
+    geometry="primitive: plane; buffer: false; skipCache: true; height: 0.3; width: 0.3"
+    material="shader: flat; transparent: true"
+    position="-1.8 0.5 -2"
+    bind__visible="!!player.avatar"></a-entity>
 
   <a-entity position="1.8 1.2 -4">
     <a-entity

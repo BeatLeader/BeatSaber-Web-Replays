@@ -165,17 +165,19 @@ AFRAME.registerComponent('song', {
   },
 
   getCurrentTime: function () {
-    let lastCurrentTime = this.lastCurrentTime;
-    var newCurrent
-    if (lastCurrentTime) {
-      newCurrent = lastCurrentTime + (this.context.currentTime - this.lastContextTime) * this.source.playbackRate.value;
-    } else {
-      newCurrent = (this.context.currentTime - this.songStartTime) * this.source.playbackRate.value;
-    }
+    // let lastCurrentTime = this.lastCurrentTime;
+    // var newCurrent
+    // if (lastCurrentTime) {
+    //   newCurrent = lastCurrentTime + (this.context.currentTime - this.lastContextTime) * this.source.playbackRate.value;
+    // } else {
+    //   newCurrent = (this.context.currentTime - this.songStartTime) * this.source.playbackRate.value;
+    // }
 
-    this.lastCurrentTime = newCurrent;
-    this.lastContextTime = this.context.currentTime;
+    // this.lastCurrentTime = newCurrent;
+    // this.lastContextTime = this.context.currentTime;
 
-    return newCurrent;
+    // return newCurrent;
+
+    return this.context.currentTime - this.songStartTime;
   }
 });

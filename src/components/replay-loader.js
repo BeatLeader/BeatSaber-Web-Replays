@@ -45,9 +45,9 @@ AFRAME.registerComponent('replay-loader', {
     },
 
     songFetched: function (hash) {
-      fetch(`https://beatsaver.com/api/scores/${hash}/1?difficulty=${this.difficultyNumber(this.data.difficulty)}&gameMode=0`).then(res => {
+      fetch(`/cors/score-saber/api/leaderboard/by-hash/${hash}/info?difficulty=${this.difficultyNumber(this.data.difficulty)}`).then(res => {
         res.json().then(leaderbord => {
-          fetch(`https://sspreviewdecode.azurewebsites.net/?playerID=${this.data.playerID}&songID=${leaderbord.uid}`).then(res => {
+          fetch(`https://sspreviewdecode.azurewebsites.net/?playerID=${this.data.playerID}&songID=${leaderbord.id}`).then(res => {
               res.json().then(data => {
                   this.replay = JSON.parse(data);
                   this.el.sceneEl.emit('replayloaded', null);
@@ -57,8 +57,8 @@ AFRAME.registerComponent('replay-loader', {
       });
       fetch(`/cors/score-saber/api/player/${this.data.playerID}/full`).then(res => {
         res.json().then(data => {
-            this.user = JSON.parse(data);
-            this.el.sceneEl.emit('userloaded', {name: this.user.name, avatar: this.user.profilePicture}, null);
+            this.user = data;
+            this.el.sceneEl.emit('userloaded', {name: this.user.name, avatar: this.user.profilePicture.replace('https://cdn.scoresaber.com/', '/cors/score-saber-cdn/')}, null);
         });
       });
     }

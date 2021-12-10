@@ -25,21 +25,21 @@ class Search extends Component {
     });
 
     // Open search.
-    document.getElementById('searchToggle').addEventListener('click', () => {
-      document.dispatchEvent(new CustomEvent('searchOpen'));
-      this.setState({open: !this.state.open});
-      setTimeout(() => {
-        document.getElementById('searchInput').focus();
-      }, 15);
-    });
+    // document.getElementById('searchToggle').addEventListener('click', () => {
+    //   document.dispatchEvent(new CustomEvent('searchOpen'));
+    //   this.setState({open: !this.state.open});
+    //   setTimeout(() => {
+    //     document.getElementById('searchInput').focus();
+    //   }, 15);
+    // });
 
     // Update URL.
-    scene.addEventListener('challengeset', evt => {
-      const id = evt.detail;
-      if (!id) { return; }
-      this.setState({url: `preview.beatleader.xyz/?id=${id}`});
-      setIdQueryParam(id);
-    });
+    // scene.addEventListener('challengeset', evt => {
+    //   const id = evt.detail;
+    //   if (!id) { return; }
+    //   this.setState({url: `preview.beatleader.xyz/?id=${id}`});
+    //   setIdQueryParam(id);
+    // });
 
     this.search = debounce(this.search.bind(this), 100);
     this.selectSong = this.selectSong.bind(this);

@@ -25784,7 +25784,7 @@ function rebuildAttribute (attrib, data, itemSize) {
 
 			if ( device === null ) {
 
-				camera.position.set( 0, scope.userHeight, 0 );
+				// camera.position.set( 0, scope.userHeight, -2 );
 				return camera;
 
 			}
@@ -66491,7 +66491,7 @@ module.exports.Component = registerComponent('screenshot', {
       // Use ortho camera.
       camera = this.camera;
       // Copy position and rotation of scene camera into the ortho one.
-      el.camera.getWorldPosition(camera.position);
+    //   el.camera.getWorldPosition(camera.position);
       el.camera.getWorldRotation(camera.rotation);
       // Create cube camera and copy position from scene camera.
       cubeCamera = new THREE.CubeCamera(el.camera.near, el.camera.far,

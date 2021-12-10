@@ -1,3 +1,9 @@
+[dev]
+    command = "npm run start"
+    publish = ".publish"
+    port = 9999
+    targetPort = 3000
+
 [[redirects]]
     from = "/cors/beat-saver-cdn/*"
     to = "https://eu.cdn.beatsaver.com/:splat"
@@ -8,6 +14,13 @@
 [[redirects]]
     from = "/cors/score-saber/*"
     to = "https://scoresaber.com/:splat"
+    status = 200
+    force = true
+    headers = {X-From = "Netlify"}
+
+[[redirects]]
+    from = "/cors/score-saber-cdn/*"
+    to = "https://cdn.scoresaber.com/:splat"
     status = 200
     force = true
     headers = {X-From = "Netlify"}

@@ -147,6 +147,7 @@ AFRAME.registerComponent('beat', {
 
     this.saberEls[0].object3D.position.y = 1.4;
     this.saberEls[0].object3D.position.x = -0.4;
+    
     this.saberEls[1].object3D.position.y = 1.4;
     this.saberEls[1].object3D.position.x = 0.4;
   },
@@ -216,46 +217,6 @@ AFRAME.registerComponent('beat', {
     const data = this.data;
     const position = el.object3D.position;
     const rotation = el.object3D.rotation;
-
-    // this.saberEls[0].object3D.rotation.x += 0.1;
-    // this.saberEls[1].object3D.rotation.y += 0.1;
-
-    let currentTime = this.el.sceneEl.components.song.getCurrentTime();
-    let frames = this.replayDecoder.replay.frames;
-    var frameIndex = 0;
-    for (var i = 0; i < frames.length - 1; i++) {
-      if (frames[i].a <= currentTime && frames[i+1].a >= currentTime) {
-        frameIndex = i;
-        break;
-      }
-    }
-
-    let frame = frames[frameIndex];
-    let nextFrame = frames[frameIndex + 1];
-    
-    this.saberEls[0].object3D.position.x = frame.l.p.x;
-    this.saberEls[0].object3D.position.y = frame.l.p.y;
-    this.saberEls[0].object3D.position.z = frame.l.p.z;
-
-    this.saberEls[1].object3D.position.x = frame.r.p.x;
-    this.saberEls[1].object3D.position.y = frame.r.p.y;
-    this.saberEls[1].object3D.position.z = frame.r.p.z;
-
-    var lquat = new THREE.Quaternion(frame.l.r.x, frame.l.r.y, frame.l.r.z, frame.l.r.w).slerp(new THREE.Quaternion(nextFrame.l.r.x, nextFrame.l.r.y, nextFrame.l.r.z, nextFrame.l.r.w), 0.2);
-    var lrotation = new THREE.Euler().setFromQuaternion(lquat);
-
-    this.saberEls[0].object3D.rotation.x = lrotation.x;
-    this.saberEls[0].object3D.rotation.y = lrotation.y;
-    this.saberEls[0].object3D.rotation.z = lrotation.z;
-
-    var rquat = new THREE.Quaternion(frame.r.r.y, frame.r.r.x, frame.r.r.z, frame.r.r.w).slerp(new THREE.Quaternion(nextFrame.r.r.y, nextFrame.r.r.x, nextFrame.r.r.z, nextFrame.r.r.w), 0.2);
-    var rrotation = new THREE.Euler().setFromQuaternion(rquat);
-
-    this.saberEls[1].object3D.rotation.x = rrotation.x;
-    this.saberEls[1].object3D.rotation.y = rrotation.y;
-    this.saberEls[1].object3D.rotation.z = rrotation.z;
-
-    // console.log(frame.a + " - " + currentTime);
 
     if (this.destroyed) {
       this.tockDestroyed(timeDelta);

@@ -15,7 +15,7 @@ AFRAME.registerComponent('supercutfx', {
   },
 
   tick: function (time) {
-    if (time > this.startTime + 1000) {
+    if (time > this.startTime + 100) {
       this.el.object3D.visible = false;
       this.el.pause();
     }

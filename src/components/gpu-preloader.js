@@ -12,13 +12,14 @@ AFRAME.registerComponent('gpu-preloader', {
 
     setTimeout(() => {
       this.preloadAtlas();
-      this.preloadBeamMap();
+      // this.preloadBeamMap();
       this.preloadBeatEnvMap();
     }, 1000);
   },
 
   preloadAtlas: function () {
     const stage = document.querySelector('#stageObj');
+    const mesh = stage.getObject3D('mesh');
     this.preloadTexture(stage.getObject3D('mesh').children[0].material.uniforms.src.value);
   },
 

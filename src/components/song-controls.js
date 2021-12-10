@@ -201,10 +201,10 @@ AFRAME.registerComponent('song-controls', {
         .setVolume(evt.target.value);
     });
 
-    document.getElementById('speedSlider').addEventListener('change', evt => {
-      this.song.source.playbackRate.value = evt.target.value;
-      this.songSpeedPercent.innerHTML = (evt.target.value * 100) + "%";
-    });
+    // document.getElementById('speedSlider').addEventListener('change', evt => {
+    //   this.song.source.playbackRate.value = evt.target.value;
+    //   this.songSpeedPercent.innerHTML = (evt.target.value * 100) + "%";
+    // });
   },
 
   tick: function () {

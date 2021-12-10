@@ -128,7 +128,7 @@ AFRAME.registerState({
     userloaded: (state, payload) => {
       state.player = payload;
 
-      document.title = `ScoreSaber Replays | ${state.player.name} | ${payload.info._songName}`;
+      document.title = `ScoreSaber Replays | ${state.player.name} | ${state.challenge.songName}`;
     },
 
     challengeloaderror: (state, payload) => {
@@ -351,6 +351,6 @@ function takeDamage (state) {
 function updateScoreAccuracy (state) {
   // Update live accuracy.
   const currentNumBeats = state.score.beatsHit + state.score.beatsMissed;
-  state.score.accuracy = (state.score.score / (currentNumBeats * 110)) * 100;
+  state.score.accuracy = ((state.score.score / (currentNumBeats * 115)) * 100).toFixed(2);
 }
 

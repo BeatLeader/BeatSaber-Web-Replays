@@ -5,11 +5,7 @@ const stageNormalShaders = require('../../assets/shaders/stageNormal.js');
 
 AFRAME.registerSystem('materials', {
   init: function () {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', this.createMaterials.bind(this));
-    } else {
       this.createMaterials();
-    }
   },
 
   createMaterials: function () {

@@ -1,7 +1,7 @@
 <a-entity
   id="loadingSongInfoContainer"
-  bind__animation__scale="enabled: challenge.isLoading || !hasReceivedUserGesture && !challenge.hasLoadError"
-  bind__visible="challenge.isLoading || !hasReceivedUserGesture || challenge.hasLoadError"
+  bind__animation__scale="enabled: challenge.isLoading || replay.isLoading || !hasReceivedUserGesture && !challenge.hasLoadError && !replay.hasError"
+  bind__visible="challenge.isLoading || replay.isLoading || !hasReceivedUserGesture || challenge.hasLoadError"
   animation__scale="property: scale; from: 1 1 1; to: 1.05 1.05 1.05; dir: alternate; loop: true; dur: 1200; easing: easeInOutCubic"
   position="0 1.5 -1">
 
@@ -25,18 +25,18 @@
     <a-entity
       id="loadingText"
       mixin="font"
-      bind__text="value: isSongBufferProcessing && 'Processing audio...' || 'Downloading song...'"
-      bind__visible="challenge.isLoading || isSongBufferProcessing && !challenge.hasLoadError"
+      bind__text="value: isSongBufferProcessing && 'Processing audio...' || challenge.isLoading && 'Downloading song...' || 'Downloading replay...'"
+      bind__visible="challenge.isLoading || replay.isLoading || isSongBufferProcessing && !challenge.hasLoadError"
       text="align: center; color: #FAFAFA; wrapCount: 18; width: 0.65"
       position="0 -0.32 0.001"></a-entity>
 
     <a-entity
       id="loadingErrorText"
       mixin="font"
-      bind__text="value: challenge.loadErrorText"
-      bind__visible="challenge.hasLoadError"
+      bind__text="value: challenge.hasLoadError && challenge.loadErrorText || replay.errorText"
+      bind__visible="!challenge.isLoading && !replay.isLoading && !isSongBufferProcessing && (challenge.hasLoadError || replay.hasError)"
       text="align: center; color: #FAFAFA; wrapCount: 18; width: 0.65"
-      position="0 -0.09437 0.001"></a-entity>
+      position="0 -0.34 0.001"></a-entity>
 
     <a-entity
       id="challengeLoadingIndicator"
@@ -61,7 +61,7 @@
     <a-entity
       id="loadingGestureButton"
       mixin="bigMenuButton"
-      bind__visible-raycastable="!challenge.isLoading && !isPlaying && !isPaused && !hasReceivedUserGesture && !isSongBufferProcessing && !challenge.hasLoadError"
+      bind__visible-raycastable="!challenge.isLoading && !replay.isLoading && !isPlaying && !isPaused && !hasReceivedUserGesture && !isSongBufferProcessing && !challenge.hasLoadError && !replay.hasError"
       position="0 -0.31923 0.01"
       proxy-event="event: click; to: a-scene; as: usergesturereceive"
       slice9="width: 0.725"

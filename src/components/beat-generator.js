@@ -113,6 +113,15 @@ AFRAME.registerComponent('beat-generator', {
       }
     }
 
+    const notes = this.beatData._notes;
+    var index = 0;
+    for (var i = 0; i < notes.length; i++) {
+      if (notes[i]._type == 0 || notes[i]._type == 1) {
+        notes[i].index = index;
+        index++;
+      }
+    }
+
     this.beatDataProcessed = true;
     console.log('[beat-generator] Finished processing beat data.');
   },
@@ -241,6 +250,7 @@ AFRAME.registerComponent('beat-generator', {
       beatObj.size = 0.4;
       beatObj.type = type;
       beatObj.warmupPosition = -data.beatWarmupTime * data.beatWarmupSpeed;
+      beatObj.index = note.index;
 
       if (this.mappingExtensions) {
         note._lineIndex = note._lineIndex < 0

@@ -32,6 +32,7 @@ function getVerticalPosition (lineLayer) {
  */
 AFRAME.registerComponent('beat', {
   schema: {
+    index: {default: 0},
     anticipationPosition: {default: 0},
     color: {default: 'red', oneOf: ['red', 'blue']},
     cutDirection: {default: 'down'},
@@ -106,7 +107,7 @@ AFRAME.registerComponent('beat', {
     this.returnToPoolTimeStart = undefined;
     this.rotationAxis = new THREE.Vector3();
     this.saberEls = this.el.sceneEl.querySelectorAll('[saber-controls]');
-    this.replayDecoder = this.el.sceneEl.components['replay-loader'];
+    this.replayPlayer = this.el.sceneEl.components['replay-player'];
     this.frameNum = 0;
     this.scoreEl = null;
     this.scoreElTime = undefined;
@@ -219,6 +220,10 @@ AFRAME.registerComponent('beat', {
     const rotation = el.object3D.rotation;
 
     if (this.destroyed) {
+      if (this.data.index) {
+        this.el.emit('beatend', {score: this.replayPlayer.score, index: this.data.index}, true);
+      }
+      
       this.tockDestroyed(timeDelta);
       // Check to remove score entity from pool.
     } else {
@@ -700,8 +705,8 @@ AFRAME.registerComponent('beat', {
 
         this.destroyBeat(saberEls[i]);
 
-        if (saberEls[i].components['saber-controls'].swinging &&
-            this.data.color === saberColors[hand]) {
+        // if (saberEls[i].components['saber-controls'].swinging &&
+        //     this.data.color === saberColors[hand]) {
           this.hitSaberEl = saberEls[i];
           this.hitSaberEl.addEventListener('strokeend', this.onEndStroke, ONCE);
           saberControls = saberEls[i].components['saber-controls'];
@@ -712,10 +717,10 @@ AFRAME.registerComponent('beat', {
 
           if (this.data.type === 'arrow') {
             saberControls.updateStrokeDirection();
-            if (!saberControls.strokeDirection[this.data.cutDirection]) {
-              this.wrongHit(hand);
-              break;
-            }
+            // if (!saberControls.strokeDirection[this.data.cutDirection]) {
+            //   this.wrongHit(hand);
+            //   break;
+            // }
 
             if (cutDirection === 'up' || cutDirection === 'down') {
               maxAngle = saberControls.maxAnglePlaneX;
@@ -730,9 +735,9 @@ AFRAME.registerComponent('beat', {
           }
           this.angleBeforeHit = maxAngle;
 
-        } else {
-          this.wrongHit(hand);
-        }
+        // } else {
+        //   this.wrongHit(hand);
+        // }
         break;
       }
     }
@@ -778,7 +783,7 @@ AFRAME.registerComponent('beat', {
       this.superCutIdx = (this.superCutIdx + 1) % this.superCuts.length;
     }
 
-    const scoreEl = this.el.sceneEl.components[beatScorePool].requestEntity();
+    const scoreEl = this.el.sceneEl.querySelectorAll(".beatscoreok" + Math.round(this.replayPlayer.score.lastNoteScore))[0];
     if (scoreEl) {
       scoreEl.object3D.position.copy(this.el.object3D.position);
       scoreEl.play();

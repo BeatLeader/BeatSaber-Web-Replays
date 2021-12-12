@@ -60,7 +60,14 @@ AFRAME.registerState({
       maxCombo: 0,
       multiplier: 1,
       rank: '',  // Grade (S to F).
-      score: 0
+      maxScore: 0,
+      score: 0,
+      lastNoteScore: 0
+    },
+    replay: {
+      isLoading: false,
+      hasError: false,
+      errorText: ''
     },
     player: {
       name: '',
@@ -74,7 +81,7 @@ AFRAME.registerState({
     isPlaying: false,  // Actively playing.
     isFinished: false,
     isSafari: isSafari,
-    isSongBufferProcessing: false,
+    isSongBufferProcessing: false
   },
 
   handlers: {
@@ -119,10 +126,22 @@ AFRAME.registerState({
       state.challenge.songSubNameShort = truncate(state.challenge.songSubName, 21);
 
       document.title = `ScoreSaber Replays | ${state.player.name} | ${payload.info._songName}`;
+      state.challenge.isLoading = false;
+    },
+
+    replayloadstart: (state, payload) => {
+      state.replay.isLoading = true;
     },
 
     replayloaded: (state, payload) => {
-      state.challenge.isLoading = false;
+      state.replay.isLoading = false;
+      state.score.maxScore = payload.maxScore;
+    },
+
+    replayloadfailed: (state, payload) => {
+      state.replay.isLoading = false;
+      state.replay.hasError = true;
+      state.replay.errorText = payload.error;
     },
 
     userloaded: (state, payload) => {
@@ -141,31 +160,14 @@ AFRAME.registerState({
       state.controllerType = payload.name;
     },
 
+    beatend: (state, payload) => {
+      updateScore(state, payload);
+    },
+
     beathit: (state, payload) => {
       if (state.damage > DAMAGE_DECAY) {
         state.damage -= DAMAGE_DECAY;
       }
-      state.score.beatsHit++;
-      state.score.combo++;
-      if (state.score.combo > state.score.maxCombo) {
-        state.score.maxCombo = state.score.combo;
-      }
-
-      payload.score = isNaN(payload.score) ? 100 : payload.score;
-      state.score.score += Math.floor(payload.score * state.score.multiplier);
-
-      // Might be a math formula for this, but the multiplier system is easy reduced.
-      if (state.score.combo < 2) {
-        state.score.multiplier = 1;
-      } else if (state.score.combo < 6) {
-        state.score.multiplier = 2;
-      } else if (state.score.combo < 14) {
-        state.score.multiplier = 4;
-      } else {
-        state.score.multiplier = 8;
-      }
-
-      updateScoreAccuracy(state);
     },
 
     beatmiss: state => {
@@ -339,18 +341,37 @@ function truncate (str, length) {
 
 function takeDamage (state) {
   if (!state.isPlaying) { return; }
-  state.score.combo = 0;
-  state.score.multiplier = state.score.multiplier > 1
-    ? Math.ceil(state.score.multiplier / 2)
-    : 1;
-  if (AFRAME.utils.getUrlParameter('godmode')) { return; }
   state.damage++;
   // checkGameOver(state);
 }
 
 function updateScoreAccuracy (state) {
-  // Update live accuracy.
-  const currentNumBeats = state.score.beatsHit + state.score.beatsMissed;
-  state.score.accuracy = ((state.score.score / (currentNumBeats * 115)) * 100).toFixed(2);
+  //state.score.accuracy = ((state.score.score / state.score.maxScore) * 100).toFixed(2);
+}
+
+function maxScoreForNote(index) {
+  if (index < 2) {
+    return (index + 1) * 115;
+  } if (index < 6) {
+    return index * 2 * 115;
+  } if (index < 14) {
+    return 5 * 2 * 115 + (index - 5) * 4 * 115;
+  } else {
+    return 5 * 2 * 115 + 8 * 4 * 115 + (index - 13) * 8 * 115;
+  }
+}
+
+function updateScore (state, payload) {
+  let score = payload.score;
+  let noteIndex = payload.index;
+
+  state.score.combo = score.combo;
+  if (state.score.multiplier != score.multiplier) {
+    state.score.multiplier = score.multiplier;
+  }
+  
+  state.score.score = score.totalScore;
+  state.score.lastNoteScore = score.lastNoteScore;
+  state.score.accuracy = (score.totalScore / maxScoreForNote(noteIndex) * 100).toFixed(2)
 }
 

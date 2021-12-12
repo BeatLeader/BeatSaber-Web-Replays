@@ -6,9 +6,9 @@ const zipUrl = AFRAME.utils.getUrlParameter('zip');
 
 AFRAME.registerComponent('zip-loader', {
   schema: {
-    id: {default: zipUrl ? '' : (AFRAME.utils.getUrlParameter('id') || '22cc')},
+    id: {default: zipUrl ? '' : (AFRAME.utils.getUrlParameter('id') || '1a55e')},
     isSafari: {default: false},
-    difficulty: {default: AFRAME.utils.getUrlParameter('difficulty')},
+    difficulty: {default: (AFRAME.utils.getUrlParameter('difficulty') || 'ExpertPlus')},
     mode: {default: AFRAME.utils.getUrlParameter('mode') || 'Standard'}
   },
 
@@ -131,13 +131,18 @@ AFRAME.registerComponent('zip-loader', {
   fetchData: function (id) {
     return fetch(`https://beatsaver.com/api/maps/id/${id}`).then(res => {
       res.json().then(data => {
-        this.hash = data.versions[0].hash;
-        this.el.sceneEl.emit(
-          'challengeimage',
-          `${utils.beatsaverCdnCors(data.versions[0].coverURL)}`
-        );
-        this.el.sceneEl.emit('songFetched', this.hash);
-        this.fetchZip(zipUrl || `${data.versions[0].downloadURL}`);
+        if (data.versions) {
+          this.hash = data.versions[0].hash;
+          this.el.sceneEl.emit(
+            'challengeimage',
+            `${utils.beatsaverCdnCors(data.versions[0].coverURL)}`
+          );
+          this.el.sceneEl.emit('songFetched', this.hash);
+          this.fetchZip(zipUrl || `${data.versions[0].downloadURL}`);
+        } else {
+          this.el.emit('challengeloaderror', null);
+        }
+        
       });
     });
   },

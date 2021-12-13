@@ -52,8 +52,6 @@ AFRAME.registerComponent('multiplier-ring', {
     const el = this.el;
     const progress = this.progress;
 
-    console.log(data.multiplier);
-
     if (data.multiplier === 8) {
       progress.value = 1;
       return;

@@ -60,10 +60,10 @@ AFRAME.registerState({
       maxCombo: 0,
       multiplier: 1,
       rank: '',  // Grade (S to F).
-      maxScore: 0,
-      score: 0,
-      lastNoteScore: 0
+      score: 0
     },
+    lastNoteTime: 0,
+    notes: null,
     replay: {
       isLoading: false,
       hasError: false,
@@ -135,7 +135,7 @@ AFRAME.registerState({
 
     replayloaded: (state, payload) => {
       state.replay.isLoading = false;
-      state.score.maxScore = payload.maxScore;
+      state.notes = payload.notes;
     },
 
     replayloadfailed: (state, payload) => {
@@ -173,13 +173,11 @@ AFRAME.registerState({
     beatmiss: state => {
       state.score.beatsMissed++;
       takeDamage(state);
-      updateScoreAccuracy(state);
     },
 
     beatwrong: state => {
       state.score.beatsMissed++;
       takeDamage(state);
-      updateScoreAccuracy(state);
     },
 
     minehit: state => {
@@ -255,6 +253,29 @@ AFRAME.registerState({
       state.isPaused = false;
       state.isFinished = false;
       state.isSongBufferProcessing = true;
+      state.score = {
+        accuracy: 0,
+        beatsHit: 0,
+        beatsMissed: 0,
+        beatsText: '',
+        combo: 0,
+        maxCombo: 0,
+        multiplier: 1,
+        rank: '',
+        score: 0
+      }
+      state.lastNoteTime = 0;
+    },
+
+    timechanged: (state, payload) => {
+      state.lastNoteTime = 0;
+      let notes = state.notes;
+      for (var i = 0; i < notes.length; i++) {
+        if (notes[i].time > payload.newTime) {
+          updateScore(state, {index: notes[i > 0 ? i - 1 : i].index});
+          break;
+        }
+      }
     },
 
     modeselect: (state, payload) => {
@@ -345,33 +366,16 @@ function takeDamage (state) {
   // checkGameOver(state);
 }
 
-function updateScoreAccuracy (state) {
-  //state.score.accuracy = ((state.score.score / state.score.maxScore) * 100).toFixed(2);
-}
-
-function maxScoreForNote(index) {
-  if (index < 2) {
-    return (index + 1) * 115;
-  } if (index < 6) {
-    return index * 2 * 115;
-  } if (index < 14) {
-    return 5 * 2 * 115 + (index - 5) * 4 * 115;
-  } else {
-    return 5 * 2 * 115 + 8 * 4 * 115 + (index - 13) * 8 * 115;
-  }
-}
-
 function updateScore (state, payload) {
-  let score = payload.score;
-  let noteIndex = payload.index;
+  let note = state.notes.find(e => e.index == payload.index);
+  if (note.time <= state.lastNoteTime) return;
 
-  state.score.combo = score.combo;
-  if (state.score.multiplier != score.multiplier) {
-    state.score.multiplier = score.multiplier;
-  }
-  
-  state.score.score = score.totalScore;
-  state.score.lastNoteScore = score.lastNoteScore;
-  state.score.accuracy = (score.totalScore / maxScoreForNote(noteIndex) * 100).toFixed(2)
+  state.score.score = note.totalScore;
+  state.score.combo = note.combo;
+  state.score.multiplier = note.multiplier;
+  state.score.accuracy = note.accuracy;
+  state.lastNoteTime = note.time;
+
+  console.log(note.score + " - " + note.index + " - " + note.time);
 }
 

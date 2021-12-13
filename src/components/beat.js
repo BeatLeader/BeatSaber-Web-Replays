@@ -107,7 +107,7 @@ AFRAME.registerComponent('beat', {
     this.returnToPoolTimeStart = undefined;
     this.rotationAxis = new THREE.Vector3();
     this.saberEls = this.el.sceneEl.querySelectorAll('[saber-controls]');
-    this.replayPlayer = this.el.sceneEl.components['replay-player'];
+    this.replayLoader = this.el.sceneEl.components['replay-loader'];
     this.frameNum = 0;
     this.scoreEl = null;
     this.scoreElTime = undefined;
@@ -145,51 +145,11 @@ AFRAME.registerComponent('beat', {
     } else {
       this.initFragments();
     };
-
-    this.saberEls[0].object3D.position.y = 1.4;
-    this.saberEls[0].object3D.position.x = -0.4;
-    
-    this.saberEls[1].object3D.position.y = 1.4;
-    this.saberEls[1].object3D.position.x = 0.4;
-  },
-
-  updatePosition: function () {
-    const el = this.el;
-    const data = this.data;
-
-    el.object3D.position.set(
-      this.horizontalPositions[data.horizontalPosition],
-      this.verticalPositions[data.verticalPosition],
-      data.anticipationPosition + data.warmupPosition
-    );
-
-    el.object3D.rotation.z = THREE.Math.degToRad(this.rotations[data.cutDirection]);
   },
 
   update: function () {
-    // this.updatePosition();
     this.updateBlock();
     this.updateFragments();
-
-    // let frame = this.replayDecoder.replay.frames[this.frameNum];
-    
-    // this.saberEls[0].object3D.position.x = frame.l.p.x;
-    // this.saberEls[0].object3D.position.y = frame.l.p.y;
-    // this.saberEls[0].object3D.position.z = frame.l.p.z;
-
-    // this.saberEls[1].object3D.position.x = frame.r.p.x;
-    // this.saberEls[1].object3D.position.y = frame.r.p.y;
-    // this.saberEls[1].object3D.position.z = frame.r.p.z;
-
-    // this.saberEls[0].object3D.rotation.x = frame.l.r.x;
-    // this.saberEls[0].object3D.rotation.y = frame.l.r.y;
-    // this.saberEls[0].object3D.rotation.z = frame.l.r.z;
-
-    // this.saberEls[1].object3D.rotation.x = frame.r.r.x;
-    // this.saberEls[1].object3D.rotation.y = frame.r.r.y;
-    // this.saberEls[1].object3D.rotation.z = frame.r.r.z;
-
-    // this.frameNum += 1;
 
     if (this.data.type === 'mine') {
       this.poolName = `pool__beat-mine`;
@@ -207,7 +167,7 @@ AFRAME.registerComponent('beat', {
   },
 
   play: function () {
-    this.glow = this.el.sceneEl.components['pool__beat-glow'].requestEntity();
+    // this.glow = this.el.sceneEl.components['pool__beat-glow'].requestEntity();
     this.blockEl.object3D.visible = true;
     this.destroyed = false;
     this.el.object3D.visible = true;
@@ -220,10 +180,6 @@ AFRAME.registerComponent('beat', {
     const rotation = el.object3D.rotation;
 
     if (this.destroyed) {
-      if (this.data.index) {
-        this.el.emit('beatend', {score: this.replayPlayer.score, index: this.data.index}, true);
-      }
-      
       this.tockDestroyed(timeDelta);
       // Check to remove score entity from pool.
     } else {
@@ -461,20 +417,22 @@ AFRAME.registerComponent('beat', {
     wrongEl.object3D.position.z -= 0.5;
     wrongEl.object3D.visible = true;
     wrongEl.emit('beatwrong', null, true);
+    this.postEndEvent();
     this.destroyed = true;
   },
 
   missHit: function (hand) {
-    var missEl = hand === 'left' ? this.missElLeft : this.missElRight;
-    if (!missEl || this.data.type === 'mine') { return; }
-    missEl.object3D.position.copy(this.el.object3D.position);
-    missEl.object3D.position.y += 0.2;
-    missEl.object3D.position.z -= 0.5;
-    missEl.object3D.visible = true;
-    missEl.emit('beatmiss', null, true);
+    if (this.data.type === 'mine') { return; }
+    
+    this.showScore();
+    this.postEndEvent();
     if (AFRAME.utils.getUrlParameter('synctest')) {
       console.log(this.el.sceneEl.components.song.getCurrentTime());
     }
+  },
+
+  postEndEvent: function () {
+      this.el.emit('beatend', {index: this.data.index}, true);
   },
 
   destroyMine: function () {
@@ -770,6 +728,7 @@ AFRAME.registerComponent('beat', {
 
     hitEventDetail.score = score;
     this.el.emit('beathit', hitEventDetail, true);
+    this.postEndEvent();
     this.el.sceneEl.emit('textglowbold', null, false);
 
     let beatScorePool;
@@ -783,11 +742,26 @@ AFRAME.registerComponent('beat', {
       this.superCutIdx = (this.superCutIdx + 1) % this.superCuts.length;
     }
 
-    const scoreEl = this.el.sceneEl.querySelectorAll(".beatscoreok" + Math.round(this.replayPlayer.score.lastNoteScore))[0];
-    if (scoreEl) {
-      scoreEl.object3D.position.copy(this.el.object3D.position);
-      scoreEl.play();
-      scoreEl.emit('beatscorestart', null, false);
+    this.showScore();
+  },
+
+  showScore: function () {
+    let score = this.replayLoader.replay.scores[this.data.index];
+    if (score == 0) {
+      var missEl = hand === 'left' ? this.missElLeft : this.missElRight;
+      if (!missEl) { return; }
+      missEl.object3D.position.copy(this.el.object3D.position);
+      missEl.object3D.position.y += 0.2;
+      missEl.object3D.position.z -= 0.5;
+      missEl.object3D.visible = true;
+      missEl.emit('beatmiss', null, true);
+    } else {
+      const scoreEl = this.el.sceneEl.querySelectorAll(".beatscoreok" + score)[0];
+      if (scoreEl) {
+        scoreEl.object3D.position.copy(this.el.object3D.position);
+        scoreEl.play();
+        scoreEl.emit('beatscorestart', null, false);
+      }
     }
   },
 

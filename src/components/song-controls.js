@@ -113,7 +113,7 @@ AFRAME.registerComponent('song-controls', {
       // Get new audio buffer source (needed every time audio is stopped).
       // Start audio at seek time.
       const time = percent * this.song.source.buffer.duration;
-      this.seek(time);
+      this.seek(time >= 0 ? time : 0);
       // setTimeQueryParam(time);
     });
 
@@ -135,6 +135,16 @@ AFRAME.registerComponent('song-controls', {
     // Pause.
     document.getElementById('controlsPause').addEventListener('click', () => {
       this.el.sceneEl.emit('pausegame', null, false);
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === ' ') {
+        if (this.song.isPlaying) {
+          this.el.sceneEl.emit('pausegame', null, false);
+        } else {
+          this.el.sceneEl.emit('gamemenuresume', null, false);
+        }
+      }
     });
 
     // Difficulty dropdown.
@@ -194,12 +204,27 @@ AFRAME.registerComponent('song-controls', {
     });
 
     // Update volume.
-    document.getElementById('volumeSlider').addEventListener('change', evt => {
+    let volumeSlider = document.getElementById('volumeSlider');
+    let volumeHandler = () => {
       this.song.audioAnalyser.gainNode.gain.cancelScheduledValues(0);
-      this.song.audioAnalyser.gainNode.gain.value = evt.target.value;
+      this.song.audioAnalyser.gainNode.gain.value = volumeSlider.value;
       document.getElementById('beatContainer').components['beat-hit-sound']
-        .setVolume(evt.target.value);
+        .setVolume(volumeSlider.value);
+    }
+    volumeSlider.addEventListener('input', evt => {
+      volumeHandler();
     });
+
+    volumeSlider.addEventListener("wheel", function(e){
+      if (e.deltaY < 0){
+        volumeSlider.valueAsNumber += 0.05;
+      }else{
+        volumeSlider.value -= 0.05;
+      }
+      volumeHandler();
+      e.preventDefault();
+      e.stopPropagation();
+    })
 
     // document.getElementById('speedSlider').addEventListener('change', evt => {
     //   this.song.source.playbackRate.value = evt.target.value;
@@ -226,7 +251,7 @@ AFRAME.registerComponent('song-controls', {
       // Tell beat generator about seek.
       this.el.components['beat-generator'].seek(time);
 
-      this.updatePlayhead();
+      this.updatePlayhead(true);
     }, ONCE);
 
     this.song.audioAnalyser.refreshSource();
@@ -276,11 +301,14 @@ AFRAME.registerComponent('song-controls', {
     });
   },
 
-  updatePlayhead: function () {
+  updatePlayhead: function (seek) {
     const progress = Math.max(
       0,
       Math.min(100, 100 * (this.song.getCurrentTime() / this.song.source.buffer.duration)));
     this.playhead.style.width = progress + '%';
+    if (seek) {
+      this.el.sceneEl.emit('timechanged', { newTime: this.song.getCurrentTime() }, null);
+    }
   }
 });
 

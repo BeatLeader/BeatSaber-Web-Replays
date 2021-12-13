@@ -13,11 +13,17 @@ AFRAME.registerComponent('replay-player', {
           lastNoteScore: 0,
           multiplier: 1
         }
+
+        this.saberEls[0].object3D.position.y = 1.4;
+        this.saberEls[0].object3D.position.x = -0.4;
+        
+        this.saberEls[1].object3D.position.y = 1.4;
+        this.saberEls[1].object3D.position.x = 0.4;
     },
 
     tock: function (time, delta) {
         if (this.song.isPlaying && this.replayDecoder.replay) {
-          let currentTime = this.song.getCurrentTime() - 0.06;
+          let currentTime = this.song.getCurrentTime() - 0.075;
           let frames = this.replayDecoder.replay.frames;
           var frameIndex = 0;
           for (var i = 0; i < frames.length; i++) {
@@ -53,75 +59,6 @@ AFRAME.registerComponent('replay-player', {
           this.saberEls[1].object3D.rotation.x = rrotation.x;
           this.saberEls[1].object3D.rotation.y = rrotation.y + Math.PI;
           this.saberEls[1].object3D.rotation.z = -rrotation.z;
-
-          let combos = this.replayDecoder.replay.combos;
-          var comboIndex = combos.length - 1;
-          
-          for (var i = 0; i < combos.length; i++) {
-            if (combos[i].a >= currentTime) {
-              comboIndex = i;
-              comboTime = combos[i].a;
-              break;
-            }
-          }
-
-          let scores = this.replayDecoder.replay.scores;
-          var comboTime = combos[comboIndex].a, lastComboTime = comboIndex == 0 ? 0 : combos[comboIndex - 1].a;
-
-          var currentScore, scoreIndex, lastScoreIndex;
-          for (var i = 0; i < scores.length; i++) {
-            if (!lastScoreIndex && scores[i].a >= lastComboTime) {
-              lastScoreIndex = i;
-            }
-
-            if (!scoreIndex && scores[i].a >= comboTime) {
-              scoreIndex = i;
-            }
-
-            if (!currentScore && scores[i].a >= currentTime) {
-              currentScore = i;
-            }
-
-            if (lastScoreIndex && scoreIndex && currentScore) break;
-          }
-
-          lastScoreIndex = lastScoreIndex ? lastScoreIndex : scores.length - 2;
-          scoreIndex = scoreIndex ? scoreIndex : scores.length - 1;
-          currentScore = currentScore ? currentScore : scores.length - 1;
-
-          let multiplier = this.multiplier(combos[comboIndex].i);
-
-          if (comboIndex == 0) {
-            this.score = {
-              totalScore: scores[currentScore].i,
-              combo: combos[comboIndex].i,
-              acc: 0,
-              lastNoteScore: scores[scoreIndex].i / multiplier,
-              multiplier: multiplier
-            }
-          } else {
-            this.score = {
-              totalScore: scores[currentScore].i,
-              combo: combos[comboIndex].i,
-              acc: 0,
-              lastNoteScore: (scores[scoreIndex].i - scores[lastScoreIndex].i) / multiplier,
-              multiplier: multiplier
-            }
-          }
-
-          // console.log(frame.a + " - " + scores[scoreIndex].i + " - " + currentScore + " - " + currentTime);
-          // console.log((scores[scoreIndex].i - scores[lastScoreIndex].i) / this.multiplier(combos[comboIndex].i));
         }
-      },
-    multiplier: function (combo) {
-      if (combo < 2) {
-        return 1;
-      } if (combo < 6) {
-        return 2;
-      } if (combo < 14) {
-        return 4;
-      } else {
-        return 8;
       }
-    }
 });

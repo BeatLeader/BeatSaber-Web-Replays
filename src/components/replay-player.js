@@ -30,8 +30,9 @@ AFRAME.registerComponent('replay-player', {
     },
 
     tock: function (time, delta) {
-        if (this.song.isPlaying && this.replayDecoder.replay) {
-          let currentTime = this.song.getCurrentTime() - 0.075;
+      let replay = this.replayDecoder.replay;
+        if (this.song.isPlaying && replay) {
+          let currentTime = this.song.getCurrentTime() - replay.info.midDeviation;
           let frames = this.replayDecoder.replay.frames;
           var frameIndex = 0;
           for (var i = 0; i < frames.length; i++) {

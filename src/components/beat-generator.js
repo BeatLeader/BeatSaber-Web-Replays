@@ -47,7 +47,7 @@ AFRAME.registerComponent('beat-generator', {
     this.bpm = undefined;
     this.stageColors = this.el.components['stage-colors'];
     // Beats arrive at sword stroke distance synced with the music.
-    this.swordOffset = 1.5;
+    this.swordOffset = 1.0;
     this.twister = document.getElementById('twister');
     this.leftStageLasers = document.getElementById('leftStageLasers');
     this.rightStageLasers = document.getElementById('rightStageLasers');
@@ -100,7 +100,7 @@ AFRAME.registerComponent('beat-generator', {
     this.beatOffset = this.beatOffsets[this.data.mode][this.data.difficulty];
     this.bpm = this.info._beatsPerMinute;
 
-    this.beatAnticipationTime = 1.0 + this.beatOffset;
+    this.beatAnticipationTime = this.calculateJumpTime(this.bpm, this.beatSpeed, this.beatOffset);
     this.beatsPreloadTimeTotal =
       (this.beatAnticipationTime + this.data.beatWarmupTime) * 1000;
 
@@ -376,6 +376,25 @@ AFRAME.registerComponent('beat-generator', {
       return;
     }
     return pool.requestEntity();
+  },
+
+  calculateJumpTime: function (bpm, njs, offset) {
+    console.log(offset);
+      let halfjump = 4;
+      let num = 60 / bpm;
+
+      // Need to repeat this here even tho it's in BeatmapInfo because sometimes we call this function directly
+      if (njs <= 0.01) // Is it ok to == a 0f?
+          njs = 10;
+
+      while (njs * num * halfjump > 18)
+          halfjump /= 2;
+
+      halfjump += offset;
+      if (halfjump < 0.25)
+          halfjump = 0.25;
+
+      return num * halfjump;
   },
 
   /**

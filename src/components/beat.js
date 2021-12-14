@@ -43,6 +43,7 @@ AFRAME.registerComponent('beat', {
     type: {default: 'arrow', oneOf: ['arrow', 'dot', 'mine']},
     verticalPosition: {default: 1},
     warmupPosition: {default: 0},
+    timeOffset: {default: 0}
   },
 
   materialColor: {
@@ -191,31 +192,25 @@ AFRAME.registerComponent('beat', {
         // Warm up / warp in.
         if (newPositionZ < data.anticipationPosition) {
           position.z = newPositionZ;
+          position.z += this.data.speed * (-data.timeOffset);
         } else {
           position.z = data.anticipationPosition;
           this.beams.newBeam(this.data.color, position);
         }
+        console.log(data.timeOffset);
       } else {
-        const oldPosition = position.z;
 
         // Standard moving.
         position.z += this.data.speed * (timeDelta / 1000);
         rotation.z = this.startRotationZ;
-
-        // if (oldPosition < -1 * SWORD_OFFSET && position.z >= -1 * SWORD_OFFSET) {
-        //   this.returnToPoolTimeStart = time;
-        //   if (this.data.type === 'mine') {
-        //     this.destroyMine();
-        //   } else {
-        //     this.destroyBeat();
-        //   }
-        // }
       }
 
+      let warmupRotationTime = BEAT_WARMUP_ROTATION_TIME * (0.8 + data.anticipationPosition / 20);
+
       if (position.z > (data.anticipationPosition - BEAT_WARMUP_ROTATION_OFFSET) &&
-          this.currentRotationWarmupTime < BEAT_WARMUP_ROTATION_TIME) {
+          this.currentRotationWarmupTime < warmupRotationTime) {
         const progress = AFRAME.ANIME.easings.easeOutBack(
-          this.currentRotationWarmupTime / BEAT_WARMUP_ROTATION_TIME);
+          this.currentRotationWarmupTime / warmupRotationTime);
         el.object3D.rotation.z = this.rotationZStart + (progress * this.rotationZChange);
         this.currentRotationWarmupTime += timeDelta;
       }
@@ -297,8 +292,8 @@ AFRAME.registerComponent('beat', {
         }, ONCE);
       }
     } else {
-      signEl.setAttribute('materials', {name: 'stageAdditive'});
-      this.setObjModelFromTemplate(signEl, this.signModels[this.data.type + this.data.color]);
+      // signEl.setAttribute('materials', "name: stageAdditive");
+      this.setObjModelFromTemplate(signEl, this.signModels[this.data.type + this.data.color], this.el.sceneEl.systems.materials.stageAdditive);
     }
   },
 
@@ -818,7 +813,7 @@ AFRAME.registerComponent('beat', {
   setObjModelFromTemplate: (function () {
     const geometries = {};
 
-    return function (el, templateId) {
+    return function (el, templateId, material) {
       if (!geometries[templateId]) {
         const templateEl = document.getElementById(templateId);
         if (templateEl.getObject3D('mesh')) {
@@ -834,6 +829,9 @@ AFRAME.registerComponent('beat', {
 
       if (!el.getObject3D('mesh')) { el.setObject3D('mesh', new THREE.Mesh()); }
       el.getObject3D('mesh').geometry = geometries[templateId];
+      if (material) {
+        el.getObject3D('mesh').material = material;
+      }
     };
   })()
 });

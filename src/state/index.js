@@ -18,7 +18,7 @@ const emptyChallenge = {
   author: '',
   difficulty: '',
   id: '',
-  image: 'assets/img/logo.png',
+  image: '',
   songName: '',
   songNameMedium: '',
   songNameShort: '',
@@ -81,7 +81,8 @@ AFRAME.registerState({
     isPlaying: false,  // Actively playing.
     isFinished: false,
     isSafari: isSafari,
-    isSongBufferProcessing: false
+    isSongBufferProcessing: false,
+    showHeadset: false
   },
 
   handlers: {
@@ -333,6 +334,10 @@ AFRAME.registerState({
       state.hasReceivedUserGesture = true;
     },
 
+    settingsChanged: (state, payload) => {
+      state.showHeadset = payload.showHeadset;
+    },
+
     'enter-vr': state => {
       state.inVR = true;
     },
@@ -348,7 +353,7 @@ AFRAME.registerState({
   computeState: state => {
     state.isPlaying =
       !state.isPaused && !state.isSongBufferProcessing &&
-      !state.challenge.isLoading && state.hasReceivedUserGesture;
+      !state.challenge.isLoading && !state.replay.isLoading && !state.challenge.hasLoadError && !state.replay.hasError && state.hasReceivedUserGesture;
   }
 });
 

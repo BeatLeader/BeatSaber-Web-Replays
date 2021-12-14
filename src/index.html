@@ -58,7 +58,8 @@
       user-gesture
       replay-loader
       replay-player
-      camera-mover>
+      camera-mover
+      settings>
 
       <a-assets timeout="10000">
         {% include './assets.html' %}
@@ -196,6 +197,18 @@
         id="cursorMesh"
         material="shader: flat; transparent: true; src: #cursorMeshImg; depthTest: false"
         ></a-mixin>
+
+            <!-- Player. -->
+      <a-entity 
+        id="cameraRig" 
+        class="headset" 
+        obj-model="obj: #questObj"
+        bind__visible="isPlaying && showHeadset"
+        position="0 1.7 0.0"
+        active=false>
+        <a-entity id="camera" rotation="0 0 -1" camera>
+        </a-entity>
+      </a-entity>
 
       <a-entity
         id="mouseCursor"

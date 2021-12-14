@@ -75,10 +75,6 @@ AFRAME.registerComponent('beat-generator', {
   update: function (oldData) {
     if (!this.beatmaps) { return; }
 
-    if (oldData.isPlaying && !this.data.isPlaying) {
-      this.clearBeats(true);
-    }
-
     if ((oldData.difficulty && oldData.difficulty !== this.data.difficulty) ||
         (oldData.mode && oldData.mode !== this.data.mode)) {
       this.beatData = this.beatmaps[this.data.mode][this.data.difficulty];
@@ -154,7 +150,7 @@ AFRAME.registerComponent('beat-generator', {
     // Skip a frame to update prevBeats data.
     if (this.isSeeking) {
       this.isSeeking = false;
-      return;
+      // return;
     }
 
     // Load in stuff scheduled between the last timestamp and current timestamp.
@@ -205,9 +201,7 @@ AFRAME.registerComponent('beat-generator', {
   seek: function (time) {
     this.clearBeats(true);
     this.beatsTime = (
-      time +
-      this.beatAnticipationTime +
-      this.data.beatWarmupTime
+      time
     ) * 1000;
     this.isSeeking = true;
   },
@@ -247,7 +241,6 @@ AFRAME.registerComponent('beat-generator', {
 
       // Apply sword offset. Blocks arrive on beat in front of the user.
       beatObj.anticipationPosition = -this.beatAnticipationTime * this.beatSpeed - this.swordOffset;
-      // beatObj.anticipationPosition += beatObj.anticipationPosition * this.beatOffset
       beatObj.color = color;
       beatObj.cutDirection = this.orientationsHumanized[note._cutDirection];
       beatObj.speed = this.beatSpeed;
@@ -255,6 +248,10 @@ AFRAME.registerComponent('beat-generator', {
       beatObj.type = type;
       beatObj.warmupPosition = -data.beatWarmupTime * data.beatWarmupSpeed;
       beatObj.index = note.index;
+
+      const sPerBeat = 60 / this.bpm;
+      beatObj.timeOffset = note._time * sPerBeat - this.el.components.song.getCurrentTime() - this.beatAnticipationTime -
+      this.data.beatWarmupTime;
 
       if (this.mappingExtensions) {
         note._lineIndex = note._lineIndex < 0

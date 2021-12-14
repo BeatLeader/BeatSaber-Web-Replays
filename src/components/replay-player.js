@@ -4,6 +4,7 @@ AFRAME.registerComponent('replay-player', {
 
     init: function () {
         this.saberEls = this.el.sceneEl.querySelectorAll('[saber-controls]');
+        
         this.replayDecoder = this.el.sceneEl.components['replay-loader'];
         this.song = this.el.sceneEl.components.song;
         this.score = {
@@ -19,6 +20,13 @@ AFRAME.registerComponent('replay-player', {
         
         this.saberEls[1].object3D.position.y = 1.4;
         this.saberEls[1].object3D.position.x = 0.4;
+
+        
+    },
+
+    play: function () {
+      this.headset = this.el.sceneEl.querySelectorAll('.headset')[0];
+      this.headset.object3D.position.y = 1.75;
     },
 
     tock: function (time, delta) {
@@ -45,6 +53,10 @@ AFRAME.registerComponent('replay-player', {
           this.saberEls[1].object3D.position.x = frame.r.p.x;
           this.saberEls[1].object3D.position.y = frame.r.p.y;// + (height - 2.0);
           this.saberEls[1].object3D.position.z = -frame.r.p.z;
+
+          this.headset.object3D.position.x = frame.h.p.x;
+          this.headset.object3D.position.y = frame.h.p.y;
+          this.headset.object3D.position.z = -frame.h.p.z;
     
           var lquat = new THREE.Quaternion(frame.l.r.w, frame.l.r.z, frame.l.r.y, frame.l.r.x).slerp(new THREE.Quaternion(nextFrame.l.r.w, nextFrame.l.r.z, nextFrame.l.r.y, nextFrame.l.r.x), 0.2);
           var lrotation = new THREE.Euler().setFromQuaternion(lquat);
@@ -59,6 +71,13 @@ AFRAME.registerComponent('replay-player', {
           this.saberEls[1].object3D.rotation.x = rrotation.x;
           this.saberEls[1].object3D.rotation.y = rrotation.y + Math.PI;
           this.saberEls[1].object3D.rotation.z = -rrotation.z;
+
+          var hquat = new THREE.Quaternion(frame.h.r.w, frame.h.r.z, frame.h.r.y, frame.h.r.x).slerp(new THREE.Quaternion(nextFrame.h.r.w, nextFrame.h.r.z, nextFrame.h.r.y, nextFrame.h.r.x), 0.2);
+          var hrotation = new THREE.Euler().setFromQuaternion(hquat);
+    
+          this.headset.object3D.rotation.x = hrotation.x
+          this.headset.object3D.rotation.y = hrotation.y + Math.PI;
+          this.headset.object3D.rotation.z = hrotation.z + Math.PI;;
         }
       }
 });

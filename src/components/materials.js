@@ -41,32 +41,6 @@ AFRAME.registerSystem('materials', {
       transparent: true
     });
 
-    this.logo = new THREE.ShaderMaterial({
-      uniforms: {
-        src: {
-          value: new THREE.TextureLoader().load(document.getElementById('logotexImg').src)
-        },
-      },
-      vertexShader: flatShaders.vertexShader,
-      fragmentShader: flatShaders.fragmentShader,
-      fog: false,
-      transparent: true
-    });
-
-    this.logoadditive = new THREE.ShaderMaterial({
-      uniforms: {
-        src: {
-          value: new THREE.TextureLoader().load(document.getElementById('logotexImg').src)
-        },
-      },
-      vertexShader: flatShaders.vertexShader,
-      fragmentShader: flatShaders.fragmentShader,
-      depthTest: false,
-      blending: THREE.AdditiveBlending,
-      fog: false,
-      transparent: true
-    });
-
     this.mineMaterialred = new THREE.MeshStandardMaterial({
       roughness: 0.38,
       metalness: 0.48,

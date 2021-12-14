@@ -197,7 +197,6 @@ AFRAME.registerComponent('beat', {
           position.z = data.anticipationPosition;
           this.beams.newBeam(this.data.color, position);
         }
-        console.log(data.timeOffset);
       } else {
 
         // Standard moving.

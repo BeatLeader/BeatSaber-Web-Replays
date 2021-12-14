@@ -136,11 +136,6 @@ html
     display flex
     flex-direction column
     padding-left 5px
-  #settings
-    display flex
-    flex-direction column
-    padding-left 80px
-    padding-top 16px
   #songName
     color $gray
     font-weight bold
@@ -464,6 +459,15 @@ html
   background-color: #FF94C8;
 }
 
+#settings {
+  position: absolute;
+  right: 130px;
+  bottom: 15px;
+  font-family $font
+  font-size 11px
+}
+    
+
 .switch {
   position: relative;
   display: inline-block;
@@ -527,7 +531,7 @@ input:checked + .slider:before {
 }
 
 .toggleButtonLabel {
-  top: -3px;
+  top: 1px;
   position: relative;
   display: inline-block;
   width: 30px;

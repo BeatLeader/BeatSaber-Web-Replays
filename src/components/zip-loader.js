@@ -47,6 +47,7 @@ AFRAME.registerComponent('zip-loader', {
       audio: '',
       beatmaps: {Standard: {}},
       beatSpeeds: {Standard: {}},
+      beatOffsets: {Standard: {}},
       difficulties: {Standard: []},
       id: isDragDrop ? '' : this.data.id,
       image: '',
@@ -78,11 +79,13 @@ AFRAME.registerComponent('zip-loader', {
       const mode = set._beatmapCharacteristicName;
       event.beatmaps[mode] = {};
       event.beatSpeeds[mode] = {};
+      event.beatOffsets[mode] = {};
 
       const diffBeatmaps = set._difficultyBeatmaps.sort(d => d._difficultyRank);
       diffBeatmaps.forEach(diff => {
         event.beatmaps[mode][diff._difficulty] = loader.extractAsJSON(diff._beatmapFilename);
         event.beatSpeeds[mode][diff._difficulty] = diff._noteJumpMovementSpeed;
+        event.beatOffsets[mode][diff._difficulty] = diff._noteJumpStartBeatOffset;
 
         // TODO: Assume for now if one difficulty wants extensions, they all do. Fix later.
         if (diff._customData &&

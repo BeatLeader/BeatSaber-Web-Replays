@@ -40,11 +40,11 @@ AFRAME.registerComponent('replay-player', {
           
           this.saberEls[0].object3D.position.x = frame.l.p.x;
           this.saberEls[0].object3D.position.y = frame.l.p.y;// + (height - 2.0);
-          this.saberEls[0].object3D.position.z = frame.l.p.z;
+          this.saberEls[0].object3D.position.z = -frame.l.p.z;
     
           this.saberEls[1].object3D.position.x = frame.r.p.x;
           this.saberEls[1].object3D.position.y = frame.r.p.y;// + (height - 2.0);
-          this.saberEls[1].object3D.position.z = frame.r.p.z;
+          this.saberEls[1].object3D.position.z = -frame.r.p.z;
     
           var lquat = new THREE.Quaternion(frame.l.r.w, frame.l.r.z, frame.l.r.y, frame.l.r.x).slerp(new THREE.Quaternion(nextFrame.l.r.w, nextFrame.l.r.z, nextFrame.l.r.y, nextFrame.l.r.x), 0.2);
           var lrotation = new THREE.Euler().setFromQuaternion(lquat);

@@ -17,7 +17,6 @@ AFRAME.registerComponent('beat-generator', {
   dependencies: ['stage-colors'],
 
   schema: {
-    beatAnticipationTime: {default: 1.1},
     beatWarmupTime: {default: BEAT_WARMUP_TIME / 1000},
     beatWarmupSpeed: {default: BEAT_WARMUP_SPEED},
     difficulty: {type: 'string'},
@@ -45,8 +44,6 @@ AFRAME.registerComponent('beat-generator', {
     this.beatContainer = document.getElementById('beatContainer');
     this.beatsTime = undefined;
     this.beatsPreloadTime = 0;
-    this.beatsPreloadTimeTotal =
-      (this.data.beatAnticipationTime + this.data.beatWarmupTime) * 1000;
     this.bpm = undefined;
     this.stageColors = this.el.components['stage-colors'];
     // Beats arrive at sword stroke distance synced with the music.
@@ -60,6 +57,7 @@ AFRAME.registerComponent('beat-generator', {
       this.beatmaps = evt.detail.beatmaps;
       this.beatData = this.beatmaps.Standard[this.data.difficulty || evt.detail.difficulty];
       this.beatSpeeds = evt.detail.beatSpeeds;
+      this.beatOffsets = evt.detail.beatOffsets;
       this.info = evt.detail.info;
       this.processBeats();
 
@@ -103,7 +101,12 @@ AFRAME.registerComponent('beat-generator', {
     this.beatData._obstacles.sort(lessThan);
     this.beatData._notes.sort(lessThan);
     this.beatSpeed = this.beatSpeeds[this.data.mode][this.data.difficulty];
+    this.beatOffset = this.beatOffsets[this.data.mode][this.data.difficulty];
     this.bpm = this.info._beatsPerMinute;
+
+    this.beatAnticipationTime = 1.0 + this.beatOffset;
+    this.beatsPreloadTimeTotal =
+      (this.beatAnticipationTime + this.data.beatWarmupTime) * 1000;
 
     // Some events have negative time stamp to initialize the stage.
     const events = this.beatData._events;
@@ -139,7 +142,7 @@ AFRAME.registerComponent('beat-generator', {
     if (this.beatsPreloadTime === undefined) {
       // Get current song time.
       if (!song.isPlaying) { return; }
-      this.beatsTime = (song.getCurrentTime() + this.data.beatAnticipationTime +
+      this.beatsTime = (song.getCurrentTime() + this.beatAnticipationTime +
                         this.data.beatWarmupTime) * 1000;
       this.eventsTime = song.getCurrentTime() * 1000;
     } else {
@@ -203,7 +206,7 @@ AFRAME.registerComponent('beat-generator', {
     this.clearBeats(true);
     this.beatsTime = (
       time +
-      this.data.beatAnticipationTime +
+      this.beatAnticipationTime +
       this.data.beatWarmupTime
     ) * 1000;
     this.isSeeking = true;
@@ -243,7 +246,8 @@ AFRAME.registerComponent('beat-generator', {
       const data = this.data;
 
       // Apply sword offset. Blocks arrive on beat in front of the user.
-      beatObj.anticipationPosition = -data.beatAnticipationTime * this.beatSpeed - this.swordOffset;
+      beatObj.anticipationPosition = -this.beatAnticipationTime * this.beatSpeed - this.swordOffset;
+      // beatObj.anticipationPosition += beatObj.anticipationPosition * this.beatOffset
       beatObj.color = color;
       beatObj.cutDirection = this.orientationsHumanized[note._cutDirection];
       beatObj.speed = this.beatSpeed;
@@ -286,7 +290,7 @@ AFRAME.registerComponent('beat-generator', {
 
       const durationSeconds = 60 * (wall._duration / this.bpm);
       wallObj.anticipationPosition =
-        -data.beatAnticipationTime * this.beatSpeed - this.swordOffset;
+        -this.beatAnticipationTime * this.beatSpeed - this.swordOffset;
       wallObj.durationSeconds = durationSeconds;
       wallObj.horizontalPosition = wall._lineIndex;
       wallObj.isCeiling = wall._type === 1;

@@ -376,6 +376,6 @@ function updateScore (state, payload) {
   state.score.accuracy = note.accuracy;
   state.lastNoteTime = note.time;
 
-  console.log(note.score + " - " + note.index + " - " + note.time);
+  // console.log(note.score + " - " + note.index + " - " + note.time);
 }
 

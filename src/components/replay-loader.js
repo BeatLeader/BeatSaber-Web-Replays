@@ -65,14 +65,26 @@ AFRAME.registerComponent('replay-loader', {
     processScores: function () {
       const replay = this.replay;
       var noteStructs = new Array();
+      var bombStructs = new Array();
+      var index = 0;
       for (var i = 0; i < replay.scores.length; i++) {
-        let note = {
-          score: replay.scores[i],
-          time: replay.noteTime[i],
-          combo: replay.combos[i],
-          index: i
+
+        if (replay.scores[i] == -4) {
+          let bomb = {
+            time: replay.noteTime[i]
+          }
+          bombStructs.push(bomb);
+        } else {
+          let note = {
+            score: replay.scores[i],
+            time: replay.noteTime[i],
+            combo: replay.combos[i],
+            index: index
+          }
+          index++;
+          noteStructs.push(note);
+          console.log(i + " -- " + note.score + " -- " + note.combo);
         }
-        noteStructs.push(note);
       }
 
       noteStructs.sort(function(a, b) {
@@ -87,10 +99,9 @@ AFRAME.registerComponent('replay-loader', {
       for (var i = 0; i < noteStructs.length; i++) {
         let note = noteStructs[i];
 
-        if (note.combo == 0) {
+        if (note.score < 0) {
           multiplier = multiplier > 1 ? Math.ceil(multiplier / 2) : 1;
           lastmultiplier = multiplier;
-          note.score = 0;
         } else {
           score += multiplier * note.score;
           multiplier = this.multiplierForCombo(this.comboForMultiplier(lastmultiplier) + note.combo);

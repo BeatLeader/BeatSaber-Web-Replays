@@ -4,9 +4,8 @@ AFRAME.registerComponent('settings', {
   
     init: function () {
 
-      document.getElementById('headsetToggle').addEventListener('input', (el) => {
-        el.checked = !el.checked;
-        this.el.sceneEl.emit('settingsChanged', {showHeadset: el.checked}, false);
+      document.getElementById('headsetToggle').addEventListener('input', (event) => {
+        this.el.sceneEl.emit('settingsChanged', {showHeadset: event.srcElement.checked}, false);
       });
     },
   });

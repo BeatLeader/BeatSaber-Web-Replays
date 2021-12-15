@@ -373,7 +373,7 @@ function takeDamage (state) {
 
 function updateScore (state, payload) {
   let note = state.notes.find(e => e.index == payload.index);
-  if (note.time <= state.lastNoteTime) return;
+  if (note.time < state.lastNoteTime) return;
 
   state.score.score = note.totalScore;
   state.score.combo = note.combo;

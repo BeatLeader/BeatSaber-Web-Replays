@@ -403,22 +403,10 @@ AFRAME.registerComponent('beat', {
     }
   },
 
-  wrongHit: function (hand) {
-    var wrongEl = hand === 'left' ? this.wrongElLeft : this.wrongElRight;
-    if (!wrongEl) { return; }
-    wrongEl.object3D.position.copy(this.el.object3D.position);
-    wrongEl.object3D.position.y += 0.2;
-    wrongEl.object3D.position.z -= 0.5;
-    wrongEl.object3D.visible = true;
-    wrongEl.emit('beatwrong', null, true);
-    this.postEndEvent();
-    this.destroyed = true;
-  },
-
   missHit: function (hand) {
     if (this.data.type === 'mine') { return; }
     
-    this.showScore();
+    this.showScore(hand);
     this.postEndEvent();
     if (AFRAME.utils.getUrlParameter('synctest')) {
       console.log(this.el.sceneEl.components.song.getCurrentTime());
@@ -656,40 +644,29 @@ AFRAME.registerComponent('beat', {
         }
 
         this.destroyBeat(saberEls[i]);
+        this.hitSaberEl = saberEls[i];
+        this.hitSaberEl.addEventListener('strokeend', this.onEndStroke, ONCE);
+        saberControls = saberEls[i].components['saber-controls'];
+        this.hitHand = hand;
+        saberControls.maxAnglePlaneX = 0;
+        saberControls.maxAnglePlaneY = 0;
+        saberControls.maxAnglePlaneXY = 0;
 
-        // if (saberEls[i].components['saber-controls'].swinging &&
-        //     this.data.color === saberColors[hand]) {
-          this.hitSaberEl = saberEls[i];
-          this.hitSaberEl.addEventListener('strokeend', this.onEndStroke, ONCE);
-          saberControls = saberEls[i].components['saber-controls'];
-          this.hitHand = hand;
-          saberControls.maxAnglePlaneX = 0;
-          saberControls.maxAnglePlaneY = 0;
-          saberControls.maxAnglePlaneXY = 0;
+        if (this.data.type === 'arrow') {
+          saberControls.updateStrokeDirection();
 
-          if (this.data.type === 'arrow') {
-            saberControls.updateStrokeDirection();
-            // if (!saberControls.strokeDirection[this.data.cutDirection]) {
-            //   this.wrongHit(hand);
-            //   break;
-            // }
-
-            if (cutDirection === 'up' || cutDirection === 'down') {
-              maxAngle = saberControls.maxAnglePlaneX;
-            } else if (cutDirection === 'left' || cutDirection === 'right') {
-            maxAngle = saberControls.maxAnglePlaneY;
-            } else {
-              maxAngle = saberControls.maxAnglePlaneXY;
-            }
+          if (cutDirection === 'up' || cutDirection === 'down') {
+            maxAngle = saberControls.maxAnglePlaneX;
+          } else if (cutDirection === 'left' || cutDirection === 'right') {
+          maxAngle = saberControls.maxAnglePlaneY;
           } else {
-            maxAngle = Math.max(saberControls.maxAnglePlaneX, saberControls.maxAnglePlaneY,
-                                saberControls.maxAnglePlaneXY);
+            maxAngle = saberControls.maxAnglePlaneXY;
           }
-          this.angleBeforeHit = maxAngle;
-
-        // } else {
-        //   this.wrongHit(hand);
-        // }
+        } else {
+          maxAngle = Math.max(saberControls.maxAnglePlaneX, saberControls.maxAnglePlaneY,
+                              saberControls.maxAnglePlaneXY);
+        }
+        this.angleBeforeHit = maxAngle;
         break;
       }
     }
@@ -739,16 +716,27 @@ AFRAME.registerComponent('beat', {
     this.showScore();
   },
 
-  showScore: function () {
+  showScore: function (hand) {
     let score = this.replayLoader.replay.scores[this.data.index];
-    if (score == 0) {
-      var missEl = hand === 'left' ? this.missElLeft : this.missElRight;
-      if (!missEl) { return; }
-      missEl.object3D.position.copy(this.el.object3D.position);
-      missEl.object3D.position.y += 0.2;
-      missEl.object3D.position.z -= 0.5;
-      missEl.object3D.visible = true;
-      missEl.emit('beatmiss', null, true);
+    if (score < 0) {
+      if (score == -2) {
+        var missEl = hand === 'left' ? this.missElLeft : this.missElRight;
+        if (!missEl) { return; }
+        missEl.object3D.position.copy(this.el.object3D.position);
+        missEl.object3D.position.y += 0.2;
+        missEl.object3D.position.z -= 0.5;
+        missEl.object3D.visible = true;
+        missEl.emit('beatmiss', null, true);
+      } else if (score == -3) {
+        var wrongEl = hand === 'left' ? this.wrongElLeft : this.wrongElRight;
+        if (!wrongEl) { return; }
+        wrongEl.object3D.position.copy(this.el.object3D.position);
+        wrongEl.object3D.position.y += 0.2;
+        wrongEl.object3D.position.z -= 0.5;
+        wrongEl.object3D.visible = true;
+        wrongEl.emit('beatwrong', null, true);
+      }
+      
     } else {
       const scoreEl = this.el.sceneEl.querySelectorAll(".beatscoreok" + score)[0];
       if (scoreEl) {

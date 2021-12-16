@@ -4,8 +4,11 @@ AFRAME.registerComponent('camera-mover', {
 
     init: function () {
         this.pov = false
-        this.defaultCamera = this.el.sceneEl.camera;
-        this.povCamera = this.el.sceneEl.querySelectorAll('.headset')[0];
+        this.defaultCameraRig = this.el.sceneEl.querySelectorAll('.floatingCamera')[0];
+        this.povCameraRig = this.el.sceneEl.querySelectorAll('.headset')[0];
+
+        this.defaultCamera = this.el.sceneEl.querySelectorAll('.mainCamera')[0];
+        this.povCamera = this.el.sceneEl.querySelectorAll('.povCamera')[0];
     },
 
     play: function () {
@@ -14,9 +17,9 @@ AFRAME.registerComponent('camera-mover', {
         document.getElementById('povswitch').addEventListener('click', () => {
             if (this.pov) {
                 this.povCamera.setAttribute('camera', 'active', false);
-                this.defaultCamera.el.setAttribute('camera', 'active', true);
+                this.defaultCamera.setAttribute('camera', 'active', true);
             } else {
-                this.defaultCamera.el.setAttribute('camera', 'active', false);
+                this.defaultCamera.setAttribute('camera', 'active', false);
                 this.povCamera.setAttribute('camera', 'active', true);
             }
             this.pov = !this.pov;
@@ -25,11 +28,11 @@ AFRAME.registerComponent('camera-mover', {
           
         document.addEventListener("keydown", (e) => {
             if (e.key == 'c') {
-                this.el.sceneEl.camera.parent.position.y -= 0.1;
+                this.defaultCameraRig.object3D.position.y -= 0.1;
             } else if (e.key == 'x') {
-                this.el.sceneEl.camera.parent.position.y += 0.1;
+                this.defaultCameraRig.object3D.position.y += 0.1;
             }
         })
-        this.el.sceneEl.camera.parent.position.z = 2.0;
+        this.defaultCameraRig.object3D.position.z = 2.0;
     },
 });

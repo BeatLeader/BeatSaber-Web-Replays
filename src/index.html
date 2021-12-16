@@ -111,7 +111,7 @@
 
       <a-entity
         id="controllerRig"
-        proxy-event="event: recentered; to: #cameraRig; captureBubbles: true; as: recenter">
+        proxy-event="event: recentered; to: #headRig; captureBubbles: true; as: recenter">
         {% macro saber (hand, otherHand, bladeColor, beamColor) %}
           <a-entity id="{{ hand }}Hand"
             class="saber"
@@ -199,16 +199,21 @@
         ></a-mixin>
 
             <!-- Player. -->
+      <a-entity id="defaultRig" class="floatingCamera">
+        <a-entity id="mainCamera" class="mainCamera"  position="0 1.6 0.5" camera look-controls wasd-controls active="true">
+        </a-entity>
+      </a-entity>
       <a-entity 
-        id="cameraRig" 
+        id="headRig" 
         class="headset" 
         obj-model="obj: #questObj"
         bind__visible="isPlaying && showHeadset"
-        position="0 1.7 0.0"
-        active=false>
-        <a-entity id="camera" rotation="0 0 -1" camera>
+        position="0 1.7 0.0">
+        <a-entity id="povCamera" class="povCamera" rotation="0 0 -1" camera active="false">
         </a-entity>
       </a-entity>
+
+      
 
       <a-entity
         id="mouseCursor"

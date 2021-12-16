@@ -40,6 +40,20 @@ AFRAME.registerComponent('song-controls', {
     analyser.addEventListener('audioanalyserbuffersource', evt => {
       document.getElementById('songDuration').innerHTML =
         formatSeconds(evt.detail.buffer.duration);
+        if (this.notes) {
+          this.showMisses(this.notes, this.bombs, evt.detail.buffer, this);
+          this.notes = null;
+        }
+    });
+
+    this.el.sceneEl.addEventListener('replayloaded', (event) => {
+      if (this.song.source && this.song.source.buffer) {
+        this.showMisses(event.detail.notes, event.detail.bombs, this.song.source.buffer, this);
+      }
+      else {
+        this.notes = event.detail.notes;
+        this.bombs = event.detail.bombs;
+      }
     });
 
     this.songProgress = document.getElementById('songProgress');
@@ -65,7 +79,7 @@ AFRAME.registerComponent('song-controls', {
 
     document.getElementById('controlsDifficulty').innerHTML =
       this.customDifficultyLabels[data.difficulty] || data.difficulty;
-    document.getElementById('controlsMode').innerHTML = data.mode;
+    // document.getElementById('controlsMode').innerHTML = data.mode;
 
     if ((oldData.difficulty && oldData.difficulty !== data.difficulty) ||
         (oldData.mode && oldData.mode !== data.mode)) {
@@ -226,10 +240,59 @@ AFRAME.registerComponent('song-controls', {
       e.stopPropagation();
     })
 
-    // document.getElementById('speedSlider').addEventListener('change', evt => {
-    //   this.song.source.playbackRate.value = evt.target.value;
-    //   this.songSpeedPercent.innerHTML = (evt.target.value * 100) + "%";
-    // });
+    let speedSlider = document.getElementById('speedSlider');
+    speedSlider.addEventListener('input', evt => {
+      this.song.source.playbackRate.value = evt.target.value;
+      this.song.speed = evt.target.value;
+      this.songSpeedPercent.innerHTML = (evt.target.value * 100) + "%";
+    });
+
+    speedSlider.value = this.song.speed;
+  },
+
+  showMisses: (notes, bombs, buffer, target) => {
+    const timeline = target.timeline;
+
+    const marginLeft = timeline.getBoundingClientRect().left;
+    const width = timeline.getBoundingClientRect().width;
+    const duration = buffer.duration;
+
+    const container = document.createElement('div');
+
+    for (var i = 0; i < notes.length; i++) {
+      const note = notes[i];
+
+      if (note.score < 0) {
+        const img = document.createElement('img');
+        img.src = 'assets/img/wrong.png';
+        img.className = "missMark";
+        img.style.left = (((note.time) / duration) * width - 6) + 'px';
+        if (note.score == -2) {
+          img.title = "Miss"
+        } else if (note.score == -3) {
+          img.title = "Bad cut"
+        }
+        img.title += " at " + formatSeconds(note.time);
+        
+        container.appendChild(img);
+      }
+    }
+
+    if (bombs) {
+      for (var i = 0; i < bombs.length; i++) {
+        const note = bombs[i];
+        const img = document.createElement('img');
+        img.src = 'assets/img/explode.png';
+        img.className = "missMark";
+        img.style.left = (((note.time) / duration) * width - 6) + 'px';
+        img.title = "Bomb hit at " + formatSeconds(note.time);
+        
+        container.appendChild(img);
+      }
+    }
+    
+
+    timeline.appendChild(container);
   },
 
   tick: function () {

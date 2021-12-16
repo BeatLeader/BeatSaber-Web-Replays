@@ -137,6 +137,7 @@ AFRAME.registerComponent('beat', {
     this.explodeEventDetail = {position: new THREE.Vector3(), rotation: new THREE.Euler()};
     this.saberColors = {right: 'blue', left: 'red'};
     this.glow = null;
+    this.song = this.el.sceneEl.components.song;
 
     this.onEndStroke = this.onEndStroke.bind(this);
 
@@ -188,11 +189,11 @@ AFRAME.registerComponent('beat', {
 
       // Move.
       if (position.z < data.anticipationPosition) {
-        let newPositionZ = position.z + BEAT_WARMUP_SPEED * (timeDelta / 1000);
+        let newPositionZ = position.z + BEAT_WARMUP_SPEED * this.song.speed * (timeDelta / 1000);
         // Warm up / warp in.
         if (newPositionZ < data.anticipationPosition) {
           position.z = newPositionZ;
-          position.z += this.data.speed * (-data.timeOffset);
+          position.z += this.data.speed * this.song.speed * (-data.timeOffset);
         } else {
           position.z = data.anticipationPosition;
           this.beams.newBeam(this.data.color, position);
@@ -200,7 +201,7 @@ AFRAME.registerComponent('beat', {
       } else {
 
         // Standard moving.
-        position.z += this.data.speed * (timeDelta / 1000);
+        position.z += this.data.speed * this.song.speed * (timeDelta / 1000);
         rotation.z = this.startRotationZ;
       }
 

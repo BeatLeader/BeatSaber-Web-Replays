@@ -114,7 +114,7 @@ AFRAME.registerComponent('replay-loader', {
         // console.log(note.score + " - " + noteIndex);
       }
 
-      this.el.sceneEl.emit('replayloaded', { notes: noteStructs }, null);
+      this.el.sceneEl.emit('replayloaded', { notes: noteStructs, bombs: bombStructs}, null);
     },
     maxScoreForNote(index) {
       if (index < 2) {

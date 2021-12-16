@@ -10,6 +10,13 @@ if (!!skipDebug) {
   skipDebug = 0;
 }
 
+let songSpeed = AFRAME.utils.getUrlParameter('speed');
+if (!!songSpeed) {
+  songSpeed = parseFloat(songSpeed);
+} else {
+  songSpeed = 1.0;
+}
+
 /**
  * Active challenge song / audio.
  *
@@ -42,6 +49,7 @@ AFRAME.registerComponent('song', {
     this.isPlaying = false;
     this.songLoadingIndicator = document.getElementById('songLoadingIndicator');
     this.songStartTime = 0;
+    this.speed = songSpeed;
 
     this.audioAnalyser.gainNode.gain.value =
       document.getElementById('volumeSlider').value || 0.35;
@@ -57,7 +65,7 @@ AFRAME.registerComponent('song', {
     // Resume.
     if (oldData.isPaused && !data.isPaused) {
       if (navigator.userAgent.indexOf('Chrome') !== -1) {
-        this.source.playbackRate.value = 1;
+        this.source.playbackRate.value = this.speed;
       }
 
         this.audioAnalyser.resumeContext();
@@ -158,26 +166,27 @@ AFRAME.registerComponent('song', {
   startAudio: function (time) {
     this.isPlaying = true;
     const playTime = time || skipDebug || 0;
-    this.songStartTime = this.context.currentTime - playTime;
+    this.songStartTime = (this.context.currentTime * this.speed - playTime) / this.speed;
     this.source.start(0, playTime);
     this.el.emit('songstartaudio');
     this.lastCurrentTime = null;
+    this.source.playbackRate.value = this.speed;
   },
 
   getCurrentTime: function () {
-    // let lastCurrentTime = this.lastCurrentTime;
-    // var newCurrent
-    // if (lastCurrentTime) {
-    //   newCurrent = lastCurrentTime + (this.context.currentTime - this.lastContextTime) * this.source.playbackRate.value;
-    // } else {
-    //   newCurrent = (this.context.currentTime - this.songStartTime) * this.source.playbackRate.value;
-    // }
+    let lastCurrentTime = this.lastCurrentTime;
+    var newCurrent
+    if (lastCurrentTime) {
+      newCurrent = lastCurrentTime + (this.context.currentTime - this.lastContextTime) * this.speed;
+    } else {
+      newCurrent = (this.context.currentTime - this.songStartTime) * this.speed;
+    }
 
-    // this.lastCurrentTime = newCurrent;
-    // this.lastContextTime = this.context.currentTime;
+    this.lastCurrentTime = newCurrent;
+    this.lastContextTime = this.context.currentTime;
 
-    // return newCurrent;
+    return newCurrent;
 
-    return this.context.currentTime - this.songStartTime;
+    // return this.context.currentTime - this.songStartTime;
   }
 });

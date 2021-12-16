@@ -28,6 +28,7 @@ AFRAME.registerComponent('wall', {
 
   init: function () {
     this.maxZ = 10;
+    this.song = this.el.sceneEl.components.song;
   },
 
   update: function () {
@@ -35,7 +36,7 @@ AFRAME.registerComponent('wall', {
     const data = this.data;
     const width = data.width;
 
-    const halfDepth = data.durationSeconds * data.speed / 2;
+    const halfDepth = data.durationSeconds * (data.speed * this.song.speed) / 2;
 
     if (data.isCeiling) {
       el.object3D.position.set(
@@ -46,7 +47,7 @@ AFRAME.registerComponent('wall', {
       el.object3D.scale.set(
         width,
         CEILING_THICKNESS,
-        data.durationSeconds * data.speed
+        data.durationSeconds * data.speed * this.song.speed
       );
       return;
     }
@@ -61,7 +62,7 @@ AFRAME.registerComponent('wall', {
     el.object3D.scale.set(
       width,
       2.5,
-      data.durationSeconds * data.speed
+      data.durationSeconds * data.speed * this.song.speed
     );
   },
 
@@ -69,7 +70,7 @@ AFRAME.registerComponent('wall', {
     const data = this.data;
     const el = this.el;
 
-    const halfDepth = data.durationSeconds * data.speed / 2;
+    const halfDepth = data.durationSeconds * (data.speed * this.song.speed) / 2;
 
     el.object3D.position.set(
       getHorizontalPosition(data.horizontalPosition) + data.width / 2  - 0.25,
@@ -80,7 +81,7 @@ AFRAME.registerComponent('wall', {
     el.object3D.scale.set(
       data.width,
       height,
-      data.durationSeconds * data.speed
+      data.durationSeconds * (data.speed * this.song.speed)
     );
   },
 
@@ -102,7 +103,7 @@ AFRAME.registerComponent('wall', {
     // Move.
     this.el.object3D.visible = true;
     if (position.z < (data.anticipationPosition - halfDepth)) {
-      let newPositionZ = position.z + BEAT_WARMUP_SPEED * (timeDelta / 1000);
+      let newPositionZ = position.z + BEAT_WARMUP_SPEED * this.song.speed * (timeDelta / 1000);
       // Warm up / warp in.
       if (newPositionZ < (data.anticipationPosition - halfDepth)) {
         position.z = newPositionZ;
@@ -111,7 +112,7 @@ AFRAME.registerComponent('wall', {
       }
     } else {
       // Standard moving.
-      position.z += this.data.speed * (timeDelta / 1000);
+      position.z += this.data.speed * this.song.speed * (timeDelta / 1000);
     }
 
     if (this.el.object3D.position.z > (this.maxZ + halfDepth)) {

@@ -228,6 +228,7 @@ AFRAME.registerComponent('song-controls', {
     volumeSlider.addEventListener('input', evt => {
       volumeHandler();
     });
+    this.song.audioAnalyser.gainNode.gain.value = volumeSlider.value;
 
     volumeSlider.addEventListener("wheel", function(e){
       if (e.deltaY < 0){
@@ -302,7 +303,7 @@ AFRAME.registerComponent('song-controls', {
   },
 
   seek: function (time) {
-    if (this.data.isPlaying) { this.song.stopAudio();  }
+    this.song.stopAudio();
 
     // Get new audio buffer source (needed every time audio is stopped).
     this.song.data.analyserEl.addEventListener('audioanalyserbuffersource', evt => {
@@ -327,10 +328,10 @@ AFRAME.registerComponent('song-controls', {
       option.style.display = 'none';
       option.innerHTML = option.dataset.mode;
     }
-    Object.keys(this.beatmaps).forEach(mode => {
-      const option = this.modeOptionEls.querySelector(`[data-mode="${mode}"]`);
-      option.style.display = 'inline-block';
-    });
+    // Object.keys(this.beatmaps).forEach(mode => {
+    //   const option = this.modeOptionEls.querySelector(`[data-mode="${mode}"]`);
+    //   option.style.display = 'inline-block';
+    // });
   },
 
   updateDifficultyOptions: function () {

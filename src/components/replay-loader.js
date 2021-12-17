@@ -83,7 +83,7 @@ AFRAME.registerComponent('replay-loader', {
           }
           index++;
           noteStructs.push(note);
-          console.log(i + " -- " + note.score + " -- " + note.combo);
+          // console.log(i + " -- " + note.score + " -- " + note.combo);
         }
       }
 

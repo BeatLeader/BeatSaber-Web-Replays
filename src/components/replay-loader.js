@@ -2,8 +2,8 @@ AFRAME.registerComponent('replay-loader', {
     schema: {
       playerID: {default: (AFRAME.utils.getUrlParameter('playerID') || '76561198059961776')},
       isSafari: {default: false},
-      difficulty: {default: 'ExpertPlus'},
-      mode: {default: 'Standard'}
+      difficulty: {default: (AFRAME.utils.getUrlParameter('difficulty') || 'ExpertPlus' )},
+      mode: {default: AFRAME.utils.getUrlParameter('mode') || 'Standard'}
     },
   
     init: function () {

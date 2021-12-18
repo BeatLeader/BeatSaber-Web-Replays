@@ -1,7 +1,7 @@
 <a-entity
   id="loadingSongInfoContainer"
   bind__animation__scale="enabled: challenge.isLoading || replay.isLoading || !hasReceivedUserGesture && !challenge.hasLoadError && !replay.hasError"
-  bind__visible="challenge.isLoading || replay.isLoading || !hasReceivedUserGesture || challenge.hasLoadError"
+  bind__visible="challenge.isLoading || replay.isLoading || !hasReceivedUserGesture || challenge.hasLoadError || replay.hasError"
   animation__scale="property: scale; from: 1 1 1; to: 1.05 1.05 1.05; dir: alternate; loop: true; dur: 1200; easing: easeInOutCubic"
   position="0 1.5 -1">
 

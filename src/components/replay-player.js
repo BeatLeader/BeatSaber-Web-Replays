@@ -32,7 +32,7 @@ AFRAME.registerComponent('replay-player', {
     tock: function (time, delta) {
       let replay = this.replayDecoder.replay;
         if (this.song.isPlaying && replay) {
-          let currentTime = this.song.getCurrentTime() - replay.info.midDeviation - 0.01;
+          let currentTime = this.song.getCurrentTime() - replay.info.midDeviation;
           let frames = this.replayDecoder.replay.frames;
           var frameIndex = 0;
           for (var i = 0; i < frames.length; i++) {
@@ -45,19 +45,27 @@ AFRAME.registerComponent('replay-player', {
           let frame = frames[frameIndex];
           let nextFrame = frames[frameIndex != frames.length - 1 ? frameIndex + 1 : frameIndex];
     
-          let height = this.replayDecoder.replay.info.height;
+          let room = replay.info.room;
           
-          this.saberEls[0].object3D.position.x = frame.l.p.x;
-          this.saberEls[0].object3D.position.y = frame.l.p.y;// + (height - 2.0);
-          this.saberEls[0].object3D.position.z = -frame.l.p.z;
+          if (replay.info.leftHanded) {
+            this.leftHandedTock(room, frame, nextFrame);
+          } else {
+            this.rightHandedTock(room, frame, nextFrame);
+          }
+        }
+      },
+    rightHandedTock: function(room, frame, nextFrame) {
+          this.saberEls[0].object3D.position.x = frame.l.p.x - room.x;
+          this.saberEls[0].object3D.position.y = frame.l.p.y - room.y;// + (height - 2.0);
+          this.saberEls[0].object3D.position.z = -frame.l.p.z + room.z;
     
-          this.saberEls[1].object3D.position.x = frame.r.p.x;
-          this.saberEls[1].object3D.position.y = frame.r.p.y;// + (height - 2.0);
-          this.saberEls[1].object3D.position.z = -frame.r.p.z;
+          this.saberEls[1].object3D.position.x = frame.r.p.x - room.x;
+          this.saberEls[1].object3D.position.y = frame.r.p.y - room.y;// + (height - 2.0);
+          this.saberEls[1].object3D.position.z = -frame.r.p.z + room.z;
 
-          this.headset.object3D.position.x = frame.h.p.x;
-          this.headset.object3D.position.y = frame.h.p.y;
-          this.headset.object3D.position.z = -frame.h.p.z;
+          this.headset.object3D.position.x = frame.h.p.x - room.x;
+          this.headset.object3D.position.y = frame.h.p.y - room.y;
+          this.headset.object3D.position.z = -frame.h.p.z + room.z;
     
           var lquat = new THREE.Quaternion(frame.l.r.w, frame.l.r.z, frame.l.r.y, frame.l.r.x).slerp(new THREE.Quaternion(nextFrame.l.r.w, nextFrame.l.r.z, nextFrame.l.r.y, nextFrame.l.r.x), 0.2);
           var lrotation = new THREE.Euler().setFromQuaternion(lquat);
@@ -79,6 +87,39 @@ AFRAME.registerComponent('replay-player', {
           this.headset.object3D.rotation.x = hrotation.x
           this.headset.object3D.rotation.y = hrotation.y + Math.PI;
           this.headset.object3D.rotation.z = hrotation.z + Math.PI;;
-        }
-      }
+    },
+    leftHandedTock: function(room, frame, nextFrame) {
+          this.saberEls[0].object3D.position.x = -frame.r.p.x + room.x;
+          this.saberEls[0].object3D.position.y = frame.r.p.y - room.y;// + (height - 2.0);
+          this.saberEls[0].object3D.position.z = -frame.r.p.z + room.z;
+    
+          this.saberEls[1].object3D.position.x = -frame.l.p.x + room.x;
+          this.saberEls[1].object3D.position.y = frame.l.p.y - room.y;// + (height - 2.0);
+          this.saberEls[1].object3D.position.z = -frame.l.p.z + room.z;
+
+          this.headset.object3D.position.x = -frame.h.p.x + room.x;
+          this.headset.object3D.position.y = frame.h.p.y - room.y;
+          this.headset.object3D.position.z = -frame.h.p.z + room.z;
+    
+          var rquat = new THREE.Quaternion(frame.r.r.w, -frame.r.r.z, -frame.r.r.y, frame.r.r.x).slerp(new THREE.Quaternion(nextFrame.r.r.w, -nextFrame.r.r.z, -nextFrame.r.r.y, nextFrame.r.r.x), 0.2);
+          var rrotation = new THREE.Euler().setFromQuaternion(rquat);
+    
+          this.saberEls[0].object3D.rotation.x = rrotation.x;
+          this.saberEls[0].object3D.rotation.y = rrotation.y + Math.PI;
+          this.saberEls[0].object3D.rotation.z = rrotation.z;
+          
+          var lquat = new THREE.Quaternion(frame.l.r.w, -frame.l.r.z, -frame.l.r.y, frame.l.r.x).slerp(new THREE.Quaternion(nextFrame.l.r.w, -nextFrame.l.r.z, -nextFrame.l.r.y, nextFrame.l.r.x), 0.2);
+          var lrotation = new THREE.Euler().setFromQuaternion(lquat);
+    
+          this.saberEls[1].object3D.rotation.x = lrotation.x;
+          this.saberEls[1].object3D.rotation.y = lrotation.y + Math.PI;
+          this.saberEls[1].object3D.rotation.z = lrotation.z;
+
+          var hquat = new THREE.Quaternion(frame.h.r.w, -frame.h.r.z, -frame.h.r.y, frame.h.r.x).slerp(new THREE.Quaternion(nextFrame.h.r.w, -nextFrame.h.r.z, -nextFrame.h.r.y, nextFrame.h.r.x), 0.2);
+          var hrotation = new THREE.Euler().setFromQuaternion(hquat);
+    
+          this.headset.object3D.rotation.x = hrotation.x
+          this.headset.object3D.rotation.y = hrotation.y + Math.PI;
+          this.headset.object3D.rotation.z = hrotation.z + Math.PI;;
+    },
 });

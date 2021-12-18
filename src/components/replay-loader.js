@@ -2,8 +2,8 @@ AFRAME.registerComponent('replay-loader', {
     schema: {
       playerID: {default: (AFRAME.utils.getUrlParameter('playerID') || '76561198059961776')},
       isSafari: {default: false},
-      difficulty: {default: (AFRAME.utils.getUrlParameter('difficulty') || 'ExpertPlus' )},
-      mode: {default: AFRAME.utils.getUrlParameter('mode') || 'Standard'}
+      difficulty: {default: 'ExpertPlus'},
+      mode: {default: 'Standard'}
     },
   
     init: function () {
@@ -13,6 +13,9 @@ AFRAME.registerComponent('replay-loader', {
       let captureThis = this;
       document.addEventListener('songFetched', (e) => {
         captureThis.songFetched(e.detail);
+      });
+      this.el.addEventListener('challengeloadend', (e) => {
+        captureThis.challengeloadend(e.detail);
       });
     },
 
@@ -113,8 +116,35 @@ AFRAME.registerComponent('replay-loader', {
 
         // console.log(note.score + " - " + noteIndex);
       }
+      this.notes = noteStructs;
+      if (this.challenge) {
+        this.calculateOffset();
+      }
+
+      console.log(replay.info.room);
 
       this.el.sceneEl.emit('replayloaded', { notes: noteStructs, bombs: bombStructs}, null);
+    },
+    challengeloadend: function(event) {
+      this.challenge = event;
+      if (this.notes) {
+        this.calculateOffset();
+      }
+    },
+    calculateOffset() {
+      let beatmaps = this.challenge.beatmaps[this.data.mode][this.data.difficulty]._notes;
+      let bpm = this.challenge.info._beatsPerMinute;
+      const sPerBeat = 60 / bpm;
+      let count = Math.min(this.notes.length, 10);
+      var result = 0;
+      for (var i = 0; i < count; i++) {
+        let replayNote = this.notes[i];
+        let songNote = beatmaps[i];
+
+        result += songNote._time * sPerBeat - replayNote.time;
+      }
+
+      this.replay.info.midDeviation = result / count;
     },
     maxScoreForNote(index) {
       if (index < 2) {

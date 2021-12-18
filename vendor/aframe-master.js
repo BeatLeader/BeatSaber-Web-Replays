@@ -43764,8 +43764,11 @@ function rebuildAttribute (attrib, data, itemSize) {
 				// detaches the buffer when complete, preventing reuse.
 				var bufferCopy = buffer.slice( 0 );
 
+				const isSafari = navigator.userAgent.toLowerCase().indexOf('safari') !== -1 &&
+                 navigator.userAgent.toLowerCase().indexOf('chrome') === -1;
+
 				var context = AudioContext.getContext();
-				context.decodeAudioData( bufferCopy, function ( audioBuffer ) {
+				context[isSafari ? "decodeOggData" : "decodeAudioData"]( bufferCopy, function ( audioBuffer ) {
 
 					onLoad( audioBuffer );
 

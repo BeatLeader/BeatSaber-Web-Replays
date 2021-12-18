@@ -28,6 +28,16 @@ const emptyChallenge = {
 
 const isSafari = navigator.userAgent.toLowerCase().indexOf('safari') !== -1 &&
                  navigator.userAgent.toLowerCase().indexOf('chrome') === -1;
+                 
+if (isSafari) 
+{
+  var module = require("../lib/oggdec");
+  const decodeOggData = module().decodeOggData;
+  const decodeAudioData = (data, completion) => {
+    decodeOggData(data).then(completion);
+  }
+  ( window.AudioContext || window.webkitAudioContext ).prototype.decodeOggData = decodeAudioData;
+}
 
 let beatmaps;
 let difficulties;
@@ -49,7 +59,7 @@ AFRAME.registerState({
       hasLoadError: isSafari,
       isLoading: false,
       isBeatsPreloaded: false,  // Whether we have passed the negative time.
-      loadErrorText: isSafari ? 'iOS and Safari support coming soon! We need to convert songs to MP3 first.' : '',
+      loadErrorText: '',
     }, emptyChallenge),
     score: {
       accuracy: 0,  // Out of 100.
@@ -82,7 +92,7 @@ AFRAME.registerState({
     isFinished: false,
     isSafari: isSafari,
     isSongBufferProcessing: false,
-    showHeadset: false
+    settings: {showHeadset: false}
   },
 
   handlers: {
@@ -335,7 +345,7 @@ AFRAME.registerState({
     },
 
     settingsChanged: (state, payload) => {
-      state.showHeadset = payload.showHeadset;
+      state.settings = payload.settings;
     },
 
     'enter-vr': state => {

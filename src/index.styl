@@ -20,7 +20,7 @@ html
   padding 10px
   position fixed
   right 0
-  width 730px
+  width 750px
   z-index 99999999
 
   &.challengeLoaded
@@ -45,6 +45,32 @@ html
     transform rotate(-90deg)
     z-index 999999999
     &.volumeActive
+      display block
+
+    input
+      cursor pointer
+      padding 0
+      width 100px
+  
+  #controlsSettings
+    cursor pointer
+    padding 3px 10px 0 3px
+    img
+      height 20px
+      width 20px
+  
+  #settingsContainer
+    background rgba(85, 85, 85, 0.85)
+    border-radius 5px 5px 5px 5px
+    bottom 60px
+    cursor pointer
+    display none
+    right 80px
+    padding-top 4px
+    position absolute
+    z-index 999999999
+    width: 130px
+    &.settingsActive
       display block
 
     input
@@ -473,6 +499,8 @@ html
   display: inline-block;
   width: 30px;
   height: 17px;
+  margin-left: 4px
+  margin-right: 2px
 }
 
 /* Hide default HTML checkbox */
@@ -531,7 +559,7 @@ input:checked + .slider:before {
 }
 
 .toggleButtonLabel {
-  top: 1px;
+  top: -4px;
   position: relative;
   display: inline-block;
   width: 30px;
@@ -551,4 +579,59 @@ input:checked + .slider:before {
   width: 15px;
   height: 15px;
   z-index: 3;
+}
+
+#ctxMenu {
+  display: none;
+  position: absolute;
+  overflow: hidden;
+  border-radius: 6px;
+  background: rgba(28,28,28,0.9);
+  text-shadow: 0 0 2px rgb(0 0 0 / 50%);
+  -webkit-transition: opacity .1s cubic-bezier(0,0,0.2,1);
+  transition: opacity .1s cubic-bezier(0,0,0.2,1);
+  z-index: 9999;
+}
+
+.panel-menu {
+    padding: 8px 0;
+    display: table;
+    width: 100%;
+    color: #eee;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+.menuitem {
+    display: table-row;
+    cursor: default;
+    outline: none;
+    height: 40px;
+}
+
+.menuitem:hover {
+    background: rgba(102, 102, 102, 0.9);
+}
+
+.menuitem-icon {
+    display: table-cell;
+    vertical-align: middle;
+    padding: 0 10px;
+}
+
+.menuitem-content {
+    font-size: 109%;
+    text-align: right;
+    display: table-cell;
+    vertical-align: middle;
+    padding: 0 15px;
+}
+
+.menuitem-label {
+    font-size: 118%;
+    font-weight: 500;
+    padding-left: 0;
+    display: table-cell;
+    vertical-align: middle;
+    padding: 0 15px;
 }

@@ -21,7 +21,8 @@ AFRAME.registerComponent('beat-generator', {
     beatWarmupSpeed: {default: BEAT_WARMUP_SPEED},
     difficulty: {type: 'string'},
     isPlaying: {default: false},
-    mode: {default: 'Standard'}
+    mode: {default: 'Standard'},
+    noEffects: {default: false}
   },
 
   orientationsHumanized: [
@@ -176,15 +177,18 @@ AFRAME.registerComponent('beat-generator', {
       }
     }
 
-    // Stage events.
-    const eventsTime = this.eventsTime + skipDebug;
-    const events = this.beatData._events;
-    for (let i = 0; i < events.length; ++i) {
-      let noteTime = events[i]._time * msPerBeat;
-      if (noteTime > prevEventsTime && noteTime <= eventsTime) {
-        this.generateEvent(events[i]);
+    if (!this.data.noEffects) {
+      // Stage events.
+      const eventsTime = this.eventsTime + skipDebug;
+      const events = this.beatData._events;
+      for (let i = 0; i < events.length; ++i) {
+        let noteTime = events[i]._time * msPerBeat;
+        if (noteTime > prevEventsTime && noteTime <= eventsTime) {
+          this.generateEvent(events[i]);
+        }
       }
     }
+    
 
     if (this.beatsPreloadTime === undefined) { return; }
 

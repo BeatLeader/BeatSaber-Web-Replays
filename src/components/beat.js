@@ -109,6 +109,7 @@ AFRAME.registerComponent('beat', {
     this.rotationAxis = new THREE.Vector3();
     this.saberEls = this.el.sceneEl.querySelectorAll('[saber-controls]');
     this.replayLoader = this.el.sceneEl.components['replay-loader'];
+    this.settings = this.el.sceneEl.components['settings'];
     this.frameNum = 0;
     this.scoreEl = null;
     this.scoreElTime = undefined;
@@ -196,7 +197,9 @@ AFRAME.registerComponent('beat', {
           position.z += this.data.speed * this.song.speed * (-data.timeOffset);
         } else {
           position.z = data.anticipationPosition;
-          this.beams.newBeam(this.data.color, position);
+          if (!this.settings.settings.noEffects) {
+            this.beams.newBeam(this.data.color, position);
+          }
         }
       } else {
 
@@ -640,11 +643,22 @@ AFRAME.registerComponent('beat', {
 
         if (this.data.type === 'mine') {
           this.el.emit('minehit', null, true);
-          this.destroyMine();
+          if (!this.settings.settings.reducedDebris) {
+            this.destroyMine();
+          } else {
+            this.returnToPool(true);
+          }
+          
           break;
         }
 
-        this.destroyBeat(saberEls[i]);
+        if (!this.settings.settings.reducedDebris) {
+          this.destroyBeat(saberEls[i]);
+        } else {
+          this.returnToPool(true);
+          break;
+        }
+        
         this.hitSaberEl = saberEls[i];
         this.hitSaberEl.addEventListener('strokeend', this.onEndStroke, ONCE);
         saberControls = saberEls[i].components['saber-controls'];

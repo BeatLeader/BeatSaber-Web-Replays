@@ -204,6 +204,9 @@ AFRAME.registerComponent('song-controls', {
 
     // Hide volume if click anywhere.
     document.addEventListener('click', evt => {
+      var ctxMenu = document.getElementById("ctxMenu");
+      ctxMenu.style.display = "none";
+
       if (evt.target.closest('#volumeSliderContainer') ||
           evt.target.closest('#controlsVolume')) { return; }
       const slider = document.getElementById('volumeSliderContainer');
@@ -212,9 +215,41 @@ AFRAME.registerComponent('song-controls', {
       slider.classList.remove('volumeActive');
     });
 
+    document.addEventListener("contextmenu",function(event){
+      event.preventDefault();
+      var ctxMenu = document.getElementById("ctxMenu");
+      ctxMenu.style.display = "block";
+      ctxMenu.style.left = (event.pageX - 10)+"px";
+      ctxMenu.style.top = (event.pageY - 10)+"px";
+    },false);
+
+    const copyURL = (target, time) => {
+      let input = document.createElement('input');
+      target.appendChild(input);
+      let base = location.protocol + "//" + location.host + "/" + `?id=${AFRAME.utils.getUrlParameter('id')}&playerID=${AFRAME.utils.getUrlParameter('playerID')}&difficulty=${AFRAME.utils.getUrlParameter('difficulty')}`
+      input.value = base + (time ? `&time=${Math.round(this.song.getCurrentTime())}&speed=${Math.round(this.song.speed * 100)}` : "" );
+      input.select();
+      document.execCommand("copy");
+      target.removeChild(input);
+    };
+
+    document.getElementById('copyURL').addEventListener('click', evt => {
+      copyURL(evt.currentTarget);
+    });
+    document.getElementById('copyURLtime').addEventListener('click', evt => {
+      copyURL(evt.currentTarget, true);
+    });
+    document.getElementById('showInspector').addEventListener('click', evt => {
+      
+    });
+
     // Toggle volume slider.
     document.getElementById('controlsVolume').addEventListener('click', evt => {
       document.getElementById('volumeSliderContainer').classList.toggle('volumeActive');
+    });
+
+    document.getElementById('controlsSettings').addEventListener('click', evt => {
+      document.getElementById('settingsContainer').classList.toggle('settingsActive');
     });
 
     // Update volume.
@@ -248,6 +283,7 @@ AFRAME.registerComponent('song-controls', {
       this.songSpeedPercent.innerHTML = (evt.target.value * 100) + "%";
     });
 
+    this.songSpeedPercent.innerHTML = (this.song.speed * 100) + "%";
     speedSlider.value = this.song.speed;
   },
 

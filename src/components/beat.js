@@ -422,18 +422,22 @@ AFRAME.registerComponent('beat', {
   },
 
   destroyMine: function () {
-    for (let i = 0; i < this.mineFragments.length; i++) {
-      this.mineFragments[i].visible = true;
+    if (!this.settings.settings.reducedDebris) {
+      for (let i = 0; i < this.mineFragments.length; i++) {
+        this.mineFragments[i].visible = true;
+      }
+  
+      this.blockEl.object3D.visible = false;
+      this.destroyed = true;
+      this.gravityVelocity = 0.1;
+      this.returnToPoolTimer = 800;
     }
-
-    this.blockEl.object3D.visible = false;
-    this.destroyed = true;
-    this.gravityVelocity = 0.1;
-    this.returnToPoolTimer = 800;
-
-    this.explodeEventDetail.position.copy(this.el.object3D.position);
-    this.explodeEventDetail.rotation.copy(this.randVec);
-    this.mineParticles.emit('explode', this.explodeEventDetail, false);
+    
+    if (!this.settings.settings.noEffects) {
+      this.explodeEventDetail.position.copy(this.el.object3D.position);
+      this.explodeEventDetail.rotation.copy(this.randVec);
+      this.mineParticles.emit('explode', this.explodeEventDetail, false);
+    }
   },
 
   destroyBeat: (function () {
@@ -447,103 +451,109 @@ AFRAME.registerComponent('beat', {
     var point3 = new THREE.Vector3();
 
     return function (saberEl) {
-      var coplanarPoint;
-      var cutThickness = this.cutThickness = 0.02;
-      var direction = this.cutDirection;
-      var leftBorderInnerPlane = this.leftBorderInnerPlane;
-      var leftBorderOuterPlane = this.leftBorderOuterPlane;
-      var leftCutPlane = this.leftCutPlane;
-      var planeGeometry;
-      var planeMesh;
-      var rightBorderInnerPlane = this.rightBorderInnerPlane;
-      var rightBorderOuterPlane = this.rightBorderOuterPlane;
-      var rightCutPlane = this.rightCutPlane;
-      var trailPoints = saberEl.components.trail.saberTrajectory;
 
-      point1.copy(trailPoints[0].top);
-      point2.copy(trailPoints[0].center);
-      point3.copy(trailPoints[trailPoints.length - 1].top);
-      direction.copy(point1).sub(point3);
+      if (!this.settings.settings.reducedDebris) {
+        var coplanarPoint;
+        var cutThickness = this.cutThickness = 0.02;
+        var direction = this.cutDirection;
+        var leftBorderInnerPlane = this.leftBorderInnerPlane;
+        var leftBorderOuterPlane = this.leftBorderOuterPlane;
+        var leftCutPlane = this.leftCutPlane;
+        var planeGeometry;
+        var planeMesh;
+        var rightBorderInnerPlane = this.rightBorderInnerPlane;
+        var rightBorderOuterPlane = this.rightBorderOuterPlane;
+        var rightCutPlane = this.rightCutPlane;
+        var trailPoints = saberEl.components.trail.saberTrajectory;
 
-      this.partRightEl.object3D.position.set(0, 0, 0);
-      this.partRightEl.object3D.rotation.set(0, 0, 0);
-      this.partRightEl.object3D.updateMatrixWorld();
+        point1.copy(trailPoints[0].top);
+        point2.copy(trailPoints[0].center);
+        point3.copy(trailPoints[trailPoints.length - 1].top);
+        direction.copy(point1).sub(point3);
 
-      this.partRightEl.object3D.worldToLocal(this.rightCutPlanePoints[0].copy(point1));
-      this.partRightEl.object3D.worldToLocal(this.rightCutPlanePoints[1].copy(point2));
-      this.partRightEl.object3D.worldToLocal(this.rightCutPlanePoints[2].copy(point3));
+        this.partRightEl.object3D.position.set(0, 0, 0);
+        this.partRightEl.object3D.rotation.set(0, 0, 0);
+        this.partRightEl.object3D.updateMatrixWorld();
 
-      this.partLeftEl.object3D.position.set(0, 0, 0);
-      this.partLeftEl.object3D.rotation.set(0, 0, 0);
-      this.partLeftEl.object3D.updateMatrixWorld();
+        this.partRightEl.object3D.worldToLocal(this.rightCutPlanePoints[0].copy(point1));
+        this.partRightEl.object3D.worldToLocal(this.rightCutPlanePoints[1].copy(point2));
+        this.partRightEl.object3D.worldToLocal(this.rightCutPlanePoints[2].copy(point3));
 
-      this.partLeftEl.object3D.worldToLocal(this.leftCutPlanePoints[0].copy(point3));
-      this.partLeftEl.object3D.worldToLocal(this.leftCutPlanePoints[1].copy(point2));
-      this.partLeftEl.object3D.worldToLocal(this.leftCutPlanePoints[2].copy(point1));
+        this.partLeftEl.object3D.position.set(0, 0, 0);
+        this.partLeftEl.object3D.rotation.set(0, 0, 0);
+        this.partLeftEl.object3D.updateMatrixWorld();
 
-      this.generateCutClippingPlanes();
+        this.partLeftEl.object3D.worldToLocal(this.leftCutPlanePoints[0].copy(point3));
+        this.partLeftEl.object3D.worldToLocal(this.leftCutPlanePoints[1].copy(point2));
+        this.partLeftEl.object3D.worldToLocal(this.leftCutPlanePoints[2].copy(point1));
 
-      if (this.data.debug) {
-        coplanarPoint = new THREE.Vector3();
-        planeGeometry = new THREE.PlaneGeometry(4.0, 4.0, 1.0, 1.0);
+        this.generateCutClippingPlanes();
 
-        rightCutPlane.coplanarPoint(coplanarPoint);
-        planeGeometry.lookAt(rightCutPlane.normal);
-        planeGeometry.translate(coplanarPoint.x, coplanarPoint.y, coplanarPoint.z);
+        if (this.data.debug) {
+          coplanarPoint = new THREE.Vector3();
+          planeGeometry = new THREE.PlaneGeometry(4.0, 4.0, 1.0, 1.0);
 
-        planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
-        this.el.sceneEl.setObject3D('rightCutPlane', planeMesh);
+          rightCutPlane.coplanarPoint(coplanarPoint);
+          planeGeometry.lookAt(rightCutPlane.normal);
+          planeGeometry.translate(coplanarPoint.x, coplanarPoint.y, coplanarPoint.z);
 
-        planeGeometry = new THREE.PlaneGeometry(4.0, 4.0, 1.0, 1.0);
+          planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
+          this.el.sceneEl.setObject3D('rightCutPlane', planeMesh);
 
-        rightBorderOuterPlane.coplanarPoint(coplanarPoint);
-        planeGeometry.lookAt(rightBorderOuterPlane.normal);
-        planeGeometry.translate(coplanarPoint.x, coplanarPoint.y, coplanarPoint.z);
+          planeGeometry = new THREE.PlaneGeometry(4.0, 4.0, 1.0, 1.0);
 
-        const parallelPlaneMesh = new THREE.Mesh(planeGeometry, parallelPlaneMaterial);
-        this.el.sceneEl.setObject3D('planeParallel', parallelPlaneMesh);
+          rightBorderOuterPlane.coplanarPoint(coplanarPoint);
+          planeGeometry.lookAt(rightBorderOuterPlane.normal);
+          planeGeometry.translate(coplanarPoint.x, coplanarPoint.y, coplanarPoint.z);
+
+          const parallelPlaneMesh = new THREE.Mesh(planeGeometry, parallelPlaneMaterial);
+          this.el.sceneEl.setObject3D('planeParallel', parallelPlaneMesh);
+        }
+
+        this.blockEl.object3D.visible = false;
+
+        const partRightMaterial = this.partRightEl.getObject3D('mesh').material;
+        partRightMaterial.clippingPlanes = partRightMaterial.clippingPlanes || [];
+        partRightMaterial.clippingPlanes.length = 0;
+        partRightMaterial.clippingPlanes.push(rightCutPlane);
+
+        const cutRightMaterial = this.cutRightEl.getObject3D('mesh').material;
+        cutRightMaterial.clippingPlanes = cutRightMaterial.clippingPlanes || [];
+        cutRightMaterial.clippingPlanes.length = 0;
+        cutRightMaterial.clippingPlanes.push(rightBorderOuterPlane);
+        cutRightMaterial.clippingPlanes.push(rightBorderInnerPlane);
+
+        const partLeftMaterial = this.partLeftEl.getObject3D('mesh').material;
+        partLeftMaterial.clippingPlanes = partLeftMaterial.clippingPlanes || [];
+        partLeftMaterial.clippingPlanes.length = 0;
+        partLeftMaterial.clippingPlanes.push(leftCutPlane);
+
+        const cutLeftMaterial = this.cutLeftEl.getObject3D('mesh').material;
+        cutLeftMaterial.clippingPlanes = cutLeftMaterial.clippingPlanes || [];
+        cutLeftMaterial.clippingPlanes.length = 0;
+        cutLeftMaterial.clippingPlanes.push(leftBorderInnerPlane);
+        cutLeftMaterial.clippingPlanes.push(leftBorderOuterPlane);
+
+        this.partLeftEl.object3D.visible = true;
+        this.partRightEl.object3D.visible = true;
+
+        this.el.sceneEl.renderer.localClippingEnabled = true;
+        this.destroyed = true;
+        this.gravityVelocity = 0.1;
+
+        this.rotationAxis.copy(this.rightCutPlanePoints[0]).sub(this.rightCutPlanePoints[1]);
+
+        this.returnToPoolTimer = 800;
+
+        auxObj3D.up.copy(rightCutPlane.normal);
+        auxObj3D.lookAt(direction);
       }
 
-      this.blockEl.object3D.visible = false;
-
-      const partRightMaterial = this.partRightEl.getObject3D('mesh').material;
-      partRightMaterial.clippingPlanes = partRightMaterial.clippingPlanes || [];
-      partRightMaterial.clippingPlanes.length = 0;
-      partRightMaterial.clippingPlanes.push(rightCutPlane);
-
-      const cutRightMaterial = this.cutRightEl.getObject3D('mesh').material;
-      cutRightMaterial.clippingPlanes = cutRightMaterial.clippingPlanes || [];
-      cutRightMaterial.clippingPlanes.length = 0;
-      cutRightMaterial.clippingPlanes.push(rightBorderOuterPlane);
-      cutRightMaterial.clippingPlanes.push(rightBorderInnerPlane);
-
-      const partLeftMaterial = this.partLeftEl.getObject3D('mesh').material;
-      partLeftMaterial.clippingPlanes = partLeftMaterial.clippingPlanes || [];
-      partLeftMaterial.clippingPlanes.length = 0;
-      partLeftMaterial.clippingPlanes.push(leftCutPlane);
-
-      const cutLeftMaterial = this.cutLeftEl.getObject3D('mesh').material;
-      cutLeftMaterial.clippingPlanes = cutLeftMaterial.clippingPlanes || [];
-      cutLeftMaterial.clippingPlanes.length = 0;
-      cutLeftMaterial.clippingPlanes.push(leftBorderInnerPlane);
-      cutLeftMaterial.clippingPlanes.push(leftBorderOuterPlane);
-
-      this.partLeftEl.object3D.visible = true;
-      this.partRightEl.object3D.visible = true;
-
-      this.el.sceneEl.renderer.localClippingEnabled = true;
-      this.destroyed = true;
-      this.gravityVelocity = 0.1;
-
-      this.rotationAxis.copy(this.rightCutPlanePoints[0]).sub(this.rightCutPlanePoints[1]);
-
-      this.returnToPoolTimer = 800;
-
-      auxObj3D.up.copy(rightCutPlane.normal);
-      auxObj3D.lookAt(direction);
-      this.explodeEventDetail.position = this.el.object3D.position;
-      this.explodeEventDetail.rotation = auxObj3D.rotation;
-      this.particles.emit('explode', this.explodeEventDetail, false);
+      if (!this.settings.settings.noEffects) {
+        this.explodeEventDetail.position = this.el.object3D.position;
+        this.explodeEventDetail.rotation = auxObj3D.rotation;
+        this.particles.emit('explode', this.explodeEventDetail, false);
+      }
     };
   })(),
 
@@ -643,21 +653,12 @@ AFRAME.registerComponent('beat', {
 
         if (this.data.type === 'mine') {
           this.el.emit('minehit', null, true);
-          if (!this.settings.settings.reducedDebris) {
-            this.destroyMine();
-          } else {
-            this.returnToPool(true);
-          }
+          this.destroyMine();
           
           break;
         }
 
-        if (!this.settings.settings.reducedDebris) {
-          this.destroyBeat(saberEls[i]);
-        } else {
-          this.returnToPool(true);
-          break;
-        }
+        this.destroyBeat(saberEls[i]);
         
         this.hitSaberEl = saberEls[i];
         this.hitSaberEl.addEventListener('strokeend', this.onEndStroke, ONCE);
@@ -729,6 +730,9 @@ AFRAME.registerComponent('beat', {
     }
 
     this.showScore();
+    if (this.settings.settings.reducedDebris) {
+      this.returnToPool(true);
+    }
   },
 
   showScore: function (hand) {

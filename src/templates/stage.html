@@ -7,23 +7,29 @@
 <a-entity id="stage">
   <a-entity
     id="audioColumns"
+    bind__visible="!settings.noEffects"
     audio-columns="analyser: #audioAnalyser; height: 28; mirror: 18; scale: 9; thickness: 0.6; separation: 0.55"
     position="0 -19 5"></a-entity>
 
-  <a-entity id="twister" position="0 0 -35" rotation="90 0 0" bind__twister="enabled: isPlaying"></a-entity>
+  <a-entity id="twister" position="0 0 -35" rotation="90 0 0" bind__twister="enabled: isPlaying && !settings.noEffects"></a-entity>
 
   <a-entity position="0 -1 0">
     <a-entity id="stageObj" obj-model="obj: #stageNormalObj" materials="name: stageNormal"></a-entity>
 
     <!-- Lasers left. -->
-    <a-entity id="leftStageLasers" bind__stage-lasers="enabled: isPlaying">
+    <a-entity 
+      id="leftStageLasers" 
+      bind__stage-lasers="enabled: isPlaying && !settings.noEffects"
+      bind__visible="!settings.noEffects">
       <a-entity obj-model="obj: #leftLaserObj" materials="name: stageAdditive" position="-6 2.3 -41"></a-entity>
       <a-entity obj-model="obj: #leftLaserObj" materials="name: stageAdditive" position="-10 0 -40"></a-entity>
       <a-entity obj-model="obj: #leftLaserObj" materials="name: stageAdditive" position="-14 -3 -39"></a-entity>
     </a-entity>
 
     <!-- Lasers right. -->
-    <a-entity id="rightStageLasers" bind__stage-lasers="enabled: isPlaying">
+    <a-entity id="rightStageLasers" 
+      bind__stage-lasers="enabled: isPlaying && !settings.noEffects"
+      bind__visible="!settings.noEffects">
       <a-entity obj-model="obj: #rightLaserObj" materials="name: stageAdditive" position="6 4 -38"></a-entity>
       <a-entity obj-model="obj: #rightLaserObj" materials="name: stageAdditive" position="10 2 -37"></a-entity>
       <a-entity obj-model="obj: #rightLaserObj" materials="name: stageAdditive" position="14 -1.5 -36"></a-entity>
@@ -39,6 +45,7 @@
 
   <a-entity
     id="smoke"
+    bind__visible="!settings.noEffects"
     animation__rotate="property: rotation; to: 0 360 0; easing: linear; loop: true; dur: 200000"
     obj-model="obj: #smokeObj"
     material="src: #atlasImg; shader: flat; transparent: true; depthWrite: false"

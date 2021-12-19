@@ -128,7 +128,7 @@ AFRAME.registerComponent('replay-loader', {
     challengeloadend: function(event) {
       this.challenge = event;
       if (this.notes) {
-        this.calculateOffset();
+        // this.calculateOffset();
       }
     },
     calculateOffset() {
@@ -143,7 +143,6 @@ AFRAME.registerComponent('replay-loader', {
 
         result += songNote._time * sPerBeat - replayNote.time;
       }
-
       this.replay.info.midDeviation = result / count;
     },
     maxScoreForNote(index) {

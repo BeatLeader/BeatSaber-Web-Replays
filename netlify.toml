@@ -5,6 +5,13 @@
     targetPort = 3000
 
 [[redirects]]
+    from = "/cors/beat-saver/*"
+    to = "https://beatsaver.com/:splat"
+    status = 200
+    force = true
+    headers = {X-From = "Netlify"}
+
+[[redirects]]
     from = "/cors/beat-saver-cdn/*"
     to = "https://eu.cdn.beatsaver.com/:splat"
     status = 200

@@ -20,7 +20,7 @@ html
   padding 10px
   position fixed
   right 0
-  width 750px
+  max-width 770px
   z-index 99999999
 
   &.challengeLoaded
@@ -55,6 +55,8 @@ html
   #controlsSettings
     cursor pointer
     padding 3px 10px 0 14px
+    position: absolute
+    right: 5px
     img
       height 20px
       width 20px
@@ -65,7 +67,7 @@ html
     bottom 60px
     cursor pointer
     display none
-    right 80px
+    right 0px
     padding-top 4px
     position absolute
     z-index 999999999
@@ -149,6 +151,7 @@ html
 #songInfoContainer
   align-items center
   display flex
+  padding-left: 5px
 
   img
     height 32px
@@ -172,8 +175,7 @@ html
   #songInfoSelect
     align-items center
     display flex
-    position absolute
-    right 5px
+    padding-left: 5px
 
   #controlsDifficulty,
   #controlsMode

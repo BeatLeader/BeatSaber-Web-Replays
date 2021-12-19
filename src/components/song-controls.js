@@ -117,10 +117,9 @@ AFRAME.registerComponent('song-controls', {
       this.updateModeOptions();
     });
 
-    // Seek.
-    timeline.addEventListener('click', event => {
-      if (!this.song.source) { return; }
+    var timelineClicked = false;
 
+    let doSeek = event => {
       const marginLeft = (event.clientX - timeline.getBoundingClientRect().left);
       const percent = marginLeft / timeline.getBoundingClientRect().width;
 
@@ -128,8 +127,43 @@ AFRAME.registerComponent('song-controls', {
       // Start audio at seek time.
       const time = percent * this.song.source.buffer.duration;
       this.seek(time >= 0 ? time : 0);
-      // setTimeQueryParam(time);
-    });
+    }
+
+    // Seek.
+    let handleClick = event => {
+      if (!this.song.source) { return; }
+
+      doSeek(event);
+      timelineClicked = true;
+    };
+
+    handleMove = event => {
+      if (!this.song.source || !timelineClicked) { return; }
+
+      doSeek(event);
+    };
+
+    handleUp = event => {
+      timelineClicked = false;
+    };
+
+    if ('onpointerdown' in window) {
+      timeline.addEventListener('pointerdown', handleClick);
+    } else {
+      timeline.addEventListener('touchstart', handleClick);
+    }
+
+    if ('onpointermove' in window) {
+      timeline.addEventListener('pointermove', handleMove);
+    } else {
+      timeline.addEventListener('touchmove', handleMove);
+    }
+
+    if ('onpointerup' in window) {
+      timeline.addEventListener('pointerup', handleUp);
+    } else {
+      timeline.addEventListener('touchend', handleUp);
+    }
 
     // Seek hover.
     timeline.addEventListener('mouseenter', evt => {
@@ -144,6 +178,7 @@ AFRAME.registerComponent('song-controls', {
     });
     timeline.addEventListener('mouseleave', evt => {
       timelineHover.classList.remove('timelineHoverActive');
+      timelineClicked = false;
     });
 
     // Pause.
@@ -280,7 +315,7 @@ AFRAME.registerComponent('song-controls', {
     speedSlider.addEventListener('input', evt => {
       this.song.source.playbackRate.value = evt.target.value;
       this.song.speed = evt.target.value;
-      this.songSpeedPercent.innerHTML = (evt.target.value * 100) + "%";
+      this.songSpeedPercent.innerHTML = (Math.round(evt.target.value * 100)) + "%";
     });
 
     this.songSpeedPercent.innerHTML = (this.song.speed * 100) + "%";

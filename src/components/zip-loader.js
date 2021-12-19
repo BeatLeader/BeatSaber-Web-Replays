@@ -1,4 +1,3 @@
-const dragDrop = require('drag-drop')
 const utils = require('../utils');
 import ZipLoader from 'zip-loader';
 
@@ -19,10 +18,6 @@ AFRAME.registerComponent('zip-loader', {
     if (zipUrl) {
       this.fetchZip(zipUrl);
     }
-
-    dragDrop('#body', (files) => {
-      this.readFile(files[0]);
-    });
   },
 
   update: function (oldData) {
@@ -132,7 +127,7 @@ AFRAME.registerComponent('zip-loader', {
    * Read API first to get hash and URLs.
    */
   fetchData: function (id) {
-    return fetch(`https://beatsaver.com/api/maps/id/${id}`).then(res => {
+    return fetch(`/cors/beat-saver/api/maps/id/${id}`).then(res => {
       res.json().then(data => {
         if (data.versions) {
           this.hash = data.versions[0].hash;

@@ -194,13 +194,13 @@ AFRAME.registerComponent('beat', {
         // Warm up / warp in.
         if (newPositionZ < data.anticipationPosition) {
           position.z = newPositionZ;
-          position.z += this.data.speed * this.song.speed * (-data.timeOffset);
         } else {
           position.z = data.anticipationPosition;
           if (!this.settings.settings.noEffects) {
             this.beams.newBeam(this.data.color, position);
           }
         }
+        position.z += this.data.speed * (-data.timeOffset);
       } else {
 
         // Standard moving.
@@ -208,7 +208,7 @@ AFRAME.registerComponent('beat', {
         rotation.z = this.startRotationZ;
       }
 
-      let warmupRotationTime = BEAT_WARMUP_ROTATION_TIME * (0.8 + data.anticipationPosition / 20);
+      let warmupRotationTime = BEAT_WARMUP_ROTATION_TIME * (0.8 + data.anticipationPosition / 20) / Math.max(this.song.speed, 0.001);
 
       if (position.z > (data.anticipationPosition - BEAT_WARMUP_ROTATION_OFFSET) &&
           this.currentRotationWarmupTime < warmupRotationTime) {
@@ -250,6 +250,27 @@ AFRAME.registerComponent('beat', {
     if (data.type == 'mine') { this.resetMineFragments(); }
 
     this.returnToPoolTimeStart = undefined;
+    
+    if (this.settings.settings.showHitboxes) {
+      if (!this.hitbox) {
+        let itsMine = this.data.type === 'mine';
+        const hitbox = new THREE.WireframeGeometry(itsMine ? new THREE.SphereGeometry(0.18, 16, 8) : new THREE.BoxGeometry(0.8, 0.5, 1.0));
+        const material = new THREE.LineBasicMaterial({
+          color: 0xff0000,
+          linewidth: 1
+        });
+        const line = new THREE.LineSegments( hitbox, material);
+          
+        el.object3D.add(line);
+        if (!itsMine) {
+          line.position.z += 0.25;
+        }
+        this.hitbox = line;
+      }
+    } else if (this.hitbox) {
+      this.hitbox = null;
+      el.object3D.remove(line);
+    }
   },
 
   initBlock: function () {
@@ -632,8 +653,16 @@ AFRAME.registerComponent('beat', {
     const saberEls = this.saberEls;
     const hitBoundingBox = this.hitColliderEl && this.hitBoundingBox.setFromObject(
       this.hitColliderEl.getObject3D('mesh'));
-    const beatBoundingBox = this.beatBoundingBox.setFromObject(
+    const beatSmallBoundingBox = this.beatBoundingBox.setFromObject(
       this.blockEl.getObject3D('mesh'));
+    const beatBigBoundingBox = this.beatBoundingBox.setFromObject(
+        this.blockEl.getObject3D('mesh'));
+    if (this.data.type != 'mine' && !this.settings.settings.showHitboxes) {
+      beatBigBoundingBox.expandByVector(new THREE.Vector3(0.8, 0.51, 1.02));
+      beatBigBoundingBox.translate(new THREE.Vector3(0.0, 0.0, 0.25))
+    }
+    
+    const position = this.el.object3D.position;
 
     for (let i = 0; i < saberEls.length; i++) {
       let saberBoundingBox = saberEls[i].components['saber-controls'].boundingBox;
@@ -644,7 +673,7 @@ AFRAME.registerComponent('beat', {
 
       const hand = saberEls[i].getAttribute('saber-controls').hand;
 
-      if (saberBoundingBox.intersectsBox(beatBoundingBox)) {
+      if (saberBoundingBox.intersectsBox(beatSmallBoundingBox) || (saberBoundingBox.intersectsBox(beatBigBoundingBox) && position.z > -0.3)) {
         // Notify for haptics.
         this.el.emit(`beatcollide${hand}`, null, true);
 
@@ -757,9 +786,18 @@ AFRAME.registerComponent('beat', {
       }
       
     } else {
-      const scoreEl = this.el.sceneEl.querySelectorAll(".beatscoreok" + score)[0];
+      const scoreEl = this.el.sceneEl.components["pool__beatscoreok"].requestEntity();
+      scoreEl.setAttribute('text', 'value', "" + score);
+
+      let duration = 500 / this.song.speed;
+      scoreEl.setAttribute('animation__opacityin', 'dur', duration);
+      scoreEl.setAttribute('animation__opacityout', 'dur', duration);
+      scoreEl.setAttribute('animation__motionz', 'dur', duration);
+      scoreEl.setAttribute('animation__motiony', 'dur', duration);
       if (scoreEl) {
         scoreEl.object3D.position.copy(this.el.object3D.position);
+        scoreEl.object3D.position.x += 0.5; // One block right
+        scoreEl.object3D.position.z -= 3;
         scoreEl.play();
         scoreEl.emit('beatscorestart', null, false);
       }

@@ -6,7 +6,8 @@ AFRAME.registerComponent('settings', {
       this.settings = {
         showHeadset: false,
         reducedDebris: false,
-        noEffects: false
+        noEffects: false,
+        showHitboxes: false
       }
 
       try {

@@ -269,7 +269,7 @@ AFRAME.registerComponent('beat', {
       }
     } else if (this.hitbox) {
       this.hitbox = null;
-      el.object3D.remove(line);
+      el.object3D.remove(this.hitbox);
     }
   },
 

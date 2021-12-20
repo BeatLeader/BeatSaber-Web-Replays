@@ -117,15 +117,21 @@ AFRAME.registerComponent('song-controls', {
       this.updateModeOptions();
     });
 
-    var timelineClicked = false;
+    var timelineClicked = false, timelineHovered = false;
 
-    let doSeek = event => {
-      const marginLeft = (event.clientX - timeline.getBoundingClientRect().left);
-      const percent = marginLeft / timeline.getBoundingClientRect().width;
+    let doSeek = (event, fromTime) => {
+      var time;
+      if (!fromTime) {
+        const marginLeft = (event.clientX - timeline.getBoundingClientRect().left);
+        const percent = marginLeft / timeline.getBoundingClientRect().width;
+        time = percent * this.song.source.buffer.duration;
+      } else {
+        time = fromTime;
+      }
 
       // Get new audio buffer source (needed every time audio is stopped).
       // Start audio at seek time.
-      const time = percent * this.song.source.buffer.duration;
+      
       this.seek(time >= 0 ? time : 0);
     }
 
@@ -169,6 +175,7 @@ AFRAME.registerComponent('song-controls', {
     timeline.addEventListener('mouseenter', evt => {
       if (!this.song.source) { return; }
       timelineHover.classList.add('timelineHoverActive');
+      timelineHovered = true;
     });
     timeline.addEventListener('mousemove', evt => {
       const marginLeft = (evt.clientX - timeline.getBoundingClientRect().left);
@@ -179,7 +186,19 @@ AFRAME.registerComponent('song-controls', {
     timeline.addEventListener('mouseleave', evt => {
       timelineHover.classList.remove('timelineHoverActive');
       timelineClicked = false;
+      timelineHovered = false;
     });
+    let captureThis = this;
+    timeline.addEventListener("wheel", function(e){
+      let currentTime = captureThis.song.getCurrentTime();
+      if (e.deltaY < 0){
+        doSeek(null, currentTime + 0.2);
+      }else{
+        doSeek(null, currentTime - 0.2);
+      }
+      e.preventDefault();
+      e.stopPropagation();
+    })
 
     // Pause.
     document.getElementById('controlsPause').addEventListener('click', () => {

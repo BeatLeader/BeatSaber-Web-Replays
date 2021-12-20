@@ -268,8 +268,8 @@ AFRAME.registerComponent('beat', {
         this.hitbox = line;
       }
     } else if (this.hitbox) {
-      this.hitbox = null;
       el.object3D.remove(this.hitbox);
+      this.hitbox = null;
     }
   },
 
@@ -568,6 +568,8 @@ AFRAME.registerComponent('beat', {
 
         auxObj3D.up.copy(rightCutPlane.normal);
         auxObj3D.lookAt(direction);
+      } else {
+        this.returnToPool(true);
       }
 
       if (!this.settings.settings.noEffects) {
@@ -657,8 +659,8 @@ AFRAME.registerComponent('beat', {
       this.blockEl.getObject3D('mesh'));
     const beatBigBoundingBox = this.beatBoundingBox.setFromObject(
         this.blockEl.getObject3D('mesh'));
-    if (this.data.type != 'mine' && !this.settings.settings.showHitboxes) {
-      beatBigBoundingBox.expandByVector(new THREE.Vector3(0.8, 0.51, 1.02));
+    if (this.data.type != 'mine') {
+      beatBigBoundingBox.expandByVector(new THREE.Vector3(0.181, 0.05, 0.3));
       beatBigBoundingBox.translate(new THREE.Vector3(0.0, 0.0, 0.25))
     }
     
@@ -673,7 +675,7 @@ AFRAME.registerComponent('beat', {
 
       const hand = saberEls[i].getAttribute('saber-controls').hand;
 
-      if (saberBoundingBox.intersectsBox(beatSmallBoundingBox) || (saberBoundingBox.intersectsBox(beatBigBoundingBox) && position.z > -0.3)) {
+      if (saberBoundingBox.intersectsBox(beatSmallBoundingBox) || (saberBoundingBox.intersectsBox(beatBigBoundingBox))) {
         // Notify for haptics.
         this.el.emit(`beatcollide${hand}`, null, true);
 

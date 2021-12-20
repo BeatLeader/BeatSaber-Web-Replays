@@ -254,8 +254,20 @@ AFRAME.registerComponent('beat-generator', {
       beatObj.index = note.index;
 
       const sPerBeat = 60 / this.bpm;
-      beatObj.timeOffset = note._time * sPerBeat - this.el.components.song.getCurrentTime() - this.beatAnticipationTime -
-      this.data.beatWarmupTime;
+      var timeOffset = note._time * sPerBeat - this.el.components.song.getCurrentTime() - this.beatAnticipationTime - data.beatWarmupTime;
+      
+      var positionOffset = 0;
+      if (timeOffset < -0.06) {
+        if (timeOffset <= -data.beatWarmupTime) {
+          positionOffset = beatObj.anticipationPosition;
+          timeOffset += data.beatWarmupTime;
+          positionOffset += -timeOffset * this.beatSpeed;
+        } else {
+          positionOffset = beatObj.anticipationPosition + beatObj.warmupPosition + data.beatWarmupSpeed * -timeOffset;
+        }
+      }
+      beatObj.positionOffset = positionOffset;
+      
 
       if (this.mappingExtensions) {
         note._lineIndex = note._lineIndex < 0
@@ -383,7 +395,6 @@ AFRAME.registerComponent('beat-generator', {
   },
 
   calculateJumpTime: function (bpm, njs, offset) {
-    console.log(offset);
       let halfjump = 4;
       let num = 60 / bpm;
 

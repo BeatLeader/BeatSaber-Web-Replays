@@ -43,7 +43,7 @@ AFRAME.registerComponent('beat', {
     type: {default: 'arrow', oneOf: ['arrow', 'dot', 'mine']},
     verticalPosition: {default: 1},
     warmupPosition: {default: 0},
-    timeOffset: {default: 0}
+    positionOffset: {default: 0}
   },
 
   materialColor: {
@@ -188,8 +188,15 @@ AFRAME.registerComponent('beat', {
     } else {
       if (position.z > collisionZThreshold) { this.checkCollisions(); }
 
+      if (data.positionOffset) {
+        position.z = data.positionOffset;
+        data.positionOffset = 0;
+        return;
+      }
+      
       // Move.
       if (position.z < data.anticipationPosition) {
+        
         let newPositionZ = position.z + BEAT_WARMUP_SPEED * this.song.speed * (timeDelta / 1000);
         // Warm up / warp in.
         if (newPositionZ < data.anticipationPosition) {
@@ -200,7 +207,6 @@ AFRAME.registerComponent('beat', {
             this.beams.newBeam(this.data.color, position);
           }
         }
-        position.z += this.data.speed * (-data.timeOffset);
       } else {
 
         // Standard moving.

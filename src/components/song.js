@@ -166,10 +166,11 @@ AFRAME.registerComponent('song', {
   startAudio: function (time) {
     this.isPlaying = true;
     const playTime = time || skipDebug || 0;
-    this.songStartTime = (this.context.currentTime * this.speed - playTime) / this.speed;
+    this.songStartTime = (this.context.currentTime * this.speed - playTime) / (this.speed > 0.01 ? this.speed : 0.01);
     this.source.start(0, playTime);
     this.el.emit('songstartaudio');
-    this.lastCurrentTime = null;
+    this.lastCurrentTime = (this.speed > 0.01 ? 0 : time);
+    
     this.source.playbackRate.value = this.speed;
   },
 

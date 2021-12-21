@@ -3,7 +3,7 @@ import {BEAT_WARMUP_OFFSET, BEAT_WARMUP_SPEED, BEAT_WARMUP_TIME} from '../consta
 const COLORS = require('../constants/colors.js');
 
 const auxObj3D = new THREE.Object3D();
-const collisionZThreshold = -1.65;
+const collisionZThreshold = -2.6;
 const BEAT_WARMUP_ROTATION_CHANGE = Math.PI / 5;
 const BEAT_WARMUP_ROTATION_OFFSET = 0.4;
 const BEAT_WARMUP_ROTATION_TIME = 750;
@@ -322,8 +322,8 @@ AFRAME.registerComponent('beat', {
         }, ONCE);
       }
     } else {
-      // signEl.setAttribute('materials', "name: stageAdditive");
-      this.setObjModelFromTemplate(signEl, this.signModels[this.data.type + this.data.color], this.el.sceneEl.systems.materials.clearStageAdditive);
+      signEl.setAttribute('materials', "name: clearStageAdditive");
+      this.setObjModelFromTemplate(signEl, this.signModels[this.data.type + this.data.color]);
     }
   },
 
@@ -667,7 +667,7 @@ AFRAME.registerComponent('beat', {
         this.blockEl.getObject3D('mesh'));
     if (this.data.type != 'mine') {
       beatBigBoundingBox.expandByVector(new THREE.Vector3(0.181, 0.05, 0.3));
-      beatBigBoundingBox.translate(new THREE.Vector3(0.0, 0.0, 0.25))
+      beatBigBoundingBox.translate(new THREE.Vector3(0.0, 0.0, 0.4))
     }
     
     const position = this.el.object3D.position;

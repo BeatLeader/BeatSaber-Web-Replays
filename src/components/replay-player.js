@@ -44,6 +44,7 @@ AFRAME.registerComponent('replay-player', {
     
           let frame = frames[frameIndex];
           let nextFrame = frames[frameIndex != frames.length - 1 ? frameIndex + 1 : frameIndex];
+          if (frame.a == 0 && nextFrame.a == 0) return;
     
           let room = replay.info.room;
           let height = clamp((replay.info.height - 1.8) * 0.5, -0.2, 0.6);

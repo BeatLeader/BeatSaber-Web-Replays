@@ -55,7 +55,7 @@ AFRAME.registerSystem('materials', {
       vertexShader: stageAdditiveShaders.vertexShader,
       fragmentShader: stageAdditiveShaders.fragmentShader,
       blending: THREE.AdditiveBlending,
-      depthTest: false,
+      depthWrite: false,
       fog: false,
       transparent: true
     });

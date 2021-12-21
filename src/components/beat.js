@@ -323,7 +323,7 @@ AFRAME.registerComponent('beat', {
       }
     } else {
       // signEl.setAttribute('materials', "name: stageAdditive");
-      this.setObjModelFromTemplate(signEl, this.signModels[this.data.type + this.data.color], this.el.sceneEl.systems.materials.stageAdditive);
+      this.setObjModelFromTemplate(signEl, this.signModels[this.data.type + this.data.color], this.el.sceneEl.systems.materials.clearStageAdditive);
     }
   },
 

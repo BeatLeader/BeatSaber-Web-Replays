@@ -257,14 +257,12 @@ AFRAME.registerComponent('beat-generator', {
       var timeOffset = note._time * sPerBeat - this.el.components.song.getCurrentTime() - this.beatAnticipationTime - data.beatWarmupTime;
       
       var positionOffset = 0;
-      if (timeOffset < -0.06) {
-        if (timeOffset <= -data.beatWarmupTime) {
-          positionOffset = beatObj.anticipationPosition;
-          timeOffset += data.beatWarmupTime;
-          positionOffset += -timeOffset * this.beatSpeed;
-        } else {
-          positionOffset = beatObj.anticipationPosition + beatObj.warmupPosition + data.beatWarmupSpeed * -timeOffset;
-        }
+      if (timeOffset <= -data.beatWarmupTime) {
+        positionOffset = beatObj.anticipationPosition;
+        timeOffset += data.beatWarmupTime;
+        positionOffset += -timeOffset * this.beatSpeed;
+      } else {
+        positionOffset = beatObj.anticipationPosition + beatObj.warmupPosition + data.beatWarmupSpeed * -timeOffset;
       }
       beatObj.positionOffset = positionOffset;
       

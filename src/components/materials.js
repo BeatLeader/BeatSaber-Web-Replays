@@ -41,6 +41,25 @@ AFRAME.registerSystem('materials', {
       transparent: true
     });
 
+    this.clearStageAdditive = new THREE.ShaderMaterial({
+      uniforms: {
+        tunnelNeon: {value: new THREE.Color(COLORS.NEON_RED)},
+        floorNeon: {value: new THREE.Color(COLORS.NEON_RED)},
+        leftLaser: {value: new THREE.Color(COLORS.NEON_BLUE)},
+        rightLaser: {value: new THREE.Color(COLORS.NEON_BLUE)},
+        textGlow: {value: new THREE.Color(COLORS.TEXT_OFF)},
+        src: {
+          value: new THREE.TextureLoader().load(document.getElementById('atlasImg').src)
+        },
+      },
+      vertexShader: stageAdditiveShaders.vertexShader,
+      fragmentShader: stageAdditiveShaders.fragmentShader,
+      blending: THREE.AdditiveBlending,
+      depthTest: false,
+      fog: false,
+      transparent: true
+    });
+
     this.mineMaterialred = new THREE.MeshStandardMaterial({
       roughness: 0.38,
       metalness: 0.48,

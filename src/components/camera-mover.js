@@ -14,7 +14,8 @@ AFRAME.registerComponent('camera-mover', {
     play: function () {
         document.querySelectorAll('.a-enter-vr')[0].style.display = 'none';
 
-        document.getElementById('povswitch').addEventListener('click', () => {
+        document.getElementById('povswitch').addEventListener('click', (e) => {
+            e.preventDefault();
             if (this.pov) {
                 this.povCamera.setAttribute('camera', 'active', false);
                 this.defaultCamera.setAttribute('camera', 'active', true);
@@ -25,14 +26,6 @@ AFRAME.registerComponent('camera-mover', {
             this.pov = !this.pov;
             this.el.sceneEl.emit('povchanged', {newPov: this.pov}, false);
         });
-          
-        document.addEventListener("keydown", (e) => {
-            if (e.key == 'c') {
-                this.defaultCameraRig.object3D.position.y -= 0.1;
-            } else if (e.key == 'x') {
-                this.defaultCameraRig.object3D.position.y += 0.1;
-            }
-        })
         this.defaultCameraRig.object3D.position.z = 2.0;
     },
 });

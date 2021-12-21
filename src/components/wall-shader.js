@@ -102,7 +102,7 @@ AFRAME.registerShader('wallShader', {
 
       vec3 col = vec3(r * COL.r + w + BG.r, r * COL.g + w + BG.g, r * COL.b + w + BG.b);
 
-      gl_FragColor = vec4(col, 0.7 + w);
+      gl_FragColor = vec4(col, 0.3 + w);
     }
 `
 

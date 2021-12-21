@@ -135,13 +135,22 @@ AFRAME.registerComponent('replay-loader', {
       let beatmaps = this.challenge.beatmaps[this.data.mode][this.data.difficulty]._notes;
       let bpm = this.challenge.info._beatsPerMinute;
       const sPerBeat = 60 / bpm;
-      let count = Math.min(this.notes.length, 10);
+      let count = Math.min(this.notes.length, 100);
       var result = 0;
-      for (var i = 0; i < count; i++) {
-        let replayNote = this.notes[i];
-        let songNote = beatmaps[i];
 
-        result += songNote._time * sPerBeat - replayNote.time;
+      var noteIndex = 0;
+      var replayNoteIndex = 0;
+      
+      while (replayNoteIndex < count) {
+        let replayNote = this.notes[replayNoteIndex];
+        let songNote = beatmaps[noteIndex];
+
+        if (songNote._type < 2) {
+          result += songNote._time * sPerBeat - replayNote.time;
+          replayNoteIndex++;
+        }
+
+        noteIndex++;
       }
       this.replay.info.midDeviation = result / count;
       console.log("Mid deviation: " + this.replay.info.midDeviation);

@@ -48,7 +48,7 @@ AFRAME.registerComponent('beat-generator', {
     this.bpm = undefined;
     this.stageColors = this.el.components['stage-colors'];
     // Beats arrive at sword stroke distance synced with the music.
-    this.swordOffset = 1.0;
+    this.swordOffset = 1.5;
     this.twister = document.getElementById('twister');
     this.leftStageLasers = document.getElementById('leftStageLasers');
     this.rightStageLasers = document.getElementById('rightStageLasers');
@@ -309,6 +309,19 @@ AFRAME.registerComponent('beat-generator', {
       wallObj.warmupPosition = -data.beatWarmupTime * data.beatWarmupSpeed;
       // wall._width can be like 1 or 2. Map that to 0.5 thickness.
       wallObj.width = wall._width * WALL_THICKNESS;
+
+      const sPerBeat = 60 / this.bpm;
+      var timeOffset = wall._time * sPerBeat - this.el.components.song.getCurrentTime() - this.beatAnticipationTime - data.beatWarmupTime;
+      
+      var positionOffset = 0;
+      if (timeOffset <= -data.beatWarmupTime) {
+        positionOffset = wallObj.anticipationPosition;
+        timeOffset += data.beatWarmupTime;
+        positionOffset += -timeOffset * this.beatSpeed;
+      } else {
+        positionOffset = wallObj.anticipationPosition + wallObj.warmupPosition + data.beatWarmupSpeed * -timeOffset;
+      }
+      wallObj.positionOffset = positionOffset;
 
       if (this.mappingExtensions) {
         wallObj.horizontalPosition = wall._lineIndex < 0

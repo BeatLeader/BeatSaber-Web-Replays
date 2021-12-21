@@ -23,7 +23,8 @@ AFRAME.registerComponent('wall', {
     isCeiling: {default: false},
     speed: {default: 1.0},
     warmupPosition: {default: 0},
-    width: {default: 1}
+    width: {default: 1},
+    positionOffset: {default: 0}
   },
 
   init: function () {
@@ -36,7 +37,7 @@ AFRAME.registerComponent('wall', {
     const data = this.data;
     const width = data.width;
 
-    const halfDepth = data.durationSeconds * (data.speed * this.song.speed) / 2;
+    const halfDepth = data.durationSeconds * (data.speed) / 2;
 
     if (data.isCeiling) {
       el.object3D.position.set(
@@ -47,7 +48,7 @@ AFRAME.registerComponent('wall', {
       el.object3D.scale.set(
         width,
         CEILING_THICKNESS,
-        data.durationSeconds * data.speed * this.song.speed
+        data.durationSeconds * data.speed
       );
       return;
     }
@@ -62,7 +63,7 @@ AFRAME.registerComponent('wall', {
     el.object3D.scale.set(
       width,
       2.5,
-      data.durationSeconds * data.speed * this.song.speed
+      data.durationSeconds * data.speed
     );
   },
 
@@ -99,6 +100,12 @@ AFRAME.registerComponent('wall', {
     const data = this.data;
     const halfDepth = data.durationSeconds * data.speed / 2;
     const position = this.el.object3D.position;
+
+    if (data.positionOffset) {
+      position.z = data.positionOffset;
+      data.positionOffset = 0;
+      return;
+    }
 
     // Move.
     this.el.object3D.visible = true;

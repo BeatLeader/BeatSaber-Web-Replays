@@ -8,7 +8,8 @@ AFRAME.registerComponent('settings', {
         reducedDebris: false,
         noEffects: false,
         showHitboxes: false,
-        pixelRatio: 1.6
+        pixelRatio: 1.6,
+        volume: 0.3
       }
 
       try {
@@ -22,6 +23,7 @@ AFRAME.registerComponent('settings', {
 
       Object.keys(this.settings).forEach(key => {
         let toggle = document.getElementById(key);
+        if (!toggle) return; // Someone else handling setting.
         if (toggle.type == 'checkbox') {
           toggle.addEventListener('input', (event) => {
             this.settings[key] = event.srcElement.checked;
@@ -43,4 +45,7 @@ AFRAME.registerComponent('settings', {
         
       });
     },
+    sync: function() {
+      localStorage.setItem('settings', JSON.stringify(this.settings))
+    }
   });

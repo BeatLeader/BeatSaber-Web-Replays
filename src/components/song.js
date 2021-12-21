@@ -52,7 +52,7 @@ AFRAME.registerComponent('song', {
     this.speed = songSpeed;
 
     this.audioAnalyser.gainNode.gain.value =
-      document.getElementById('volumeSlider').value || 0.35;
+      this.el.sceneEl.components.settings.settings.volume || 0.35;
 
     this.el.addEventListener('gamemenurestart', this.onRestart.bind(this));
   },

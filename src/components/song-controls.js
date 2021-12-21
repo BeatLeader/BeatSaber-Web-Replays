@@ -25,6 +25,7 @@ AFRAME.registerComponent('song-controls', {
   init: function () {
     this.customDifficultyLabels = {};
     this.song = this.el.components.song;
+    this.settings = this.el.components.settings;
     this.tick = AFRAME.utils.throttleTick(this.tick.bind(this), 100);
 
     // Seek to ?time if specified.
@@ -311,13 +312,15 @@ AFRAME.registerComponent('song-controls', {
     let volumeHandler = () => {
       this.song.audioAnalyser.gainNode.gain.cancelScheduledValues(0);
       this.song.audioAnalyser.gainNode.gain.value = volumeSlider.value;
+      this.settings.settings.volume = volumeSlider.value;
+      this.settings.sync();
       document.getElementById('beatContainer').components['beat-hit-sound']
         .setVolume(volumeSlider.value);
     }
     volumeSlider.addEventListener('input', evt => {
       volumeHandler();
     });
-    this.song.audioAnalyser.gainNode.gain.value = volumeSlider.value;
+    volumeSlider.value = this.settings.settings.volume;
 
     volumeSlider.addEventListener("wheel", function(e){
       if (e.deltaY < 0){

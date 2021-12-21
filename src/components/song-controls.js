@@ -4,7 +4,7 @@ let queryParamTime = AFRAME.utils.getUrlParameter('time').trim();
 if (!queryParamTime || isNaN(queryParamTime)) {
   queryParamTime = undefined;
 } else {
-  queryParamTime = parseFloat(queryParamTime);
+  queryParamTime = parseFloat(queryParamTime) / 1000;
 }
 
 /**
@@ -281,7 +281,7 @@ AFRAME.registerComponent('song-controls', {
       let input = document.createElement('input');
       target.appendChild(input);
       let base = location.protocol + "//" + location.host + "/" + `?id=${AFRAME.utils.getUrlParameter('id')}&playerID=${AFRAME.utils.getUrlParameter('playerID')}&difficulty=${AFRAME.utils.getUrlParameter('difficulty')}`
-      input.value = base + (time ? `&time=${Math.round(this.song.getCurrentTime())}&speed=${Math.round(this.song.speed * 100)}` : "" );
+      input.value = base + (time ? `&time=${Math.round(this.song.getCurrentTime()*1000)}&speed=${Math.round(this.song.speed * 100000)}` : "" );
       input.select();
       document.execCommand("copy");
       target.removeChild(input);
@@ -331,11 +331,26 @@ AFRAME.registerComponent('song-controls', {
     })
 
     let speedSlider = document.getElementById('speedSlider');
+    let speedHandler = () => {
+      this.song.source.playbackRate.value = speedSlider.value;
+      this.song.speed = speedSlider.value;
+      this.songSpeedPercent.innerHTML = (Math.round(speedSlider.value * 10000) / 100) + "%";
+    };
+    
     speedSlider.addEventListener('input', evt => {
-      this.song.source.playbackRate.value = evt.target.value;
-      this.song.speed = evt.target.value;
-      this.songSpeedPercent.innerHTML = (Math.round(evt.target.value * 100)) + "%";
+      speedHandler();
     });
+
+    speedSlider.addEventListener("wheel", function(e){
+      if (e.deltaY < 0){
+        speedSlider.valueAsNumber += 0.01;
+      }else{
+        speedSlider.value -= 0.01;
+      }
+      speedHandler();
+      e.preventDefault();
+      e.stopPropagation();
+    })
 
     this.songSpeedPercent.innerHTML = (this.song.speed * 100) + "%";
     speedSlider.value = this.song.speed;

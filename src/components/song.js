@@ -12,7 +12,7 @@ if (!!skipDebug) {
 
 let songSpeed = AFRAME.utils.getUrlParameter('speed');
 if (!!songSpeed) {
-  songSpeed = parseFloat(songSpeed) / 100;
+  songSpeed = parseFloat(songSpeed) / 100000;
 } else {
   songSpeed = 1.0;
 }

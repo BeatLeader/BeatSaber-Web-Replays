@@ -72008,6 +72008,7 @@ module.exports.Component = registerComponent('wasd-controls', {
     let movement = this.getMovementVector(delta)
     el.object3D.position.y += movement.y;
     el.object3D.position.x += movement.x;
+    el.object3D.position.z += movement.z;
   },
 
   remove: function () {

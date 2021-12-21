@@ -24,12 +24,17 @@ AFRAME.registerComponent('wall', {
     speed: {default: 1.0},
     warmupPosition: {default: 0},
     width: {default: 1},
-    positionOffset: {default: 0}
+    positionOffset: {default: 0},
+    time: {default: 0},
+    anticipationTime: {default: 0},
+    warmupTime: {default: 0},
+    warmupSpeed: {default: 0},
   },
 
   init: function () {
     this.maxZ = 10;
     this.song = this.el.sceneEl.components.song;
+    this.headset = this.el.sceneEl.querySelectorAll('.headset')[0];
   },
 
   update: function () {
@@ -100,29 +105,27 @@ AFRAME.registerComponent('wall', {
     const data = this.data;
     const halfDepth = data.durationSeconds * data.speed / 2;
     const position = this.el.object3D.position;
-
-    if (data.positionOffset) {
-      position.z = data.positionOffset;
-      data.positionOffset = 0;
-      return;
-    }
+    const song = this.song;
 
     // Move.
     this.el.object3D.visible = true;
-    if (position.z < (data.anticipationPosition - halfDepth)) {
-      let newPositionZ = position.z + BEAT_WARMUP_SPEED * this.song.speed * (timeDelta / 1000);
-      // Warm up / warp in.
-      if (newPositionZ < (data.anticipationPosition - halfDepth)) {
-        position.z = newPositionZ;
-      } else {
-        position.z = data.anticipationPosition - halfDepth;
-      }
+
+    var newPosition = 0;
+
+    var timeOffset = data.time - song.getCurrentTime() - data.anticipationTime - data.warmupTime;
+
+    if (timeOffset <= -data.warmupTime) {
+      newPosition = data.anticipationPosition;
+      timeOffset += data.warmupTime;
+      newPosition += -timeOffset * data.speed;
     } else {
-      // Standard moving.
-      position.z += this.data.speed * this.song.speed * (timeDelta / 1000);
+      newPosition = data.anticipationPosition + data.warmupPosition + data.warmupSpeed * -timeOffset;
     }
 
-    if (this.el.object3D.position.z > (this.maxZ + halfDepth)) {
+    newPosition -= this.headset.object3D.position.z;
+    position.z = newPosition;
+
+    if (position.z > (this.maxZ + halfDepth)) {
       this.returnToPool();
       return;
     }

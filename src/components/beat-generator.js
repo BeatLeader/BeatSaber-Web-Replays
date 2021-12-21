@@ -48,7 +48,7 @@ AFRAME.registerComponent('beat-generator', {
     this.bpm = undefined;
     this.stageColors = this.el.components['stage-colors'];
     // Beats arrive at sword stroke distance synced with the music.
-    this.swordOffset = 1.5;
+    this.swordOffset = 0.5;
     this.twister = document.getElementById('twister');
     this.leftStageLasers = document.getElementById('leftStageLasers');
     this.rightStageLasers = document.getElementById('rightStageLasers');
@@ -253,19 +253,10 @@ AFRAME.registerComponent('beat-generator', {
       beatObj.warmupPosition = -data.beatWarmupTime * data.beatWarmupSpeed;
       beatObj.index = note.index;
 
-      const sPerBeat = 60 / this.bpm;
-      var timeOffset = note._time * sPerBeat - this.el.components.song.getCurrentTime() - this.beatAnticipationTime - data.beatWarmupTime;
-      
-      var positionOffset = 0;
-      if (timeOffset <= -data.beatWarmupTime) {
-        positionOffset = beatObj.anticipationPosition;
-        timeOffset += data.beatWarmupTime;
-        positionOffset += -timeOffset * this.beatSpeed;
-      } else {
-        positionOffset = beatObj.anticipationPosition + beatObj.warmupPosition + data.beatWarmupSpeed * -timeOffset;
-      }
-      beatObj.positionOffset = positionOffset;
-      
+      beatObj.time = note._time * (60 / this.bpm);
+      beatObj.anticipationTime = this.beatAnticipationTime;
+      beatObj.warmupTime = data.beatWarmupTime;
+      beatObj.warmupSpeed = data.beatWarmupSpeed;
 
       if (this.mappingExtensions) {
         note._lineIndex = note._lineIndex < 0
@@ -310,18 +301,10 @@ AFRAME.registerComponent('beat-generator', {
       // wall._width can be like 1 or 2. Map that to 0.5 thickness.
       wallObj.width = wall._width * WALL_THICKNESS;
 
-      const sPerBeat = 60 / this.bpm;
-      var timeOffset = wall._time * sPerBeat - this.el.components.song.getCurrentTime() - this.beatAnticipationTime - data.beatWarmupTime;
-      
-      var positionOffset = 0;
-      if (timeOffset <= -data.beatWarmupTime) {
-        positionOffset = wallObj.anticipationPosition;
-        timeOffset += data.beatWarmupTime;
-        positionOffset += -timeOffset * this.beatSpeed;
-      } else {
-        positionOffset = wallObj.anticipationPosition + wallObj.warmupPosition + data.beatWarmupSpeed * -timeOffset;
-      }
-      wallObj.positionOffset = positionOffset;
+      wallObj.time = wall._time * (60 / this.bpm);
+      wallObj.anticipationTime = this.beatAnticipationTime;
+      wallObj.warmupTime = data.beatWarmupTime;
+      wallObj.warmupSpeed = data.beatWarmupSpeed;
 
       if (this.mappingExtensions) {
         wallObj.horizontalPosition = wall._lineIndex < 0

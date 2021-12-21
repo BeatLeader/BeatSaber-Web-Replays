@@ -43,7 +43,10 @@ AFRAME.registerComponent('beat', {
     type: {default: 'arrow', oneOf: ['arrow', 'dot', 'mine']},
     verticalPosition: {default: 1},
     warmupPosition: {default: 0},
-    positionOffset: {default: 0}
+    time: {default: 0},
+    anticipationTime: {default: 0},
+    warmupTime: {default: 0},
+    warmupSpeed: {default: 0},
   },
 
   materialColor: {
@@ -108,6 +111,7 @@ AFRAME.registerComponent('beat', {
     this.returnToPoolTimeStart = undefined;
     this.rotationAxis = new THREE.Vector3();
     this.saberEls = this.el.sceneEl.querySelectorAll('[saber-controls]');
+    this.headset = this.el.sceneEl.querySelectorAll('.headset')[0];
     this.replayLoader = this.el.sceneEl.components['replay-loader'];
     this.settings = this.el.sceneEl.components['settings'];
     this.frameNum = 0;
@@ -181,6 +185,7 @@ AFRAME.registerComponent('beat', {
     const data = this.data;
     const position = el.object3D.position;
     const rotation = el.object3D.rotation;
+    const song = this.song;
 
     if (this.destroyed) {
       this.tockDestroyed(timeDelta);
@@ -188,31 +193,23 @@ AFRAME.registerComponent('beat', {
     } else {
       if (position.z > collisionZThreshold) { this.checkCollisions(); }
 
-      if (data.positionOffset) {
-        position.z = data.positionOffset;
-        data.positionOffset = 0;
-        return;
-      }
-      
-      // Move.
-      if (position.z < data.anticipationPosition) {
-        
-        let newPositionZ = position.z + BEAT_WARMUP_SPEED * this.song.speed * (timeDelta / 1000);
-        // Warm up / warp in.
-        if (newPositionZ < data.anticipationPosition) {
-          position.z = newPositionZ;
-        } else {
-          position.z = data.anticipationPosition;
-          if (!this.settings.settings.noEffects) {
-            this.beams.newBeam(this.data.color, position);
-          }
+      var newPosition = 0;
+
+      var timeOffset = data.time - song.getCurrentTime() - data.anticipationTime - data.warmupTime;
+
+      if (timeOffset <= -data.warmupTime) {
+        newPosition = data.anticipationPosition;
+        timeOffset += data.warmupTime;
+        newPosition += -timeOffset * data.speed;
+        if (!this.settings.settings.noEffects && Math.abs(timeOffset) < 0.01) {
+          this.beams.newBeam(this.data.color, newPosition);
         }
       } else {
-
-        // Standard moving.
-        position.z += this.data.speed * this.song.speed * (timeDelta / 1000);
-        rotation.z = this.startRotationZ;
+        newPosition = data.anticipationPosition + data.warmupPosition + data.warmupSpeed * -timeOffset;
       }
+
+      newPosition -= this.headset.object3D.position.z;
+      position.z = newPosition;
 
       let warmupRotationTime = BEAT_WARMUP_ROTATION_TIME * (0.8 + data.anticipationPosition / 20) / Math.max(this.song.speed, 0.001);
 
@@ -283,9 +280,6 @@ AFRAME.registerComponent('beat', {
     var el = this.el;
     var blockEl = this.blockEl = document.createElement('a-entity');
     var signEl = this.signEl = document.createElement('a-entity');
-
-    blockEl.setAttribute('mixin', 'beatBlock');
-    blockEl.setAttribute('mixin', 'beatSign');
 
     // Small offset to prevent z-fighting when the blocks are far away
     signEl.object3D.position.z += 0.02;
@@ -667,7 +661,7 @@ AFRAME.registerComponent('beat', {
         this.blockEl.getObject3D('mesh'));
     if (this.data.type != 'mine') {
       beatBigBoundingBox.expandByVector(new THREE.Vector3(0.181, 0.05, 0.3));
-      beatBigBoundingBox.translate(new THREE.Vector3(0.0, 0.0, 0.4))
+      beatBigBoundingBox.translate(new THREE.Vector3(0.0, 0.0, 0.25))
     }
     
     const position = this.el.object3D.position;

@@ -61,15 +61,15 @@ AFRAME.registerComponent('replay-player', {
       },
     rightHandedTock: function(room, frame, nextFrame, height, slerpValue) {
           this.saberEls[0].object3D.position.x = frame.l.p.x - room.x;
-          this.saberEls[0].object3D.position.y = frame.l.p.y - room.y + height;
+          this.saberEls[0].object3D.position.y = frame.l.p.y - room.y - height;
           this.saberEls[0].object3D.position.z = -frame.l.p.z + room.z;
     
           this.saberEls[1].object3D.position.x = frame.r.p.x - room.x;
-          this.saberEls[1].object3D.position.y = frame.r.p.y - room.y + height;
+          this.saberEls[1].object3D.position.y = frame.r.p.y - room.y - height;
           this.saberEls[1].object3D.position.z = -frame.r.p.z + room.z;
 
           this.headset.object3D.position.x = frame.h.p.x - room.x;
-          this.headset.object3D.position.y = frame.h.p.y - room.y + height;
+          this.headset.object3D.position.y = frame.h.p.y - room.y - height;
           this.headset.object3D.position.z = -frame.h.p.z + room.z;
     
           var lquat = new THREE.Quaternion(frame.l.r.w, frame.l.r.z, frame.l.r.y, frame.l.r.x).slerp(new THREE.Quaternion(nextFrame.l.r.w, nextFrame.l.r.z, nextFrame.l.r.y, nextFrame.l.r.x), slerpValue);
@@ -95,15 +95,15 @@ AFRAME.registerComponent('replay-player', {
     },
     leftHandedTock: function(room, frame, nextFrame, height, slerpValue) {
           this.saberEls[0].object3D.position.x = -frame.r.p.x + room.x;
-          this.saberEls[0].object3D.position.y = frame.r.p.y - room.y + height;
+          this.saberEls[0].object3D.position.y = frame.r.p.y - room.y - height;
           this.saberEls[0].object3D.position.z = -frame.r.p.z + room.z;
     
           this.saberEls[1].object3D.position.x = -frame.l.p.x + room.x;
-          this.saberEls[1].object3D.position.y = frame.l.p.y - room.y + height;
+          this.saberEls[1].object3D.position.y = frame.l.p.y - room.y - height;
           this.saberEls[1].object3D.position.z = -frame.l.p.z + room.z;
 
           this.headset.object3D.position.x = -frame.h.p.x + room.x;
-          this.headset.object3D.position.y = frame.h.p.y - room.y + height;
+          this.headset.object3D.position.y = frame.h.p.y - room.y - height;
           this.headset.object3D.position.z = -frame.h.p.z + room.z;
     
           var rquat = new THREE.Quaternion(frame.r.r.w, -frame.r.r.z, -frame.r.r.y, frame.r.r.x).slerp(new THREE.Quaternion(nextFrame.r.r.w, -nextFrame.r.r.z, -nextFrame.r.r.y, nextFrame.r.r.x), slerpValue);

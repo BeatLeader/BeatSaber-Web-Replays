@@ -67,6 +67,7 @@ AFRAME.registerComponent('replay-loader', {
     },
     processScores: function () {
       const replay = this.replay;
+      console.log(replay.info.height);
       var noteStructs = new Array();
       var bombStructs = new Array();
       var index = 0;

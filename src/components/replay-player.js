@@ -67,10 +67,6 @@ AFRAME.registerComponent('replay-player', {
           this.saberEls[1].object3D.position.y = frame.r.p.y - height;
           this.saberEls[1].object3D.position.z = -frame.r.p.z;
 
-          this.headset.object3D.position.x = frame.h.p.x;
-          this.headset.object3D.position.y = frame.h.p.y - height;
-          this.headset.object3D.position.z = -frame.h.p.z;
-    
           var lquat = new THREE.Quaternion(frame.l.r.w, frame.l.r.z, frame.l.r.y, frame.l.r.x).slerp(new THREE.Quaternion(nextFrame.l.r.w, nextFrame.l.r.z, nextFrame.l.r.y, nextFrame.l.r.x), slerpValue);
           var lrotation = new THREE.Euler().setFromQuaternion(lquat);
     
@@ -85,12 +81,19 @@ AFRAME.registerComponent('replay-player', {
           this.saberEls[1].object3D.rotation.y = rrotation.y + Math.PI;
           this.saberEls[1].object3D.rotation.z = -rrotation.z;
 
+          this.headset.object3D.position = this.headset.object3D.position.lerp(new THREE.Vector3(frame.h.p.x, frame.h.p.y - height, -frame.h.p.z), 0.4);
+
           var hquat = new THREE.Quaternion(frame.h.r.w, frame.h.r.z, frame.h.r.y, frame.h.r.x).slerp(new THREE.Quaternion(nextFrame.h.r.w, nextFrame.h.r.z, nextFrame.h.r.y, nextFrame.h.r.x), slerpValue);
+
+          if (this.headset.object3D.hquat) {
+            hquat = this.headset.object3D.hquat.slerp(hquat, 0.4);
+          }
           var hrotation = new THREE.Euler().setFromQuaternion(hquat);
     
           this.headset.object3D.rotation.x = hrotation.x
           this.headset.object3D.rotation.y = hrotation.y + Math.PI;
-          this.headset.object3D.rotation.z = hrotation.z + Math.PI;;
+          this.headset.object3D.rotation.z = hrotation.z + Math.PI;
+          this.headset.object3D.hquat = hquat;
     },
     leftHandedTock: function(frame, nextFrame, height, slerpValue) {
           this.saberEls[0].object3D.position.x = -frame.r.p.x;
@@ -101,10 +104,6 @@ AFRAME.registerComponent('replay-player', {
           this.saberEls[1].object3D.position.y = frame.l.p.y - height;
           this.saberEls[1].object3D.position.z = -frame.l.p.z;
 
-          this.headset.object3D.position.x = -frame.h.p.x;
-          this.headset.object3D.position.y = frame.h.p.y - height;
-          this.headset.object3D.position.z = -frame.h.p.z;
-    
           var rquat = new THREE.Quaternion(frame.r.r.w, -frame.r.r.z, -frame.r.r.y, frame.r.r.x).slerp(new THREE.Quaternion(nextFrame.r.r.w, -nextFrame.r.r.z, -nextFrame.r.r.y, nextFrame.r.r.x), slerpValue);
           var rrotation = new THREE.Euler().setFromQuaternion(rquat);
     
@@ -119,12 +118,19 @@ AFRAME.registerComponent('replay-player', {
           this.saberEls[1].object3D.rotation.y = lrotation.y + Math.PI;
           this.saberEls[1].object3D.rotation.z = lrotation.z;
 
+          this.headset.object3D.position = this.headset.object3D.position.lerp(new THREE.Vector3(-frame.h.p.x, frame.h.p.y - height, -frame.h.p.z), 0.4);
+
           var hquat = new THREE.Quaternion(frame.h.r.w, -frame.h.r.z, -frame.h.r.y, frame.h.r.x).slerp(new THREE.Quaternion(nextFrame.h.r.w, -nextFrame.h.r.z, -nextFrame.h.r.y, nextFrame.h.r.x), slerpValue);
+
+          if (this.headset.object3D.hquat) {
+            hquat = this.headset.object3D.hquat.slerp(hquat, 0.4);
+          }
           var hrotation = new THREE.Euler().setFromQuaternion(hquat);
     
           this.headset.object3D.rotation.x = hrotation.x
           this.headset.object3D.rotation.y = hrotation.y + Math.PI;
-          this.headset.object3D.rotation.z = hrotation.z + Math.PI;;
+          this.headset.object3D.rotation.z = hrotation.z + Math.PI;
+          this.headset.object3D.hquat = hquat;
     },
 });
 

@@ -63,7 +63,9 @@
     position="-1.8 0.5 -2"
     bind__visible="!!player.avatar"></a-entity>
 
-  <a-entity position="1.8 1.2 -4">
+  <a-entity 
+    render-order="hud"
+    position="1.8 1.2 -4">
     <a-entity
       id="multiplier"
       mixin="scoreText"
@@ -73,6 +75,7 @@
     </a-entity>
 
    <a-entity
+      render-order="hud"
       id="multiplierRing"
       bind__multiplier-ring="combo: score.combo; multiplier: score.multiplier"
       geometry="primitive: plane; width: 0.5; height: 0.5"

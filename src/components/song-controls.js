@@ -32,7 +32,10 @@ AFRAME.registerComponent('song-controls', {
     if (queryParamTime !== undefined) {
       this.el.sceneEl.addEventListener('songstartaudio', () => {
         setTimeout(() => {
-          this.seek(queryParamTime);
+          if (queryParamTime >= 0 && queryParamTime <= this.song.source.buffer.duration) {
+            this.seek(queryParamTime);
+          }
+          
         }, 100);
       }, ONCE);
     }

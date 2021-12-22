@@ -65,6 +65,8 @@
 
 <a-mixin
   id="beatScore"
+  render-order="hud"
+  material="shader: flat; transparent: true; depthWrite: false;"
   mixin="font"
   text="opacity: 0; wrapCount: 19; color: #FFF; width: 1.5"
   animation__opacityin="property: components.text.material.uniforms.opacity.value; from: .5; to: 1; dur: 500; startEvents: beatscorestart"

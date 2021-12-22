@@ -6,6 +6,7 @@ AFRAME.registerComponent('replay-player', {
         this.saberEls = this.el.sceneEl.querySelectorAll('[saber-controls]');
         
         this.replayDecoder = this.el.sceneEl.components['replay-loader'];
+        this.fpsCounter = this.el.sceneEl.components['fps-counter'];
         this.song = this.el.sceneEl.components.song;
         this.score = {
           totalScore: 0,
@@ -44,6 +45,7 @@ AFRAME.registerComponent('replay-player', {
     
           let frame = frames[frameIndex];
           let nextFrame = frames[frameIndex != frames.length - 1 ? frameIndex + 1 : frameIndex];
+          this.fpsCounter.replayFps = frame.i;
           if (frame.a == 0 && nextFrame.a == 0) return;
     
           let room = replay.info.room;

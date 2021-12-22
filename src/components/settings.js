@@ -9,7 +9,8 @@ AFRAME.registerComponent('settings', {
         noEffects: false,
         showHitboxes: false,
         pixelRatio: 1.6,
-        volume: 0.3
+        volume: 0.3,
+        showFps: false
       }
 
       try {

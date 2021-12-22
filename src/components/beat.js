@@ -253,7 +253,7 @@ AFRAME.registerComponent('beat', {
     if (data.type == 'mine') { this.resetMineFragments(); }
 
     this.returnToPoolTimeStart = undefined;
-    
+
     if (this.settings.settings.showHitboxes) {
       if (!this.hitbox) {
         let itsMine = this.data.type === 'mine';
@@ -796,9 +796,13 @@ AFRAME.registerComponent('beat', {
       scoreEl.setAttribute('animation__opacityout', 'dur', duration);
       scoreEl.setAttribute('animation__motionz', 'dur', duration);
       scoreEl.setAttribute('animation__motiony', 'dur', duration);
+
+      let random = Math.random() / 4;
+      scoreEl.setAttribute('animation__motionz', 'to', -6 - random);
+      scoreEl.setAttribute('animation__motiony', 'to', 0.3 + random);
       if (scoreEl) {
         scoreEl.object3D.position.copy(this.el.object3D.position);
-        scoreEl.object3D.position.x += 0.5; // One block right
+        scoreEl.object3D.position.x += 0.6; // One block right
         scoreEl.object3D.position.z -= 3;
         scoreEl.play();
         scoreEl.emit('beatscorestart', null, false);

@@ -1,45 +1,36 @@
-# beatsaver-viewer
+# ScoreSaber replays
+
+[![Netlify Status](https://api.netlify.com/api/v1/badges/08ead0d0-ade4-4f38-8af4-9b6c3c679234/deploy-status)](https://app.netlify.com/sites/musing-aryabhata-6ae6ea/deploys)
 
 [A-Frame]: https://aframe.io
-[visit]: https://preview.beatleader.xyz/?id=811-535&difficulty=Expert
+[visit]: https://replay.beatleader.xyz/
 
-Web-based viewer for BeatSaver maps, built with [A-Frame] and JavaScript.
-
+Web-based viewer for ScoreSaber replays, built with [A-Frame] and JavaScript.
 
 **[CLICK TO VIEW][visit]**
 
-![https://preview.beatleader.xyz/?id=811-535&difficulty=Expert](https://raw.githubusercontent.com/supermedium/beatsaver-viewer/master/assets/img/sshot.jpg)
-
-The viewer works within a normal web browser and can be embedded on any
-webpage. It can also be previewed within VR headsets on browsers that support
-VR (e.g., [Supermedium](https://supermedium.com)).
-
-Featured on [BeastSaber](https://bsaber.com) and the unofficial [Beat Saber
-Songs](https://beatsaber-songs.herokuapp.com/top/all) site!
+![https://replay.beatleader.xyz/](https://raw.githubusercontent.com/supermedium/beatsaver-viewer/master/assets/img/sshot.jpg)
 
 ## Usage
 
-You can [visit or link the viewer directly][visit].
+Go to the ![BeatLeader](https://beatleader.xyz) and click on any ranked play higher than top 500 on leaderboard.
 
 Or if you have a site, you can I-Frame the viewer and pass a query parameter
-containing the song ID and difficulty:
+containing the song ID, difficulty and playerID:
 
-```
-<iframe src="https://preview.beatleader.xyz/?id=811-535&difficulty=Expert">
-```
+`https://www.replay.beatleader.xyz/?id=c32d&difficulty=ExpertPlus&playerID=76561198333869741`
 
-To directly preview a BeatSaver ZIP file, use the `?zip` parameter in the URL:
+id - BeatSaver song ID. ("Ov Sacrament" in this case)
+difficulty - Easy, Normal, Hard, Expert, ExpertPlus
+playerID - player's Steam or Oculus ID (cerret in this case)
 
-`https://preview.beatleader.xyz/?zip={zipURL}`
+To directly link to a seeked time, use the `?time` parameter in the URL (milliseconds):
 
-Note the ZIP must be served with CORS header. An easy way to do this is to
-prepend `https://cors-anywhere.herokuapp.com/` to your ZIP URL:
+`https://www.replay.beatleader.xyz/?id=c32d&difficulty=ExpertPlus&playerID=76561198333869741&time=15000` - 15 sec
 
-`https://preview.beatleader.xyz/?zip=https://cors-anywhere.herokuapp.com/{YOUR_FULL_ZIP_URL}`
+To specify replay speed use the `?speed` paramater in the URL (thousands of percent):
 
-To directly link to a seeked time, use the `?time` parameter in the URL (seconds):
-
-`https://preview.beatleader.xyz/?time=15`
+`https://www.replay.beatleader.xyz/?id=c32d&difficulty=ExpertPlus&playerID=76561198333869741&speed=50000` - 50% speed
 
 ## Roadmap
 
@@ -48,17 +39,10 @@ To directly link to a seeked time, use the `?time` parameter in the URL (seconds
 
 ## Community
 
-*The BeatSaver viewer is an unofficial community project and not officially
+*The ScoreSaber replays is an unofficial community project and not officially
 affiliated with Beat Saber.*
 
-- [Supermedium Discord](https://supermedium.com/discord)
-- [BeastSaber Discord](https://discordapp.com/invite/cZpFayw)
-- [BeatSaber Songs](https://beatsaber-songs.herokuapp.com/top/all)
-
-It is adopted officially by the community on the Discord though, used as the
-official tool for sharing maps online and featured on [BeastSaber](bsaber.com):
-
-![](https://user-images.githubusercontent.com/674727/57561078-abdc0300-733e-11e9-9476-88e1bc6b2867.png)
+- [BeatLeader Discord](https://discord.gg/RpXagakZ)
 
 ## Development
 
@@ -67,7 +51,26 @@ building VR experiences. And JavaScript.
 
 ```
 npm install
-npm run start
 ```
 
-Then head to `localhost:9999` in your browser.
+### Configure Netlify account 
+
+Create a new Netlify project and link it to the forked repo. 
+
+#### Install netlify dev CLI
+
+```bash
+npm install netlify-cli -g
+```
+
+Then start Netlify dev environment
+
+```bash
+netlify dev
+```
+
+Navigate to [localhost:8888](http://localhost:9999). You should see app running.
+
+### Building and running in production mode
+
+By default, Netlify builds the app after every change to this branch in the repository, so all you need is push to git.

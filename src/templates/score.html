@@ -8,7 +8,7 @@
   bind__score-texts="isSongLoading: isSongLoading"
   bind__visible="isPlaying || isPaused">
 
-  <a-entity id="scoreTextContainer" position="0 -0.3068215621073873 -6.25">
+  <a-entity id="scoreTextContainer" position="1.8 0.3 -4">
     <a-entity
       id="score"
       mixin="scoreText"
@@ -17,12 +17,30 @@
     </a-entity>
   </a-entity>
 
+  <a-entity id="fpsTextContainer" position="1.8 2.0 -4">
+    <a-entity
+      id="fps"
+      mixin="scoreText"
+      bind__visible="settings.showFps"
+      text="width: 4; color: #FAFAFA">
+    </a-entity>
+  </a-entity>
+
   <a-entity
     id="combo"
     mixin="scoreText"
-    bind__text="value: 'COMBO\n' + score.combo + '\n\n' + score.accuracy"
+    bind__text="value: 'COMBO\n' + score.combo"
     text="width: 1; lineHeight: 40"
     position="-1.8 1.2 -4"
+    scale="5 5 5">
+  </a-entity>
+
+  <a-entity
+    id="accuracy"
+    mixin="scoreText"
+    bind__text="value: score.accuracy"
+    text="width: 1; lineHeight: 40"
+    position="-1.8 0.3 -4"
     scale="5 5 5">
   </a-entity>
 

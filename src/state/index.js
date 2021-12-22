@@ -159,6 +159,7 @@ AFRAME.registerState({
       state.player = payload;
 
       document.title = `ScoreSaber Replays | ${state.player.name} | ${state.challenge.songName}`;
+      document.querySelector('meta[name="description"]').setAttribute("content", `ScoreSaber Replays | ${state.player.name} | ${state.challenge.songName}`);
     },
 
     challengeloaderror: (state, payload) => {

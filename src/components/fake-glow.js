@@ -7,6 +7,8 @@ const geometry = createGeometry();
 const material = new THREE.MeshBasicMaterial({
   alphaMap: createAlphaMap(),
   transparent: true,
+  blending: THREE.AdditiveBlending,
+  depthWrite: false,
   vertexColors: THREE.VertexColors
 });
 

@@ -14,10 +14,11 @@
   <a-entity id="twister" position="0 0 -35" rotation="90 0 0" bind__twister="enabled: isPlaying && !settings.noEffects"></a-entity>
 
   <a-entity position="0 -1 0">
-    <a-entity id="stageObj" obj-model="obj: #stageNormalObj" materials="name: stageNormal"></a-entity>
+    <a-entity render-order="background" id="stageObj" obj-model="obj: #stageNormalObj" materials="name: stageNormal"></a-entity>
 
     <!-- Lasers left. -->
-    <a-entity 
+    <a-entity
+      render-order="middle"
       id="leftStageLasers" 
       bind__stage-lasers="enabled: isPlaying && !settings.noEffects"
       bind__visible="!settings.noEffects">
@@ -27,7 +28,8 @@
     </a-entity>
 
     <!-- Lasers right. -->
-    <a-entity id="rightStageLasers" 
+    <a-entity id="rightStageLasers"
+      render-order="middle"
       bind__stage-lasers="enabled: isPlaying && !settings.noEffects"
       bind__visible="!settings.noEffects">
       <a-entity obj-model="obj: #rightLaserObj" materials="name: stageAdditive" position="6 4 -38"></a-entity>
@@ -36,6 +38,7 @@
     </a-entity>
 
     <a-entity
+      render-order="background"
       id="stageadditiveobj"
       obj-model="obj: #stageAdditiveObj"
       materials="name: stageAdditive"></a-entity>
@@ -66,7 +69,7 @@
     bind__song-progress-ring="enabled: isPlaying && challenge.isBeatsPreloaded"
     bind__visible="isPlaying && challenge.isBeatsPreloaded"
     geometry="primitive: plane; width: 0.1; height: 0.1"
-    material="shader: ring; progress: 0; transparent: true; radiusInner: 0.5; color: #ABABAB"
+    material="shader: ring; progress: 0; transparent: true; depthWrite: false; radiusInner: 0.5; color: #ABABAB"
     position="0 0.1 -1.5"
     rotation="-45 0 0">
   </a-entity>

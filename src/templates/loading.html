@@ -1,5 +1,6 @@
 <a-entity
   id="loadingSongInfoContainer"
+  render-order="hud"
   bind__animation__scale="enabled: challenge.isLoading || replay.isLoading || !hasReceivedUserGesture && !challenge.hasLoadError && !replay.hasError"
   bind__visible="challenge.isLoading || replay.isLoading || !hasReceivedUserGesture || challenge.hasLoadError || replay.hasError"
   animation__scale="property: scale; from: 1 1 1; to: 1.05 1.05 1.05; dir: alternate; loop: true; dur: 1200; easing: easeInOutCubic"
@@ -10,7 +11,7 @@
   <a-entity id="loadingSongImage"
     bind__blob-texture="src: challenge.image"
     geometry="primitive: plane; buffer: false; skipCache: true; height: 0.3; width: 0.3"
-    material="shader: flat; transparent: true"
+    material="shader: flat; transparent: true; depthWrite: false"
     position="0 0.24 0"
     bind__visible="!!challenge.image && !challenge.hasLoadError"></a-entity>
 
@@ -42,7 +43,7 @@
       id="challengeLoadingIndicator"
       bind__visible="challenge.isLoading || isSongBufferProcessing"
       geometry="primitive: plane; height: 0.1; width: 0.1"
-      material="shader: ring; color: #FAFAFA; radiusInner: 0.2; radiusOuter: 0.9; progress: 0; transparent: true"
+      material="shader: ring; color: #FAFAFA; radiusInner: 0.2; radiusOuter: 0.9; progress: 0; transparent: true; depthWrite: false"
       position="0 -0.38 0.002"
       visible="false">
     </a-entity>
@@ -53,7 +54,7 @@
       bind__visible="isSongBufferProcessing"
       animation__spin="property: object3D.rotation.z; from: 0; to: -360; easing: linear; dur: 1000; loop: true"
       geometry="primitive: plane; height: 0.2; width: 0.2"
-      material="shader: ring; color: #ABABAB; radiusInner: 0.2; radiusOuter: 0.4; transparent: true; progress: 0.2"
+      material="shader: ring; color: #ABABAB; radiusInner: 0.2; radiusOuter: 0.4; transparent: true; progress: 0.2; depthWrite: false"
       position="0 -0.38 0.004"
       visible="false">
     </a-entity>

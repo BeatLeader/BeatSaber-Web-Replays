@@ -102,14 +102,14 @@
 <a-mixin
   id="beatWrong"
   obj-model="obj: #wrongObj"
-  material="shader: flat; transparent: true; src: #atlasImg"
+  material="shader: flat; transparent: true; depthWrite: false; src: #atlasImg"
   visible="false"
   animation__posz="property: object3D.position.z; to: -8; startEvents: beatwrong; easing: easeOutQuart; dur: 4000"
   animation__alpha="property: components.material.material.opacity; from: 1; to: 0; startEvents: beatwrong; easing: easeOutQuart; dur: 4000"></a-mixin>
 
 <a-mixin id="beatMiss"
   obj-model="obj: #missObj"
-  material="shader: flat; transparent: true; src: #atlasImg"
+  material="shader: flat; transparent: true; depthWrite: false; src: #atlasImg"
   visible="false"
   animation__posz="property: object3D.position.z; to: -8; startEvents: beatmiss; easing: easeOutQuart; dur: 4000"
   animation__alpha="property: components.material.material.opacity; from: 1; to: 0; startEvents: beatmiss; easing: easeOutQuart; dur: 4000"></a-mixin>
@@ -117,14 +117,15 @@
 <a-mixin
   id="beatGlow"
   geometry="primitive: plane; width: 0.7; height: 0.7"
-  material="shader: flat; fog: false; blending: additive; depthTest: false; transparent: true; src: #glowImg; opacity: 1"
+  material="shader: flat; fog: false; blending: additive; depthWrite: false; depthTest: false; transparent: true; src: #glowImg; opacity: 1"
   animation__opacity="property: components.material.material.opacity; from: 0.9; to: 0; dur: 300; easing: linear; startEvents: explode"
   animation__scale="property: scale; from: 0.5 0.5 1; to: 1.5 1.5 1; dur: 300; easing: easeOutQuad; startEvents: explode"></a-mixin>
 
 <a-mixin
   id="wall"
+  render-order="walls"
   geometry
-  material="shader: wallShader; transparent: true; side: double;"
+  material="shader: wallShader; transparent: true; depthWrite: false; side: double;"
   wall></a-mixin>
 
 <a-mixin

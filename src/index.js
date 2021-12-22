@@ -18,6 +18,7 @@ require('aframe-ring-shader');
 require('aframe-state-component');
 require('aframe-slice9-component');
 require('aframe-thumb-controls-component');
+require('aframe-render-order-component');
 
 requireAll(require.context('./components/', true, /\.js$/));
 requireAll(require.context('./state/', true, /\.js$/));

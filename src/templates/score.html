@@ -1,4 +1,5 @@
 <a-mixin
+  render-order="hud"
   id="scoreText"
   mixin="font"
   text="color: #FFF; letterSpacing: -2; align: center"></a-mixin>
@@ -53,11 +54,12 @@
     scale="5 5 5">
   </a-entity>
 
-  <a-entity 
+  <a-entity
+    render-order="hud"
     id="playerAvatar"
     bind__blob-texture="src: player.avatar"
     geometry="primitive: plane; buffer: false; skipCache: true; height: 0.3; width: 0.3"
-    material="shader: flat; transparent: true"
+    material="shader: flat; transparent: true; depthWrite: false"
     position="-1.8 0.5 -2"
     bind__visible="!!player.avatar"></a-entity>
 
@@ -74,7 +76,7 @@
       id="multiplierRing"
       bind__multiplier-ring="combo: score.combo; multiplier: score.multiplier"
       geometry="primitive: plane; width: 0.5; height: 0.5"
-      material="shader: ring; transparent: true; color: #88A; radiusInner: 0.7; progress: 0"
+      material="shader: ring; transparent: true; depthWrite: false; color: #88A; radiusInner: 0.7; progress: 0"
       position="0 0.17 0"></a-entity>
   </a-entity>
 </a-entity>

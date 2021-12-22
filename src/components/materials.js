@@ -38,6 +38,7 @@ AFRAME.registerSystem('materials', {
       fragmentShader: stageAdditiveShaders.fragmentShader,
       blending: THREE.AdditiveBlending,
       fog: false,
+      depthWrite: false,
       transparent: true
     });
 

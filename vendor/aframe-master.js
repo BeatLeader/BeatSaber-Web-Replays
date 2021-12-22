@@ -68459,7 +68459,8 @@ var warn = debug('components:obj-model:warn');
 module.exports.Component = registerComponent('obj-model', {
   schema: {
     mtl: {type: 'model'},
-    obj: {type: 'model'}
+    obj: {type: 'model'},
+    renderOrder: {default: 0}
   },
 
   init: function () {
@@ -68503,6 +68504,7 @@ module.exports.Component = registerComponent('obj-model', {
         objLoader.setMaterials(materials);
         objLoader.load(objUrl, function (objModel) {
           self.model = objModel;
+          objModel.renderOrder = self.data.renderOrder;
           el.setObject3D('mesh', objModel);
           el.emit('model-loaded', {format: 'obj', model: objModel});
         });
@@ -68522,6 +68524,7 @@ module.exports.Component = registerComponent('obj-model', {
         });
       }
 
+      objModel.renderOrder = self.data.renderOrder;
       self.model = objModel;
       el.setObject3D('mesh', objModel);
       el.emit('model-loaded', {format: 'obj', model: objModel});
@@ -78159,7 +78162,7 @@ _dereq_('./core/a-mixin');
 _dereq_('./extras/components/');
 _dereq_('./extras/primitives/');
 
-console.log('A-Frame Version: 0.8.2 (Date 2021-12-21, Commit #8a467e43)');
+console.log('A-Frame Version: 0.8.2 (Date 2021-12-22, Commit #8a467e43)');
 console.log('three Version:', pkg.dependencies['three']);
 console.log('WebVR Polyfill Version:', pkg.dependencies['webvr-polyfill']);
 

@@ -57,17 +57,17 @@ AFRAME.registerComponent('beat-hit-sound', {
     // Sound pools.
     for (let i = 1; i <= 10; i++) {
       this.el.setAttribute(`sound__beathit${i}`, {
-        poolSize: 4,
+        poolSize: 10,
         src: `#hitSound${i}`,
         volume: VOLUME
       });
       this.el.setAttribute(`sound__beathit${i}left`, {
-        poolSize: 4,
+        poolSize: 10,
         src: `#hitSound${i}left`,
         volume: VOLUME
       });
       this.el.setAttribute(`sound__beathit${i}right`, {
-        poolSize: 4,
+        poolSize: 10,
         src: `#hitSound${i}right`,
         volume: VOLUME
       });
@@ -103,7 +103,7 @@ AFRAME.registerComponent('beat-hit-sound', {
     const dir = this.directionsToSounds[cutDirection || 'up'];
     const soundPool = this.el.components[`sound__beathit${rand}${dir}`];
     this.currentBeatEl = beatEl;
-    soundPool.playSound(this.processSound);
+    soundPool.playSound(this.processSound, soundPool.volume);
   },
 
   /**

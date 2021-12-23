@@ -72,7 +72,6 @@ AFRAME.registerState({
       rank: '',  // Grade (S to F).
       score: 0
     },
-    lastNoteTime: 0,
     notes: null,
     replay: {
       isLoading: false,
@@ -281,7 +280,6 @@ AFRAME.registerState({
     },
 
     timechanged: (state, payload) => {
-      state.lastNoteTime = 0;
       let notes = state.notes;
       for (var i = 0; i < notes.length; i++) {
         if (notes[i].time > payload.newTime) {
@@ -389,7 +387,6 @@ function takeDamage (state) {
 
 function updateScore (state, payload) {
   let note = state.notes.find(e => e.index == payload.index);
-  if (note.time < state.lastNoteTime) return;
 
   state.score.score = note.totalScore;
   state.score.combo = note.combo;

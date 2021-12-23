@@ -643,3 +643,55 @@ input:checked + .slider:before {
     vertical-align: middle;
     padding: 0 15px;
 }
+
+.btn {
+	position: relative;
+  display:inline-block;
+	width: 30px;
+	height: 30px;
+	cursor: pointer;
+	transition: border 0.1s ease-in-out;
+  bottom: 3px;
+  right: 10px;
+}
+
+.btn:hover .bar {
+	background-color: #555;
+}
+
+.btn .bar {
+	display: inline-block;
+	position: absolute;
+	top: 10px;
+	left: 0;
+	width: 2px;
+	height: 20px;
+	border-radius: 3px;
+	background-color: white;
+	transform-origin: center;
+	transition: transform 0.4s ease-in-out, background 0.1s ease-in-out;
+}
+
+.btn.pause .bar-1 {
+	transform: translateX(13.5px) translateY(0px) rotate(0deg);
+}
+
+.btn.pause .bar-2 {
+	transform: translateX(24px) translateY(0px) rotate(0deg);
+}
+
+.btn.pause .bar-3 {
+	transform: translateX(13.5px) translateY(0px) rotate(0deg);
+}
+
+.btn.play .bar-1 {
+	transform: translateX(20px) translateY(-6px) rotate(-55deg);
+}
+
+.btn.play .bar-2 {
+	transform: translateX(20px) translateY(5px) rotate(-125deg);
+}
+
+.btn.play .bar-3 {
+	transform: translateX(12.5px) translateY(0px) rotate(0deg);
+}

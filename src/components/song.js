@@ -42,6 +42,7 @@ AFRAME.registerComponent('song', {
     isBeatsPreloaded: {default: false},
     isPaused: {default: false},
     isPlaying: {default: false},
+    isFinished: {default: false},
     mode: {default: 'Standard'}
   },
 

@@ -195,18 +195,21 @@ AFRAME.registerComponent('song-controls', {
     let captureThis = this;
     timeline.addEventListener("wheel", function(e){
       let currentTime = captureThis.song.getCurrentTime();
-      if (e.deltaY < 0){
-        doSeek(null, currentTime + 0.2);
-      }else{
-        doSeek(null, currentTime - 0.2);
-      }
+      doSeek(null, currentTime - e.deltaY / 356);
       e.preventDefault();
       e.stopPropagation();
     })
 
     // Pause.
-    document.getElementById('controlsPause').addEventListener('click', () => {
-      this.el.sceneEl.emit('pausegame', null, false);
+    let pauseButton = document.getElementById('controlsPause');
+    pauseButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (pauseButton.classList.contains('play')) {
+        this.el.sceneEl.emit('usergesturereceive', null, false);
+        this.el.sceneEl.emit('gamemenuresume', null, false);
+      } else {
+        this.el.sceneEl.emit('pausegame', null, false);
+      }
     });
 
     document.addEventListener('keydown', (e) => {
@@ -217,6 +220,31 @@ AFRAME.registerComponent('song-controls', {
           this.el.sceneEl.emit('gamemenuresume', null, false);
         }
       }
+    });
+
+    this.el.sceneEl.addEventListener('pausegame', (e) => {
+      if (pauseButton.classList.contains('pause')) {
+        pauseButton.classList.remove('pause');
+        pauseButton.classList.add('play');
+      }
+    });
+
+    let showPlay = () => {
+      if (pauseButton.classList.contains('play')) {
+        pauseButton.classList.remove('play');
+        pauseButton.classList.add('pause');
+      }
+    };
+
+    this.el.sceneEl.addEventListener('gamemenuresume', (e) => { showPlay() });
+    this.el.sceneEl.addEventListener('usergesturereceive', (e) => { showPlay() });
+
+    this.el.sceneEl.addEventListener('finishgame', (e) => {
+      pauseButton.style.display = "none";
+    });
+
+    this.el.sceneEl.addEventListener('gamemenurestart', (e) => {
+      pauseButton.style.display = "inline-block";
     });
 
     // Difficulty dropdown.
@@ -265,12 +293,23 @@ AFRAME.registerComponent('song-controls', {
       var ctxMenu = document.getElementById("ctxMenu");
       ctxMenu.style.display = "none";
 
-      if (evt.target.closest('#volumeSliderContainer') ||
-          evt.target.closest('#controlsVolume')) { return; }
-      const slider = document.getElementById('volumeSliderContainer');
-      const active = slider.classList.contains('volumeActive');
-      if (!active) { return; }
-      slider.classList.remove('volumeActive');
+      if (!evt.target.closest('#volumeSliderContainer') &&
+          !evt.target.closest('#controlsVolume')) {
+        const slider = document.getElementById('volumeSliderContainer');
+        const active = slider.classList.contains('volumeActive');
+        if (active) {
+          slider.classList.remove('volumeActive');
+        }
+      }
+
+      if (!evt.target.closest('#settingsContainer') &&
+          !evt.target.closest('#controlsSettings')) {
+            const container = document.getElementById('settingsContainer');
+        const active = container.classList.contains('settingsActive');
+        if (active) {
+          container.classList.remove('settingsActive');
+        }
+      }
     });
 
     document.addEventListener("contextmenu",function(event){

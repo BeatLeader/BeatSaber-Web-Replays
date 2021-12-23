@@ -229,15 +229,19 @@ AFRAME.registerComponent('song-controls', {
       }
     });
 
-    let showPlay = () => {
+    let showPause = () => {
       if (pauseButton.classList.contains('play')) {
         pauseButton.classList.remove('play');
         pauseButton.classList.add('pause');
       }
     };
 
-    this.el.sceneEl.addEventListener('gamemenuresume', (e) => { showPlay() });
-    this.el.sceneEl.addEventListener('usergesturereceive', (e) => { showPlay() });
+    this.el.sceneEl.addEventListener('gamemenuresume', (e) => { showPause() });
+    this.el.sceneEl.addEventListener('usergesturereceive', (e) => {
+      if (!this.song.data.isPaused) {
+        showPause() 
+      }
+    });
 
     this.el.sceneEl.addEventListener('finishgame', (e) => {
       pauseButton.style.display = "none";

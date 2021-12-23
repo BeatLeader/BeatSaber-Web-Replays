@@ -5,7 +5,8 @@ const zipUrl = AFRAME.utils.getUrlParameter('zip');
 
 AFRAME.registerComponent('zip-loader', {
   schema: {
-    id: {default: zipUrl ? '' : (AFRAME.utils.getUrlParameter('id') || '1a55e')},
+    id: {default: AFRAME.utils.getUrlParameter('id')},
+    hash: {default: AFRAME.utils.getUrlParameter('hash')},
     isSafari: {default: false},
     difficulty: {default: (AFRAME.utils.getUrlParameter('difficulty') || 'ExpertPlus')},
     mode: {default: AFRAME.utils.getUrlParameter('mode') || 'Standard'}
@@ -23,12 +24,17 @@ AFRAME.registerComponent('zip-loader', {
   update: function (oldData) {
     this.el.sceneEl.emit('cleargame', null, false);
 
-    if (!this.data.id) { return; }
+    if (this.data.id) { 
+      if ((oldData.id !== this.data.id)) {
+        this.fetchData(this.data.id);
+      }
+     } else if (this.data.hash) {
+      if ((oldData.hash !== this.data.hash)) {
+        this.fetchData(this.data.hash, true);
+      }
+     }
 
-    if ((oldData.id !== this.data.id)) {
-      this.fetchData(this.data.id);
-      this.el.sceneEl.emit('challengeset', this.data.id);
-    }
+    
   },
 
   play: function () {
@@ -126,8 +132,8 @@ AFRAME.registerComponent('zip-loader', {
   /**
    * Read API first to get hash and URLs.
    */
-  fetchData: function (id) {
-    return fetch(`/cors/beat-saver/api/maps/id/${id}`).then(res => {
+  fetchData: function (id, byHash) {
+    return fetch(`/cors/beat-saver/api/maps/${byHash ? 'hash' : 'id'}/${id}`).then(res => {
       res.json().then(data => {
         if (data.versions) {
           this.hash = data.versions[0].hash;

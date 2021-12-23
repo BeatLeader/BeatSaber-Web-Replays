@@ -208,7 +208,7 @@ AFRAME.registerComponent('beat', {
         newPosition = data.anticipationPosition + data.warmupPosition + data.warmupSpeed * -timeOffset;
       }
 
-      newPosition -= this.headset.object3D.position.z;
+      newPosition += this.headset.object3D.position.z;
       position.z = newPosition;
 
       let warmupRotationTime = BEAT_WARMUP_ROTATION_TIME * (0.8 + data.anticipationPosition / 20) / Math.max(this.song.speed, 0.001);

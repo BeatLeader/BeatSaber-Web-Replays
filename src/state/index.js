@@ -87,6 +87,7 @@ AFRAME.registerState({
     damage: 0,
     hasReceivedUserGesture: false,
     inVR: false,
+    pov: false,
     isPaused: false,  // Playing, but paused.
     isPlaying: false,  // Actively playing.
     isFinished: false,
@@ -347,6 +348,10 @@ AFRAME.registerState({
 
     settingsChanged: (state, payload) => {
       state.settings = payload.settings;
+    },
+
+    povchanged: (state, payload) => {
+      state.pov = payload.newPov;
     },
 
     'enter-vr': state => {

@@ -5,7 +5,7 @@ AFRAME.registerComponent('camera-mover', {
     init: function () {
         this.pov = false
         this.defaultCameraRig = this.el.sceneEl.querySelectorAll('.floatingCamera')[0];
-        this.povCameraRig = this.el.sceneEl.querySelectorAll('.headset')[0];
+        this.povCameraRig = this.el.sceneEl.querySelectorAll('.headCamera')[0];
 
         this.defaultCamera = this.el.sceneEl.querySelectorAll('.mainCamera')[0];
         this.povCamera = this.el.sceneEl.querySelectorAll('.povCamera')[0];

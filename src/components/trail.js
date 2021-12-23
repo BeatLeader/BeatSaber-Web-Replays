@@ -56,6 +56,7 @@ AFRAME.registerComponent('trail', {
     const mesh = this.mesh = new THREE.Mesh(geometry, material);
     mesh.frustumCulled = false;
     mesh.vertices = vertices;
+    mesh.renderOrder = 5;
     this.el.sceneEl.setObject3D(`trail__${this.data.hand}`, mesh);
   },
 

@@ -28,6 +28,8 @@ AFRAME.registerComponent('replay-player', {
     play: function () {
       this.headset = this.el.sceneEl.querySelectorAll('.headset')[0];
       this.headset.object3D.position.y = 1.75;
+
+      this.povCameraRig = this.el.sceneEl.querySelectorAll('.headCamera')[0];
     },
 
     tock: function (time, delta) {
@@ -52,85 +54,121 @@ AFRAME.registerComponent('replay-player', {
           let slerpValue = (currentTime - frame.a) / Math.max(1E-06, nextFrame.a - frame.a);
 
           if (replay.info.leftHanded) {
-            this.leftHandedTock(frame, nextFrame, height, slerpValue);
+            this.leftHandedTock(frame, nextFrame, height, slerpValue, delta / 1000);
           } else {
-            this.rightHandedTock(frame, nextFrame, height, slerpValue);
+            this.rightHandedTock(frame, nextFrame, height, slerpValue, delta / 1000);
           }
         }
       },
-    rightHandedTock: function(frame, nextFrame, height, slerpValue) {
-          this.saberEls[0].object3D.position.x = frame.l.p.x;
-          this.saberEls[0].object3D.position.y = frame.l.p.y - height;
-          this.saberEls[0].object3D.position.z = -frame.l.p.z;
-    
-          this.saberEls[1].object3D.position.x = frame.r.p.x;
-          this.saberEls[1].object3D.position.y = frame.r.p.y - height;
-          this.saberEls[1].object3D.position.z = -frame.r.p.z;
+    rightHandedTock: function(frame, nextFrame, height, slerpValue, delta) {
+          const leftSaber = this.saberEls[0].object3D;
+          const rightSaber = this.saberEls[1].object3D;
+          const headset = this.headset.object3D;
+          const povCamera = this.povCameraRig.object3D;
 
-          var lquat = new THREE.Quaternion(frame.l.r.w, frame.l.r.z, frame.l.r.y, frame.l.r.x).slerp(new THREE.Quaternion(nextFrame.l.r.w, nextFrame.l.r.z, nextFrame.l.r.y, nextFrame.l.r.x), slerpValue);
-          var lrotation = new THREE.Euler().setFromQuaternion(lquat);
-    
-          this.saberEls[0].object3D.rotation.x = lrotation.x;
-          this.saberEls[0].object3D.rotation.y = lrotation.y + Math.PI;
-          this.saberEls[0].object3D.rotation.z = -lrotation.z;
-    
-          var rquat = new THREE.Quaternion(frame.r.r.w, frame.r.r.z, frame.r.r.y, frame.r.r.x).slerp(new THREE.Quaternion(nextFrame.r.r.w, nextFrame.r.r.z, nextFrame.r.r.y, nextFrame.r.r.x), slerpValue);
-          var rrotation = new THREE.Euler().setFromQuaternion(rquat);
-    
-          this.saberEls[1].object3D.rotation.x = rrotation.x;
-          this.saberEls[1].object3D.rotation.y = rrotation.y + Math.PI;
-          this.saberEls[1].object3D.rotation.z = -rrotation.z;
+          const lposition = new THREE.Vector3(frame.l.p.x, frame.l.p.y, frame.l.p.z).lerp(new THREE.Vector3(nextFrame.l.p.x, nextFrame.l.p.y, nextFrame.l.p.z), slerpValue);
+          leftSaber.position.x = lposition.x;
+          leftSaber.position.y = lposition.y - height;
+          leftSaber.position.z = -lposition.z;
 
-          this.headset.object3D.position = this.headset.object3D.position.lerp(new THREE.Vector3(frame.h.p.x, frame.h.p.y - height, -frame.h.p.z), 0.4);
+          const rposition = new THREE.Vector3(frame.r.p.x, frame.r.p.y, frame.r.p.z).lerp(new THREE.Vector3(nextFrame.r.p.x, nextFrame.r.p.y, nextFrame.r.p.z), slerpValue);
+          rightSaber.position.x = rposition.x;
+          rightSaber.position.y = rposition.y - height;
+          rightSaber.position.z = -rposition.z;
+
+          const lquat = new THREE.Quaternion(frame.l.r.w, frame.l.r.z, frame.l.r.y, frame.l.r.x).slerp(new THREE.Quaternion(nextFrame.l.r.w, nextFrame.l.r.z, nextFrame.l.r.y, nextFrame.l.r.x), slerpValue);
+          const lrotation = new THREE.Euler().setFromQuaternion(lquat);
+    
+          leftSaber.rotation.x = lrotation.x;
+          leftSaber.rotation.y = lrotation.y + Math.PI;
+          leftSaber.rotation.z = -lrotation.z;
+    
+          const rquat = new THREE.Quaternion(frame.r.r.w, frame.r.r.z, frame.r.r.y, frame.r.r.x).slerp(new THREE.Quaternion(nextFrame.r.r.w, nextFrame.r.r.z, nextFrame.r.r.y, nextFrame.r.r.x), slerpValue);
+          const rrotation = new THREE.Euler().setFromQuaternion(rquat);
+    
+          rightSaber.rotation.x = rrotation.x;
+          rightSaber.rotation.y = rrotation.y + Math.PI;
+          rightSaber.rotation.z = -rrotation.z;
+
+          const hpostion = new THREE.Vector3(frame.h.p.x, frame.h.p.y, frame.h.p.z).lerp(new THREE.Vector3(nextFrame.h.p.x, nextFrame.h.p.y, nextFrame.h.p.z), slerpValue);
+
+          headset.position.x = hpostion.x;
+          headset.position.y = hpostion.y - height;
+          headset.position.z = -hpostion.z;
 
           var hquat = new THREE.Quaternion(frame.h.r.w, frame.h.r.z, frame.h.r.y, frame.h.r.x).slerp(new THREE.Quaternion(nextFrame.h.r.w, nextFrame.h.r.z, nextFrame.h.r.y, nextFrame.h.r.x), slerpValue);
-
-          if (this.headset.object3D.hquat) {
-            hquat = this.headset.object3D.hquat.slerp(hquat, 0.4);
-          }
           var hrotation = new THREE.Euler().setFromQuaternion(hquat);
     
-          this.headset.object3D.rotation.x = hrotation.x
-          this.headset.object3D.rotation.y = hrotation.y + Math.PI;
-          this.headset.object3D.rotation.z = hrotation.z + Math.PI;
-          this.headset.object3D.hquat = hquat;
+          headset.rotation.x = hrotation.x
+          headset.rotation.y = hrotation.y + Math.PI;
+          headset.rotation.z = hrotation.z + Math.PI;
+
+          povCamera.position = povCamera.position.lerp(headset.position, 5 * delta);
+
+          if (povCamera.hquat) {
+            hquat = povCamera.hquat.slerp(hquat, 5 * delta);
+          }
+          hrotation = new THREE.Euler().setFromQuaternion(hquat);
+    
+          povCamera.rotation.x = hrotation.x
+          povCamera.rotation.y = hrotation.y + Math.PI;
+          povCamera.rotation.z = hrotation.z + Math.PI;
+          povCamera.hquat = hquat;
     },
-    leftHandedTock: function(frame, nextFrame, height, slerpValue) {
-          this.saberEls[0].object3D.position.x = -frame.r.p.x;
-          this.saberEls[0].object3D.position.y = frame.r.p.y - height;
-          this.saberEls[0].object3D.position.z = -frame.r.p.z;
-    
-          this.saberEls[1].object3D.position.x = -frame.l.p.x;
-          this.saberEls[1].object3D.position.y = frame.l.p.y - height;
-          this.saberEls[1].object3D.position.z = -frame.l.p.z;
+    leftHandedTock: function(frame, nextFrame, height, slerpValue, delta) {
+          const leftSaber = this.saberEls[0].object3D;
+          const rightSaber = this.saberEls[1].object3D;
+          const headset = this.headset.object3D;
+          const povCamera = this.povCameraRig.object3D;
 
-          var rquat = new THREE.Quaternion(frame.r.r.w, -frame.r.r.z, -frame.r.r.y, frame.r.r.x).slerp(new THREE.Quaternion(nextFrame.r.r.w, -nextFrame.r.r.z, -nextFrame.r.r.y, nextFrame.r.r.x), slerpValue);
-          var rrotation = new THREE.Euler().setFromQuaternion(rquat);
-    
-          this.saberEls[0].object3D.rotation.x = rrotation.x;
-          this.saberEls[0].object3D.rotation.y = rrotation.y + Math.PI;
-          this.saberEls[0].object3D.rotation.z = rrotation.z;
-          
-          var lquat = new THREE.Quaternion(frame.l.r.w, -frame.l.r.z, -frame.l.r.y, frame.l.r.x).slerp(new THREE.Quaternion(nextFrame.l.r.w, -nextFrame.l.r.z, -nextFrame.l.r.y, nextFrame.l.r.x), slerpValue);
-          var lrotation = new THREE.Euler().setFromQuaternion(lquat);
-    
-          this.saberEls[1].object3D.rotation.x = lrotation.x;
-          this.saberEls[1].object3D.rotation.y = lrotation.y + Math.PI;
-          this.saberEls[1].object3D.rotation.z = lrotation.z;
+          const lposition = new THREE.Vector3(frame.l.p.x, frame.l.p.y, frame.l.p.z).lerp(new THREE.Vector3(nextFrame.l.p.x, nextFrame.l.p.y, nextFrame.l.p.z), slerpValue);
+          rightSaber.position.x = -lposition.x;
+          rightSaber.position.y = lposition.y - height;
+          rightSaber.position.z = -lposition.z;
 
-          this.headset.object3D.position = this.headset.object3D.position.lerp(new THREE.Vector3(-frame.h.p.x, frame.h.p.y - height, -frame.h.p.z), 0.4);
+          const rposition = new THREE.Vector3(frame.r.p.x, frame.r.p.y, frame.r.p.z).lerp(new THREE.Vector3(nextFrame.r.p.x, nextFrame.r.p.y, nextFrame.r.p.z), slerpValue);
+          leftSaber.position.x = -rposition.x;
+          leftSaber.position.y = rposition.y - height;
+          leftSaber.position.z = -rposition.z;
+
+          const lquat = new THREE.Quaternion(frame.l.r.w, -frame.l.r.z, -frame.l.r.y, frame.l.r.x).slerp(new THREE.Quaternion(nextFrame.l.r.w, -nextFrame.l.r.z, -nextFrame.l.r.y, nextFrame.l.r.x), slerpValue);
+          const lrotation = new THREE.Euler().setFromQuaternion(lquat);
+    
+          rightSaber.rotation.x = lrotation.x;
+          rightSaber.rotation.y = lrotation.y + Math.PI;
+          rightSaber.rotation.z = lrotation.z;
+    
+          const rquat = new THREE.Quaternion(frame.r.r.w, -frame.r.r.z, -frame.r.r.y, frame.r.r.x).slerp(new THREE.Quaternion(nextFrame.r.r.w, -nextFrame.r.r.z, -nextFrame.r.r.y, nextFrame.r.r.x), slerpValue);
+          const rrotation = new THREE.Euler().setFromQuaternion(rquat);
+    
+          leftSaber.rotation.x = rrotation.x;
+          leftSaber.rotation.y = rrotation.y + Math.PI;
+          leftSaber.rotation.z = -rrotation.z;
+
+          const hpostion = new THREE.Vector3(frame.h.p.x, frame.h.p.y, frame.h.p.z).lerp(new THREE.Vector3(nextFrame.h.p.x, nextFrame.h.p.y, nextFrame.h.p.z), slerpValue);
+
+          headset.position.x = -hpostion.x;
+          headset.position.y = hpostion.y - height;
+          headset.position.z = -hpostion.z;
 
           var hquat = new THREE.Quaternion(frame.h.r.w, -frame.h.r.z, -frame.h.r.y, frame.h.r.x).slerp(new THREE.Quaternion(nextFrame.h.r.w, -nextFrame.h.r.z, -nextFrame.h.r.y, nextFrame.h.r.x), slerpValue);
-
-          if (this.headset.object3D.hquat) {
-            hquat = this.headset.object3D.hquat.slerp(hquat, 0.4);
-          }
           var hrotation = new THREE.Euler().setFromQuaternion(hquat);
     
-          this.headset.object3D.rotation.x = hrotation.x
-          this.headset.object3D.rotation.y = hrotation.y + Math.PI;
-          this.headset.object3D.rotation.z = hrotation.z + Math.PI;
-          this.headset.object3D.hquat = hquat;
+          headset.rotation.x = -hrotation.x
+          headset.rotation.y = hrotation.y + Math.PI;
+          headset.rotation.z = hrotation.z + Math.PI;
+
+          povCamera.position = povCamera.position.lerp(headset.position, 5 * delta);
+
+          if (povCamera.hquat) {
+            hquat = povCamera.hquat.slerp(hquat, 5 * delta);
+          }
+          hrotation = new THREE.Euler().setFromQuaternion(hquat);
+    
+          povCamera.rotation.x = -hrotation.x
+          povCamera.rotation.y = hrotation.y + Math.PI;
+          povCamera.rotation.z = hrotation.z + Math.PI;
+          povCamera.hquat = hquat;
     },
 });
 

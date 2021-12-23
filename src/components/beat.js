@@ -6,7 +6,7 @@ const auxObj3D = new THREE.Object3D();
 const collisionZThreshold = -2.6;
 const BEAT_WARMUP_ROTATION_CHANGE = Math.PI / 5;
 const BEAT_WARMUP_ROTATION_OFFSET = 0.4;
-const BEAT_WARMUP_ROTATION_TIME = 750;
+const BEAT_WARMUP_ROTATION_TIME = 0.75;
 const DESTROYED_SPEED = 1.0;
 const SWORD_OFFSET = 1.5;
 const ONCE = {once: true};
@@ -196,13 +196,14 @@ AFRAME.registerComponent('beat', {
       var newPosition = 0;
 
       var timeOffset = data.time - song.getCurrentTime() - data.anticipationTime - data.warmupTime;
+      var currentRotationWarmupTime = timeOffset;
 
       if (timeOffset <= -data.warmupTime) {
         newPosition = data.anticipationPosition;
         timeOffset += data.warmupTime;
         newPosition += -timeOffset * data.speed;
-        if (!this.settings.settings.noEffects && Math.abs(timeOffset) < 0.01) {
-          this.beams.newBeam(this.data.color, newPosition);
+        if (!this.settings.settings.noEffects && Math.abs(timeOffset) < 1) {
+          this.beams.newBeam(data.color, data.anticipationPosition);
         }
       } else {
         newPosition = data.anticipationPosition + data.warmupPosition + data.warmupSpeed * -timeOffset;
@@ -211,14 +212,14 @@ AFRAME.registerComponent('beat', {
       newPosition += this.headset.object3D.position.z;
       position.z = newPosition;
 
-      let warmupRotationTime = BEAT_WARMUP_ROTATION_TIME * (0.8 + data.anticipationPosition / 20) / Math.max(this.song.speed, 0.001);
+      if (currentRotationWarmupTime <= -data.warmupTime) {
+        currentRotationWarmupTime += data.warmupTime;
 
-      if (position.z > (data.anticipationPosition - BEAT_WARMUP_ROTATION_OFFSET) &&
-          this.currentRotationWarmupTime < warmupRotationTime) {
-        const progress = AFRAME.ANIME.easings.easeOutBack(
-          this.currentRotationWarmupTime / warmupRotationTime);
-        el.object3D.rotation.z = this.rotationZStart + (progress * this.rotationZChange);
-        this.currentRotationWarmupTime += timeDelta;
+        let warmupRotationTime = BEAT_WARMUP_ROTATION_TIME / (20 / data.anticipationPosition); // Closer anticipation - faster the rotation.
+          
+        const progress = warmupRotationTime <= currentRotationWarmupTime ? AFRAME.ANIME.easings.easeOutBack(
+          currentRotationWarmupTime / warmupRotationTime) : 1.0;
+          el.object3D.rotation.z = this.rotationZStart + (progress * this.rotationZChange);
       }
 
       this.backToPool = position.z >= 2;

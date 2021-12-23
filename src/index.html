@@ -133,12 +133,15 @@
       </a-entity>
 
       <a-entity
+        render-order="wall"
         id="saberParticles"
         particleplayer="src: #saberParticlesJSON; interpolate: true; pscale: 0.55; dur: 800; loop: false; on: explode; img: #sparkImg; count: 20%; animateScale: true; initialScale: 4 1 1; finalScale: 0.2 0.2 1"></a-entity>
       <a-entity
+        render-order="wall"
         id="mineParticles"
         particleplayer="src: #mineParticlesJSON; pscale: 0.5; interpolate: true; scale: 1.4; loop: false; on: explode; img: #sparkImg; count: 20%; animateScale: true; initialScale: 3 1 1; finalScale: 0.2 0.2 1"></a-entity>
       <a-entity
+        render-order="wall"
         id="sparkParticles"
         particleplayer="src: #sparksJSON; color: #fcc; pscale: 0.5; on: explode; scale: 0.12; loop: false; img: #spark2Img; dur: 700; count: 50%; animateScale: true; initialScale: 3 0.5 1; finalScale: 0.1 0.5 1"></a-entity>
 
@@ -147,6 +150,7 @@
         proxy-event="event: recentered; to: #headRig; captureBubbles: true; as: recenter">
         {% macro saber (hand, otherHand, bladeColor, beamColor) %}
           <a-entity id="{{ hand }}Hand"
+            render-order="wall"
             class="saber"
             mixin="raycaster"
             bind__hand-swapper="enabled: {{ otherHand }}RaycasterActive"
@@ -183,9 +187,10 @@
                   raycastable-game
                   position="0 -0.55 0"></a-entity>
                 <a-entity
+                  render-order="wall"
                   class="saberglow"
                   obj-model="obj: #saberGlowObj"
-                  material="shader: flat; color: {{ bladeColor }}; blending: additive; opacity: 0.08"
+                  material="shader: flat; color: {{ bladeColor }}; blending: additive; opacity: 0.08; depthWrite: false"
                   position="0 -0.55 0"></a-entity>
               </a-entity>
               <a-entity
@@ -206,6 +211,7 @@
             </a-entity>
 
             <a-entity
+              render-order="wall"
               class="fakeGlow"
               fake-glow="color: {{ hand == 'right' and COLORS.NEON_BRIGHTBLUE or COLORS.NEON_BRIGHTRED }}"
               position="0 0.01 0"
@@ -236,17 +242,18 @@
         <a-entity id="mainCamera" class="mainCamera"  position="0 1.6 0.5" camera look-controls wasd-controls active="true">
         </a-entity>
       </a-entity>
-      <a-entity 
-        id="headRig" 
-        class="headset" 
-        obj-model="obj: #questObj"
-        bind__visible="isPlaying && settings.showHeadset"
-        position="0 1.7 0.0">
+      <a-entity id="headRig" class="headCamera">
         <a-entity id="povCamera" class="povCamera" rotation="0 0 -1" camera active="false">
         </a-entity>
       </a-entity>
-
-      
+      <a-entity 
+        id="head" 
+        class="headset" 
+        obj-model="obj: #questObj"
+        bind__visible="isPlaying && settings.showHeadset && !pov"
+        position="0 1.7 0.0">
+        </a-entity>
+      </a-entity>
 
       <a-entity
         id="mouseCursor"

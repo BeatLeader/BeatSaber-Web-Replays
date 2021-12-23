@@ -106,7 +106,7 @@ AFRAME.registerComponent('wall', {
     const halfDepth = data.durationSeconds * data.speed / 2;
     const position = this.el.object3D.position;
     const song = this.song;
-
+    
     // Move.
     this.el.object3D.visible = true;
 
@@ -115,11 +115,11 @@ AFRAME.registerComponent('wall', {
     var timeOffset = data.time - song.getCurrentTime() - data.anticipationTime - data.warmupTime;
 
     if (timeOffset <= -data.warmupTime) {
-      newPosition = data.anticipationPosition;
+      newPosition = data.anticipationPosition - halfDepth;
       timeOffset += data.warmupTime;
       newPosition += -timeOffset * data.speed;
     } else {
-      newPosition = data.anticipationPosition + data.warmupPosition + data.warmupSpeed * -timeOffset;
+      newPosition = data.anticipationPosition - halfDepth + data.warmupPosition + data.warmupSpeed * -timeOffset;
     }
 
     newPosition -= this.headset.object3D.position.z;

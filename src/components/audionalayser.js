@@ -40,6 +40,8 @@ if (typeof AFRAME === 'undefined') {
       this.waveform = null;
       this.volume = 0;
       this.xhr = null;
+      this.isSafari = isSafari = navigator.userAgent.toLowerCase().indexOf('safari') !== -1 &&
+      navigator.userAgent.toLowerCase().indexOf('chrome') === -1;
   
       this.initContext();
     },
@@ -177,7 +179,7 @@ if (typeof AFRAME === 'undefined') {
             audioBufferCache[src] = audioBuffer;
             resolve(audioBuffer);
           }
-          const res = this.context[this.data.isSafari ? "decodeOggData" : "decodeAudioData"](xhr.response, cb);
+          const res = this.context[this.isSafari ? "decodeOggData" : "decodeAudioData"](xhr.response, cb);
           if (res && res.constructor === Promise) {
             res.then(cb).catch(console.error);
           }

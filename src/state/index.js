@@ -56,7 +56,7 @@ AFRAME.registerState({
   initialState: {
     activeHand: localStorage.getItem('hand') || 'right',
     challenge: Object.assign({  // Actively playing challenge.
-      hasLoadError: isSafari,
+      hasLoadError: false,
       isLoading: false,
       isBeatsPreloaded: false,  // Whether we have passed the negative time.
       loadErrorText: '',

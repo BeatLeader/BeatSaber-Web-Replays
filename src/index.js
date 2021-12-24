@@ -7,7 +7,6 @@ require('../vendor/BufferGeometryUtils');
 
 require('aframe-aabb-collider-component');
 require('aframe-atlas-uvs-component');
-require('aframe-audioanalyser-component');
 require('aframe-event-set-component');
 require('aframe-geometry-merger-component');
 require('aframe-haptics-component');

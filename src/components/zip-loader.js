@@ -152,7 +152,6 @@ AFRAME.registerComponent('zip-loader', {
   },
 
   fetchZip: function (zipUrl) {
-    if (this.data.isSafari) { return; }
 
     // Already fetching.
     if (this.isFetching === zipUrl ||

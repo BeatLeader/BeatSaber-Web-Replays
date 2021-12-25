@@ -686,6 +686,7 @@ AFRAME.registerComponent('beat', {
           break;
         }
 
+        this.postEndEvent();
         this.destroyBeat(saberEls[i]);
         
         this.hitSaberEl = saberEls[i];
@@ -748,7 +749,6 @@ AFRAME.registerComponent('beat', {
 
     // hitEventDetail.score = score;
     this.el.emit('beathit', null, true);
-    this.postEndEvent();
     this.el.sceneEl.emit('textglowbold', null, false);
 
     // let beatScorePool;

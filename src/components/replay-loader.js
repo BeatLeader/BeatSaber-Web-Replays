@@ -112,10 +112,8 @@ AFRAME.registerComponent('replay-loader', {
         }
 
         note.multiplier = multiplier;
-        note.totalScore = i == noteStructs.length - 1 ? replay.info.totalScore : score;
+        note.totalScore = score;
         note.accuracy = (note.totalScore / this.maxScoreForNote(i) * 100).toFixed(2);
-
-        // console.log(note.score + " - " + noteIndex);
       }
       this.notes = noteStructs;
       if (this.challenge) {
@@ -157,22 +155,24 @@ AFRAME.registerComponent('replay-loader', {
       console.log("Mid deviation: " + this.replay.info.midDeviation);
     },
     maxScoreForNote(index) {
-      if (index < 2) {
-        return (index + 1) * 115;
-      } if (index < 6) {
-        return index * 2 * 115;
-      } if (index < 14) {
-        return 5 * 2 * 115 + (index - 5) * 4 * 115;
-      } else {
-        return 5 * 2 * 115 + 8 * 4 * 115 + (index - 13) * 8 * 115;
-      }
+      const note_score = 115;
+      const notes = index + 1;
+
+      if (notes <= 1) // x1 (+1 note)
+          return note_score * (0 + (notes - 0) * 1);
+      if (notes <= 5) // x2 (+4 notes)
+          return note_score * (1 + (notes - 1) * 2);
+      if (notes <= 13) // x4 (+8 notes)
+          return note_score * (9 + (notes - 5) * 4);
+      // x8
+      return note_score * (41 + (notes - 13) * 8);
     }, 
     multiplierForCombo(combo) {
-      if (combo < 2) {
+      if (combo < 1) {
         return 1;
-      } if (combo < 6) {
+      } if (combo < 5) {
         return 2;
-      } if (combo < 14) {
+      } if (combo < 13) {
         return 4;
       } else {
         return 8;
@@ -182,11 +182,11 @@ AFRAME.registerComponent('replay-loader', {
       if (multiplier == 1) {
         return 0;
       } if (multiplier == 2) {
-        return 2;
+        return 1;
       } if (multiplier == 4) {
-        return 6;
+        return 5;
       } else {
-        return 14;
+        return 13;
       }
     },
 });

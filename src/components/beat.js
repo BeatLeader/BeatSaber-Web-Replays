@@ -440,7 +440,7 @@ AFRAME.registerComponent('beat', {
   },
 
   postEndEvent: function () {
-      this.el.emit('beatend', {index: this.data.index}, true);
+      this.el.emit('beatend', {time: this.song.getCurrentTime(), index: this.data.index}, true);
   },
 
   destroyMine: function () {
@@ -651,11 +651,9 @@ AFRAME.registerComponent('beat', {
   },
 
   checkCollisions: function () {
-    const cutDirection = this.data.cutDirection;
-    const saberColors = this.saberColors;
+    // const cutDirection = this.data.cutDirection;
     const saberEls = this.saberEls;
-    const hitBoundingBox = this.hitColliderEl && this.hitBoundingBox.setFromObject(
-      this.hitColliderEl.getObject3D('mesh'));
+
     const beatSmallBoundingBox = this.beatBoundingBox.setFromObject(
       this.blockEl.getObject3D('mesh'));
     const beatBigBoundingBox = this.beatBoundingBox.setFromObject(
@@ -665,20 +663,18 @@ AFRAME.registerComponent('beat', {
       beatBigBoundingBox.translate(new THREE.Vector3(0.0, 0.0, 0.25))
     }
     
-    const position = this.el.object3D.position;
+    // const position = this.el.object3D.position;
 
     for (let i = 0; i < saberEls.length; i++) {
-      let saberBoundingBox = saberEls[i].components['saber-controls'].boundingBox;
-      let saberControls;
-      let maxAngle;
+      let saberControls = saberEls[i].components['saber-controls'];
+      let saberBoundingBox = saberControls.boundingBox;
+      // let maxAngle;
 
       if (!saberBoundingBox) { break; }
 
-      const hand = saberEls[i].getAttribute('saber-controls').hand;
+      // const hand = saberControls.hand;
 
       if (saberBoundingBox.intersectsBox(beatSmallBoundingBox) || (saberBoundingBox.intersectsBox(beatBigBoundingBox))) {
-        // Notify for haptics.
-        this.el.emit(`beatcollide${hand}`, null, true);
 
         // Sound.
         this.el.parentNode.components['beat-hit-sound'].playSound(this.el);
@@ -693,73 +689,78 @@ AFRAME.registerComponent('beat', {
         this.destroyBeat(saberEls[i]);
         
         this.hitSaberEl = saberEls[i];
-        this.hitSaberEl.addEventListener('strokeend', this.onEndStroke, ONCE);
-        saberControls = saberEls[i].components['saber-controls'];
-        this.hitHand = hand;
-        saberControls.maxAnglePlaneX = 0;
-        saberControls.maxAnglePlaneY = 0;
-        saberControls.maxAnglePlaneXY = 0;
-
-        if (this.data.type === 'arrow') {
-          saberControls.updateStrokeDirection();
-
-          if (cutDirection === 'up' || cutDirection === 'down') {
-            maxAngle = saberControls.maxAnglePlaneX;
-          } else if (cutDirection === 'left' || cutDirection === 'right') {
-          maxAngle = saberControls.maxAnglePlaneY;
-          } else {
-            maxAngle = saberControls.maxAnglePlaneXY;
-          }
+        if (this.settings.settings.reducedDebris) {
+          this.onEndStroke();
         } else {
-          maxAngle = Math.max(saberControls.maxAnglePlaneX, saberControls.maxAnglePlaneY,
-                              saberControls.maxAnglePlaneXY);
+          this.hitSaberEl.addEventListener('strokeend', this.onEndStroke, ONCE);
         }
-        this.angleBeforeHit = maxAngle;
+        
+        // this.hitHand = hand;
+
+        // saberControls.maxAnglePlaneX = 0;
+        // saberControls.maxAnglePlaneY = 0;
+        // saberControls.maxAnglePlaneXY = 0;
+
+        // if (this.data.type === 'arrow') {
+        //   saberControls.updateStrokeDirection();
+
+        //   if (cutDirection === 'up' || cutDirection === 'down') {
+        //     maxAngle = saberControls.maxAnglePlaneX;
+        //   } else if (cutDirection === 'left' || cutDirection === 'right') {
+        //   maxAngle = saberControls.maxAnglePlaneY;
+        //   } else {
+        //     maxAngle = saberControls.maxAnglePlaneXY;
+        //   }
+        // } else {
+        //   maxAngle = Math.max(saberControls.maxAnglePlaneX, saberControls.maxAnglePlaneY,
+        //                       saberControls.maxAnglePlaneXY);
+        // }
+        // this.angleBeforeHit = maxAngle;
         break;
       }
     }
   },
 
   onEndStroke: function () {
-    var cutDirection = this.data.cutDirection;
-    var hitEventDetail = this.hitEventDetail;
-    var maxAngle;
-    var saberControls = this.hitSaberEl.components['saber-controls'];
-    var scoreText;
+    // var cutDirection = this.data.cutDirection;
+    // var hitEventDetail = this.hitEventDetail;
+    // var maxAngle;
+    // var saberControls = this.hitSaberEl.components['saber-controls'];
+    // var scoreText;
 
-    // Harcoded temporarily.
-    const saberRotation = 3.14 / 12;
+    // // Harcoded temporarily.
+    // const saberRotation = 3.14 / 12;
 
-    if (cutDirection === 'up' || cutDirection === 'down') {
-      maxAngle = saberControls.maxAnglePlaneX;
-    } else if (cutDirection === 'left' || cutDirection === 'right') {
-      maxAngle = saberControls.maxAnglePlaneY;
-    } else {
-      maxAngle = saberControls.maxAnglePlaneXY;
-    }
+    // if (cutDirection === 'up' || cutDirection === 'down') {
+    //   maxAngle = saberControls.maxAnglePlaneX;
+    // } else if (cutDirection === 'left' || cutDirection === 'right') {
+    //   maxAngle = saberControls.maxAnglePlaneY;
+    // } else {
+    //   maxAngle = saberControls.maxAnglePlaneXY;
+    // }
 
-    const angleBeforeHit = Math.max(0, (this.angleBeforeHit - saberRotation) * 180 / Math.PI);
-    const angleAfterHit = Math.max(0, (maxAngle - saberRotation) * 180 / Math.PI);
+    // const angleBeforeHit = Math.max(0, (this.angleBeforeHit - saberRotation) * 180 / Math.PI);
+    // const angleAfterHit = Math.max(0, (maxAngle - saberRotation) * 180 / Math.PI);
 
-    let score = 0;
-    score += angleBeforeHit >= 85 ? 70 : (angleBeforeHit / 80) * 70;
-    score += angleAfterHit >= 60 ? 30 : (angleAfterHit / 60) * 30;
+    // let score = 0;
+    // score += angleBeforeHit >= 85 ? 70 : (angleBeforeHit / 80) * 70;
+    // score += angleAfterHit >= 60 ? 30 : (angleAfterHit / 60) * 30;
 
-    hitEventDetail.score = score;
-    this.el.emit('beathit', hitEventDetail, true);
+    // hitEventDetail.score = score;
+    this.el.emit('beathit', null, true);
     this.postEndEvent();
     this.el.sceneEl.emit('textglowbold', null, false);
 
-    let beatScorePool;
-    if (score < 60) { beatScorePool = SCORE_POOL.OK; }
-    else if (score < 80) { beatScorePool = SCORE_POOL.GOOD; }
-    else if (score < 100) { beatScorePool = SCORE_POOL.GREAT; }
-    else {
-      beatScorePool = SCORE_POOL.SUPER;
+    // let beatScorePool;
+    // if (score < 60) { beatScorePool = SCORE_POOL.OK; }
+    // else if (score < 80) { beatScorePool = SCORE_POOL.GOOD; }
+    // else if (score < 100) { beatScorePool = SCORE_POOL.GREAT; }
+    // else {
+    //   beatScorePool = SCORE_POOL.SUPER;
 
-      this.superCuts[this.superCutIdx].components.supercutfx.createSuperCut(this.el.object3D.position);
-      this.superCutIdx = (this.superCutIdx + 1) % this.superCuts.length;
-    }
+      // this.superCuts[this.superCutIdx].components.supercutfx.createSuperCut(this.el.object3D.position);
+      // this.superCutIdx = (this.superCutIdx + 1) % this.superCuts.length;
+    // }
 
     this.showScore();
     if (this.settings.settings.reducedDebris) {
@@ -807,6 +808,11 @@ AFRAME.registerComponent('beat', {
         scoreEl.object3D.position.z -= 3;
         scoreEl.play();
         scoreEl.emit('beatscorestart', null, false);
+
+        if (score == 115 && !this.settings.settings.noEffects) {
+          this.superCuts[this.superCutIdx].components.supercutfx.createSuperCut(this.el.object3D.position);
+          this.superCutIdx = (this.superCutIdx + 1) % this.superCuts.length;
+        }
       }
     }
   },

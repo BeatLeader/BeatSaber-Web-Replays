@@ -327,8 +327,8 @@ AFRAME.registerComponent('song-controls', {
     const copyURL = (target, time) => {
       let input = document.createElement('input');
       target.appendChild(input);
-      let id = (AFRAME.utils.getUrlParameter('id') ? `?id=${AFRAME.utils.getUrlParameter('id')}` : `?hash=${AFRAME.utils.getUrlParameter('hash')}`);
-      let base = location.protocol + "//" + location.host + "/" + `${id}&playerID=${AFRAME.utils.getUrlParameter('playerID')}&difficulty=${AFRAME.utils.getUrlParameter('difficulty')}`
+      let songParam = (AFRAME.utils.getUrlParameter('id') ? `?id=${AFRAME.utils.getUrlParameter('id')}` : `?hash=${AFRAME.utils.getUrlParameter('hash')}`);
+      let base = location.protocol + "//" + location.host + "/" + `${songParam}&playerID=${AFRAME.utils.getUrlParameter('playerID')}&difficulty=${AFRAME.utils.getUrlParameter('difficulty')}`
       input.value = base + (time ? `&time=${Math.round(this.song.getCurrentTime()*1000)}&speed=${Math.round(this.song.speed * 100000)}` : "" );
       input.select();
       document.execCommand("copy");

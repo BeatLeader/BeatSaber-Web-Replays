@@ -4,6 +4,7 @@
 AFRAME.registerComponent('saber-controls', {
   schema: {
     bladeEnabled: {default: true},
+    enabled: {default: true},
     hand: {default: 'right', oneOf: ['left', 'right']},
     isPaused: {default: false},
     strokeMinSpeed: {default: 0.002},
@@ -40,12 +41,7 @@ AFRAME.registerComponent('saber-controls', {
     this.accumulatedDistance = 0;
     this.accumulatedDelta = 0;
 
-    el.addEventListener('controllerconnected', this.initSaber.bind(this));
-
     const hand = {hand: data.hand, model: false};
-    el.setAttribute('oculus-touch-controls', hand);
-    el.setAttribute('vive-controls', hand);
-    el.setAttribute('windows-motion-controls', hand);
 
     this.bladeEl = this.el.querySelector('.blade');
   },
@@ -59,6 +55,7 @@ AFRAME.registerComponent('saber-controls', {
   tick: function (time, delta) {
     if (!this.data.bladeEnabled) { return; }
     this.boundingBox.setFromObject(this.bladeEl.getObject3D('mesh'));
+    if (!this.data.enabled) { return; }
     this.detectStroke(delta);
   },
 

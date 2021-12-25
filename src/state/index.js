@@ -173,7 +173,22 @@ AFRAME.registerState({
     },
 
     beatend: (state, payload) => {
-      updateScore(state, payload);
+      let notes = state.notes;
+      var minDiff = 100000;
+      var index = 0;
+      for (var i = Math.max(payload.index - 10, 0); i < notes.length; i++) {
+        const curDiff = Math.abs(notes[i].time - payload.time);
+        if (curDiff <= minDiff) {
+
+          index = i;
+          minDiff = curDiff;
+          
+        } else {
+          break;
+        }
+      }
+
+      updateScore(state, {index});
     },
 
     beathit: (state, payload) => {
@@ -283,7 +298,7 @@ AFRAME.registerState({
       let notes = state.notes;
       for (var i = 0; i < notes.length; i++) {
         if (notes[i].time > payload.newTime) {
-          updateScore(state, {index: notes[i > 0 ? i - 1 : i].index});
+          updateScore(state, {index: i > 0 ? i - 1 : i});
           break;
         }
       }
@@ -386,7 +401,7 @@ function takeDamage (state) {
 }
 
 function updateScore (state, payload) {
-  let note = state.notes.find(e => e.index == payload.index);
+  let note = state.notes[payload.index];
 
   state.score.score = note.totalScore;
   state.score.combo = note.combo;
@@ -394,6 +409,6 @@ function updateScore (state, payload) {
   state.score.accuracy = note.accuracy;
   state.lastNoteTime = note.time;
 
-  // console.log(note.score + " - " + note.index + " - " + note.time);
+  // console.log(note.totalScore + " - " + note.index + " - " + note.time + " - " + payload.index);
 }
 

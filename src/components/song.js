@@ -52,7 +52,6 @@ AFRAME.registerComponent('song', {
     this.context = this.audioAnalyser.context;
     this.isPlaying = false;
     this.songLoadingIndicator = document.getElementById('songLoadingIndicator');
-    this.songStartTime = 0;
     this.speed = songSpeed;
 
     this.audioAnalyser.gainNode.gain.value =
@@ -148,6 +147,7 @@ AFRAME.registerComponent('song', {
   onRestart: function () {
     this.isPlaying = false;
     this.lastCurrentTime = null;
+    this.songStartTime = undefined;
 
     // Restart, get new buffer source node and play.
     if (this.source) { this.source.disconnect(); }
@@ -179,6 +179,8 @@ AFRAME.registerComponent('song', {
   },
 
   getCurrentTime: function () {
+    if (this.songStartTime === undefined) return 0;
+
     let lastCurrentTime = this.lastCurrentTime;
     var newCurrent
     if (lastCurrentTime) {

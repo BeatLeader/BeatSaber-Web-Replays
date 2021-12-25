@@ -71,6 +71,9 @@ AFRAME.registerComponent('beat-generator', {
         this.mappingExtensions = null;
       }
     });
+    this.el.addEventListener('songprocessingfinish', evt => {
+      this.beatsTime = 0;
+    });
   },
 
   update: function (oldData) {

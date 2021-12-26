@@ -7,6 +7,7 @@ $font=system-ui, BlinkMacSystemFont, -apple-system, "Segoe UI", Helvetica, Arial
 
 html
   background #111
+  user-select: none;
 
 #controls
   align-items center
@@ -20,7 +21,7 @@ html
   padding 10px
   position fixed
   right 0
-  max-width 770px
+  max-width 520px
   z-index 99999999
 
   &.challengeLoaded
@@ -60,7 +61,15 @@ html
     img
       height 20px
       width 20px
-  
+
+  #controlsCamera
+    cursor pointer
+    padding 3px 10px 0 14px
+    position: absolute
+    right: 34px
+    img
+      height 30px
+      width 26px  
   #settingsContainer
     background rgba(85, 85, 85, 0.85)
     border-radius 5px 5px 5px 5px
@@ -79,6 +88,35 @@ html
       cursor pointer
       padding 0
       width 100px
+
+  #cameraSettingsContainer
+    background rgba(85, 85, 85, 0.85)
+    border-radius 5px 5px 5px 5px
+    bottom 60px
+    cursor pointer
+    display none
+    right 0px
+    padding-top 4px
+    position absolute
+    z-index 999999999
+    width: 180px
+    &.settingsActive
+      display block
+
+    input
+      cursor pointer
+      padding 0
+      width 100px
+  
+  #cameraPositionContainer,
+  #cameraSaveContainer
+    align-items: center;
+    justify-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+    display: flex;
+    grid-gap: 0.5em;
+    margin: 10px 0px 10px 0px
 
   #speedSliderContainer
     background rgba(0, 0, 0, 0.85)
@@ -148,57 +186,6 @@ html
   margin-right 0
   width 30px
 
-#songInfoContainer
-  align-items center
-  display flex
-  padding-left: 5px
-
-  img
-    height 32px
-    width 32px
-
-  p
-    font-size 13px
-    margin 0
-    text-shadow 0 0 4px #000
-  #songInfo
-    display flex
-    flex-direction column
-    padding-left 5px
-  #songName
-    color $gray
-    font-weight bold
-    font-size 14px
-  #songSubName
-    color $lightred
-
-  #songInfoSelect
-    align-items center
-    display flex
-    padding-left: 5px
-
-  #controlsDifficulty,
-  #controlsMode
-    border 1px solid $gray
-    border-radius 5px
-    color $gray
-    cursor pointer
-    font-size 11px
-    padding 5px 10px
-    text-align center
-    transition all .1s
-    max-width: 100px
-    max-height: 28px
-    overflow: hidden
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;  
-    p
-      font-family $font
-
-  #controlsMode
-    margin-right 5px
-
 #controlsModes,
 #controlsDifficultyOptions
   background #020202
@@ -224,6 +211,24 @@ html
     transition all .1s
     &:hover
       color $red
+
+#skipIntro
+  background: #000000;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  bottom: 50px;
+  color: #fafafa;
+  flex-direction: column;
+  font-family: system-ui, BlinkMacSystemFont, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-size: 11px;
+  list-style: none;
+  padding: 10px;
+  position: absolute;
+  transition: all 0.2s;
+  cursor pointer
+  left 2px
+  &:hover
+    color: red
 
 #controlsModes
   right 142px
@@ -280,6 +285,8 @@ html
 .isPlaying
   .github-corner
     opacity 0
+  #songInfoOverlay
+    display flex
   #controls,
   #controls #pause
     opacity 1
@@ -398,79 +405,77 @@ html
   z-index 999999999
   top 20px
 
-#subscribeForm {
-  align-items center
-  background: rgba(0, 0, 0, 0.35);
-  border-radius 0 0 10px 0
-  display: flex;
-  top: 0;
-  color: #FAFAFA;
-  font-family $font
-  height: 50px;
-  left: 0;
-  margin: 0;
-  width: 400px;
-  padding: 0 0 0 10px;
-  position: fixed;
-  z-index: 9999999;
+#songInfoOverlay
+  align-items top
+  display none
+  padding-left: 5px
+  position absolute
+  top: 30px
+  left: 20px
 
-  form {
+  img
+    height 100px
+    width 100px
+
+  p
+    font-size 20px
+    font-family $font
+    margin 0
+    text-shadow 0 0 4px #000
+  #songInfo
+    display flex
+    flex-direction column
+    padding-left 5px
+    margin-top -7px
+  #songName
+    color $gray
+    font-weight bold
+    font-size 25px
+    padding-left 5px
+  #songSubName
+    color #94828d
+    padding-left 5px
+  #difficultyLabel
+    display flex
+    margin-top 5px
+  #songDifficulty
+    color #ffffff
+    font-size 15px
+    margin-left 5px
+    
+    padding 2px 5px 3px 5px
+    border-radius: 4px
+  #songCustomDifficulty
+    color #ffffff
+    font-size 15px
+    padding 2px 8px
+
+  #songInfoSelect
     align-items center
     display flex
-  }
+    padding-left: 5px
 
-  .closeSubscribe {
-    color #FAFAFA
+  #controlsDifficulty,
+  #controlsMode
+    border 1px solid $gray
+    border-radius 5px
+    color $gray
     cursor pointer
-    font-size 25px
-    margin 0
-    padding 0
-    position absolute
-    top -10px
+    font-size 11px
+    padding 5px 10px
+    text-align center
     transition all .1s
-    right 0
+    max-width: 100px
+    max-height: 28px
+    overflow: hidden
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;  
+    p
+      font-family $font
 
-    &:hover {
-      color $red
-    }
-  }
-}
-
-#subscribeForm h2 {
-  display: inline-block;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-#subscribeForm input[type="email"] {
-  background: #FAFAFA;
-  border: 0;
-  border-radius: 5px;
-  color: #333;
-  font-size 11px
-  height: 24px;
-  padding-bottom 0;
-  padding-top 0;
-  padding-left: 10px;
-  margin-left 10px
-  margin-right: 10px;
-  width: 60px;
-  text-transform: uppercase;
-  vertical-align: middle;
-}
-
-#subscribeForm button {
-  border: 0;
-  background: #FF74b8;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 11px;
-  color: #FAFAFA;
-  text-transform: uppercase;
-  transition: .1s all;
-  padding: 6px 10px;
-  vertical-align: middle;
-}
+  #controlsMode
+    margin-right 5px
 
 #povswitch {
     background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20245.82%20141.73%22%3E%3Cdefs%3E%3Cstyle%3E.a%7Bfill%3A%23fff%3Bfill-rule%3Aevenodd%3B%7D%3C%2Fstyle%3E%3C%2Fdefs%3E%3Ctitle%3Emask%3C%2Ftitle%3E%3Cpath%20class%3D%22a%22%20d%3D%22M175.56%2C111.37c-22.52%2C0-40.77-18.84-40.77-42.07S153%2C27.24%2C175.56%2C27.24s40.77%2C18.84%2C40.77%2C42.07S198.08%2C111.37%2C175.56%2C111.37ZM26.84%2C69.31c0-23.23%2C18.25-42.07%2C40.77-42.07s40.77%2C18.84%2C40.77%2C42.07-18.26%2C42.07-40.77%2C42.07S26.84%2C92.54%2C26.84%2C69.31ZM27.27%2C0C11.54%2C0%2C0%2C12.34%2C0%2C28.58V110.9c0%2C16.24%2C11.54%2C30.83%2C27.27%2C30.83H99.57c2.17%2C0%2C4.19-1.83%2C5.4-3.7L116.47%2C118a8%2C8%2C0%2C0%2C1%2C12.52-.18l11.51%2C20.34c1.2%2C1.86%2C3.22%2C3.61%2C5.39%2C3.61h72.29c15.74%2C0%2C27.63-14.6%2C27.63-30.83V28.58C245.82%2C12.34%2C233.93%2C0%2C218.19%2C0H27.27Z%22%2F%3E%3C%2Fsvg%3E") 50% 50%/70% 70% no-repeat rgba(0,0,0,.35);

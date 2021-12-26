@@ -809,10 +809,10 @@ AFRAME.registerComponent('beat', {
         scoreEl.play();
         scoreEl.emit('beatscorestart', null, false);
 
-        if (score == 115 && !this.settings.settings.noEffects) {
-          this.superCuts[this.superCutIdx].components.supercutfx.createSuperCut(this.el.object3D.position);
-          this.superCutIdx = (this.superCutIdx + 1) % this.superCuts.length;
-        }
+        // if (score == 115 && !this.settings.settings.noEffects) {
+        //   this.superCuts[this.superCutIdx].components.supercutfx.createSuperCut(this.el.object3D.position);
+        //   this.superCutIdx = (this.superCutIdx + 1) % this.superCuts.length;
+        // }
       }
     }
   },

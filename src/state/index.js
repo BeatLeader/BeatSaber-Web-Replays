@@ -136,7 +136,7 @@ AFRAME.registerState({
       state.challenge.songSubName = payload.info._songSubName || payload.info._songAuthorName;
       state.challenge.songSubNameShort = truncate(state.challenge.songSubName, 21);
 
-      document.title = `ScoreSaber Replays | ${state.player.name} | ${payload.info._songName}`;
+      document.title = `Replay | ${state.player.name} | ${payload.info._songName}`;
       state.challenge.isLoading = false;
     },
 
@@ -158,8 +158,8 @@ AFRAME.registerState({
     userloaded: (state, payload) => {
       state.player = payload;
 
-      document.title = `ScoreSaber Replays | ${state.player.name} | ${state.challenge.songName}`;
-      document.querySelector('meta[name="description"]').setAttribute("content", `ScoreSaber Replays | ${state.player.name} | ${state.challenge.songName}`);
+      document.title = `Replay | ${state.player.name} | ${state.challenge.songName}`;
+      document.querySelector('meta[name="description"]').setAttribute("content", `Replay | ${state.player.name} | ${state.challenge.songName}`);
     },
 
     challengeloaderror: (state, payload) => {
@@ -176,15 +176,13 @@ AFRAME.registerState({
       let notes = state.notes;
       var minDiff = 100000;
       var index = 0;
-      for (var i = Math.max(payload.index - 10, 0); i < notes.length; i++) {
+      for (var i = Math.max(payload.index - 6, 0); i < Math.min(notes.length, payload.index + 6); i++) {
         const curDiff = Math.abs(notes[i].time - payload.time);
         if (curDiff <= minDiff) {
 
           index = i;
           minDiff = curDiff;
           
-        } else {
-          break;
         }
       }
 

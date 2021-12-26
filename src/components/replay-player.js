@@ -38,15 +38,11 @@ AFRAME.registerComponent('replay-player', {
           let currentTime = this.song.getCurrentTime();// - replay.info.midDeviation;
           let frames = this.replayDecoder.replay.frames;
           var frameIndex = 0;
-          for (var i = 0; i < frames.length; i++) {
-            if (Math.abs(frames[i].a - currentTime) < 0.01) {
-              frameIndex = i;
-              break;
-            }
+          while (frameIndex < frames.length - 2 && frames[frameIndex + 1].a < currentTime) {
+            frameIndex++;
           }
-    
           let frame = frames[frameIndex];
-          let nextFrame = frames[frameIndex != frames.length - 1 ? frameIndex + 1 : frameIndex];
+          let nextFrame = frames[frameIndex + 1];
           this.fpsCounter.replayFps = frame.i;
           if (frame.a == 0 && nextFrame.a == 0) return;
     

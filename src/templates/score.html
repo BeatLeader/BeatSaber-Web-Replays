@@ -45,24 +45,6 @@
     scale="5 5 5">
   </a-entity>
 
-  <a-entity
-    id="playerText"
-    mixin="scoreText"
-    bind__text="value: player.name"
-    text="width: 1; lineHeight: 40"
-    position="-1.8 0 -2"
-    scale="5 5 5">
-  </a-entity>
-
-  <a-entity
-    render-order="hud"
-    id="playerAvatar"
-    bind__blob-texture="src: player.avatar"
-    geometry="primitive: plane; buffer: false; skipCache: true; height: 0.3; width: 0.3"
-    material="shader: flat; transparent: true; depthWrite: false"
-    position="-1.8 0.5 -2"
-    bind__visible="!!player.avatar"></a-entity>
-
   <a-entity 
     render-order="hud"
     position="1.8 1.2 -4">

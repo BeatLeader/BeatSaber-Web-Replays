@@ -61,7 +61,13 @@ AFRAME.registerComponent('replay-loader', {
       fetch(`/cors/score-saber/api/player/${this.data.playerID}/full`).then(res => {
         res.json().then(data => {
             this.user = data;
-            this.el.sceneEl.emit('userloaded', {name: this.user.name, avatar: this.user.profilePicture.replace('https://cdn.scoresaber.com/', '/cors/score-saber-cdn/')}, null);
+            this.el.sceneEl.emit('userloaded', {
+              name: this.user.name, 
+              avatar: this.user.profilePicture.replace('https://cdn.scoresaber.com/', '/cors/score-saber-cdn/'),
+              country: this.user.country,
+              countryIcon: `https://scoresaber.com/imports/images/flags/${this.user.country.toLowerCase()}.png`,
+              id: this.user.id
+            }, null);
         });
       });
     },

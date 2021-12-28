@@ -15,6 +15,7 @@ AFRAME.registerComponent('zip-loader', {
   init: function () {
     this.fetchedZip = ''
     this.hash = '';
+    this.id = '';
 
     if (zipUrl) {
       this.fetchZip(zipUrl);
@@ -124,6 +125,8 @@ AFRAME.registerComponent('zip-loader', {
       event.image = 'assets/img/logo.png';
     }
 
+    event.id = this.id;
+
     this.isFetching = '';
     console.log(event);
     this.el.emit('challengeloadend', event, false);
@@ -137,6 +140,7 @@ AFRAME.registerComponent('zip-loader', {
       res.json().then(data => {
         if (data.versions) {
           this.hash = data.versions[0].hash;
+          this.id = data.id;
           this.el.sceneEl.emit(
             'challengeimage',
             `${utils.beatsaverCdnCors(data.versions[0].coverURL)}`

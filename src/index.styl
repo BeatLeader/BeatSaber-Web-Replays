@@ -13,7 +13,6 @@ html
   align-items center
   background rgba(0, 0, 0, 0.85)
   border-radius 10px
-  bottom 0
   display none
   font-family $font
   left 0
@@ -100,8 +99,6 @@ html
     position absolute
     z-index 999999999
     width: 180px
-    &.settingsActive
-      display block
 
     input
       cursor pointer
@@ -282,112 +279,56 @@ html
   opacity 1
   transition .1s opacity
 
+#controls
+  bottom -60px
+  -webkit-transition: bottom 0.5s;
+  -moz-transition: bottom 0.5s;
+  -ms-transition: bottom 0.5s;
+  -o-transition: bottom 0.5s;
+  transition: bottom 0.5s;
+
+#songInfoOverlay
+  top: -130px
+  -webkit-transition: top 0.5s;
+  -moz-transition: top 0.5s;
+  -ms-transition: top 0.5s;
+  -o-transition: top 0.5s;
+  transition: top 0.5s;
+
+#playerInfoOverlay
+  bottom: -130px
+  -webkit-transition: bottom 0.5s;
+  -moz-transition: bottom 0.5s;
+  -ms-transition: bottom 0.5s;
+  -o-transition: bottom 0.5s;
+  transition: bottom 0.5s;
+
+.showControls
+  -webkit-transition: top 0.5s bottom 0.5s;
+  -moz-transition: top 0.5s bottom 0.5s;
+  -ms-transition: top 0.5s bottom 0.5s;
+  -o-transition: top 0.5s bottom 0.5s;
+  transition: top 0.5s bottom 0.5s;
+  #controls
+    bottom 0
+  #songInfoOverlay
+    top: 30px
+  #playerInfoOverlay
+    bottom: 80px
+  #controls
+    #cameraSettingsContainer
+      &.settingsActive
+        display block
+
 .isPlaying
   .github-corner
     opacity 0
-  #songInfoOverlay
-    display flex
   #controls,
   #controls #pause
     opacity 1
 
 .a-loader-title
   display none !important
-
-#songInfoContainer #searchToggle
-  cursor pointer
-  height 30px
-  padding 0 5px 0 15px
-  width 30px
-  svg
-    left 5px
-    position relative
-    top 5px
-    transform scale(1.5)
-  g
-    stroke $gray
-    transition stroke .1s
-  &:hover g
-    stroke $white
-
-#search
-  bottom 50px
-  align-items center
-  display flex
-  flex-direction column
-  justify-content center
-  left 0
-  margin 0 auto
-  position absolute
-  right 0
-  width 400px
-
-  input,
-  #url
-    background rgba(0, 0, 0, 0.85)
-    border-radius 10px
-    font-family $font
-    font-size 14px
-    position relative
-
-	input
-    border 1px solid $gray
-    bottom 15px
-    color $white
-    padding 8px 20px
-    width 340px
-
-  #url
-    border 1px solid #222
-    color $gray
-    padding 8px 20px
-    text-align center
-
-  #searchResultsContainer
-    background rgba(0, 0, 0, 0.95)
-    border 1px solid $gray
-    border-radius 10px
-    bottom 25px
-    display flex
-    flex-direction column
-    padding-bottom 6px
-    position relative
-    width 340px
-
-    > h3
-      color $gray
-      font-size 14px
-      text-align center
-      margin 8px 0 0 0
-
-  #searchResults
-    display flex
-    flex-direction column
-    margin 0
-    max-height 200px
-    list-style none
-    overflow auto
-    padding 5px 0 5px 0
-
-    li
-      align-items center
-      background none
-      color $gray
-      cursor pointer
-      display flex
-      font-size 12px
-      margin 0
-      margin-bottom 2px
-      padding-left 10px
-      transition background .1s
-      &:hover
-        background rgba(30, 30, 30, 0.95)
-      img
-        height 24px
-        width 24px
-      p
-        margin 0
-        padding-left 10px
 
 #breakWarning
   background #111
@@ -407,10 +348,9 @@ html
 
 #songInfoOverlay
   align-items top
-  display none
+  display flex
   padding-left: 5px
   position absolute
-  top: 30px
   left: 20px
 
   img
@@ -476,6 +416,38 @@ html
 
   #controlsMode
     margin-right 5px
+
+#playerInfoOverlay
+  align-items top
+  display flex
+  padding-left: 5px
+  position absolute
+  left: 20px
+
+  img
+    height 100px
+    width 100px
+
+  p
+    font-size 20px
+    font-family $font
+    margin 0
+    text-shadow 0 0 4px #000
+  #playerInfo
+    display flex
+    flex-direction column
+    padding-left 5px
+    margin-top -7px
+  #playerName
+    color $gray
+    font-weight bold
+    font-size 25px
+    padding-left 5px
+  #playerCountry
+    height 25px
+    width 25px
+    padding-left 5px
+    padding-top 5px
 
 #povswitch {
     background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20245.82%20141.73%22%3E%3Cdefs%3E%3Cstyle%3E.a%7Bfill%3A%23fff%3Bfill-rule%3Aevenodd%3B%7D%3C%2Fstyle%3E%3C%2Fdefs%3E%3Ctitle%3Emask%3C%2Ftitle%3E%3Cpath%20class%3D%22a%22%20d%3D%22M175.56%2C111.37c-22.52%2C0-40.77-18.84-40.77-42.07S153%2C27.24%2C175.56%2C27.24s40.77%2C18.84%2C40.77%2C42.07S198.08%2C111.37%2C175.56%2C111.37ZM26.84%2C69.31c0-23.23%2C18.25-42.07%2C40.77-42.07s40.77%2C18.84%2C40.77%2C42.07-18.26%2C42.07-40.77%2C42.07S26.84%2C92.54%2C26.84%2C69.31ZM27.27%2C0C11.54%2C0%2C0%2C12.34%2C0%2C28.58V110.9c0%2C16.24%2C11.54%2C30.83%2C27.27%2C30.83H99.57c2.17%2C0%2C4.19-1.83%2C5.4-3.7L116.47%2C118a8%2C8%2C0%2C0%2C1%2C12.52-.18l11.51%2C20.34c1.2%2C1.86%2C3.22%2C3.61%2C5.39%2C3.61h72.29c15.74%2C0%2C27.63-14.6%2C27.63-30.83V28.58C245.82%2C12.34%2C233.93%2C0%2C218.19%2C0H27.27Z%22%2F%3E%3C%2Fsvg%3E") 50% 50%/70% 70% no-repeat rgba(0,0,0,.35);
@@ -699,4 +671,43 @@ input:checked + .slider:before {
 
 .btn.play .bar-3 {
 	transform: translateX(12.5px) translateY(0px) rotate(0deg);
+}
+
+.range__tick {
+  fill: #a0a0a0;
+}
+
+.range__point {
+  fill: #a0a0a0;
+  font-size: 10px
+}
+
+#controls
+  #speedSliderContainer
+    #rangeTicks
+      position: absolute
+      bottom: 35px
+      margin-left: 1.5px 
+      width: 100px
+
+#rangePoints {
+  position: absolute
+  bottom: 7px
+  margin-left: 1.5px 
+  width: 100px;
+}
+
+.range__tick:first-child {
+  -webkit-transform: translateX(2px);
+  -moz-transform: translateX(2px);
+  -ms-transform: translateX(2px);
+  -o-transform: translateX(2px);
+  transform: translateX(2px);
+}
+.range__tick:last-child {
+  -webkit-transform: translateX(-3px);
+  -moz-transform: translateX(-3px);
+  -ms-transform: translateX(-3px);
+  -o-transform: translateX(-3px);
+  transform: translateX(-3px);
 }

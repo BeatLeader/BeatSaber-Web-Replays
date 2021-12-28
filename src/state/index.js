@@ -92,6 +92,8 @@ AFRAME.registerState({
     isFinished: false,
     isSafari: isSafari,
     isSongBufferProcessing: false,
+    useractive: false,
+    showControls: true,
     settings: {showHeadset: false}
   },
 
@@ -365,6 +367,10 @@ AFRAME.registerState({
       state.pov = payload.newPov;
     },
 
+    useractive: (state, payload) => {
+      state.useractive = payload.isActive;
+    },
+
     'enter-vr': state => {
       state.inVR = true;
     },
@@ -381,6 +387,8 @@ AFRAME.registerState({
     state.isPlaying =
       !state.isPaused && !state.isSongBufferProcessing &&
       !state.challenge.isLoading && !state.replay.isLoading && !state.challenge.hasLoadError && !state.replay.hasError && state.hasReceivedUserGesture;
+
+    state.showControls = state.useractive || !state.isPlaying;
   }
 });
 

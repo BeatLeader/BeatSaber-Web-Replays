@@ -29,11 +29,26 @@
   </p>
 
   <div id="speedSliderContainer">
+    <div id="rangeTicks">
+      <svg role="presentation" class="rangeSVG" height="8" width="100" xmlns="http://www.w3.org/2000/svg">
+        <rect class="range__tick" x="0%" y="3" width="1" height="10"></rect>
+        <rect class="range__tick" x="50%" y="3" width="1" height="10"></rect>
+        <rect class="range__tick" x="100%" y="3" width="1" height="10"></rect>
+    </svg>
+    </div>
     <input id="speedSlider" title="Replay speed" type="range" type="range" min="0" max="2" step="0.01"></input>
+    
+    <div id="rangePoints">
+   <svg role="presentation" class="rangeSVG" height="8" width="100" y="8" xmlns="http://www.w3.org/2000/svg">
+      <text class="range__point" x="0%" y="8" text-anchor="start">0</text>
+      <text class="range__point" x="50%" y="8" text-anchor="middle">1</text>
+      <text class="range__point" x="100%" y="8" text-anchor="end">2</text>
+   </svg>
+  </div>
   </div>
 
   <p id="songSpeed">
-    <span id="songSpeedPercent">100%</span>
+    <span id="songSpeedPercent">1x</span>
   </p>
 
   <!-- <p id="skipIntro">Skip intro</p> -->
@@ -142,18 +157,30 @@
   </div>
 </div>
 
-<div id="songInfoOverlay">
-  <img id="songImage">
-  <div id="songInfo">
-    <p id="songName"></p>
-    <p id="songSubName"></p>
-    <div id="difficultyLabel">
-      <p id="songDifficulty"></p>
-      <p id="songCustomDifficulty"></p>
-    </div>
-    
-  </div>
-</div>
+<a id="songLink" href="">
+  <span id="songInfoOverlay">
+    <img id="songImage">
+    <span id="songInfo">
+      <p id="songName"></p>
+      <p id="songSubName"></p>
+      <span id="difficultyLabel">
+        <p id="songDifficulty"></p>
+        <p id="songCustomDifficulty"></p>
+      </span>
+      
+    </span>
+  </span>
+</a>
+
+<a id="playerLink" href="">
+  <span id="playerInfoOverlay">
+    <img id="playerAvatar">
+    <span id="playerInfo">
+      <p id="playerName"></p>
+      <img id="playerCountry">
+    </span>
+  </span>
+</a>
 
 <button id="povswitch" onmousedown="event.preventDefault();" title="First person view"></button>
 

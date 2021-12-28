@@ -19,7 +19,9 @@ AFRAME.registerComponent('song-controls', {
     songName: {default: ''},
     songSubName: {default: ''},
     songImage: {default: ''},
-    isPlaying: {default: false}
+    songId: {default: ''},
+    isPlaying: {default: false},
+    showControls: {default: true}
   },
 
   init: function () {
@@ -75,11 +77,18 @@ AFRAME.registerComponent('song-controls', {
       document.body.classList.remove('isPlaying');
     }
 
+    if (data.showControls) {
+      document.body.classList.add('showControls');
+    } else {
+      document.body.classList.remove('showControls');
+    }
+
     document.getElementById('songImage').src = data.songImage;
     document.getElementById('songName').innerHTML = data.songName;
     document.getElementById('songName').setAttribute('title', data.songName);
     document.getElementById('songSubName').innerHTML = data.songSubName;
     document.getElementById('songSubName').setAttribute('title', data.songSubName);
+    document.getElementById('songLink').setAttribute('href', "https://beatsaver.com/maps/" + data.songId)
 
     
     // document.getElementById('controlsMode').innerHTML = data.mode;
@@ -133,6 +142,16 @@ AFRAME.registerComponent('song-controls', {
       }
       
       // this.updateModeOptions();
+    });
+
+    this.el.sceneEl.addEventListener('userloaded', evt => {
+      const player = evt.detail;
+      document.getElementById('playerAvatar').src = player.avatar;
+      document.getElementById('playerName').innerHTML = player.name;
+      document.getElementById('playerName').setAttribute('title', player.name);
+      document.getElementById('playerCountry').src = player.countryIcon;
+      document.getElementById('playerCountry').setAttribute('title', player.country);
+      document.getElementById('playerLink').setAttribute('href', "https://beatleader.xyz/u/" + player.id);
     });
 
     var timelineClicked = false, timelineHovered = false;
@@ -339,7 +358,7 @@ AFRAME.registerComponent('song-controls', {
       }
     });
 
-    document.addEventListener("contextmenu",function(event){
+    this.el.sceneEl.addEventListener("contextmenu",function(event){
       event.preventDefault();
       var ctxMenu = document.getElementById("ctxMenu");
       ctxMenu.style.display = "block";
@@ -408,7 +427,7 @@ AFRAME.registerComponent('song-controls', {
     let speedHandler = () => {
       this.song.source.playbackRate.value = speedSlider.value;
       this.song.speed = speedSlider.value;
-      this.songSpeedPercent.innerHTML = (Math.round(speedSlider.value * 10000) / 100) + "%";
+      this.songSpeedPercent.innerHTML = (Math.round(speedSlider.value * 10000) / 10000) + "x";
     };
     
     speedSlider.addEventListener('input', evt => {
@@ -426,7 +445,7 @@ AFRAME.registerComponent('song-controls', {
       e.stopPropagation();
     })
 
-    this.songSpeedPercent.innerHTML = (this.song.speed * 100) + "%";
+    this.songSpeedPercent.innerHTML = (this.song.speed) + "x";
     speedSlider.value = this.song.speed;
   },
 

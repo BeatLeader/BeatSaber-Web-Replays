@@ -12,7 +12,7 @@ AFRAME.registerComponent('replay-loader', {
 
       let captureThis = this;
       document.addEventListener('songFetched', (e) => {
-        captureThis.songFetched(e.detail);
+        captureThis.songFetched(e.detail.hash);
       });
       this.el.addEventListener('challengeloadend', (e) => {
         captureThis.challengeloadend(e.detail);

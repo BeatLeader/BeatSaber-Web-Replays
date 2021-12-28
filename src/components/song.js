@@ -58,6 +58,15 @@ AFRAME.registerComponent('song', {
       this.el.sceneEl.components.settings.settings.volume || 0.35;
 
     this.el.addEventListener('gamemenurestart', this.onRestart.bind(this));
+
+    const gestureListener = () => {
+      this.audioAnalyser.suspendContext();
+      this.audioAnalyser.resumeContext();
+
+      this.el.removeEventListener('usergesturereceive', gestureListener);
+    }
+
+    this.el.addEventListener('usergesturereceive', gestureListener);
   },
 
   update: function (oldData) {

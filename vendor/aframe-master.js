@@ -76323,6 +76323,7 @@ function setupCanvas (sceneEl) {
 
   canvasEl = document.createElement('canvas');
   canvasEl.classList.add('a-canvas');
+  canvasEl.classList.add('showControls');
   // Mark canvas as provided/injected by A-Frame.
   canvasEl.dataset.aframeCanvas = true;
   sceneEl.appendChild(canvasEl);
@@ -78182,7 +78183,7 @@ _dereq_('./core/a-mixin');
 _dereq_('./extras/components/');
 _dereq_('./extras/primitives/');
 
-console.log('A-Frame Version: 0.8.2 (Date 2021-12-26, Commit #ea721416)');
+console.log('A-Frame Version: 0.8.2 (Date 2021-12-28, Commit #ea721416)');
 console.log('three Version:', pkg.dependencies['three']);
 console.log('WebVR Polyfill Version:', pkg.dependencies['webvr-polyfill']);
 

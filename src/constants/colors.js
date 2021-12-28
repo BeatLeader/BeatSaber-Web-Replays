@@ -26,8 +26,8 @@ module.exports = {
   TEXT_NORMAL: '#444',
   TEXT_BOLD: '#888',
 
-  BEAT_RED: '#660338',
-  BEAT_BLUE: '#034470',
+  BEAT_RED: '#a82020',
+  BEAT_BLUE: '#2064a8',
 
   MINE_RED: '#1c060e',
   MINE_RED_EMISSION: '#2a0d1b',

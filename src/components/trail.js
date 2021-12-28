@@ -169,7 +169,7 @@ AFRAME.registerComponent('trail', {
     var vertices = this.geometry.attributes.position.array;
     var colors = this.geometry.attributes.vertexColor.array;
     var color = this.bladeColor;
-    var alpha;
+    var alpha = 0.2;
     var previousAlpha;
 
     for (i = 1; i < saberTrajectory.length; i++) {

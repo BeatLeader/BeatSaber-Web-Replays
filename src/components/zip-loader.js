@@ -25,11 +25,11 @@ AFRAME.registerComponent('zip-loader', {
   update: function (oldData) {
     this.el.sceneEl.emit('cleargame', null, false);
 
-    if (this.data.id) { 
+    if (this.data.id && !this.data.hash) { 
       if ((oldData.id !== this.data.id)) {
         this.fetchData(this.data.id);
       }
-     } else if (this.data.hash) {
+     } else if (this.data.hash && !this.data.id) {
       if ((oldData.hash !== this.data.hash)) {
         this.fetchData(this.data.hash, true);
       }
@@ -122,7 +122,7 @@ AFRAME.registerComponent('zip-loader', {
     });
 
     if (!event.image && !this.data.id) {
-      event.image = 'assets/img/logo.png';
+      event.image = 'assets/img/favicon-196x196.png';
     }
 
     event.id = this.id;
@@ -141,11 +141,9 @@ AFRAME.registerComponent('zip-loader', {
         if (data.versions) {
           this.hash = data.versions[0].hash;
           this.id = data.id;
-          this.el.sceneEl.emit(
-            'challengeimage',
-            `${utils.beatsaverCdnCors(data.versions[0].coverURL)}`
-          );
-          this.el.sceneEl.emit('songFetched', this.hash);
+          data.image = utils.beatsaverCdnCors(data.versions[0].coverURL);
+          data.hash = data.versions[0].hash;
+          this.el.sceneEl.emit('songFetched', data);
           this.fetchZip(zipUrl || `${data.versions[0].downloadURL}`);
         } else {
           this.el.emit('challengeloaderror', null);

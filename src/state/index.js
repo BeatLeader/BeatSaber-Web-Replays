@@ -102,8 +102,21 @@ AFRAME.registerState({
       state.challenge.isBeatsPreloaded = true;
     },
 
-    challengeimage: (state, payload) => {
-      state.challenge.image = payload;
+    songFetched: (state, payload) => {
+      state.challenge.image = payload.image;
+      state.challenge.author = payload.metadata.levelAuthorName;
+
+      state.challenge.songName = payload.metadata.songName;
+      state.challenge.songNameShort = truncate(payload.metadata.songName, 18);
+      state.challenge.songNameMedium = truncate(payload.metadata.songName, 30);
+
+      state.challenge.songSubName = payload.metadata.songSubName || payload.metadata.songAuthorName;
+      state.challenge.songSubNameShort = truncate(state.challenge.songSubName, 21);
+
+      state.challenge.id = payload.id;
+
+      document.title = `Replay | ${state.player.name} | ${payload.metadata.songName}`;
+      document.querySelector('meta[name="description"]').setAttribute("content", `Replay | ${state.player.name} | ${payload.metadata.songName}`);
     },
 
     challengeloadstart: (state, payload) => {

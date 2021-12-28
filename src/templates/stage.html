@@ -66,6 +66,7 @@
 
   <a-entity
     id="songProgressRing"
+    render-order="additive"
     bind__song-progress-ring="enabled: isPlaying && challenge.isBeatsPreloaded"
     bind__visible="isPlaying && challenge.isBeatsPreloaded"
     geometry="primitive: plane; width: 0.1; height: 0.1"

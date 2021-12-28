@@ -64,6 +64,7 @@ AFRAME.registerComponent('song-controls', {
 
     this.songProgress = document.getElementById('songProgress');
     this.songSpeedPercent = document.getElementById('songSpeedPercent');
+    this.canvas = document.querySelectorAll('.a-canvas')[0];
   },
 
   update: function (oldData) {
@@ -79,7 +80,9 @@ AFRAME.registerComponent('song-controls', {
 
     if (data.showControls) {
       document.body.classList.add('showControls');
+      this.canvas.classList.add('showControls');
     } else {
+      this.canvas.classList.remove('showControls');
       document.body.classList.remove('showControls');
     }
 
@@ -250,6 +253,7 @@ AFRAME.registerComponent('song-controls', {
         if (this.song.isPlaying) {
           this.el.sceneEl.emit('pausegame', null, false);
         } else {
+          this.el.sceneEl.emit('usergesturereceive', null, false);
           this.el.sceneEl.emit('gamemenuresume', null, false);
         }
       }

@@ -123,13 +123,14 @@ html
     display none
     left 90px
     padding-top 4px
-    z-index 999999999
+    z-index 99
     display block
 
     input
       cursor pointer
       padding 0
       width 100px
+      z-index 100
 
   #pause
     cursor pointer
@@ -682,19 +683,19 @@ input:checked + .slider:before {
   font-size: 10px
 }
 
-#controls
-  #speedSliderContainer
-    #rangeTicks
-      position: absolute
-      bottom: 35px
-      margin-left: 1.5px 
-      width: 100px
+#rangeTicks {
+  position: absolute
+  bottom: 35px
+  margin-left: 1.5px 
+  width: 100px
+}  
 
 #rangePoints {
   position: absolute
-  bottom: 7px
+  bottom: 11px
   margin-left: 1.5px 
   width: 100px;
+  height: 8px;
 }
 
 .range__tick:first-child {
@@ -710,4 +711,12 @@ input:checked + .slider:before {
   -ms-transform: translateX(-3px);
   -o-transform: translateX(-3px);
   transform: translateX(-3px);
+}
+
+.rangePointsSvg {
+  -webkit-transform: translateY(-8px);
+  -moz-transform: translateY(-8px);
+  -ms-transform: translateY(-8px);
+  -o-transform: translateY(-8px);
+  transform: translateY(-8px);
 }

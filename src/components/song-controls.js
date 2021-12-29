@@ -375,7 +375,7 @@ AFRAME.registerComponent('song-controls', {
       target.appendChild(input);
       let songParam = (AFRAME.utils.getUrlParameter('id') ? `?id=${AFRAME.utils.getUrlParameter('id')}` : `?hash=${AFRAME.utils.getUrlParameter('hash')}`);
       let base = location.protocol + "//" + location.host + "/" + `${songParam}&playerID=${AFRAME.utils.getUrlParameter('playerID')}&difficulty=${AFRAME.utils.getUrlParameter('difficulty')}`
-      input.value = base + (time ? `&time=${Math.round(this.song.getCurrentTime()*1000)}&speed=${Math.round(this.song.speed * 100000)}` : "" );
+      input.value = base + (time ? `&time=${Math.round(this.song.getCurrentTime()*1000)}&speed=${Math.round(this.song.speed * 100)}` : "" );
       input.select();
       document.execCommand("copy");
       target.removeChild(input);
@@ -431,6 +431,7 @@ AFRAME.registerComponent('song-controls', {
     let speedHandler = () => {
       this.song.source.playbackRate.value = speedSlider.value;
       this.song.speed = speedSlider.value;
+      speedSlider.style.setProperty('--value', speedSlider.value)
       this.songSpeedPercent.innerHTML = (Math.round(speedSlider.value * 10000) / 10000) + "x";
     };
     
@@ -459,6 +460,7 @@ AFRAME.registerComponent('song-controls', {
 
     this.songSpeedPercent.innerHTML = (this.song.speed) + "x";
     speedSlider.value = this.song.speed;
+    speedSlider.style.setProperty('--value', this.song.speed)
 
     let fullscreen = document.getElementById('controlsFullscreen');
 

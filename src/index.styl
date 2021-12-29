@@ -167,25 +167,13 @@ html
       z-index 100
       border-radius: 10px;
       background: #4776e6; /* fallback for old browsers */
-      background: -webkit-linear-gradient(
-        to right,
-        #8e54e9,
-        #dd1853
-      ); /* Chrome 10-25, Safari 5.1-6 */
+      background: 
+        -webkit-linear-gradient(to right, transparent 0%, transparent calc((var(--value) / 2) * 100%), white calc((var(--value) / 2) * 100%), white 100%),
+        -webkit-linear-gradient(to right, #8e54e9, #dd1853);
       background:
         linear-gradient(to right, transparent 0%, transparent calc((var(--value) / 2) * 100%), white calc((var(--value) / 2) * 100%), white 100%),
         linear-gradient(to right, #8e54e9, #dd1853);
 
-    // input[type="range"]::-webkit-slider-thumb {
-    //   -webkit-appearance: none;
-    //   border-radius: 50%;
-    //   height: 15px;
-    //   width: 15px;
-    //   background-color: white;
-    //   cursor: -webkit-grab;
-    //   -webkit-transition: border 1000ms ease;
-    //   transition: border 1000ms ease;
-    // }
     input[type="range"]::-moz-range-thumb {
       -moz-appearance: none;
       border-radius: 50%;
@@ -747,7 +735,7 @@ input:checked + .slider:before {
 
 .range__point 
   fill: #a0a0a0;
-  font-size: 11px
+  font-size: 10px
   white-space: pre
   &:hover
     fill: red

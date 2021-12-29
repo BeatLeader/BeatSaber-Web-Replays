@@ -57,18 +57,39 @@ html
   
   #controlsSettings
     cursor pointer
-    padding 3px 10px 0 14px
+    padding 6px 10px 0 14px
     position: absolute
-    right: 5px
+    right: 34px
     img
       height 20px
       width 20px
 
+  .inFullscreen
+    .enterFullscreen
+      display none
+    .exitFullscreen
+      display block
+  .exitFullscreen
+        display none
+
+  #controlsFullscreen.inFullscreen
+      padding 0px 10px 0 14px
+
+  #controlsFullscreen
+    cursor pointer
+    padding 6px 10px 0 14px
+    position: absolute
+    right: 2px
+    svg
+      fill: white
+      height 26px
+      width 26px
+
   #controlsCamera
     cursor pointer
-    padding 3px 10px 0 14px
+    padding 6px 10px 0 14px
     position: absolute
-    right: 34px
+    right: 60px
     img
       height 30px
       width 26px  
@@ -124,16 +145,56 @@ html
     bottom 5px
     cursor pointer
     display none
-    left 90px
+    margin-left -6px
     padding-top 4px
     z-index 99
     display block
 
     input
+      --value: 1;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      position: absolute
       cursor pointer
-      padding 0
-      width 100px
+      margin-left: -1px
+      margin-top: -5px
+      width 104px
+      height: 8px
+      background-color transparent
       z-index 100
+      border-radius: 10px;
+      background: #4776e6; /* fallback for old browsers */
+      background: -webkit-linear-gradient(
+        to right,
+        #8e54e9,
+        #dd1853
+      ); /* Chrome 10-25, Safari 5.1-6 */
+      background:
+        linear-gradient(to right, transparent 0%, transparent calc((var(--value) / 2) * 100%), white calc((var(--value) / 2) * 100%), white 100%),
+        linear-gradient(to right, #8e54e9, #dd1853);
+
+    // input[type="range"]::-webkit-slider-thumb {
+    //   -webkit-appearance: none;
+    //   border-radius: 50%;
+    //   height: 15px;
+    //   width: 15px;
+    //   background-color: white;
+    //   cursor: -webkit-grab;
+    //   -webkit-transition: border 1000ms ease;
+    //   transition: border 1000ms ease;
+    // }
+    input[type="range"]::-moz-range-thumb {
+      -moz-appearance: none;
+      border-radius: 50%;
+      height: 15px;
+      width: 15px;
+      max-width: 80px;
+      position: relative;
+      background-color: #1d1c25;
+      cursor: -moz-grab;
+      -moz-transition: border 1000ms ease;
+      transition: border 1000ms ease;
+    }
 
   #pause
     cursor pointer
@@ -183,8 +244,8 @@ html
 #songSpeed
   color $gray
   font-size 11px
-  margin-left 5px
-  margin-right 0
+  right: 93px
+  position: absolute
   width 30px
 
 #controlsModes,
@@ -681,10 +742,12 @@ input:checked + .slider:before {
   fill: #a0a0a0;
 }
 
-.range__point {
+.range__point 
   fill: #a0a0a0;
-  font-size: 10px
-}
+  font-size: 11px
+  white-space: pre
+  &:hover
+    fill: red
 
 #rangeTicks {
   position: absolute
@@ -717,6 +780,7 @@ input:checked + .slider:before {
 }
 
 .rangePointsSvg {
+  margin-left: -6px
   -webkit-transform: translateY(-8px);
   -moz-transform: translateY(-8px);
   -ms-transform: translateY(-8px);

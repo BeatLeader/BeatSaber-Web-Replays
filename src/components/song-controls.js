@@ -449,8 +449,42 @@ AFRAME.registerComponent('song-controls', {
       e.stopPropagation();
     })
 
+    const rangePoints = document.querySelectorAll(".range__point");
+    rangePoints.forEach((el, i) => {
+      el.addEventListener('click', evt => {
+        speedSlider.valueAsNumber = i * (2 / (rangePoints.length - 1));
+        speedHandler();
+      });
+    });
+
     this.songSpeedPercent.innerHTML = (this.song.speed) + "x";
     speedSlider.value = this.song.speed;
+
+    let fullscreen = document.getElementById('controlsFullscreen');
+
+    const fullscreenHandler = (inFullscreen) => {
+      if (inFullscreen) {
+        fullscreen.classList.add("inFullscreen");
+        fullscreen.title = "Exit fullscreen"
+      } else {
+        fullscreen.classList.remove("inFullscreen");
+        fullscreen.title = "Enter fullscreen"
+      }
+    }
+
+    fullscreen.addEventListener('click', () => {
+      if (fullscreen.classList.contains("inFullscreen")) {
+        document.exitFullscreen();
+        fullscreenHandler(false);
+      } else {
+        document.body.requestFullscreen();
+        fullscreenHandler(true);
+      }
+    });
+
+    document.addEventListener('fullscreenchange', () => {
+      fullscreenHandler(document.fullscreenElement);
+    });
   },
 
   showMisses: (notes, bombs, buffer, target) => {

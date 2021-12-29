@@ -771,7 +771,7 @@ AFRAME.registerComponent('beat', {
   showScore: function (hand) {
     let score = this.replayLoader.replay.scores[this.data.index];
     if (score < 0) {
-      if (score == -2) {
+      if (score == -3) {
         var missEl = hand === 'left' ? this.missElLeft : this.missElRight;
         if (!missEl) { return; }
         missEl.object3D.position.copy(this.el.object3D.position);
@@ -779,7 +779,7 @@ AFRAME.registerComponent('beat', {
         missEl.object3D.position.z -= 0.5;
         missEl.object3D.visible = true;
         missEl.emit('beatmiss', null, true);
-      } else if (score == -3) {
+      } else if (score == -2) {
         var wrongEl = hand === 'left' ? this.wrongElLeft : this.wrongElRight;
         if (!wrongEl) { return; }
         wrongEl.object3D.position.copy(this.el.object3D.position);
@@ -828,14 +828,17 @@ AFRAME.registerComponent('beat', {
     return function (timeDelta) {
       // Update gravity velocity.
       this.gravityVelocity = getGravityVelocity(this.gravityVelocity, timeDelta);
-      this.el.object3D.position.y += this.gravityVelocity * (timeDelta / 1000);
+      this.el.object3D.position.y += this.gravityVelocity * (timeDelta / 1000) * this.song.speed;
 
       if (this.data.type == 'mine') {
         for (var i = 0; i < this.mineFragments.length; i++) {
           fragment = this.mineFragments[i];
           if (!fragment.visible) { continue; }
-          fragment.position.addScaledVector(fragment.speed, timeDelta / 1000);
-          fragment.scale.multiplyScalar(0.97)
+          fragment.position.addScaledVector(fragment.speed, (timeDelta / 1000) * this.song.speed);
+          if (this.song.speed > 0) {
+            fragment.scale.multiplyScalar(0.97 / this.song.speed)
+          }
+          
           if (fragment.scale.y < 0.1){
             fragment.visible = false;
           }
@@ -844,22 +847,22 @@ AFRAME.registerComponent('beat', {
       }
 
       rightCutNormal.copy(this.rightCutPlane.normal)
-                    .multiplyScalar(DESTROYED_SPEED * (timeDelta / 500));
+                    .multiplyScalar(DESTROYED_SPEED * (timeDelta / 500) * this.song.speed);
       rightCutNormal.y = 0;  // Y handled by gravity.
       this.partRightEl.object3D.position.add(rightCutNormal);
       this.partRightEl.object3D.setRotationFromAxisAngle(this.rotationAxis, rightRotation);
-      rightRotation = rightRotation >= 2 * Math.PI ? 0 : rightRotation + rotationStep;
+      rightRotation = rightRotation >= 2 * Math.PI ? 0 : rightRotation + rotationStep * this.song.speed;
 
       leftCutNormal.copy(this.leftCutPlane.normal)
-                   .multiplyScalar(DESTROYED_SPEED * (timeDelta / 500));
+                   .multiplyScalar(DESTROYED_SPEED * (timeDelta / 500) * this.song.speed);
       leftCutNormal.y = 0;  // Y handled by gravity.
       this.partLeftEl.object3D.position.add(leftCutNormal);
       this.partLeftEl.object3D.setRotationFromAxisAngle(this.rotationAxis, leftRotation);
-      leftRotation = leftRotation >= 2 * Math.PI ? 0 : leftRotation + rotationStep;
+      leftRotation = leftRotation >= 2 * Math.PI ? 0 : leftRotation + rotationStep * this.song.speed;
 
       this.generateCutClippingPlanes();
 
-      this.returnToPoolTimer -= timeDelta;
+      this.returnToPoolTimer -= timeDelta * this.song.speed;
       this.backToPool = this.returnToPoolTimer <= 0;
     };
   })(),

@@ -178,18 +178,18 @@
               </a-entity>
               <a-entity
                 class="saberHandle"
-                geometry="primitive: box; height: 0.2; depth: 0.025; width: 0.025"
-                material="shader: flat; color: #151515">
+                geometry="primitive: cylinder; radius: 0.02; height: 0.19;"
+                material="shader: flat; color: {{ bladeColor }}">
                 <a-entity
-                  class="highlightTop"
-                  geometry="primitive: box; height: 0.18; depth: 0.005; width: 0.005"
-                  material="shader: flat; color: #FAFAFA"
-                  position="0 0 0.0125"></a-entity>
-                <a-entity
-                  class="highlightBottom"
-                  geometry="primitive: box; height: 0.18; depth: 0.005; width: 0.005"
-                  material="shader: flat; color: #FAFAFA"
-                  position="0 0 -0.0125"></a-entity>
+                class="highlightTop"
+                geometry="primitive: cylinder; radius: 0.02; height: 0.01;"
+                material="shader: flat; color: #FFFFFF"
+                position="0 0.10 0"></a-entity>
+              <a-entity
+                class="highlightBottom"
+                geometry="primitive: cylinder; radius: 0.02; height: 0.01;"
+                material="shader: flat; color: #FFFFFF"
+                position="0 -0.10 0.0"></a-entity>
               </a-entity>
             </a-entity>
 

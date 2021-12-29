@@ -175,9 +175,11 @@ AFRAME.registerComponent('beat', {
 
   play: function () {
     // this.glow = this.el.sceneEl.components['pool__beat-glow'].requestEntity();
-    this.blockEl.object3D.visible = true;
-    this.destroyed = false;
-    this.el.object3D.visible = true;
+    if (!this.hitSaberEl) {
+      this.blockEl.object3D.visible = true;
+      this.destroyed = false;
+      this.el.object3D.visible = true;
+    }
   },
 
   tock: function (time, timeDelta) {
@@ -250,6 +252,7 @@ AFRAME.registerComponent('beat', {
     if (Math.random > 0.5) { this.rotationZChange *= -1; }
     this.el.object3D.rotation.z -= this.rotationZChange;
     this.rotationZStart = this.el.object3D.rotation.z;
+    this.hitSaberEl = null;
     // Reset mine.
     if (data.type == 'mine') { this.resetMineFragments(); }
 
@@ -386,6 +389,9 @@ AFRAME.registerComponent('beat', {
       side: 'double'
     });
     this.setObjModelFromTemplate(partLeftEl, this.models.dot);
+    // Model is 0.29 size. We make it 1.0 so we can easily scale based on 1m size.
+    partLeftEl.object3D.scale.set(1, 1, 1);
+    partLeftEl.object3D.scale.multiplyScalar(3.45).multiplyScalar(this.data.size);
     partLeftEl.object3D.visible = false;
 
     cutLeftEl.setAttribute('material', {
@@ -405,6 +411,9 @@ AFRAME.registerComponent('beat', {
       side: 'double'
     });
     this.setObjModelFromTemplate(partRightEl, this.models.dot);
+    // Model is 0.29 size. We make it 1.0 so we can easily scale based on 1m size.
+    partRightEl.object3D.scale.set(1, 1, 1);
+    partRightEl.object3D.scale.multiplyScalar(3.45).multiplyScalar(this.data.size);
     partRightEl.object3D.visible = false;
 
     cutRightEl.setAttribute('material', {

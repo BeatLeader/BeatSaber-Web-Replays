@@ -1,27 +1,26 @@
 const COMBO_PROGRESS_MAP = {
   0: 0,
-  1: 0.5,
-  2: 0,
-  3: 0.25,
-  4: 0.5,
-  5: 0.75,
-  6: 0,
-  7: 0.125,
-  8: 0.25,
-  9: 0.375,
-  10: 0.5,
-  11: 0.625,
-  12: 0.75,
-  13: 0.875
+  1: 0,
+  2: 0.25,
+  3: 0.5,
+  4: 0.75,
+  5: 0,
+  6: 0.125,
+  7: 0.25,
+  8: 0.375,
+  9: 0.5,
+  10: 0.625,
+  11: 0.75,
+  12: 0.875
 };
 
 /*
  * Combo needed total for multiplier level:
  *
  * 0 - 1x
- * 2 - 2x
- * 6 - 4x
- * 14 - 8x
+ * 1 - 2x
+ * 5 - 4x
+ * 13 - 8x
  */
 AFRAME.registerComponent('multiplier-ring', {
   dependencies: ['geometry', 'material'],

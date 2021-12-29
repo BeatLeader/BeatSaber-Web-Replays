@@ -506,9 +506,9 @@ AFRAME.registerComponent('song-controls', {
         img.src = 'assets/img/wrong.png';
         img.className = "missMark";
         img.style.left = (((note.time) / duration) * width - 6) + 'px';
-        if (note.score == -2) {
+        if (note.score == -3) {
           img.title = "Miss"
-        } else if (note.score == -3) {
+        } else if (note.score == -2) {
           img.title = "Bad cut"
         }
         img.title += " at " + formatSeconds(note.time);

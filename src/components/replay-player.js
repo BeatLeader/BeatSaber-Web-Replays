@@ -97,7 +97,7 @@ AFRAME.registerComponent('replay-player', {
     
           headset.rotation.x = hrotation.x
           headset.rotation.y = hrotation.y + Math.PI;
-          headset.rotation.z = hrotation.z + Math.PI;
+          headset.rotation.z = -hrotation.z + Math.PI;
 
           povCamera.position = povCamera.position.lerp(headset.position, 5 * delta);
 
@@ -108,7 +108,7 @@ AFRAME.registerComponent('replay-player', {
     
           povCamera.rotation.x = hrotation.x
           povCamera.rotation.y = hrotation.y + Math.PI;
-          povCamera.rotation.z = hrotation.z + Math.PI;
+          povCamera.rotation.z = -hrotation.z + Math.PI;
           povCamera.hquat = hquat;
     },
     leftHandedTock: function(frame, nextFrame, height, slerpValue, delta) {
@@ -152,7 +152,7 @@ AFRAME.registerComponent('replay-player', {
     
           headset.rotation.x = -hrotation.x
           headset.rotation.y = hrotation.y + Math.PI;
-          headset.rotation.z = hrotation.z + Math.PI;
+          headset.rotation.z = -hrotation.z + Math.PI;
 
           povCamera.position = povCamera.position.lerp(headset.position, 5 * delta);
 
@@ -163,7 +163,7 @@ AFRAME.registerComponent('replay-player', {
     
           povCamera.rotation.x = -hrotation.x
           povCamera.rotation.y = hrotation.y + Math.PI;
-          povCamera.rotation.z = hrotation.z + Math.PI;
+          povCamera.rotation.z = -hrotation.z + Math.PI;
           povCamera.hquat = hquat;
     },
 });

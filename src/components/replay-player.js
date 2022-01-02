@@ -45,8 +45,19 @@ AFRAME.registerComponent('replay-player', {
           let nextFrame = frames[frameIndex + 1];
           this.fpsCounter.replayFps = frame.i;
           if (frame.a == 0 && nextFrame.a == 0) return;
+
+          var replayHeight;
+          if (replay.dynamicHeight.length) {
+            var heightFrameIndex = 0;
+            while (heightFrameIndex < replay.dynamicHeight.length - 2 && replay.dynamicHeight[heightFrameIndex + 1].a < currentTime) {
+              heightFrameIndex++;
+            }
+            replayHeight = replay.dynamicHeight[heightFrameIndex].h;
+          } else {
+            replayHeight = replay.info.height;
+          }
     
-          let height = clamp((replay.info.height - 1.8) * 0.5, -0.2, 0.6);
+          let height = clamp((replayHeight - 1.8) * 0.5, -0.2, 0.6);
           let slerpValue = (currentTime - frame.a) / Math.max(1E-06, nextFrame.a - frame.a);
 
           if (replay.info.leftHanded) {

@@ -55,7 +55,7 @@
     <span id="songSpeedPercent">1x</span>
   </p>
 
-  <!-- <p id="skipIntro">Skip intro</p> -->
+  <p id="skipIntro" style="display: none;">Skip intro</p>
 
   <a id="controlsCamera" title="Camera position"><img src="assets/img/camera.png"></a>
 
@@ -87,6 +87,13 @@
         <span class="slider round"></span>
       </label>
       <label class="toggleButtonLabel"><td><nobr>Show headset</nobr></td></label>
+    </div>
+    <div class="toggleButton" title="Will add color highlight for all missed notes, walls and bombs.">
+      <label class="switch">
+        <input type="checkbox" id="highlightErrors">
+        <span class="slider round"></span>
+      </label>
+      <label class="toggleButtonLabel"><td><nobr>Highlight errors</nobr></td></label>
     </div>
     <div class="toggleButton" title="Disable parts of notes flying off.">
       <label class="switch">

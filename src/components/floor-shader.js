@@ -47,7 +47,7 @@ AFRAME.registerShader('floorShader', {
       vec3 hitColor = HIT_COLOR;
       vec3 hit = vec3(0.0);
 
-      hit += drawCircle(worldPos, hitRight, 0.04, 0.05, hitColor);
+      hit += drawCircle(worldPos, hitRight, 0.04, 0.05, BORDER_COLOR);
       hit += drawCircle(worldPos, hitRight, 0.02, 0.03, vec3(0.7, 0.7, 0.7));
       hit += drawCircle(worldPos, hitLeft, 0.04, 0.05, hitColor);
       hit += drawCircle(worldPos, hitLeft, 0.02, 0.03, vec3(0.7, 0.7, 0.7));

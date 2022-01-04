@@ -73,41 +73,56 @@ AFRAME.registerComponent('replay-loader', {
     },
     processScores: function () {
       const replay = this.replay;
-      console.log(replay.info.height);
+
       var noteStructs = new Array();
       var bombStructs = new Array();
+      var wallStructs = new Array();
       var index = 0;
       for (var i = 0; i < replay.scores.length; i++) {
 
         if (replay.scores[i] == -4) {
           let bomb = {
+            score: -4,
+            combo: 0,
             time: replay.noteTime[i]
           }
           bombStructs.push(bomb);
+        } else if (replay.scores[i] == -5) {
+          let wall = {
+            score: -5,
+            combo: 0,
+            time: replay.noteTime[i]
+          }
+          wallStructs.push(wall);
         } else {
           let note = {
             score: replay.scores[i],
             time: replay.noteTime[i],
             combo: replay.combos[i],
+            isBlock: true,
             index: index
           }
           index++;
           noteStructs.push(note);
-          // console.log(i + " -- " + note.score + " -- " + note.combo);
         }
       }
 
-      noteStructs.sort(function(a, b) {
+      const allStructs = [].concat(bombStructs, noteStructs, wallStructs);
+
+      allStructs.sort(function(a, b) {
         if (a.time < b.time) return -1;
         if (a.time > b.time) return 1;
         return 0;
       });
+      for (var i = 0; i < allStructs.length; i++) {
+        allStructs[i].i = i;
+      }
 
       var multiplier = 1, lastmultiplier = 1;
-      var score = 0;
+      var score = 0, noteIndex = 0;
 
-      for (var i = 0; i < noteStructs.length; i++) {
-        let note = noteStructs[i];
+      for (var i = 0; i < allStructs.length; i++) {
+        let note = allStructs[i];
 
         if (note.score < 0) {
           multiplier = multiplier > 1 ? Math.ceil(multiplier / 2) : 1;
@@ -119,16 +134,24 @@ AFRAME.registerComponent('replay-loader', {
 
         note.multiplier = multiplier;
         note.totalScore = score;
-        note.accuracy = (note.totalScore / this.maxScoreForNote(i) * 100).toFixed(2);
+
+        if (note.isBlock) {
+          note.accuracy = (note.totalScore / this.maxScoreForNote(noteIndex) * 100).toFixed(2);
+          noteIndex++;
+        } else {
+          note.accuracy = i == 0 ? 0 : allStructs[i - 1].accuracy;
+        }
       }
+      this.allStructs = allStructs;
       this.notes = noteStructs;
+      this.bombs = bombStructs;
+      this.walls = wallStructs;
+
       if (this.challenge) {
         this.calculateOffset();
       }
 
-      console.log(replay.info.room);
-
-      this.el.sceneEl.emit('replayloaded', { notes: noteStructs, bombs: bombStructs}, null);
+      this.el.sceneEl.emit('replayloaded', { notes: allStructs}, null);
     },
     challengeloadend: function(event) {
       this.challenge = event;
@@ -157,8 +180,8 @@ AFRAME.registerComponent('replay-loader', {
 
         noteIndex++;
       }
-      this.replay.info.midDeviation = result / count;
-      console.log("Mid deviation: " + this.replay.info.midDeviation);
+      this.midDeviation = result / count;
+      console.log("Mid deviation: " + this.midDeviation);
     },
     maxScoreForNote(index) {
       const note_score = 115;
@@ -190,7 +213,7 @@ AFRAME.registerComponent('replay-loader', {
       } if (multiplier == 2) {
         return 1;
       } if (multiplier == 4) {
-        return 5;
+        return 6;
       } else {
         return 13;
       }

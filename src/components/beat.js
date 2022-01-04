@@ -253,8 +253,42 @@ AFRAME.registerComponent('beat', {
     this.el.object3D.rotation.z -= this.rotationZChange;
     this.rotationZStart = this.el.object3D.rotation.z;
     this.hitSaberEl = null;
+    this.replayNote = null;
+    
     // Reset mine.
-    if (data.type == 'mine') { this.resetMineFragments(); }
+    if (data.type == 'mine') { 
+      this.resetMineFragments();
+      this.blockEl.getObject3D('mesh').material = this.el.sceneEl.systems.materials['mineMaterial' + this.data.color];
+      const bombs = this.replayLoader.bombs;
+      if (bombs) {
+        for (var i = 0; i < bombs.length; i++) {
+          if (bombs[i].time < (data.time + 0.08) && bombs[i].time > data.time - 0.08) {
+            this.replayNote = bombs[i];
+            break;
+          }
+        }
+      }
+    } else {
+      const notes = this.replayLoader.allStructs;
+      const index = this.data.index;
+      var result;
+      for (var i = 0; i < notes.length; i++) {
+        if (notes[i].index == index) {
+          result = notes[i];
+          break;
+        }
+      }
+      this.replayNote = result;
+    }
+
+    if (this.settings.settings.highlightErrors && this.replayNote && this.replayNote.score < 0) {
+      if (data.type == 'mine') {
+        this.blockEl.getObject3D('mesh').material = this.el.sceneEl.systems.materials['mineMaterialyellow'];
+      } else {
+        this.blockEl.setAttribute('material', "color: yellow");
+      }
+      
+    }
 
     this.returnToPoolTimeStart = undefined;
 
@@ -439,17 +473,23 @@ AFRAME.registerComponent('beat', {
   },
 
   missHit: function (hand) {
-    if (this.data.type === 'mine') { return; }
+    if (this.data.type === 'mine') {
+      if (this.replayNote) {
+        this.postScoreEvent();
+      }
+      return; 
+    }
     
+    this.postScoreEvent();
     this.showScore(hand);
-    this.postEndEvent();
+    
     if (AFRAME.utils.getUrlParameter('synctest')) {
       console.log(this.el.sceneEl.components.song.getCurrentTime());
     }
   },
 
-  postEndEvent: function () {
-      this.el.emit('beatend', {time: this.song.getCurrentTime(), index: this.data.index}, true);
+  postScoreEvent: function () {
+      this.el.emit('scoreChanged', {index: this.replayNote.i}, true);
   },
 
   destroyMine: function () {
@@ -689,13 +729,16 @@ AFRAME.registerComponent('beat', {
         this.el.parentNode.components['beat-hit-sound'].playSound(this.el);
 
         if (this.data.type === 'mine') {
-          this.el.emit('minehit', null, true);
+          if (this.replayNote) {
+            this.postScoreEvent();
+          }
+          
           this.destroyMine();
           
           break;
         }
 
-        this.postEndEvent();
+        this.postScoreEvent();
         this.destroyBeat(saberEls[i]);
         
         this.hitSaberEl = saberEls[i];
@@ -757,7 +800,6 @@ AFRAME.registerComponent('beat', {
     // score += angleAfterHit >= 60 ? 30 : (angleAfterHit / 60) * 30;
 
     // hitEventDetail.score = score;
-    this.el.emit('beathit', null, true);
     this.el.sceneEl.emit('textglowbold', null, false);
 
     // let beatScorePool;
@@ -778,7 +820,7 @@ AFRAME.registerComponent('beat', {
   },
 
   showScore: function (hand) {
-    let score = this.replayLoader.replay.scores[this.data.index];
+    let score = this.replayNote.score;
     if (score < 0) {
       if (score == -3) {
         var missEl = hand === 'left' ? this.missElLeft : this.missElRight;

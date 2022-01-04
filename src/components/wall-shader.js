@@ -1,14 +1,17 @@
 const COLORS = require('../constants/colors.js');
 
 const WALL_COLOR = new THREE.Color(COLORS.NEON_RED);
+const RIGHT_COLOR = new THREE.Color(COLORS.NEON_BLUE);
 const WALL_BG = new THREE.Color(COLORS.SKY_RED);
+const WALL_HL_COLOR = new THREE.Color("yellow");
 
 
 AFRAME.registerShader('wallShader', {
   schema: {
     iTime: {type: 'time', is: 'uniform'},
-    hitRight: {type: 'vec3', is: 'uniform', default: {x: 0, y: 1, z: 0}},
-    hitLeft: {type: 'vec3', is: 'uniform', default: {x: 0, y: 0, z: 0}}
+    hitRight: {type: 'vec3', is: 'uniform', default: {x: -999, y: 0, z: 0}},
+    hitLeft: {type: 'vec3', is: 'uniform', default: {x: -999, y: 0, z: 0}},
+    highlight: {type: 'bool', is: 'uniform', default: false}
   },
 
   vertexShader: `
@@ -32,6 +35,7 @@ AFRAME.registerShader('wallShader', {
     //uniform sampler2D env;
     uniform vec3 hitRight;
     uniform vec3 hitLeft;
+    uniform bool highlight;
 
     #define SEED 19.1254
     #define time (3.0 + iTime)/1000.0 * 0.15
@@ -69,7 +73,9 @@ AFRAME.registerShader('wallShader', {
     }
 
     #define WALL_COLOR vec3(${WALL_COLOR.r}, ${WALL_COLOR.g}, ${WALL_COLOR.b})
+    #define WALL_HL_COLOR vec3(${WALL_HL_COLOR.r}, ${WALL_HL_COLOR.g}, ${WALL_HL_COLOR.b})
     #define WALL_BG vec3(${WALL_BG.r}, ${WALL_BG.g}, ${WALL_BG.b})
+    #define RIGHT_COLOR vec3(${RIGHT_COLOR.r}, ${RIGHT_COLOR.g}, ${RIGHT_COLOR.b})
 
     void main() {
       vec2 uv1 = uvs.xy-0.5;
@@ -97,12 +103,18 @@ AFRAME.registerShader('wallShader', {
       w *= 0.9;
       bg *= 0.5;
 
-      vec3 COL = WALL_COLOR;
+      vec3 COL = highlight ? WALL_HL_COLOR : WALL_COLOR;
       vec3 BG = WALL_BG * 0.1;
 
       vec3 col = vec3(r * COL.r + w + BG.r, r * COL.g + w + BG.g, r * COL.b + w + BG.b);
 
-      gl_FragColor = vec4(col, 0.3 + w);
+      vec3 hit;
+      hit = drawCircle(worldPos, hitRight, 0.04, 0.05, RIGHT_COLOR);
+      hit += drawCircle(worldPos, hitRight, 0.02, 0.03, vec3(0.7, 0.7, 0.7));
+      hit += drawCircle(worldPos, hitLeft, 0.04, 0.05, COL);
+      hit += drawCircle(worldPos, hitLeft, 0.02, 0.03, vec3(0.7, 0.7, 0.7));
+
+      gl_FragColor = vec4(col + hit, 0.3 + w + hit.x);
     }
 `
 

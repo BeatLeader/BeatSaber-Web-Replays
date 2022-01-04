@@ -44,27 +44,34 @@ AFRAME.registerComponent('song-controls', {
 
     const analyser = document.getElementById('audioAnalyser');
     analyser.addEventListener('audioanalyserbuffersource', evt => {
+      const songDuration = evt.detail.buffer.duration;
       document.getElementById('songDuration').innerHTML =
-        formatSeconds(evt.detail.buffer.duration);
-        if (this.notes) {
-          this.showMisses(this.notes, this.bombs, evt.detail.buffer, this);
-          this.notes = null;
-        }
+        formatSeconds(songDuration);
+      if (this.notes) {
+        this.showMisses(this.notes, evt.detail.buffer, this);
+        this.notes = null;
+      }
+      if (queryParamTime >= 0 && queryParamTime <= songDuration) {
+        const progress = Math.max(
+          0,
+          Math.min(100, 100 * (queryParamTime / songDuration)));
+        this.playhead.style.width = progress + '%';
+        document.getElementById('songProgress').innerHTML =
+        formatSeconds(queryParamTime);
+      }
     });
 
     this.el.sceneEl.addEventListener('replayloaded', (event) => {
       if (this.song.source && this.song.source.buffer) {
-        this.showMisses(event.detail.notes, event.detail.bombs, this.song.source.buffer, this);
+        this.showMisses(event.detail.notes, this.song.source.buffer, this);
       }
       else {
         this.notes = event.detail.notes;
-        this.bombs = event.detail.bombs;
       }
     });
 
     this.songProgress = document.getElementById('songProgress');
     this.songSpeedPercent = document.getElementById('songSpeedPercent');
-    this.canvas = document.querySelectorAll('.a-canvas')[0];
   },
 
   update: function (oldData) {
@@ -80,9 +87,7 @@ AFRAME.registerComponent('song-controls', {
 
     if (data.showControls) {
       document.body.classList.add('showControls');
-      this.canvas.classList.add('showControls');
     } else {
-      this.canvas.classList.remove('showControls');
       document.body.classList.remove('showControls');
     }
 
@@ -489,7 +494,7 @@ AFRAME.registerComponent('song-controls', {
     });
   },
 
-  showMisses: (notes, bombs, buffer, target) => {
+  showMisses: (notes, buffer, target) => {
     const timeline = target.timeline;
 
     const marginLeft = timeline.getBoundingClientRect().left;
@@ -510,26 +515,17 @@ AFRAME.registerComponent('song-controls', {
           img.title = "Miss"
         } else if (note.score == -2) {
           img.title = "Bad cut"
+        } else if (note.score == -5) {
+          img.title = "Wall hit"
+        } else if (note.score == -4) {
+          img.title = "Bomb hit"
+          img.src = 'assets/img/explode.png';
         }
         img.title += " at " + formatSeconds(note.time);
         
         container.appendChild(img);
       }
     }
-
-    if (bombs) {
-      for (var i = 0; i < bombs.length; i++) {
-        const note = bombs[i];
-        const img = document.createElement('img');
-        img.src = 'assets/img/explode.png';
-        img.className = "missMark";
-        img.style.left = (((note.time) / duration) * width - 6) + 'px';
-        img.title = "Bomb hit at " + formatSeconds(note.time);
-        
-        container.appendChild(img);
-      }
-    }
-    
 
     timeline.appendChild(container);
   },

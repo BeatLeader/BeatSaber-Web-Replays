@@ -48,7 +48,7 @@ AFRAME.registerComponent('beat-generator', {
     this.bpm = undefined;
     this.stageColors = this.el.components['stage-colors'];
     // Beats arrive at sword stroke distance synced with the music.
-    this.swordOffset = 1.1;
+    this.swordOffset = 0.9;
     this.twister = document.getElementById('twister');
     this.leftStageLasers = document.getElementById('leftStageLasers');
     this.rightStageLasers = document.getElementById('rightStageLasers');
@@ -151,12 +151,6 @@ AFRAME.registerComponent('beat-generator', {
       this.eventsTime = song.getCurrentTime() * 1000;
     }
 
-    // Skip a frame to update prevBeats data.
-    if (this.isSeeking) {
-      this.isSeeking = false;
-      // return;
-    }
-
     // Load in stuff scheduled between the last timestamp and current timestamp.
     // Beats.
     const beatsTime = this.beatsTime + skipDebug;
@@ -175,8 +169,15 @@ AFRAME.registerComponent('beat-generator', {
     const obstacles = this.beatData._obstacles;
     for (let i = 0; i < obstacles.length; ++i) {
       let noteTime = obstacles[i]._time * msPerBeat;
-      if (noteTime > prevBeatsTime && noteTime <= beatsTime) {
-        this.generateWall(obstacles[i]);
+      let noteDuration = obstacles[i]._duration * msPerBeat;
+      if (this.isSeeking) {
+        if ((noteTime + noteDuration / 2) > prevBeatsTime && (noteTime - noteDuration / 2) <= beatsTime) {
+          this.generateWall(obstacles[i]);
+        }
+      } else {
+        if (noteTime > prevBeatsTime && noteTime <= beatsTime) {
+          this.generateWall(obstacles[i]);
+        }
       }
     }
 
@@ -191,7 +192,10 @@ AFRAME.registerComponent('beat-generator', {
         }
       }
     }
-    
+
+    if (this.isSeeking) {
+      this.isSeeking = false;
+    }
 
     if (this.beatsPreloadTime === undefined) { return; }
 

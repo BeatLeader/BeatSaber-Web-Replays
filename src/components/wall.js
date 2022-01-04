@@ -35,12 +35,31 @@ AFRAME.registerComponent('wall', {
     this.maxZ = 10;
     this.song = this.el.sceneEl.components.song;
     this.headset = this.el.sceneEl.querySelectorAll('.headset')[0];
+    this.settings = this.el.sceneEl.components.settings;
+    this.replayLoader = this.el.sceneEl.components['replay-loader'];
   },
 
   update: function () {
     const el = this.el;
     const data = this.data;
     const width = data.width;
+
+    this.hit = false;
+    const walls = this.replayLoader.walls;
+    
+    if (walls) {
+      const durationSeconds = this.data.durationSeconds;
+      for (var i = 0; i < walls.length; i++) {
+        if (walls[i].time < (data.time + durationSeconds) && walls[i].time > data.time) {
+          this.hit = true;
+          this.hitWall = walls[i];
+          break;
+        }
+      }
+    }
+
+    const material = el.getObject3D('mesh').material;
+    material.uniforms["highlight"].value = this.hit && this.settings.settings.highlightErrors;
 
     const halfDepth = data.durationSeconds * (data.speed) / 2;
 
@@ -99,6 +118,8 @@ AFRAME.registerComponent('wall', {
   play: function () {
     this.el.object3D.visible = true;
     this.el.setAttribute('data-collidable-head', '');
+    this.el.setAttribute('data-saber-particles', '');
+    this.el.setAttribute('raycastable-game', '');
   },
 
   tock: function (time, timeDelta) {
@@ -111,8 +132,9 @@ AFRAME.registerComponent('wall', {
     this.el.object3D.visible = true;
 
     var newPosition = 0;
+    const currentTime = song.getCurrentTime();
 
-    var timeOffset = data.time - song.getCurrentTime() - data.anticipationTime - data.warmupTime;
+    var timeOffset = data.time - currentTime - data.anticipationTime - data.warmupTime;
 
     if (timeOffset <= -data.warmupTime) {
       newPosition = data.anticipationPosition - halfDepth;
@@ -120,6 +142,11 @@ AFRAME.registerComponent('wall', {
       newPosition += -timeOffset * data.speed;
     } else {
       newPosition = data.anticipationPosition - halfDepth + data.warmupPosition + data.warmupSpeed * -timeOffset;
+    }
+
+    if (this.hit && currentTime > this.hitWall.time) {
+      this.hit = false;
+      this.el.emit('scoreChanged', {index: this.hitWall.i}, true);
     }
 
     newPosition -= this.headset.object3D.position.z;
@@ -136,5 +163,6 @@ AFRAME.registerComponent('wall', {
     this.el.object3D.position.z = 9999;
     this.el.pause();
     this.el.removeAttribute('data-collidable-head');
+    this.el.removeAttribute('raycastable-game');
   }
 });

@@ -2,6 +2,7 @@ const utils = require('../utils');
 
 const GAME_OVER_LENGTH = 3.5;
 const ONCE = {once: true};
+const BASE_VOLUME = 0.35;
 
 let skipDebug = AFRAME.utils.getUrlParameter('skip');
 if (!!skipDebug) {
@@ -55,9 +56,11 @@ AFRAME.registerComponent('song', {
     this.speed = songSpeed;
 
     this.audioAnalyser.gainNode.gain.value =
-      this.el.sceneEl.components.settings.settings.volume || 0.35;
+      this.el.sceneEl.components.settings.settings.volume || BASE_VOLUME;
 
     this.el.addEventListener('gamemenurestart', this.onRestart.bind(this));
+    this.el.addEventListener('wallhitstart', this.onWallHitStart.bind(this));
+    this.el.addEventListener('wallhitend', this.onWallHitEnd.bind(this));
 
     const gestureListener = () => {
       this.audioAnalyser.suspendContext();
@@ -176,7 +179,20 @@ AFRAME.registerComponent('song', {
     this.audioAnalyser.refreshSource();
   },
 
+  onWallHitStart: function () {
+    const gain = this.audioAnalyser.gainNode.gain;
+    const volume = this.el.sceneEl.components.settings.settings.volume || BASE_VOLUME;
+    gain.linearRampToValueAtTime(0.35 * volume, this.context.currentTime + 0.1);
+  },
+
+  onWallHitEnd: function () {
+    const gain = this.audioAnalyser.gainNode.gain;
+    const volume = this.el.sceneEl.components.settings.settings.volume || BASE_VOLUME;
+    gain.linearRampToValueAtTime(volume, this.context.currentTime + 0.1);
+  },
+
   startAudio: function (time) {
+    console.log("Start audio");
     this.isPlaying = true;
     const playTime = time || skipDebug || 0;
     this.songStartTime = (this.context.currentTime * this.speed - playTime) / (this.speed > 0.01 ? this.speed : 0.01);

@@ -187,41 +187,8 @@ AFRAME.registerState({
       state.controllerType = payload.name;
     },
 
-    beatend: (state, payload) => {
-      let notes = state.notes;
-      var minDiff = 100000;
-      var index = 0;
-      for (var i = Math.max(payload.index - 6, 0); i < Math.min(notes.length, payload.index + 6); i++) {
-        const curDiff = Math.abs(notes[i].time - payload.time);
-        if (curDiff <= minDiff) {
-
-          index = i;
-          minDiff = curDiff;
-          
-        }
-      }
-
-      updateScore(state, {index});
-    },
-
-    beathit: (state, payload) => {
-      if (state.damage > DAMAGE_DECAY) {
-        state.damage -= DAMAGE_DECAY;
-      }
-    },
-
-    beatmiss: state => {
-      state.score.beatsMissed++;
-      takeDamage(state);
-    },
-
-    beatwrong: state => {
-      state.score.beatsMissed++;
-      takeDamage(state);
-    },
-
-    minehit: state => {
-      takeDamage(state);
+    scoreChanged: (state, payload) => {
+      updateScore(state, {index: payload.index});
     },
 
     victory: function (state) {

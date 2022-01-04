@@ -11,7 +11,8 @@ AFRAME.registerComponent('settings', {
         pixelRatio: 1.6,
         volume: 0.3,
         showFps: false,
-        savedCameraDefault: false
+        savedCameraDefault: false,
+        highlightErrors: false
       }
 
       try {

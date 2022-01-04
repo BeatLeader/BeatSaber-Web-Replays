@@ -9,8 +9,11 @@ html
   background #111
   user-select: none;
 
-.a-canvas:not(.showControls)
-  cursor: none !important;
+#body:not(.showControls)
+  #skipIntro
+    display: none !important;
+  .a-canvas
+    cursor: none !important;
 
 #controls
   align-items center

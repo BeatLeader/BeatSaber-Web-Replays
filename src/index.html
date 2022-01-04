@@ -60,6 +60,7 @@
       bind__song-controls="difficulty: challenge.difficulty; mode: challenge.mode; isPlaying: isPlaying; songName: challenge.songName; songSubName: challenge.author; songImage: challenge.image; showControls: showControls; songId: challenge.id"
       bind__zip-loader="difficulty: challenge.difficulty; id: challenge.id; isSafari: isSafari; mode: challenge.mode"
       bind__replay-loader="difficulty: challenge.difficulty; mode: challenge.mode"
+      bind__intro-skip="difficulty: challenge.difficulty"
       bind__fps-counter="enabled: settings.showFps"
       console-shortcuts
       debug-controller
@@ -93,6 +94,7 @@
       replay-player
       camera-mover
       fps-counter
+      intro-skip
       render-order="background, additive, middle, hud, walls">
 
       <a-assets timeout="10000">
@@ -122,10 +124,10 @@
 
       <!-- Wrong + miss beat visual indicators. -->
       <a-entity id="badContainer" bind__visible="isPlaying">
-        <a-entity id="wrongLeft" mixin='beatWrong'></a-entity>
-        <a-entity id="wrongRight" mixin='beatWrong'></a-entity>
-        <a-entity id="missLeft" mixin='beatMiss'></a-entity>
-        <a-entity id="missRight" mixin='beatMiss'></a-entity>
+        <a-entity render-order="walls" id="wrongLeft" mixin='beatWrong'></a-entity>
+        <a-entity render-order="walls" id="wrongRight" mixin='beatWrong'></a-entity>
+        <a-entity render-order="walls" id="missLeft" mixin='beatMiss'></a-entity>
+        <a-entity render-order="walls" id="missRight" mixin='beatMiss'></a-entity>
       </a-entity>
 
       <a-entity
@@ -152,6 +154,8 @@
             bind__saber-controls="bladeEnabled: isPlaying; isPaused: isPaused; enabled: !settings.reducedDebris"
             bind__saber-particles="enabled: isPlaying"
             bind__trail="enabled: isPlaying"
+            bind__raycaster="enabled: isPlaying && !settings.noEffects"
+            raycaster="objects: [raycastable-game]; far: 1; interval: 50"
             saber-particles="hand: {{ hand }}"
             saber-controls="hand: {{ hand }}"
             trail="color: {{ bladeColor }}; hand: {{ hand }}">
@@ -164,10 +168,8 @@
                 scale="0.001 0.001 0.001">
                 <a-entity
                   class="blade blade{{ hand }}"
-                  {% if hand === 'right' %}data-saber-particles{% endif %}
                   geometry="primitive: box; height: 0.9; depth: 0.02; width: 0.02"
                   material="shader: flat; color: #fff"
-                  raycastable-game
                   position="0 -0.55 0"></a-entity>
                 <a-entity
                   render-order="wall"
@@ -232,8 +234,12 @@
       <a-entity 
         id="head" 
         class="headset" 
+        bind__aabb-collider="enabled: isPlaying"
+        aabb-collider="objects: [data-collidable-head]; interval: 50; collideNonVisible: false"
         obj-model="obj: #questObj"
         bind__visible="isPlaying && settings.showHeadset && !pov"
+        proxy-event__wallhitstart="event: hitstart; to: a-scene; as: wallhitstart"
+        proxy-event__wallhitend="event: hitend; to: a-scene; as: wallhitend"
         position="0 1.7 0.0">
         </a-entity>
       </a-entity>

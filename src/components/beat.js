@@ -8,8 +8,11 @@ const BEAT_WARMUP_ROTATION_CHANGE = Math.PI / 5;
 const BEAT_WARMUP_ROTATION_OFFSET = 0.4;
 const BEAT_WARMUP_ROTATION_TIME = 0.75;
 const DESTROYED_SPEED = 1.0;
-const SWORD_OFFSET = 1.5;
 const ONCE = {once: true};
+
+// From game
+const _noteLinesCount = 4;
+const _noteLinesDistance = 0.6;
 
 const SCORE_POOL = {
   OK : 'pool__beatscoreok',
@@ -19,11 +22,11 @@ const SCORE_POOL = {
 };
 
 function getHorizontalPosition (lineIndex) {
-  return lineIndex / 3 * 1.5 - 0.75
+  return (-(_noteLinesCount - 1) * 0.5 + lineIndex) * _noteLinesDistance;
 }
 
 function getVerticalPosition (lineLayer) {
-  return lineLayer / 2 + 0.7;
+  return 0.25 + 0.6 * (lineLayer + 1) - lineLayer * 0.05; 
 }
 
 /**
@@ -83,19 +86,6 @@ AFRAME.registerComponent('beat', {
     upright: 135,
     downleft: 315,
     downright: 45
-  },
-
-  horizontalPositions: {
-    left: -0.75,
-    middleleft: -0.25,
-    middleright: 0.25,
-    right: 0.75
-  },
-
-  verticalPositions: {
-    bottom: 0.70,
-    middle: 1.20,
-    top: 1.70
   },
 
   init: function () {

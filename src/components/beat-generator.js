@@ -48,7 +48,7 @@ AFRAME.registerComponent('beat-generator', {
     this.bpm = undefined;
     this.stageColors = this.el.components['stage-colors'];
     // Beats arrive at sword stroke distance synced with the music.
-    this.swordOffset = 0.9;
+    this.swordOffset = 0.65;
     this.twister = document.getElementById('twister');
     this.leftStageLasers = document.getElementById('leftStageLasers');
     this.rightStageLasers = document.getElementById('rightStageLasers');

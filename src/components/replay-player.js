@@ -57,7 +57,7 @@ AFRAME.registerComponent('replay-player', {
             replayHeight = replay.info.height;
           }
     
-          let height = clamp((replayHeight - 1.8) * 0.5, -0.2, 0.6) + 0.1;
+          let height = clamp((replayHeight - 1.8) * 0.5, -0.2, 0.6);
           let slerpValue = (currentTime - frame.a) / Math.max(1E-06, nextFrame.a - frame.a);
 
           if (replay.info.leftHanded) {

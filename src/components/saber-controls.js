@@ -44,6 +44,7 @@ AFRAME.registerComponent('saber-controls', {
     const hand = {hand: data.hand, model: false};
 
     this.bladeEl = this.el.querySelector('.blade');
+    this.containerEl = this.el.querySelector('.saberContainer');
   },
 
   update: function (oldData) {
@@ -54,7 +55,7 @@ AFRAME.registerComponent('saber-controls', {
 
   tick: function (time, delta) {
     if (!this.data.bladeEnabled) { return; }
-    this.boundingBox.setFromObject(this.bladeEl.getObject3D('mesh'));
+    this.boundingBox.setFromObject(this.containerEl.object3D);
     if (!this.data.enabled) { return; }
     this.detectStroke(delta);
   },

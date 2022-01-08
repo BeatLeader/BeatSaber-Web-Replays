@@ -276,11 +276,19 @@ AFRAME.registerState({
 
     timechanged: (state, payload) => {
       let notes = state.notes;
-      for (var i = 0; i < notes.length; i++) {
-        if (notes[i].time > payload.newTime) {
-          updateScore(state, {index: i > 0 ? i - 1 : i});
-          break;
+      for (var i = notes.length; --i > 0;) {
+        if (notes[i].time < payload.newTime) {
+          updateScore(state, {index: i});
+          return;
         }
+      }
+
+      state.score = {
+        accuracy: 0,
+        combo: 0,
+        maxCombo: 0,
+        multiplier: 1,
+        score: 0
       }
     },
 

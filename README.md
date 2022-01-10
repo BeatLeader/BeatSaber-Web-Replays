@@ -9,11 +9,11 @@ Web-based viewer for ScoreSaber replays, built with [A-Frame] and JavaScript.
 
 **[CLICK TO VIEW][visit]**
 
-![https://replay.beatleader.xyz/](https://raw.githubusercontent.com/supermedium/beatsaver-viewer/master/assets/img/sshot.jpg)
+![https://replay.beatleader.xyz/](assets/img/preview.png)
 
 ## Usage
 
-Go to the ![BeatLeader](https://beatleader.xyz) and click on any ranked play higher than top 500 on leaderboard.
+Go to the [BeatLeader](https://beatleader.xyz) and click on any ranked play higher than top 500 on leaderboard.
 
 Or if you have a site, you can I-Frame the viewer and pass a query parameter
 containing the song ID, difficulty and playerID:
@@ -34,7 +34,6 @@ To specify replay speed use the `?speed` paramater in the URL (thousands of perc
 
 ## Roadmap
 
-- Safari support (BeatSaver currently serves OGGs which are not supported)
 - Custom saber viewer
 
 ## Community
@@ -42,7 +41,7 @@ To specify replay speed use the `?speed` paramater in the URL (thousands of perc
 *The ScoreSaber replays is an unofficial community project and not officially
 affiliated with Beat Saber.*
 
-- [BeatLeader Discord](https://discord.gg/RpXagakZ)
+- [BeatLeader Discord](https://discord.gg/2RG5YVqtG6)
 
 ## Development
 
@@ -69,7 +68,7 @@ Then start Netlify dev environment
 netlify dev
 ```
 
-Navigate to [localhost:8888](http://localhost:9999). You should see app running.
+Navigate to [localhost:9999](http://localhost:9999). You should see app running.
 
 ### Building and running in production mode
 

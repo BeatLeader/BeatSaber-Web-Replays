@@ -344,8 +344,9 @@ AFRAME.registerComponent('beat', {
         }, ONCE);
       }
     } else {
-      signEl.setAttribute('materials', "name: clearStageAdditive");
-      this.setObjModelFromTemplate(signEl, this.signModels[this.data.type + this.data.color]);
+      // Uncomment in case of new Chrome version 
+      // signEl.setAttribute('materials', "name: clearStageAdditive");
+      this.setObjModelFromTemplate(signEl, this.signModels[this.data.type + this.data.color], this.el.sceneEl.systems.materials.clearStageAdditive);
     }
   },
 

@@ -8,6 +8,8 @@ AFRAME.registerComponent('camera-mover', {
         this.povCameraRig = this.el.sceneEl.querySelectorAll('.headCamera')[0];
 
         this.defaultCamera = this.el.sceneEl.querySelectorAll('.mainCamera')[0];
+        this.defaultCamera.setAttribute('camera', 'active', true);
+        
         this.lookControls = this.defaultCamera.components['look-controls'];
         this.povCamera = this.el.sceneEl.querySelectorAll('.povCamera')[0];
 

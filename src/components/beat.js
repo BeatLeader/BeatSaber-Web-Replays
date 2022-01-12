@@ -517,6 +517,8 @@ AFRAME.registerComponent('beat', {
       this.destroyed = true;
       this.gravityVelocity = 0.1;
       this.returnToPoolTimer = 800;
+    } else {
+      this.returnToPool(true);
     }
     
     if (!this.settings.settings.noEffects) {
@@ -711,6 +713,7 @@ AFRAME.registerComponent('beat', {
 
   returnToPool: function (force) {
     if (!this.backToPool && !force) { return; }
+    
     this.el.sceneEl.components[this.poolName].returnEntity(this.el);
   },
 
@@ -829,9 +832,6 @@ AFRAME.registerComponent('beat', {
     // }
 
     this.showScore();
-    if (this.settings.settings.reducedDebris) {
-      this.returnToPool(true);
-    }
   },
 
   showScore: function (hand) {
@@ -901,12 +901,11 @@ AFRAME.registerComponent('beat', {
           fragment = this.mineFragments[i];
           if (!fragment.visible) { continue; }
           fragment.position.addScaledVector(fragment.speed, (timeDelta / 1000) * this.song.speed);
-          if (this.song.speed > 0) {
-            fragment.scale.multiplyScalar(0.97 / this.song.speed)
-          }
+          fragment.scale.multiplyScalar(1 - 0.03 * this.song.speed);
           
-          if (fragment.scale.y < 0.1){
+          if (fragment.scale.y < 0.1 || this.el.object3D.position.y < -1){
             fragment.visible = false;
+            this.backToPool = true;
           }
         }
         return;
@@ -929,7 +928,7 @@ AFRAME.registerComponent('beat', {
       this.generateCutClippingPlanes();
 
       this.returnToPoolTimer -= timeDelta * this.song.speed;
-      this.backToPool = this.returnToPoolTimer <= 0;
+      this.backToPool = this.returnToPoolTimer <= 0 || this.el.object3D.position.y < -1;
     };
   })(),
 

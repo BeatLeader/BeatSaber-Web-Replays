@@ -9,7 +9,7 @@ AFRAME.registerComponent('camera-mover', {
 
         this.defaultCamera = this.el.sceneEl.querySelectorAll('.mainCamera')[0];
         this.defaultCamera.setAttribute('camera', 'active', true);
-        
+
         this.lookControls = this.defaultCamera.components['look-controls'];
         this.povCamera = this.el.sceneEl.querySelectorAll('.povCamera')[0];
 
@@ -20,7 +20,6 @@ AFRAME.registerComponent('camera-mover', {
     },
 
     play: function () {
-        document.querySelectorAll('.a-enter-vr')[0].style.display = 'none';
 
         document.getElementById('povswitch').addEventListener('click', (e) => {
             e.preventDefault();

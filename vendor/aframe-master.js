@@ -64795,7 +64795,7 @@ module.exports={
     "present": "0.0.6",
     "promise-polyfill": "^3.1.0",
     "style-attr": "^1.0.2",
-    "three": "0.95.0",
+    "three": "^0.95.0",
     "three-bmfont-text": "^2.1.0",
     "webvr-polyfill": "^0.10.5"
   },
@@ -64830,7 +64830,6 @@ module.exports={
     "markserv": "github:sukima/markserv#feature/fix-broken-websoketio-link",
     "minifyify": "^7.3.3",
     "mocha": "^3.0.2",
-    "mozilla-download": "^1.1.1",
     "replace-in-file": "^2.5.3",
     "semistandard": "^9.0.0",
     "shelljs": "^0.7.7",
@@ -71970,8 +71969,7 @@ var shouldCaptureKeyEvent = utils.shouldCaptureKeyEvent;
 var CLAMP_VELOCITY = 0.00001;
 var MAX_DELTA = 0.2;
 var KEYS = [
-  'KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyX', 'KeyC',
-  'ArrowUp', 'ArrowLeft', 'ArrowRight', 'ArrowDown'
+  'KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyX', 'KeyC'
 ];
 
 /**
@@ -72028,7 +72026,7 @@ module.exports.Component = registerComponent('wasd-controls', {
     // el.object3D.position.add( dir.multiply(velocity));
     // el.object3D.position.addScaledVector(dir, velocity[data.wsAxis] * delta);
 
-    let movement = this.getMovementVector(delta)
+    const movement = this.getMovementVector(delta);
     el.object3D.position.y += movement.y;
     el.object3D.position.x += movement.x;
     el.object3D.position.z += movement.z;
@@ -75629,9 +75627,9 @@ module.exports.AScene = registerElement('a-scene', {
 
         // Default components.
         this.setAttribute('inspector', '');
-        this.setAttribute('keyboard-shortcuts', '');
-        this.setAttribute('screenshot', '');
-        this.setAttribute('vr-mode-ui', '');
+        // this.setAttribute('keyboard-shortcuts', '');
+        // this.setAttribute('screenshot', '');
+        // this.setAttribute('vr-mode-ui', '');
       }
     },
 
@@ -76407,12 +76405,12 @@ module.exports.setup = function setup (el, getCanvasSize) {
   sphereMesh1 = new THREE.Mesh(sphereGeometry, sphereMaterial);
   sphereMesh2 = sphereMesh1.clone();
   sphereMesh3 = sphereMesh1.clone();
-  camera = new THREE.PerspectiveCamera(80, window.innerWidth / window.innerHeight, 0.0005, 10000);
+  // camera = new THREE.PerspectiveCamera(80, window.innerWidth / window.innerHeight, 0.0005, 10000);
   clock = new THREE.Clock();
   time = 0;
   render = function () {
     raf = sceneEl.effect.requestAnimationFrame(render);
-    sceneEl.effect.render(loaderScene, camera);
+    // sceneEl.effect.render(loaderScene, camera);
     time = clock.getElapsedTime() % 4;
     sphereMesh1.visible = time >= 1;
     sphereMesh2.visible = time >= 2;
@@ -76420,21 +76418,21 @@ module.exports.setup = function setup (el, getCanvasSize) {
   };
 
   loaderScene.background = new THREE.Color(backgroundColor);
-  loaderScene.add(camera);
+  // loaderScene.add(camera);
   sphereMesh1.position.set(-1, 0, -15);
   sphereMesh2.position.set(0, 0, -15);
   sphereMesh3.position.set(1, 0, -15);
-  camera.add(sphereMesh1);
-  camera.add(sphereMesh2);
-  camera.add(sphereMesh3);
+  // camera.add(sphereMesh1);
+  // camera.add(sphereMesh2);
+  // camera.add(sphereMesh3);
   setupTitle();
 
   // Delay 200ms to avoid loader flashes.
   setTimeout(function () {
     if (sceneEl.hasLoaded) { return; }
-    resize(camera);
+    // resize(camera);
     titleEl.style.display = 'block';
-    window.addEventListener('resize', function () { resize(camera); });
+    // window.addEventListener('resize', function () { resize(camera); });
     render();
   }, 200);
 };
@@ -78183,7 +78181,7 @@ _dereq_('./core/a-mixin');
 _dereq_('./extras/components/');
 _dereq_('./extras/primitives/');
 
-console.log('A-Frame Version: 0.8.2 (Date 2021-12-28, Commit #ea721416)');
+console.log('A-Frame Version: 0.8.2 (Date 2022-01-12, Commit #ea721416)');
 console.log('three Version:', pkg.dependencies['three']);
 console.log('WebVR Polyfill Version:', pkg.dependencies['webvr-polyfill']);
 
@@ -78874,13 +78872,13 @@ module.exports.System = registerSystem('camera', {
 
     // Check if camera is appropriate for being the initial camera.
     cameraData = cameraEl.getAttribute('camera');
-    if (!cameraData.active || cameraData.spectator) {
-      // No user cameras eligible, create default camera.
-      if (this.numUserCamerasChecked === this.numUserCameras) {
-        this.createDefaultCamera();
-      }
-      return;
-    }
+    // if (!cameraData.active || cameraData.spectator) {
+    //   // No user cameras eligible, create default camera.
+    //   if (this.numUserCamerasChecked === this.numUserCameras) {
+    //     this.createDefaultCamera();
+    //   }
+    //   return;
+    // }
 
     this.initialCameraFound = true;
     sceneEl.camera = cameraEl.getObject3D('camera');

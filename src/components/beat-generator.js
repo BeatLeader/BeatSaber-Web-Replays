@@ -287,7 +287,7 @@ AFRAME.registerComponent('beat-generator', {
 
   generateWall: (function () {
     const wallObj = {};
-    const WALL_THICKNESS = 0.5;
+    const WALL_THICKNESS = 0.6;
 
     return function (wall) {
       const el = this.el.sceneEl.components.pool__wall.requestEntity();
@@ -305,7 +305,7 @@ AFRAME.registerComponent('beat-generator', {
       wallObj.isCeiling = wall._type === 1;
       wallObj.speed = speed;
       wallObj.warmupPosition = -data.beatWarmupTime * data.beatWarmupSpeed;
-      // wall._width can be like 1 or 2. Map that to 0.5 thickness.
+      // wall._width can be like 1 or 2. Map that to 0.6 thickness.
       wallObj.width = wall._width * WALL_THICKNESS;
 
       wallObj.time = wall._time * (60 / this.bpm);

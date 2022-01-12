@@ -253,17 +253,6 @@ AFRAME.registerComponent('song-controls', {
       }
     });
 
-    document.addEventListener('keydown', (e) => {
-      if (e.key === ' ') {
-        if (this.song.isPlaying) {
-          this.el.sceneEl.emit('pausegame', null, false);
-        } else {
-          this.el.sceneEl.emit('usergesturereceive', null, false);
-          this.el.sceneEl.emit('gamemenuresume', null, false);
-        }
-      }
-    });
-
     this.el.sceneEl.addEventListener('pausegame', (e) => {
       if (pauseButton.classList.contains('pause')) {
         pauseButton.classList.remove('pause');
@@ -472,14 +461,14 @@ AFRAME.registerComponent('song-controls', {
     const fullscreenHandler = (inFullscreen) => {
       if (inFullscreen) {
         fullscreen.classList.add("inFullscreen");
-        fullscreen.title = "Exit fullscreen"
+        fullscreen.title = "Exit fullscreen (f)"
       } else {
         fullscreen.classList.remove("inFullscreen");
-        fullscreen.title = "Enter fullscreen"
+        fullscreen.title = "Enter fullscreen (f)"
       }
     }
 
-    fullscreen.addEventListener('click', () => {
+    const toggleFullscreen = () => {
       if (fullscreen.classList.contains("inFullscreen")) {
         document.exitFullscreen();
         fullscreenHandler(false);
@@ -487,10 +476,57 @@ AFRAME.registerComponent('song-controls', {
         document.body.requestFullscreen();
         fullscreenHandler(true);
       }
+    }
+
+    fullscreen.addEventListener('click', () => {
+      toggleFullscreen();
     });
 
     document.addEventListener('fullscreenchange', () => {
       fullscreenHandler(document.fullscreenElement);
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === ' ') {
+        if (this.song.isPlaying) {
+          this.el.sceneEl.emit('pausegame', null, false);
+        } else {
+          this.el.sceneEl.emit('usergesturereceive', null, false);
+          this.el.sceneEl.emit('gamemenuresume', null, false);
+        }
+      }
+      if (e.keyCode === 70) {  // f
+        toggleFullscreen();
+      }
+      if (e.keyCode === 39) { // right
+        let currentTime = captureThis.song.getCurrentTime();
+        doSeek(null, currentTime + 0.05);
+      }
+      if (e.keyCode === 37) { // left
+        let currentTime = captureThis.song.getCurrentTime();
+        doSeek(null, currentTime - 0.05);
+      }
+
+      if (e.keyCode === 38) { // up
+        volumeSlider.valueAsNumber += 0.05;
+        volumeHandler();
+      }
+
+      if (e.keyCode === 40) { // up
+        volumeSlider.value -= 0.05;
+        volumeHandler();
+      }
+
+      if (e.keyCode === 77) { // m
+        if (volumeSlider.value != 0) {
+          this.lastVolume = volumeSlider.value;
+          volumeSlider.value = 0;
+        } else if (this.lastVolume) {
+          volumeSlider.valueAsNumber = this.lastVolume;
+          this.lastVolume = null;
+        }
+        volumeHandler();
+      }
     });
   },
 

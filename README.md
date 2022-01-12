@@ -2,7 +2,7 @@
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/08ead0d0-ade4-4f38-8af4-9b6c3c679234/deploy-status)](https://app.netlify.com/sites/musing-aryabhata-6ae6ea/deploys)
 
-[A-Frame]: https://aframe.io
+[A-Frame]: https://github.com/radulov/ngoframe
 [visit]: https://replay.beatleader.xyz/
 
 Web-based viewer for ScoreSaber replays, built with [A-Frame] and JavaScript.
@@ -28,12 +28,14 @@ To directly link to a seeked time, use the `?time` parameter in the URL (millise
 
 `https://www.replay.beatleader.xyz/?id=c32d&difficulty=ExpertPlus&playerID=76561198333869741&time=15000` - 15 sec
 
-To specify replay speed use the `?speed` paramater in the URL (thousands of percent):
+To specify replay speed use the `?speed` paramater in the URL (percent):
 
-`https://www.replay.beatleader.xyz/?id=c32d&difficulty=ExpertPlus&playerID=76561198333869741&speed=50000` - 50% speed
+`https://www.replay.beatleader.xyz/?id=c32d&difficulty=ExpertPlus&playerID=76561198333869741&speed=50` - 50% speed
 
 ## Roadmap
 
+- Performance optimization
+- A-Frame update to the latest version
 - Custom saber viewer
 
 ## Community
@@ -69,6 +71,18 @@ netlify dev
 ```
 
 Navigate to [localhost:9999](http://localhost:9999). You should see app running.
+
+#### A-Frame build
+
+Uses custom A-Frame fork: https://github.com/radulov/ngoframe
+
+To build it
+```bash
+npm install
+npm run dist
+```
+
+Copy files from \dist folder of A-Frame to \vendor folder here. 
 
 ### Building and running in production mode
 

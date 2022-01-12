@@ -71,7 +71,7 @@ AFRAME.registerComponent('trail', {
     }
   },
 
-  tock: function (time, delta) {
+  tick: function (time, delta) {
     if (!this.data.enabled) { return; }
     // Delay before showing after enabled to prevent flash from old saber position.
     if (!this.mesh.visible && time > this.enabledTime + 250) { this.mesh.visible = true; }
@@ -314,12 +314,12 @@ AFRAME.registerComponent('trail', {
     if (this.saberTrajectory.length === this.maxPoints) {
       // Dump oldest point.
       sample = this.saberTrajectory.shift();
-      sample.top.set(0, -0.4, 0);
+      sample.top.set(0, -0.5, 0);
       sample.center.set(0, 0, 0);
       sample.bottom.set(0, 0.4, 0);
     } else {
       sample = {
-        top: new THREE.Vector3(0, -0.4, 0),
+        top: new THREE.Vector3(0, -0.5, 0),
         center: new THREE.Vector3(0, 0, 0),
         bottom: new THREE.Vector3(0, 0.4, 0)
       };

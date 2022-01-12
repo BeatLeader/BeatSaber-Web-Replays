@@ -7,8 +7,11 @@ const CEILING_THICKNESS = 1.5;
 const CEILING_HEIGHT = 1.4 + CEILING_THICKNESS / 2;
 const CEILING_WIDTH = 4;
 
+const _noteLinesCount = 4;
+const _noteLinesDistance = 0.6;
+
 function getHorizontalPosition (lineIndex) {
-  return lineIndex / 3 * 1.5 - 0.75
+  return (-(_noteLinesCount - 1) * 0.5 + lineIndex) * _noteLinesDistance;
 }
 
 /**
@@ -98,13 +101,13 @@ AFRAME.registerComponent('wall', {
     const halfDepth = data.durationSeconds * (data.speed * this.song.speed) / 2;
 
     el.object3D.position.set(
-      getHorizontalPosition(data.horizontalPosition) + data.width / 2  - 0.25,
+      getHorizontalPosition(data.horizontalPosition) + (data.width - _noteLinesDistance) / 2,
       startHeight + RAISE_Y_OFFSET,
       data.anticipationPosition + data.warmupPosition - halfDepth
     );
 
     el.object3D.scale.set(
-      data.width,
+      data.width * 0.98,
       height,
       data.durationSeconds * (data.speed * this.song.speed)
     );

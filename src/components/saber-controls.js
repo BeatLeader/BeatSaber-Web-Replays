@@ -55,7 +55,7 @@ AFRAME.registerComponent('saber-controls', {
 
   tick: function (time, delta) {
     if (!this.data.bladeEnabled) { return; }
-    this.boundingBox.setFromObject(this.containerEl.object3D);
+    this.boundingBox.setFromObject(this.bladeEl.object3D);
     if (!this.data.enabled) { return; }
     this.detectStroke(delta);
   },

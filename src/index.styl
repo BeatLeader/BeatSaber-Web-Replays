@@ -50,8 +50,6 @@ html
     position absolute
     transform rotate(-90deg)
     z-index 999999999
-    &.volumeActive
-      display block
 
     input
       cursor pointer
@@ -110,8 +108,6 @@ html
     position absolute
     z-index 999999999
     width: 130px
-    &.settingsActive
-      display block
 
     input
       cursor pointer
@@ -377,6 +373,12 @@ html
   #controls
     #cameraSettingsContainer
       &.settingsActive
+        display block
+    #settingsContainer
+      &.settingsActive
+        display block
+    #volumeSliderContainer
+      &.volumeActive
         display block
 
 .isPlaying

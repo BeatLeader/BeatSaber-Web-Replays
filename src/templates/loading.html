@@ -1,9 +1,7 @@
 <a-entity
   id="loadingSongInfoContainer"
   render-order="hud"
-  bind__animation__scale="enabled: challenge.isLoading || replay.isLoading || !hasReceivedUserGesture && !challenge.hasLoadError && !replay.hasError"
   bind__visible="challenge.isLoading || replay.isLoading || !hasReceivedUserGesture || challenge.hasLoadError || replay.hasError"
-  animation__scale="property: scale; from: 1 1 1; to: 1.05 1.05 1.05; dir: alternate; loop: true; dur: 1200; easing: easeInOutCubic"
   position="0 1.5 -1">
 
   <a-entity mixin="slice" slice9="opacity: 0.9; width: 0.77; height: 1; padding: 0.08" position="0 -0.02 -0.03"></a-entity>
@@ -71,3 +69,17 @@
     </a-entity>
   </a-entity>
 </a-entity>
+
+<a-entity 
+  mixin="beat" 
+  bind__beat="animating: challenge.isLoading || replay.isLoading; visible: challenge.isLoading || replay.isLoading || !hasReceivedUserGesture || challenge.hasLoadError || replay.hasError"
+  beat="color: blue; type: arrow; loadingCube: true" 
+  position="1.0 1.5 -1.0" 
+  bind__visible="challenge.isLoading || replay.isLoading || !hasReceivedUserGesture || challenge.hasLoadError || replay.hasError"></a-entity>
+
+<a-entity 
+  mixin="beat"
+  bind__beat="animating: challenge.isLoading || replay.isLoading; visible: challenge.isLoading || replay.isLoading || !hasReceivedUserGesture || challenge.hasLoadError || replay.hasError"
+  beat="color: red; type: arrow; loadingCube: true" 
+  position="-1.0 1.5 -1.0" 
+  bind__visible="challenge.isLoading || replay.isLoading || !hasReceivedUserGesture || challenge.hasLoadError || replay.hasError"></a-entity>

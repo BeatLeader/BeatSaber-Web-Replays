@@ -21,6 +21,11 @@ AFRAME.registerComponent('gpu-preloader', {
     const stage = document.querySelector('#stageObj');
     const mesh = stage.getObject3D('mesh');
     this.preloadTexture(stage.getObject3D('mesh').children[0].material.uniforms.src.value);
+
+    this.preloadTexture(document.querySelector('#wrongLeft').object3D.children[0].material.map);
+    this.preloadTexture(document.querySelector('#wrongRight').object3D.children[0].material.map);
+    this.preloadTexture(document.querySelector('#missLeft').object3D.children[0].material.map);
+    this.preloadTexture(document.querySelector('#missRight').object3D.children[0].material.map);
   },
 
   preloadBeamMap: function () {

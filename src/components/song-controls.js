@@ -176,8 +176,11 @@ AFRAME.registerComponent('song-controls', {
 
       // Get new audio buffer source (needed every time audio is stopped).
       // Start audio at seek time.
-      
-      this.seek(time >= 0 ? time : 0);
+      if (time > this.song.source.buffer.duration) { 
+        this.seek(this.song.source.buffer.duration);
+      } else {
+        this.seek(time >= 0 ? time : 0);
+      }
     }
 
     // Seek.
@@ -196,6 +199,12 @@ AFRAME.registerComponent('song-controls', {
 
     handleUp = event => {
       timelineClicked = false;
+    };
+
+    handleLeave = event => {
+      timelineHover.classList.remove('timelineHoverActive');
+      timelineClicked = false;
+      timelineHovered = false;
     };
 
     if ('onpointerdown' in window) {
@@ -224,15 +233,17 @@ AFRAME.registerComponent('song-controls', {
     });
     timeline.addEventListener('mousemove', evt => {
       const marginLeft = (evt.clientX - timeline.getBoundingClientRect().left);
-      const percent = marginLeft / timeline.getBoundingClientRect().width;
+      var percent = marginLeft / timeline.getBoundingClientRect().width;
+      if (percent < 0 && percent > -0.05) {percent = 0;}
+      if (percent < 0 || percent > 1) {
+        handleLeave();
+        return;
+      }
       timelineHover.style.left = marginLeft - 17 + 'px';
       timelineHover.innerHTML = formatSeconds(percent * this.song.source.buffer.duration);
     });
-    timeline.addEventListener('mouseleave', evt => {
-      timelineHover.classList.remove('timelineHoverActive');
-      timelineClicked = false;
-      timelineHovered = false;
-    });
+    timeline.addEventListener('mouseleave', handleLeave);
+    
     let captureThis = this;
     timeline.addEventListener("wheel", function(e){
       let currentTime = captureThis.song.getCurrentTime();
@@ -409,6 +420,8 @@ AFRAME.registerComponent('song-controls', {
       volumeHandler();
     });
     volumeSlider.value = this.settings.settings.volume;
+    document.getElementById('beatContainer').components['beat-hit-sound']
+        .setVolume(volumeSlider.value);
 
     volumeSlider.addEventListener("wheel", function(e){
       if (e.deltaY < 0){
@@ -500,11 +513,11 @@ AFRAME.registerComponent('song-controls', {
       }
       if (e.keyCode === 39) { // right
         let currentTime = captureThis.song.getCurrentTime();
-        doSeek(null, currentTime + 0.05);
+        doSeek(null, currentTime + Math.max(0.01, 5 * captureThis.song.speed));
       }
       if (e.keyCode === 37) { // left
         let currentTime = captureThis.song.getCurrentTime();
-        doSeek(null, currentTime - 0.05);
+        doSeek(null, currentTime - Math.max(0.01, 5 * captureThis.song.speed));
       }
 
       if (e.keyCode === 38) { // up

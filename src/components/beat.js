@@ -50,6 +50,10 @@ AFRAME.registerComponent('beat', {
     anticipationTime: {default: 0},
     warmupTime: {default: 0},
     warmupSpeed: {default: 0},
+    // Loading cubes
+    loadingCube: {default: false},
+    visible: {default: true},
+    animating: {default: true},
   },
 
   materialColor: {
@@ -158,6 +162,16 @@ AFRAME.registerComponent('beat', {
     } else {
       this.poolName = `pool__beat-${this.data.type}-${this.data.color}`;
     }
+
+    if (this.data.loadingCube) {
+      if (this.data.visible) {
+        this.setObjModelFromTemplate(this.signEl, this.signModels[this.data.type + this.data.color], this.el.sceneEl.systems.materials.clearStageAdditive);
+        this.el.object3D.rotation.y = (this.data.color == 'red' ? 1 : -1) * Math.PI / 4;
+        this.el.object3D.rotation.z = Math.PI / 4;
+      } else {
+        this.returnToPool();
+      }
+    }
   },
 
   pause: function () {
@@ -178,6 +192,18 @@ AFRAME.registerComponent('beat', {
   },
 
   tock: function (time, timeDelta) {
+    if (this.data.loadingCube) {
+      if (this.data.animating) {
+        let object = this.el.object3D;
+        const m = Math.cos(time / 300);
+        const m2 = Math.cos(time / 300 - Math.PI / 2);
+        object.rotation.y += m2 * 0.01;
+        object.rotation.z += (this.data.color == 'red' ? 1 : -1) * m2 * 0.01;
+        object.scale.multiplyScalar(m * 0.01 + 1);
+      }
+      
+      return;
+    }
     const el = this.el;
     const data = this.data;
     const position = el.object3D.position;

@@ -149,8 +149,11 @@ AFRAME.registerComponent('beat-hit-sound', {
     volume = volume * 0.4;
     for (let i = 1; i <= 10; i++) {
       for (let j = 0; j < 4; j++) {
+        this.el.components[`sound__beathit${i}`].data.volume = volume;
         this.el.components[`sound__beathit${i}`].pool.children[j].setVolume(volume);
+        this.el.components[`sound__beathit${i}left`].data.volume = volume;
         this.el.components[`sound__beathit${i}left`].pool.children[j].setVolume(volume);
+        this.el.components[`sound__beathit${i}right`].data.volume = volume;
         this.el.components[`sound__beathit${i}right`].pool.children[j].setVolume(volume);
       }
     }

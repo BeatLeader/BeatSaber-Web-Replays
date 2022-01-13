@@ -67,7 +67,7 @@ AFRAME.registerComponent('saber-controls', {
     var directionChange;
 
     // Tip of the blade position in world coordinates.
-    this.bladeTipPosition.set(0, 0, -0.8);
+    this.bladeTipPosition.set(0, 0, -1.0);
     this.bladePosition.set(0, 0, 0);
 
     const saberObj = this.el.object3D;
@@ -83,6 +83,7 @@ AFRAME.registerComponent('saber-controls', {
 
     // Distance covered but the saber tip in one frame.
     distance = this.bladeTipPreviousPosition.sub(this.bladeTipPosition).length();
+    this.bladeSpeed = distance / delta;
 
     // Sample distance of the last 5 frames.
     if (this.distanceSamples.length === 5) {

@@ -91,6 +91,7 @@ AFRAME.registerComponent('beat', {
   init: function () {
     this.beams = document.getElementById('beams').components.beams;
     this.beatBoundingBox = new THREE.Box3();
+    this.beatBigBoundingBox = new THREE.Box3();
     this.currentRotationWarmupTime = 0;
     this.cutDirection = new THREE.Vector3();
     this.destroyed = false;
@@ -136,6 +137,9 @@ AFRAME.registerComponent('beat', {
 
     this.onEndStroke = this.onEndStroke.bind(this);
     this.rotEuler = new THREE.Euler();
+    this.strokeDirectionVector = new THREE.Vector3();
+    this.bladeTipPosition = new THREE.Vector3();
+    this.startStrokePosition = new THREE.Vector3();
 
     this.initBlock();
     if (this.data.type === 'mine') {
@@ -717,13 +721,33 @@ AFRAME.registerComponent('beat', {
     this.el.sceneEl.components[this.poolName].returnEntity(this.el);
   },
 
+  checkBigCollider: function (collider, hand, saberControls) {
+    const saberColors = this.saberColors;
+
+    var saberTypeOK = this.data.color === saberColors[hand];
+    saberControls.updateStrokeDirection();
+
+    const cutAngleTolerance = 60;
+    this.blockEl.object3D.parent.updateMatrixWorld();
+    this.bladeTipPosition.copy(saberControls.bladeTipPosition)
+    this.startStrokePosition.copy(saberControls.startStrokePosition);
+
+    const cutDirVec = this.blockEl.object3D.worldToLocal(this.bladeTipPosition).sub(this.blockEl.object3D.worldToLocal(this.startStrokePosition));
+
+    const flag = Math.abs(cutDirVec.z) > Math.abs(cutDirVec.x) * 10.0 && Math.abs(cutDirVec.z) > Math.abs(cutDirVec.y) * 10.0;
+    const cutDirAngle = Math.atan2(cutDirVec.y, cutDirVec.x) * 57.29578;
+    const directionOK = cutDirAngle > -90.0 - cutAngleTolerance && cutDirAngle < cutAngleTolerance - 90.0 || this.data.type !== 'arrow';
+    const speedOK = saberControls.bladeSpeed > 0.002 * this.song.speed;
+
+    return saberTypeOK && directionOK && speedOK && saberControls.boundingBox.intersectsBox(collider);
+  },
+
   checkCollisions: function () {
     // const cutDirection = this.data.cutDirection;
     const saberEls = this.saberEls;
-
     const beatSmallBoundingBox = this.beatBoundingBox.setFromObject(
       this.blockEl.getObject3D('mesh'));
-    const beatBigBoundingBox = this.beatBoundingBox.setFromObject(
+    const beatBigBoundingBox = this.beatBigBoundingBox.setFromObject(
         this.blockEl.getObject3D('mesh'));
     if (this.data.type != 'mine') {
       beatBigBoundingBox.expandByVector(new THREE.Vector3(0.181, 0.05, 0.3));
@@ -739,9 +763,9 @@ AFRAME.registerComponent('beat', {
 
       if (!saberBoundingBox) { break; }
 
-      // const hand = saberControls.hand;
+      const hand = saberControls.data.hand;
 
-      if (saberBoundingBox.intersectsBox(beatSmallBoundingBox) || (saberBoundingBox.intersectsBox(beatBigBoundingBox))) {
+      if (saberBoundingBox.intersectsBox(beatSmallBoundingBox) || this.checkBigCollider(beatBigBoundingBox, hand, saberControls)) {
 
         // Sound.
         this.el.parentNode.components['beat-hit-sound'].playSound(this.el);
@@ -775,13 +799,13 @@ AFRAME.registerComponent('beat', {
         // if (this.data.type === 'arrow') {
         //   saberControls.updateStrokeDirection();
 
-        //   if (cutDirection === 'up' || cutDirection === 'down') {
-        //     maxAngle = saberControls.maxAnglePlaneX;
-        //   } else if (cutDirection === 'left' || cutDirection === 'right') {
-        //   maxAngle = saberControls.maxAnglePlaneY;
-        //   } else {
-        //     maxAngle = saberControls.maxAnglePlaneXY;
-        //   }
+          // if (cutDirection === 'up' || cutDirection === 'down') {
+          //   maxAngle = saberControls.maxAnglePlaneX;
+          // } else if (cutDirection === 'left' || cutDirection === 'right') {
+          // maxAngle = saberControls.maxAnglePlaneY;
+          // } else {
+          //   maxAngle = saberControls.maxAnglePlaneXY;
+          // }
         // } else {
         //   maxAngle = Math.max(saberControls.maxAnglePlaneX, saberControls.maxAnglePlaneY,
         //                       saberControls.maxAnglePlaneXY);

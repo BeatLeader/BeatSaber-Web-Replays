@@ -46,15 +46,17 @@ AFRAME.registerComponent('replay-loader', {
       fetch(`/cors/score-saber/api/leaderboard/by-hash/${hash}/info?difficulty=${this.difficultyNumber(this.data.difficulty)}`).then(res => {
         res.json().then(leaderbord => {
           fetch(`https://sspreviewdecode.azurewebsites.net/?playerID=${this.data.playerID}&songID=${leaderbord.id}`).then(res => {
-              res.json().then(data => {
-                  let replay = JSON.parse(data);
-                  if (replay.frames) {
-                    this.replay = replay;
-                    this.processScores();
-                  } else {
-                    this.el.sceneEl.emit('replayloadfailed', { error: replay.errorMessage }, null);
-                  }
-              });
+            res.json().then(data => {
+              let replay = JSON.parse(data);
+              if (replay.frames) {
+                this.replay = replay;
+                if (this.challenge) {
+                  this.processScores();
+                }
+              } else {
+                this.el.sceneEl.emit('replayloadfailed', { error: replay.errorMessage }, null);
+              }
+            });
           });
         });
       });
@@ -73,37 +75,78 @@ AFRAME.registerComponent('replay-loader', {
     },
     processScores: function () {
       const replay = this.replay;
+      var mapnotes = this.challenge.beatmaps[this.data.mode][this.data.difficulty]._notes;
+      mapnotes = mapnotes.sort((a, b) => { return a._time - b._time; }).filter(a => a._type == 0 || a._type == 1);
 
       var noteStructs = new Array();
       var bombStructs = new Array();
       var wallStructs = new Array();
-      var index = 0;
       for (var i = 0; i < replay.scores.length; i++) {
-
         if (replay.scores[i] == -4) {
           let bomb = {
             score: -4,
-            combo: 0,
             time: replay.noteTime[i]
           }
           bombStructs.push(bomb);
         } else if (replay.scores[i] == -5) {
           let wall = {
             score: -5,
-            combo: 0,
             time: replay.noteTime[i]
           }
           wallStructs.push(wall);
         } else {
+          const info = replay.noteInfos[i];
           let note = {
             score: replay.scores[i],
             time: replay.noteTime[i],
-            combo: replay.combos[i],
-            isBlock: true,
-            index: index
+            lineIndex: parseInt(info[0]),
+            noteLineLayer: parseInt(info[1]),
+            cutDirection: parseInt(info[2]),
+            colorType: parseInt(info[3]),
+            isBlock: true
           }
-          index++;
           noteStructs.push(note);
+        }
+      }
+
+      var group, groupIndex, groupTime;
+
+      const processGroup = () => {
+        for (var j = 0; j < group.length; j++) {
+          const mapnote = mapnotes[group[j]];
+          for (var m = 0; m < group.length; m++) {
+            const replaynote = noteStructs[groupIndex + m];
+            if (replaynote.lineIndex == mapnote._lineIndex &&
+              replaynote.noteLineLayer == mapnote._lineLayer &&
+              replaynote.cutDirection == mapnote._cutDirection &&
+              replaynote.colorType == mapnote._type) {
+                replaynote.index = group[j];
+                break;
+            }
+          }
+        }
+      }
+
+      for (var i = 0; i < mapnotes.length && i < noteStructs.length; i++) {
+        if (!group) {
+          group = [i];
+          groupIndex = i;
+          groupTime = mapnotes[i]._time;
+        } else {
+          if (groupTime == mapnotes[i]._time) {
+            group.push(i);
+          } else {
+            processGroup();
+            group = null;
+            i--;
+          }
+        }
+      }
+      processGroup();
+
+      for (var i = 0; i < noteStructs.length; i++) {
+        if (noteStructs[i].index == undefined) {
+          console.log(noteStructs[i]);
         }
       }
 
@@ -120,6 +163,7 @@ AFRAME.registerComponent('replay-loader', {
 
       var multiplier = 1, lastmultiplier = 1;
       var score = 0, noteIndex = 0;
+      var combo = 0;
 
       for (var i = 0; i < allStructs.length; i++) {
         let note = allStructs[i];
@@ -127,13 +171,16 @@ AFRAME.registerComponent('replay-loader', {
         if (note.score < 0) {
           multiplier = multiplier > 1 ? Math.ceil(multiplier / 2) : 1;
           lastmultiplier = multiplier;
+          combo = 0;
         } else {
           score += multiplier * note.score;
-          multiplier = this.multiplierForCombo(this.comboForMultiplier(lastmultiplier) + note.combo);
+          combo++;
+          multiplier = this.multiplierForCombo(this.comboForMultiplier(lastmultiplier) + combo);
         }
 
         note.multiplier = multiplier;
         note.totalScore = score;
+        note.combo = combo;
 
         if (note.isBlock) {
           note.accuracy = (note.totalScore / this.maxScoreForNote(noteIndex) * 100).toFixed(2);
@@ -147,41 +194,13 @@ AFRAME.registerComponent('replay-loader', {
       this.bombs = bombStructs;
       this.walls = wallStructs;
 
-      if (this.challenge) {
-        this.calculateOffset();
-      }
-
       this.el.sceneEl.emit('replayloaded', { notes: allStructs}, null);
     },
     challengeloadend: function(event) {
       this.challenge = event;
-      if (this.notes) {
-        this.calculateOffset();
+      if (!this.notes && this.replay) {
+        this.processScores();
       }
-    },
-    calculateOffset() {
-      let beatmaps = this.challenge.beatmaps[this.data.mode][this.data.difficulty]._notes;
-      let bpm = this.challenge.info._beatsPerMinute;
-      const sPerBeat = 60 / bpm;
-      let count = Math.min(this.notes.length, 100);
-      var result = 0;
-
-      var noteIndex = 0;
-      var replayNoteIndex = 0;
-      
-      while (replayNoteIndex < count) {
-        let replayNote = this.notes[replayNoteIndex];
-        let songNote = beatmaps[noteIndex];
-
-        if (songNote._type < 2) {
-          result += songNote._time * sPerBeat - replayNote.time;
-          replayNoteIndex++;
-        }
-
-        noteIndex++;
-      }
-      this.midDeviation = result / count;
-      console.log("Mid deviation: " + this.midDeviation);
     },
     maxScoreForNote(index) {
       const note_score = 115;

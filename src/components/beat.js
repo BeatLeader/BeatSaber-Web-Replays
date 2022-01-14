@@ -197,9 +197,9 @@ AFRAME.registerComponent('beat', {
         let object = this.el.object3D;
         const m = Math.cos(time / 300);
         const m2 = Math.cos(time / 300 - Math.PI / 2);
-        object.rotation.y += m2 * 0.01;
-        object.rotation.z += (this.data.color == 'red' ? 1 : -1) * m2 * 0.01;
-        object.scale.multiplyScalar(m * 0.01 + 1);
+        object.rotation.y += m2 * 0.003;
+        object.rotation.z += (this.data.color == 'red' ? 1 : -1) * m2 * 0.003;
+        object.scale.multiplyScalar(m * 0.003 + 1);
       }
       
       return;

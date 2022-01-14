@@ -75615,6 +75615,7 @@ module.exports.AScene = registerElement('a-scene', {
         this.isScene = true;
         this.object3D = new THREE.Scene();
         this.render = bind(this.render, this);
+        this.calculate = bind(this.calculate, this);
         this.systems = {};
         this.systemNames = [];
         this.time = this.delta = 0;
@@ -76128,6 +76129,8 @@ module.exports.AScene = registerElement('a-scene', {
             sceneEl.clock = new THREE.Clock();
             loadingScreen.remove();
             sceneEl.render();
+            sceneEl.calculate();
+            sceneEl.calculate();
             sceneEl.renderStarted = true;
             sceneEl.emit('renderstart');
           }
@@ -76232,6 +76235,23 @@ module.exports.AScene = registerElement('a-scene', {
         this.components.overlay && this.components.overlay.render();
 
         effect.submitFrame();
+      },
+      writable: true
+    },
+
+    calculate: {
+      value: function () {
+        var effectComposer = this.effectComposer;
+        var effect = this.effect;
+
+        this.delta = this.clock.getDelta() * 1000;
+        this.time = this.clock.elapsedTime * 1000;
+
+        if (this.isPlaying) { this.tick(this.time, this.delta); }
+
+        effect.requestAnimationFrame(this.calculate);
+
+        if (this.isPlaying) { this.tock(this.time, this.delta, this.camera); }
       },
       writable: true
     }
@@ -78181,7 +78201,7 @@ _dereq_('./core/a-mixin');
 _dereq_('./extras/components/');
 _dereq_('./extras/primitives/');
 
-console.log('A-Frame Version: 0.8.2 (Date 2022-01-12, Commit #ea721416)');
+console.log('A-Frame Version: 0.8.2 (Date 2022-01-14, Commit #ea721416)');
 console.log('three Version:', pkg.dependencies['three']);
 console.log('WebVR Polyfill Version:', pkg.dependencies['webvr-polyfill']);
 

@@ -133,7 +133,7 @@ AFRAME.registerComponent('replay-loader', {
           groupIndex = i;
           groupTime = mapnotes[i]._time;
         } else {
-          if (groupTime == mapnotes[i]._time) {
+          if (Math.abs(groupTime - mapnotes[i]._time) < 0.0001) {
             group.push(i);
           } else {
             processGroup();

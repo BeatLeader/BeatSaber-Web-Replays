@@ -192,7 +192,6 @@ AFRAME.registerComponent('song', {
   },
 
   startAudio: function (time) {
-    console.log("Start audio");
     this.isPlaying = true;
     const playTime = time || skipDebug || 0;
     this.songStartTime = (this.context.currentTime * this.speed - playTime) / (this.speed > 0.01 ? this.speed : 0.01);

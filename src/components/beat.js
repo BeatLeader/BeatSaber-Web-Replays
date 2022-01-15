@@ -191,6 +191,66 @@ AFRAME.registerComponent('beat', {
     }
   },
 
+  updatePosition: function () {
+    const el = this.el;
+    const data = this.data;
+    const position = el.object3D.position;
+    const rotation = el.object3D.rotation;
+    const song = this.song;
+
+    var newPosition = 0;
+
+    var timeOffset = data.time - song.getCurrentTime() - data.anticipationTime - data.warmupTime;
+    
+    var t = timeOffset / -data.anticipationTime - data.warmupTime;
+
+    var currentRotationWarmupTime = timeOffset;
+
+    if (timeOffset <= -data.warmupTime) {
+      newPosition = data.anticipationPosition;
+      timeOffset += data.warmupTime;
+      newPosition += -timeOffset * data.speed;
+      if (!this.settings.settings.noEffects && Math.abs(timeOffset) < 1) {
+        this.beams.newBeam(data.color, data.anticipationPosition);
+      }
+    } else {
+      newPosition = data.anticipationPosition + data.warmupPosition + data.warmupSpeed * -timeOffset;
+    }
+
+    newPosition += this.headset.object3D.position.z;
+    position.z = newPosition;
+
+    if (currentRotationWarmupTime <= -data.warmupTime) {
+      currentRotationWarmupTime += data.warmupTime;
+
+      let warmupRotationTime = BEAT_WARMUP_ROTATION_TIME / (20 / data.anticipationPosition); // Closer anticipation - faster the rotation.
+        
+      const progress = warmupRotationTime <= currentRotationWarmupTime ? AFRAME.ANIME.easings.easeOutBack(
+        currentRotationWarmupTime / warmupRotationTime) : 1.0;
+        el.object3D.rotation.z = this.rotationZStart + (progress * this.rotationZChange);
+    }
+
+    // Vector3 headPseudoLocalPos = this._playerTransforms.headPseudoLocalPos;
+    //   headPseudoLocalPos.y = Mathf.Lerp(headPseudoLocalPos.y, this._localPosition.y, 0.8f);
+    //   Vector3 normalized = (this._localPosition - this._inverseWorldRotation * headPseudoLocalPos).normalized;
+    //   Quaternion b = new Quaternion();
+    //   Vector3 vector3 = this._playerSpaceConvertor.worldToPlayerSpaceRotation * this._rotatedObject.up;
+    //   b.SetLookRotation(normalized, this._inverseWorldRotation * vector3);
+    //   this._rotatedObject.localRotation = Quaternion.Lerp(a, b, t * 2f);
+
+    if (t >= 0.5 && t <= 1 && data.type != 'mine') {
+      var headPseudoLocalPos = this.headset.object3D.position.clone();
+      var localPosition = position.clone();
+
+      headPseudoLocalPos.y = THREE.Math.lerp(headPseudoLocalPos.y, localPosition.y, 0.8);
+      this.rotEuler.copy(el.object3D.rotation);
+      el.object3D.lookAt(headPseudoLocalPos);
+      el.object3D.rotation.x = THREE.Math.lerp(this.rotEuler.x, el.object3D.rotation.x, 0.4 * t);
+      el.object3D.rotation.y = THREE.Math.lerp(this.rotEuler.y, el.object3D.rotation.y, 0.4 * t);
+      el.object3D.rotation.z = this.rotEuler.z;
+    }
+  },
+
   tock: function (time, timeDelta) {
     if (this.data.loadingCube) {
       if (this.data.animating) {
@@ -205,10 +265,7 @@ AFRAME.registerComponent('beat', {
       return;
     }
     const el = this.el;
-    const data = this.data;
     const position = el.object3D.position;
-    const rotation = el.object3D.rotation;
-    const song = this.song;
 
     if (this.destroyed) {
       this.tockDestroyed(timeDelta);
@@ -216,57 +273,7 @@ AFRAME.registerComponent('beat', {
     } else {
       if (position.z > collisionZThreshold) { this.checkCollisions(); }
 
-      var newPosition = 0;
-
-      var timeOffset = data.time - song.getCurrentTime() - data.anticipationTime - data.warmupTime;
-      
-      var t = timeOffset / -data.anticipationTime - data.warmupTime;
-
-      var currentRotationWarmupTime = timeOffset;
-
-      if (timeOffset <= -data.warmupTime) {
-        newPosition = data.anticipationPosition;
-        timeOffset += data.warmupTime;
-        newPosition += -timeOffset * data.speed;
-        if (!this.settings.settings.noEffects && Math.abs(timeOffset) < 1) {
-          this.beams.newBeam(data.color, data.anticipationPosition);
-        }
-      } else {
-        newPosition = data.anticipationPosition + data.warmupPosition + data.warmupSpeed * -timeOffset;
-      }
-
-      newPosition += this.headset.object3D.position.z;
-      position.z = newPosition;
-
-      if (currentRotationWarmupTime <= -data.warmupTime) {
-        currentRotationWarmupTime += data.warmupTime;
-
-        let warmupRotationTime = BEAT_WARMUP_ROTATION_TIME / (20 / data.anticipationPosition); // Closer anticipation - faster the rotation.
-          
-        const progress = warmupRotationTime <= currentRotationWarmupTime ? AFRAME.ANIME.easings.easeOutBack(
-          currentRotationWarmupTime / warmupRotationTime) : 1.0;
-          el.object3D.rotation.z = this.rotationZStart + (progress * this.rotationZChange);
-      }
-
-      // Vector3 headPseudoLocalPos = this._playerTransforms.headPseudoLocalPos;
-      //   headPseudoLocalPos.y = Mathf.Lerp(headPseudoLocalPos.y, this._localPosition.y, 0.8f);
-      //   Vector3 normalized = (this._localPosition - this._inverseWorldRotation * headPseudoLocalPos).normalized;
-      //   Quaternion b = new Quaternion();
-      //   Vector3 vector3 = this._playerSpaceConvertor.worldToPlayerSpaceRotation * this._rotatedObject.up;
-      //   b.SetLookRotation(normalized, this._inverseWorldRotation * vector3);
-      //   this._rotatedObject.localRotation = Quaternion.Lerp(a, b, t * 2f);
-
-      if (t > 0.5 && data.type != 'mine') {
-        var headPseudoLocalPos = this.headset.object3D.position.clone();
-        var localPosition = position.clone();
-
-        headPseudoLocalPos.y = THREE.Math.lerp(headPseudoLocalPos.y, localPosition.y, 0.8);
-        this.rotEuler.copy(el.object3D.rotation);
-        el.object3D.lookAt(headPseudoLocalPos);
-        el.object3D.rotation.x = THREE.Math.lerp(this.rotEuler.x, el.object3D.rotation.x, 0.4 * t);
-        el.object3D.rotation.y = THREE.Math.lerp(this.rotEuler.y, el.object3D.rotation.y, 0.4 * t);
-        el.object3D.rotation.z = this.rotEuler.z;
-      }
+      this.updatePosition();
 
       this.backToPool = position.z >= 2;
         if (this.backToPool) { this.missHit(); }
@@ -333,6 +340,8 @@ AFRAME.registerComponent('beat', {
       }
       
     }
+
+    this.updatePosition();
 
     this.returnToPoolTimeStart = undefined;
 

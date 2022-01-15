@@ -36,6 +36,7 @@ AFRAME.registerComponent('song-controls', {
         setTimeout(() => {
           if (queryParamTime >= 0 && queryParamTime <= this.song.source.buffer.duration) {
             this.seek(queryParamTime);
+            queryParamTime = undefined;
           }
           
         }, 100);
@@ -247,7 +248,7 @@ AFRAME.registerComponent('song-controls', {
     let captureThis = this;
     timeline.addEventListener("wheel", function(e){
       let currentTime = captureThis.song.getCurrentTime();
-      doSeek(null, currentTime - e.deltaY / 356);
+      doSeek(null, currentTime - (e.deltaY / 356) * Math.max(captureThis.song.speed, 0.01));
       e.preventDefault();
       e.stopPropagation();
     })

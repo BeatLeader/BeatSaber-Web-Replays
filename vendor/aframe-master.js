@@ -69973,7 +69973,7 @@ module.exports.Component = registerComponent('pool', {
   returnEntity: function (el) {
     var index = this.usedEls.indexOf(el);
     if (index === -1) {
-      warn('The returned entity was not previously pooled from ' + this.attrName);
+      // warn('The returned entity was not previously pooled from ' + this.attrName);
       return;
     }
     this.usedEls.splice(index, 1);
@@ -78201,7 +78201,7 @@ _dereq_('./core/a-mixin');
 _dereq_('./extras/components/');
 _dereq_('./extras/primitives/');
 
-console.log('A-Frame Version: 0.8.2 (Date 2022-01-14, Commit #ea721416)');
+console.log('A-Frame Version: 0.8.2 (Date 2022-01-15, Commit #ea721416)');
 console.log('three Version:', pkg.dependencies['three']);
 console.log('WebVR Polyfill Version:', pkg.dependencies['webvr-polyfill']);
 

@@ -181,7 +181,7 @@ AFRAME.registerComponent('beat-generator', {
       }
     }
 
-    if (!this.data.noEffects) {
+    if (!this.data.noEffects && !this.isSeeking) {
       // Stage events.
       const eventsTime = this.eventsTime + skipDebug;
       const events = this.beatData._events;
@@ -346,6 +346,7 @@ AFRAME.registerComponent('beat-generator', {
         el.components.wall.setMappingExtensionsHeight(startHeight, height);
       }
 
+      el.components.wall.onGenerate(this.mappingExtensions);
       el.play();
     };
   })(),

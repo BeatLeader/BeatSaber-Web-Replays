@@ -42,6 +42,41 @@ AFRAME.registerComponent('wall', {
     this.replayLoader = this.el.sceneEl.components['replay-loader'];
   },
 
+  updatePosition: function () {
+    const data = this.data;
+    const halfDepth = data.durationSeconds * data.speed / 2;
+    const position = this.el.object3D.position;
+    const song = this.song;
+    
+    // Move.
+    this.el.object3D.visible = true;
+
+    var newPosition = 0;
+    const currentTime = song.getCurrentTime();
+
+    var timeOffset = data.time - currentTime - data.anticipationTime - data.warmupTime;
+
+    if (timeOffset <= -data.warmupTime) {
+      newPosition = data.anticipationPosition - halfDepth;
+      timeOffset += data.warmupTime;
+      newPosition += -timeOffset * data.speed;
+    } else {
+      newPosition = data.anticipationPosition - halfDepth + data.warmupPosition + data.warmupSpeed * -timeOffset;
+    }
+    
+    newPosition -= this.headset.object3D.position.z;
+    position.z = newPosition;
+
+    if (this.hit && currentTime > this.hitWall.time) {
+      this.hit = false;
+      this.el.emit('scoreChanged', {index: this.hitWall.i}, true);
+    }
+  },
+
+  onGenerate: function () {
+    this.updatePosition();
+  },
+
   update: function () {
     const el = this.el;
     const data = this.data;
@@ -129,31 +164,13 @@ AFRAME.registerComponent('wall', {
     const data = this.data;
     const halfDepth = data.durationSeconds * data.speed / 2;
     const position = this.el.object3D.position;
-    const song = this.song;
     
-    // Move.
-    this.el.object3D.visible = true;
-
-    var newPosition = 0;
-    const currentTime = song.getCurrentTime();
-
-    var timeOffset = data.time - currentTime - data.anticipationTime - data.warmupTime;
-
-    if (timeOffset <= -data.warmupTime) {
-      newPosition = data.anticipationPosition - halfDepth;
-      timeOffset += data.warmupTime;
-      newPosition += -timeOffset * data.speed;
-    } else {
-      newPosition = data.anticipationPosition - halfDepth + data.warmupPosition + data.warmupSpeed * -timeOffset;
-    }
+    this.updatePosition();
 
     if (this.hit && currentTime > this.hitWall.time) {
       this.hit = false;
       this.el.emit('scoreChanged', {index: this.hitWall.i}, true);
     }
-
-    newPosition -= this.headset.object3D.position.z;
-    position.z = newPosition;
 
     if (position.z > (this.maxZ + halfDepth)) {
       this.returnToPool();

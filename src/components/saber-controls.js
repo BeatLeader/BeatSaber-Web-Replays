@@ -24,6 +24,7 @@ AFRAME.registerComponent('saber-controls', {
     this.bladePosition = new THREE.Vector3();
     this.bladeVector = new THREE.Vector3();
     this.bladeTipPreviousPosition = new THREE.Vector3();
+    this.bladePreviousPosition = new THREE.Vector3();
     this.projectedBladeVector = new THREE.Vector3();
     this.saberPosition = new THREE.Vector3();
     this.swinging = false;
@@ -45,6 +46,12 @@ AFRAME.registerComponent('saber-controls', {
 
     this.bladeEl = this.el.querySelector('.blade');
     this.containerEl = this.el.querySelector('.saberContainer');
+
+    this.initBoxVars();
+  },
+
+  play: function () {
+    this.settings = this.el.sceneEl.components.settings;
   },
 
   update: function (oldData) {
@@ -55,9 +62,17 @@ AFRAME.registerComponent('saber-controls', {
 
   tick: function (time, delta) {
     if (!this.data.bladeEnabled) { return; }
-    this.boundingBox.setFromObject(this.bladeEl.object3D);
-    if (!this.data.enabled) { return; }
+    
+    // if (!this.data.enabled) { return; }
     this.detectStroke(delta);
+
+    if (this.line) {
+      this.line.visible = this.settings.settings.showHitboxes;
+      if (this.hitboxGood) {
+        this.line.geometry.computeBoundingBox();
+        this.boundingBox.copy(this.line.geometry.boundingBox).applyMatrix4(this.line.matrixWorld);
+      }
+    }
   },
 
   detectStroke: function (delta) {
@@ -67,13 +82,15 @@ AFRAME.registerComponent('saber-controls', {
     var directionChange;
 
     // Tip of the blade position in world coordinates.
-    this.bladeTipPosition.set(0, 0, -1.0);
-    this.bladePosition.set(0, 0, 0);
+    this.bladeTipPosition.set(0, 0, -0.85);
+    this.bladePosition.set(0, 0, 0.1);
 
     const saberObj = this.el.object3D;
     saberObj.parent.updateMatrixWorld();
     saberObj.localToWorld(this.bladeTipPosition);
     saberObj.localToWorld(this.bladePosition);
+
+    this.threePointsToBox(this.bladeTipPosition, this.bladePosition, new THREE.Vector3().addVectors(this.bladePreviousPosition, this.bladeTipPreviousPosition).multiplyScalar(0.5));
 
     // Angles between saber and major planes.
     this.bladeVector.copy(this.bladeTipPosition).sub(this.bladePosition).normalize();
@@ -120,6 +137,7 @@ AFRAME.registerComponent('saber-controls', {
       this.endStroke();
     }
 
+    this.bladePreviousPosition.copy(this.bladePosition);
     this.bladeTipPreviousPosition.copy(this.bladeTipPosition);
   },
 
@@ -136,6 +154,64 @@ AFRAME.registerComponent('saber-controls', {
     this.maxAnglePlaneXY = 0;
     for (let i = 0; i < this.distanceSamples.length; i++) { this.distanceSamples[i] = 0; }
     for (let i = 0; i < this.deltaSamples.length; i++) { this.deltaSamples[i] = 0; }
+  },
+
+  initBoxVars: function () {
+    this.zeroVector = new THREE.Vector3(0,0,0);
+    this.v1 = new THREE.Vector3();
+    this.v2 = new THREE.Vector3();
+    this.v3 = new THREE.Vector3();
+    this.v4 = new THREE.Vector3();
+    this.v5 = new THREE.Vector3();
+
+    this.orientation = new THREE.Quaternion();
+    this.matrix = new THREE.Matrix4();
+    this.plane = new THREE.Plane();
+  },
+
+  // saberBladeTopPos, saberBladeBottomPos, (bottomPos + topPos) * 0.5f
+  threePointsToBox: function (p0, p1, p2) {
+    var normalized1 = this.v1.crossVectors(this.v2.subVectors(p1, p2), this.v3.subVectors(p0, p2)).normalize();
+    if (normalized1.lengthSq() > 9.99999974737875E-06) {
+      var normalized2 = this.v2.subVectors(p0, p1).normalize();
+      var inNormal = this.v3.crossVectors(normalized2, normalized1);
+
+      var mx = this.matrix.lookAt(normalized2, this.zeroVector, normalized1);
+      this.orientation.setFromRotationMatrix(mx);
+
+      var num1 = Math.abs(this.plane.setFromNormalAndCoplanarPoint(inNormal, p0).distanceToPoint(p2));
+      var num2 = this.v4.subVectors(p0, p1).length();
+      var vector3 = this.v5.addVectors(p0, p1).multiplyScalar(0.5);
+
+      const saberOrigin = vector3.sub(inNormal.multiplyScalar(num1));
+
+      var line;
+
+      if (this.line) {
+        line = this.line;
+      } else {
+        this.saberBox = new THREE.BoxGeometry(1, 1, 1);
+        const hitbox = new THREE.WireframeGeometry(this.saberBox);
+        const material = new THREE.LineBasicMaterial({
+          color: 0xff0000,
+          linewidth: 1
+        });
+        line = new THREE.LineSegments( hitbox, material);
+        this.line = line;
+        line.position.copy(saberOrigin);
+        this.containerEl.sceneEl.object3D.add(line);
+      }
+      
+      line.scale.set(0.0001, Math.max(num1, 0.0001), num2);
+      line.quaternion.copy(this.orientation);
+      line.position.copy(saberOrigin);
+
+      line.updateMatrixWorld();
+
+      this.hitboxGood = true;
+    } else {
+      this.hitboxGood = false;
+    }
   },
 
   updateStrokeDirection: function () {

@@ -278,6 +278,13 @@ AFRAME.registerComponent('beat', {
       this.backToPool = position.z >= 2;
         if (this.backToPool) { this.missHit(); }
     }
+    if (this.hitboxObject) {
+      this.hitboxObject.visible = this.settings.settings.showHitboxes;
+    }
+    if (this.smallHitObject) {
+      this.smallHitObject.visible = this.settings.settings.showHitboxes;
+    }
+    
     this.returnToPool();
   },
 
@@ -338,32 +345,40 @@ AFRAME.registerComponent('beat', {
       } else {
         this.blockEl.setAttribute('material', "color: yellow");
       }
-      
     }
 
     this.updatePosition();
 
     this.returnToPoolTimeStart = undefined;
 
-    if (this.settings.settings.showHitboxes) {
-      if (!this.hitbox) {
-        let itsMine = this.data.type === 'mine';
-        const hitbox = new THREE.WireframeGeometry(itsMine ? new THREE.SphereGeometry(0.18, 16, 8) : new THREE.BoxGeometry(0.8, 0.5, 1.0));
-        const material = new THREE.LineBasicMaterial({
-          color: 0xff0000,
+    if (!this.hitboxObject) {
+      let itsMine = this.data.type === 'mine';
+      const hitbox = new THREE.WireframeGeometry(itsMine ? new THREE.SphereGeometry(0.18, 16, 8) : new THREE.BoxGeometry(0.8, 0.5, 1.0));
+      const material = new THREE.LineBasicMaterial({
+        color: 0xff0000,
+        linewidth: 1
+      });
+      const line = new THREE.LineSegments(hitbox, material);
+      line.geometry.computeBoundingBox();
+      line.visible = this.settings.settings.showHitboxes;
+      el.object3D.add(line);
+      if (!itsMine) {
+        line.position.z += 0.25;
+
+        const smallhitbox = new THREE.WireframeGeometry(new THREE.BoxGeometry(0.48, 0.48, 0.48));
+        const material2 = new THREE.LineBasicMaterial({
+          color: 0xff00ff,
           linewidth: 1
         });
-        const line = new THREE.LineSegments( hitbox, material);
+        const line2 = new THREE.LineSegments(smallhitbox, material2);
+        line2.geometry.computeBoundingBox();
+        line2.visible = this.settings.settings.showHitboxes;
           
-        el.object3D.add(line);
-        if (!itsMine) {
-          line.position.z += 0.25;
-        }
-        this.hitbox = line;
+        el.object3D.add(line2);
+
+        this.smallHitObject = line2;
       }
-    } else if (this.hitbox) {
-      el.object3D.remove(this.hitbox);
-      this.hitbox = null;
+      this.hitboxObject = line;
     }
   },
 
@@ -759,35 +774,25 @@ AFRAME.registerComponent('beat', {
   checkBigCollider: function (collider, hand, saberControls) {
     const saberColors = this.saberColors;
 
-    var saberTypeOK = this.data.color === saberColors[hand];
-    saberControls.updateStrokeDirection();
+    if (!saberControls.hitboxGood || !saberControls.boundingBox.intersectsBox(collider)) {
+      return false;
+    }
 
-    const cutAngleTolerance = 60;
-    this.blockEl.object3D.parent.updateMatrixWorld();
-    this.bladeTipPosition.copy(saberControls.bladeTipPosition)
-    this.startStrokePosition.copy(saberControls.startStrokePosition);
-
-    const cutDirVec = this.blockEl.object3D.worldToLocal(this.bladeTipPosition).sub(this.blockEl.object3D.worldToLocal(this.startStrokePosition));
-
-    const flag = Math.abs(cutDirVec.z) > Math.abs(cutDirVec.x) * 10.0 && Math.abs(cutDirVec.z) > Math.abs(cutDirVec.y) * 10.0;
-    const cutDirAngle = Math.atan2(cutDirVec.y, cutDirVec.x) * 57.29578;
-    const directionOK = cutDirAngle > -90.0 - cutAngleTolerance && cutDirAngle < cutAngleTolerance - 90.0 || this.data.type !== 'arrow';
-    const speedOK = saberControls.bladeSpeed > 0.002 * this.song.speed;
-
-    return saberTypeOK && directionOK && speedOK && saberControls.boundingBox.intersectsBox(collider);
+    return this.data.color === saberColors[hand] && this.replayNote.score > 0;
   },
 
   checkCollisions: function () {
     // const cutDirection = this.data.cutDirection;
     const saberEls = this.saberEls;
-    const beatSmallBoundingBox = this.beatBoundingBox.setFromObject(
-      this.blockEl.getObject3D('mesh'));
-    const beatBigBoundingBox = this.beatBigBoundingBox.setFromObject(
-        this.blockEl.getObject3D('mesh'));
-    if (this.data.type != 'mine') {
-      beatBigBoundingBox.expandByVector(new THREE.Vector3(0.181, 0.05, 0.3));
-      beatBigBoundingBox.translate(new THREE.Vector3(0.0, 0.0, 0.25))
+    
+    this.beatBigBoundingBox.copy(this.hitboxObject.geometry.boundingBox).applyMatrix4(this.hitboxObject.matrixWorld);
+    const beatBigBoundingBox = this.beatBigBoundingBox;
+
+    if (this.smallHitObject) {
+      this.beatBoundingBox.copy(this.smallHitObject.geometry.boundingBox).applyMatrix4(this.smallHitObject.matrixWorld);
     }
+    
+    const beatSmallBoundingBox = this.smallHitObject ? this.beatBoundingBox : this.beatBigBoundingBox;
     
     // const position = this.el.object3D.position;
 
@@ -800,7 +805,7 @@ AFRAME.registerComponent('beat', {
 
       const hand = saberControls.data.hand;
 
-      if (saberBoundingBox.intersectsBox(beatSmallBoundingBox) || this.checkBigCollider(beatBigBoundingBox, hand, saberControls)) {
+      if ((saberControls.hitboxGood && saberBoundingBox.intersectsBox(beatSmallBoundingBox) && this.replayNote.score != -3) || this.checkBigCollider(beatBigBoundingBox, hand, saberControls)) {
 
         // Sound.
         this.el.parentNode.components['beat-hit-sound'].playSound(this.el);

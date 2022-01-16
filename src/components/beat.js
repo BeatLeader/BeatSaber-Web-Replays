@@ -279,10 +279,10 @@ AFRAME.registerComponent('beat', {
         if (this.backToPool) { this.missHit(); }
     }
     if (this.hitboxObject) {
-      this.hitboxObject.visible = this.settings.settings.showHitboxes;
+      this.hitboxObject.visible = !this.destroyed && this.settings.settings.showHitboxes;
     }
     if (this.smallHitObject) {
-      this.smallHitObject.visible = this.settings.settings.showHitboxes;
+      this.smallHitObject.visible = !this.destroyed && this.settings.settings.showHitboxes;
     }
     
     this.returnToPool();
@@ -778,7 +778,7 @@ AFRAME.registerComponent('beat', {
       return false;
     }
 
-    return this.data.color === saberColors[hand] && this.replayNote.score > 0;
+    return this.data.color === saberColors[hand] && this.replayNote && this.replayNote.score > 0;
   },
 
   checkCollisions: function () {
@@ -805,7 +805,7 @@ AFRAME.registerComponent('beat', {
 
       const hand = saberControls.data.hand;
 
-      if ((saberControls.hitboxGood && saberBoundingBox.intersectsBox(beatSmallBoundingBox) && this.replayNote.score != -3) || this.checkBigCollider(beatBigBoundingBox, hand, saberControls)) {
+      if ((saberControls.hitboxGood && saberBoundingBox.intersectsBox(beatSmallBoundingBox) && this.replayNote && this.replayNote.score != -3) || this.checkBigCollider(beatBigBoundingBox, hand, saberControls)) {
 
         // Sound.
         this.el.parentNode.components['beat-hit-sound'].playSound(this.el);
@@ -952,7 +952,7 @@ AFRAME.registerComponent('beat', {
     var leftRotation = 0;
     var rightCutNormal = new THREE.Vector3();
     var rightRotation = 0;
-    var rotationStep = 2 * Math.PI / 150;
+    var rotationStep = 2 * Math.PI / 150 / 3;
     var fragment;
 
     return function (timeDelta) {

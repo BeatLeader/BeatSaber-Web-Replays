@@ -191,12 +191,10 @@ AFRAME.registerComponent('saber-controls', {
         line = this.line;
       } else {
         this.saberBox = new THREE.BoxGeometry(1, 1, 1);
-        const hitbox = new THREE.WireframeGeometry(this.saberBox);
-        const material = new THREE.LineBasicMaterial({
-          color: 0xff0000,
-          linewidth: 1
+        const material = new THREE.MeshBasicMaterial({
+          color: 0xff00ff
         });
-        line = new THREE.LineSegments( hitbox, material);
+        line = new THREE.Mesh(this.saberBox, material);
         this.line = line;
         line.position.copy(saberOrigin);
         this.containerEl.sceneEl.object3D.add(line);

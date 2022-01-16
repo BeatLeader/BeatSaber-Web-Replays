@@ -183,7 +183,7 @@ AFRAME.registerComponent('saber-controls', {
       var num2 = this.v4.subVectors(p0, p1).length();
       var vector3 = this.v5.addVectors(p0, p1).multiplyScalar(0.5);
 
-      const saberOrigin = vector3.sub(inNormal.multiplyScalar(num1));
+      const saberOrigin = vector3.sub(inNormal.multiplyScalar(num1).multiplyScalar(0.5));
 
       var line;
 
@@ -205,6 +205,7 @@ AFRAME.registerComponent('saber-controls', {
       line.scale.set(0.0001, Math.max(num1, 0.0001), num2);
       line.quaternion.copy(this.orientation);
       line.position.copy(saberOrigin);
+      line.rotation.z += Math.PI / 2;
 
       line.updateMatrixWorld();
 

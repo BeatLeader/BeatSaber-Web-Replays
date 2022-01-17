@@ -563,10 +563,10 @@ AFRAME.registerComponent('song-controls', {
 
       jd.value = newJD;
       jdLabel.innerHTML = newJDString;
-      if (e.detail.isDefault) {
-        const percent = ((newJD - jd.min) / (jd.max - jd.min)) * 100;
-        jdPoint.attributes.x.value = percent * 0.9 + (50 - percent) / 5 - 5 + "%";
-        jdPoint.innerHTML = newJDString;
+      if (e.detail.defaultJd) {
+        const percent = ((e.detail.defaultJd - jd.min) / (jd.max - jd.min)) * 100;
+        jdPoint.attributes.x.value = percent * 0.9 + (50 - percent) / 5 - 10 + "%";
+        jdPoint.innerHTML = "" + e.detail.defaultJd.toFixed(2);
         jdTick.attributes.x.value = percent * 0.9 + "%";
       }
     });

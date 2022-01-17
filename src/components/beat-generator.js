@@ -451,15 +451,18 @@ AFRAME.registerComponent('beat-generator', {
   },
 
   updateJD: function (newJD, updateChildren = true) {
+    const defaultJT = this.calculateJumpTime(this.bpm, this.beatSpeed, this.beatOffset);
+    const defaultJD = (60 / this.bpm) * defaultJT * this.beatSpeed * 2;
+    
     var jt;
     if (newJD != -1) {
       jt = ((newJD / (60 / this.bpm)) / this.beatSpeed) / 2;
       this.jd = newJD;
     } else {
-      jt = this.calculateJumpTime(this.bpm, this.beatSpeed, this.beatOffset);
-      this.jd = (60 / this.bpm) * jt * this.beatSpeed * 2;
+      jt = defaultJT;
+      this.jd = defaultJT;
     }
-    this.el.sceneEl.emit('jdCalculated', {jd: this.jd, isDefault: !updateChildren}, false);
+    this.el.sceneEl.emit('jdCalculated', {jd: this.jd, defaultJd: !updateChildren ? defaultJD : null}, false);
     this.beatAnticipationTime = (60 / this.bpm) * jt;
 
     if (updateChildren) {

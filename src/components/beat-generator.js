@@ -460,7 +460,7 @@ AFRAME.registerComponent('beat-generator', {
       this.jd = newJD;
     } else {
       jt = defaultJT;
-      this.jd = defaultJT;
+      this.jd = defaultJD;
     }
     this.el.sceneEl.emit('jdCalculated', {jd: this.jd, defaultJd: !updateChildren ? defaultJD : null}, false);
     this.beatAnticipationTime = (60 / this.bpm) * jt;

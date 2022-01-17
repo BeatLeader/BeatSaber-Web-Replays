@@ -380,7 +380,13 @@ AFRAME.registerComponent('song-controls', {
       let input = document.createElement('input');
       target.appendChild(input);
       let songParam = (AFRAME.utils.getUrlParameter('id') ? `?id=${AFRAME.utils.getUrlParameter('id')}` : `?hash=${AFRAME.utils.getUrlParameter('hash')}`);
-      let base = location.protocol + "//" + location.host + "/" + `${songParam}&playerID=${AFRAME.utils.getUrlParameter('playerID')}&difficulty=${AFRAME.utils.getUrlParameter('difficulty')}`
+      let jdParam = "";
+      if (this.jdChanged) {
+        jdParam = "&jd=" + document.getElementById('jdLabel').innerHTML;
+      } else if (AFRAME.utils.getUrlParameter('jd') ) {
+        jdParam = "&jd=" + AFRAME.utils.getUrlParameter('jd');
+      }
+      let base = location.protocol + "//" + location.host + "/" + `${songParam}&playerID=${AFRAME.utils.getUrlParameter('playerID')}&difficulty=${AFRAME.utils.getUrlParameter('difficulty')}${jdParam}`
       input.value = base + (time ? `&time=${Math.round(this.song.getCurrentTime()*1000)}&speed=${Math.round(this.song.speed * 100)}` : "" );
       input.select();
       document.execCommand("copy");
@@ -545,12 +551,29 @@ AFRAME.registerComponent('song-controls', {
 
     let jd = document.getElementById('jd');
     let jdLabel = document.getElementById('jdLabel');
+    let jdPoint = document.getElementById('jdPoint');
+    let jdTick = document.getElementById('jdTick');
     jd.addEventListener('input', () => {
       this.el.components['beat-generator'].updateJD(jd.valueAsNumber);
+      this.jdChanged = true;
     });
     this.el.sceneEl.addEventListener('jdCalculated', (e) => {
-      jd.value = e.detail.jd;
-      jdLabel.innerHTML = "" + e.detail.jd.toFixed(2);
+      const newJD = e.detail.jd;
+      const newJDString = "" + newJD.toFixed(2);
+
+      jd.value = newJD;
+      jdLabel.innerHTML = newJDString;
+      if (e.detail.isDefault) {
+        const percent = ((newJD - jd.min) / (jd.max - jd.min)) * 100;
+        jdPoint.attributes.x.value = percent * 0.9 + (50 - percent) / 5 - 5 + "%";
+        jdPoint.innerHTML = newJDString;
+        jdTick.attributes.x.value = percent * 0.9 + "%";
+      }
+    });
+
+    jdPoint.addEventListener('click', evt => {
+      this.el.components['beat-generator'].updateJD(parseFloat(jdPoint.innerHTML));
+      this.jdChanged = false;
     });
   },
 

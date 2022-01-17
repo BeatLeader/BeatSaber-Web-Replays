@@ -36,19 +36,19 @@
         <rect class="range__tick" x="50%" y="3" width="1" height="10"></rect>
         <rect class="range__tick" x="75%" y="3" width="1" height="10"></rect>
         <rect class="range__tick" x="100%" y="3" width="1" height="10"></rect>
-    </svg>
+      </svg>
     </div>
     <input id="speedSlider" title="Replay speed" type="range" type="range" min="0" max="2" step="0.01" oninput="this.style.setProperty('--value',this.value)"; ></input>
     
     <div id="rangePoints">
-   <svg role="presentation" class="rangePointsSvg" height="8" width="112" xmlns="http://www.w3.org/2000/svg">
-      <text class="range__point" x="0%" y="8" text-anchor="start">  0  </text>
-      <text class="range__point" x="25%" y="8" text-anchor="middle">  0.5</text>
-      <text class="range__point" x="50%" y="8" text-anchor="middle">  1  </text>
-      <text class="range__point" x="75%" y="8" text-anchor="middle">1.5  </text>
-      <text class="range__point" x="100%" y="8" text-anchor="end">  2  </text>
-   </svg>
-  </div>
+      <svg role="presentation" class="rangePointsSvg" height="8" width="112" xmlns="http://www.w3.org/2000/svg">
+        <text class="range__point" x="0%" y="8" text-anchor="start">  0  </text>
+        <text class="range__point" x="25%" y="8" text-anchor="middle">  0.5</text>
+        <text class="range__point" x="50%" y="8" text-anchor="middle">  1  </text>
+        <text class="range__point" x="75%" y="8" text-anchor="middle">1.5  </text>
+        <text class="range__point" x="100%" y="8" text-anchor="end">  2  </text>
+      </svg>
+    </div>
   </div>
 
   <p id="songSpeed">
@@ -81,6 +81,25 @@
   <a id="controlsSettings" title="Settings"><img src="assets/img/settings.png"></a>
 
   <div id="settingsContainer">
+    <div class="toggleButton" title="Distance from player to note slowdown.">
+      <label>
+        <div>
+          <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Jump Distance:</nobr></td></label>
+          <label id="jdLabel" class="toggleButtonLabel" style="margin-left: 40px;">18</label>
+        </div>
+        <div style="height: 0; margin-left: 13px;">
+          <svg role="presentation" class="jdRangePoint" height="30" width="100" xmlns="http://www.w3.org/2000/svg">
+            <rect id="jdTick" class="jd__tick" x="33%" y="0" width="1" height="10"></rect>
+          </svg>
+        </div>
+        <input id="jd" style="margin-left: 13px;" type="range" type="range" min="5" max="50" step="0.2" value="18">
+        <div style="height: 10px; margin-left: 13px;">
+          <svg role="presentation" class="rangePointsSvg" height="30" width="120" xmlns="http://www.w3.org/2000/svg">
+            <text id="jdPoint" class="jd__point" x="33%" y="8" text-anchor="start">0</text>
+          </svg>
+        </div>
+      </label>
+    </div>
     <div class="toggleButton" title="Show 3D model of headset synced with replay.">
       <label class="switch">
         <input type="checkbox" id="showHeadset">
@@ -94,16 +113,6 @@
         <span class="slider round"></span>
       </label>
       <label class="toggleButtonLabel"><td><nobr>Highlight errors</nobr></td></label>
-    </div>
-    <div class="toggleButton" title="Distance from player to note slowdown.">
-      <label>
-        <div>
-          <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Jump Distance:</nobr></td></label>
-          <label id="jdLabel" class="toggleButtonLabel" style="margin-left: 40px;">18</label>
-        </div>
-        <input id="jd" type="range" type="range" min="1" max="50" step="0.2" value="18">
-        
-      </label>
     </div>
     <div class="toggleButton" title="Disable parts of notes flying off.">
       <label class="switch">

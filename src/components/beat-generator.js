@@ -5,7 +5,10 @@ let skipDebug = AFRAME.utils.getUrlParameter('skip') || 0;
 skipDebug = parseInt(skipDebug, 10);
 
 let queryJD = AFRAME.utils.getUrlParameter('jd') || -1;
-queryJD = parseInt(queryJD, 10);
+queryJD = parseFloat(queryJD);
+if (queryJD < 5 || queryJD > 50) {
+  queryJD = -1;
+}
 
 const RIDICULOUS_MAP_EX_CONSTANT = 4001;
 const WALL_HEIGHT_MIN = 0;
@@ -456,7 +459,7 @@ AFRAME.registerComponent('beat-generator', {
       jt = this.calculateJumpTime(this.bpm, this.beatSpeed, this.beatOffset);
       this.jd = (60 / this.bpm) * jt * this.beatSpeed * 2;
     }
-    this.el.sceneEl.emit('jdCalculated', {jd: this.jd}, false);
+    this.el.sceneEl.emit('jdCalculated', {jd: this.jd, isDefault: !updateChildren}, false);
     this.beatAnticipationTime = (60 / this.bpm) * jt;
 
     if (updateChildren) {

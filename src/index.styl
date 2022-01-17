@@ -92,8 +92,8 @@ html
     cursor pointer
     margin 6px 0px 0 0px
     position: absolute
-    right: 58px
-    width: 40px
+    right: 68px
+    width: 30px
     img
       height 30px
       width 26px  
@@ -777,6 +777,30 @@ input:checked + .slider:before {
 
 .rangePointsSvg {
   margin-left: -6px
+  -webkit-transform: translateY(-8px);
+  -moz-transform: translateY(-8px);
+  -ms-transform: translateY(-8px);
+  -o-transform: translateY(-8px);
+  transform: translateY(-8px);
+}
+
+.jd__tick {
+  fill: #a0a0a0;
+  -webkit-transform: translateX(2px);
+  -moz-transform: translateX(2px);
+  -ms-transform: translateX(2px);
+  -o-transform: translateX(2px);
+  transform: translateX(2px);
+}
+
+.jd__point 
+  fill: #a0a0a0;
+  font-size: 10px
+  white-space: pre
+  &:hover
+    fill: red
+
+#jdRangePoint {
   -webkit-transform: translateY(-8px);
   -moz-transform: translateY(-8px);
   -ms-transform: translateY(-8px);

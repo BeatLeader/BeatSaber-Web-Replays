@@ -542,6 +542,16 @@ AFRAME.registerComponent('song-controls', {
         volumeHandler();
       }
     });
+
+    let jd = document.getElementById('jd');
+    let jdLabel = document.getElementById('jdLabel');
+    jd.addEventListener('input', () => {
+      this.el.components['beat-generator'].updateJD(jd.valueAsNumber);
+    });
+    this.el.sceneEl.addEventListener('jdCalculated', (e) => {
+      jd.value = e.detail.jd;
+      jdLabel.innerHTML = "" + e.detail.jd.toFixed(2);
+    });
   },
 
   showMisses: (notes, buffer, target) => {

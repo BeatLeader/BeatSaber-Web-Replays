@@ -1,5 +1,6 @@
 import { toLong } from 'ip';
 import {BEAT_WARMUP_OFFSET, BEAT_WARMUP_SPEED, BEAT_WARMUP_TIME} from '../constants/beat';
+import {getHorizontalPosition, getVerticalPosition} from '../utils';
 const COLORS = require('../constants/colors.js');
 
 const auxObj3D = new THREE.Object3D();
@@ -10,24 +11,12 @@ const BEAT_WARMUP_ROTATION_TIME = 0.75;
 const DESTROYED_SPEED = 1.0;
 const ONCE = {once: true};
 
-// From game
-const _noteLinesCount = 4;
-const _noteLinesDistance = 0.6;
-
 const SCORE_POOL = {
   OK : 'pool__beatscoreok',
   GOOD : 'pool__beatscoregood',
   GREAT : 'pool__beatscoregreat',
   SUPER : 'pool__beatscoresuper'
 };
-
-function getHorizontalPosition (lineIndex) {
-  return (-(_noteLinesCount - 1) * 0.5 + lineIndex) * _noteLinesDistance;
-}
-
-function getVerticalPosition (lineLayer) {
-  return 0.25 + 0.6 * (lineLayer + 1) - lineLayer * 0.05; 
-}
 
 /**
  * Bears, beats, Battlestar Galactica.
@@ -39,6 +28,7 @@ AFRAME.registerComponent('beat', {
     anticipationPosition: {default: 0},
     color: {default: 'red', oneOf: ['red', 'blue']},
     cutDirection: {default: 'down'},
+    rotationOffset: {default: 0},
     debug: {default: false},
     horizontalPosition: {default: 1},
     size: {default: 0.40},
@@ -301,7 +291,7 @@ AFRAME.registerComponent('beat', {
       getVerticalPosition(data.verticalPosition),
       data.anticipationPosition + data.warmupPosition
     );
-    el.object3D.rotation.set(0, 0, THREE.Math.degToRad(this.rotations[data.cutDirection]));
+    el.object3D.rotation.set(0, 0, THREE.Math.degToRad(this.rotations[data.cutDirection] + (this.data.rotationOffset ? this.data.rotationOffset : 0.0)));
 
     // Set up rotation warmup.
     this.startRotationZ = this.el.object3D.rotation.z;

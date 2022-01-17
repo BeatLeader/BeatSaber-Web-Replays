@@ -1,3 +1,4 @@
+import {clamp} from '../utils';
 AFRAME.registerComponent('replay-player', {
     schema: {
     },
@@ -40,7 +41,7 @@ AFRAME.registerComponent('replay-player', {
     tock: function (time, delta) {
       let replay = this.replayDecoder.replay;
         if (this.song.isPlaying && replay) {
-          const currentTime = this.song.getCurrentTime();// - replay.info.midDeviation;
+          const currentTime = this.song.getCurrentTime();
           const frames = this.replayDecoder.replay.frames;
           var frameIndex = 0;
           while (frameIndex < frames.length - 2 && frames[frameIndex + 1].a < currentTime) {
@@ -114,10 +115,12 @@ AFRAME.registerComponent('replay-player', {
           var hrotation = euler.setFromQuaternion(hquat);
           headset.rotation.set(hrotation.x, hrotation.y + Math.PI, -hrotation.z + Math.PI);
 
-          povCamera.position = povCamera.position.lerp(headset.position, 5 * delta);
+          povCamera.position.copy(povCamera.position.lerp(headset.position, 5 * delta));
 
           if (povCamera.hquat) {
             hquat = povCamera.hquat.slerp(hquat, 5 * delta);
+          } else {
+            hquat = new THREE.Quaternion().copy(hquat);
           }
           hrotation = euler.setFromQuaternion(hquat);
           
@@ -164,10 +167,12 @@ AFRAME.registerComponent('replay-player', {
           var hrotation = euler.setFromQuaternion(hquat);
           headset.rotation.set(-hrotation.x, hrotation.y + Math.PI, -hrotation.z + Math.PI);
 
-          povCamera.position = povCamera.position.lerp(headset.position, 5 * delta);
+          povCamera.position.copy(povCamera.position.lerp(headset.position, 5 * delta));
 
           if (povCamera.hquat) {
             hquat = povCamera.hquat.slerp(hquat, 5 * delta);
+          } else {
+            hquat = new THREE.Quaternion().copy(hquat);
           }
           hrotation = euler.setFromQuaternion(hquat);
           
@@ -175,5 +180,3 @@ AFRAME.registerComponent('replay-player', {
           povCamera.hquat = hquat;
     },
 });
-
-const clamp = (num, min, max) => Math.min(Math.max(num, min), max);

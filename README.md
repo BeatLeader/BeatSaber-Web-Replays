@@ -1,11 +1,11 @@
-# ScoreSaber replays
+# BeatSaber Web Replays
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/08ead0d0-ade4-4f38-8af4-9b6c3c679234/deploy-status)](https://app.netlify.com/sites/musing-aryabhata-6ae6ea/deploys)
 
 [A-Frame]: https://github.com/radulov/ngoframe
 [visit]: https://replay.beatleader.xyz/
 
-Web-based viewer for ScoreSaber replays, built with [A-Frame] and JavaScript.
+Web-based viewer for BeatSaber replays, built with [A-Frame] and JavaScript.
 
 **[CLICK TO VIEW][visit]**
 
@@ -24,13 +24,17 @@ id - BeatSaver song ID. ("Ov Sacrament" in this case)
 difficulty - Easy, Normal, Hard, Expert, ExpertPlus
 playerID - player's Steam or Oculus ID (cerret in this case)
 
-To directly link to a seeked time, use the `?time` parameter in the URL (milliseconds):
+To directly link to a seeked time, use the `?time` parameter in the URL (milliseconds, int, 0 to song duration):
 
 `https://www.replay.beatleader.xyz/?id=c32d&difficulty=ExpertPlus&playerID=76561198333869741&time=15000` - 15 sec
 
-To specify replay speed use the `?speed` paramater in the URL (percent):
+To specify replay speed use the `?speed` paramater in the URL (percent, int, 0 to 200):
 
 `https://www.replay.beatleader.xyz/?id=c32d&difficulty=ExpertPlus&playerID=76561198333869741&speed=50` - 50% speed
+
+To specify notes jump distance use the `?jd` paramater in the URL (meters, float, 5 to 50):
+
+`https://www.replay.beatleader.xyz/?id=c32d&difficulty=ExpertPlus&playerID=76561198333869741&jd=18.6` - 18.6 JD
 
 ## Roadmap
 
@@ -53,6 +57,8 @@ building VR experiences. And JavaScript.
 ```
 npm install
 ```
+
+Uses [Open Replay Format](https://github.com/radulov/BS-Open-Replay)
 
 ### Configure Netlify account 
 

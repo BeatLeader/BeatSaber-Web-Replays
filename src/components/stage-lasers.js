@@ -17,6 +17,9 @@ AFRAME.registerComponent('stage-lasers', {
   },
 
   tick: function (time, delta) {
+    this.lasers[0].updateMatrix(true);
+    this.lasers[1].updateMatrix(true);
+    this.lasers[2].updateMatrix(true);
     if (this.speed === 0) { return; }
     delta /= 1000;
     if (!this.data.enabled) {

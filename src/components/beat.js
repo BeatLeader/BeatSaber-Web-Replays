@@ -220,14 +220,6 @@ AFRAME.registerComponent('beat', {
         el.object3D.rotation.z = this.rotationZStart + (progress * this.rotationZChange);
     }
 
-    // Vector3 headPseudoLocalPos = this._playerTransforms.headPseudoLocalPos;
-    //   headPseudoLocalPos.y = Mathf.Lerp(headPseudoLocalPos.y, this._localPosition.y, 0.8f);
-    //   Vector3 normalized = (this._localPosition - this._inverseWorldRotation * headPseudoLocalPos).normalized;
-    //   Quaternion b = new Quaternion();
-    //   Vector3 vector3 = this._playerSpaceConvertor.worldToPlayerSpaceRotation * this._rotatedObject.up;
-    //   b.SetLookRotation(normalized, this._inverseWorldRotation * vector3);
-    //   this._rotatedObject.localRotation = Quaternion.Lerp(a, b, t * 2f);
-
     if (t >= 0.5 && t <= 1 && data.type != 'mine') {
       var headPseudoLocalPos = this.headset.object3D.position.clone();
       var localPosition = position.clone();
@@ -538,6 +530,10 @@ AFRAME.registerComponent('beat', {
       }
       return; 
     }
+
+    if (this.replayNote.score > 0) {
+      this.el.emit('wrongMiss', null, true);
+    }
     
     this.postScoreEvent();
     this.showScore(hand);
@@ -683,11 +679,11 @@ AFRAME.registerComponent('beat', {
         this.returnToPool(true);
       }
 
-      if (!this.settings.settings.noEffects) {
-        this.explodeEventDetail.position = this.el.object3D.position;
-        this.explodeEventDetail.rotation = auxObj3D.rotation;
-        this.particles.emit('explode', this.explodeEventDetail, false);
-      }
+      // if (!this.settings.settings.noEffects) {
+      //   this.explodeEventDetail.position = this.el.object3D.position;
+      //   this.explodeEventDetail.rotation = auxObj3D.rotation;
+      //   this.particles.emit('explode', this.explodeEventDetail, false);
+      // }
     };
   })(),
 
@@ -921,19 +917,17 @@ AFRAME.registerComponent('beat', {
 
       let random = Math.random() / 4;
       scoreEl.setAttribute('animation__motionz', 'to', -6 - random);
-      scoreEl.setAttribute('animation__motiony', 'to', 0.3 + random);
-      if (scoreEl) {
-        scoreEl.object3D.position.copy(this.el.object3D.position);
-        scoreEl.object3D.position.x += 0.6; // One block right
-        scoreEl.object3D.position.z -= 3;
-        scoreEl.play();
-        scoreEl.emit('beatscorestart', null, false);
+      scoreEl.setAttribute('animation__motiony', 'to', -2 + this.el.object3D.position.y + random);
+      scoreEl.object3D.position.copy(this.el.object3D.position);
+      scoreEl.object3D.position.x += 0.6 + random; // One block right
+      scoreEl.object3D.position.z -= 3;
+      scoreEl.play();
+      scoreEl.emit('beatscorestart', null, false);
 
-        // if (score == 115 && !this.settings.settings.noEffects) {
-        //   this.superCuts[this.superCutIdx].components.supercutfx.createSuperCut(this.el.object3D.position);
-        //   this.superCutIdx = (this.superCutIdx + 1) % this.superCuts.length;
-        // }
-      }
+      // if (score == 115 && !this.settings.settings.noEffects) {
+      //   this.superCuts[this.superCutIdx].components.supercutfx.createSuperCut(this.el.object3D.position);
+      //   this.superCutIdx = (this.superCutIdx + 1) % this.superCuts.length;
+      // }
     }
   },
 

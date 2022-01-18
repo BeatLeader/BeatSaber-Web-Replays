@@ -46,6 +46,7 @@ AFRAME.registerComponent('twister', {
     var material = this.el.sceneEl.systems.materials.stageNormal;
     var mesh = new THREE.Mesh(this.geometry, material);
     this.el.object3D.add(mesh);
+    this.el.object3D.parent.updateMatrixWorld(true);
   },
 
   createSegment: function (radius) {

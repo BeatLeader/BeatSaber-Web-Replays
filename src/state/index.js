@@ -94,6 +94,7 @@ AFRAME.registerState({
     isSongBufferProcessing: false,
     useractive: false,
     showControls: true,
+    wrongMisses: 0,
     settings: {showHeadset: false}
   },
 
@@ -357,6 +358,11 @@ AFRAME.registerState({
 
     useractive: (state, payload) => {
       state.useractive = payload.isActive;
+    },
+
+    wrongMiss: (state, payload) => {
+      state.wrongMisses++;
+      console.log("Wrong miss #" + state.wrongMisses);
     },
 
     'enter-vr': state => {

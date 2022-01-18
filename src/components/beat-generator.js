@@ -501,7 +501,7 @@ AFRAME.registerComponent('beat-generator', {
     } else {
       if (Math.abs(line2) > 40) return;
       noteData1.cutDirectionAngleOffset = line2;
-      if (noteData2._cutDirection == ANY_CUT_DIRECTION && noteData2._cutDirection > NoteCutDirection.Right) {
+      if (noteData2._cutDirection == ANY_CUT_DIRECTION && noteData1._cutDirection > NoteCutDirection.Right) {
         noteData2.cutDirectionAngleOffset = line2 + 45;
       } else {
         noteData2.cutDirectionAngleOffset = line2;

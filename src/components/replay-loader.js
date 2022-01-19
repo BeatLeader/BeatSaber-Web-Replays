@@ -164,6 +164,7 @@ AFRAME.registerComponent('replay-loader', {
       var multiplier = 1, lastmultiplier = 1;
       var score = 0, noteIndex = 0;
       var combo = 0;
+      var misses = 0;
 
       for (var i = 0; i < allStructs.length; i++) {
         let note = allStructs[i];
@@ -172,6 +173,7 @@ AFRAME.registerComponent('replay-loader', {
           multiplier = multiplier > 1 ? Math.ceil(multiplier / 2) : 1;
           lastmultiplier = multiplier;
           combo = 0;
+          misses++;
         } else {
           score += multiplier * note.score;
           combo++;
@@ -181,6 +183,7 @@ AFRAME.registerComponent('replay-loader', {
         note.multiplier = multiplier;
         note.totalScore = score;
         note.combo = combo;
+        note.misses = misses;
 
         if (note.isBlock) {
           note.accuracy = (note.totalScore / this.maxScoreForNote(noteIndex) * 100).toFixed(2);

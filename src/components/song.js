@@ -79,11 +79,7 @@ AFRAME.registerComponent('song', {
 
     // Resume.
     if (oldData.isPaused && !data.isPaused) {
-      if (navigator.userAgent.indexOf('Chrome') !== -1) {
-        this.source.playbackRate.value = this.speed;
-      }
-
-        this.audioAnalyser.resumeContext();
+      this.audioAnalyser.resumeContext();
       this.isPlaying = true;
     }
 
@@ -109,10 +105,6 @@ AFRAME.registerComponent('song', {
 
     // Pause / stop.
     if (!oldData.isPaused && data.isPaused) {
-      if (navigator.userAgent.indexOf('Chrome') !== -1) {
-        // Stupid Chrome audio policies. Can't resume.
-        this.source.playbackRate.value = 0.000000001;
-      }
       this.audioAnalyser.suspendContext();
       this.isPlaying = false;
     }
@@ -217,7 +209,5 @@ AFRAME.registerComponent('song', {
     this.lastContextTime = this.context.currentTime;
 
     return newCurrent;
-
-    // return this.context.currentTime - this.songStartTime;
   }
 });

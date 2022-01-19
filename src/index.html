@@ -34,18 +34,23 @@
     <meta name="twitter:image:alt" content="BeatSaber replays">
     <meta name="twitter:card" content="summary_large_image">
 
-    <meta name="twitter:player" content="#" />
     <meta name="twitter:player:width" content="1280" />
     <meta name="twitter:player:height" content="720" />
     <meta name="twitter:card" content="player">
 
     <meta property="og:type" content="video.other">
-    <meta property="og:url" content="#">
-    <meta property="og:video:url" content="#">
-    <meta property="og:video:secure_url" content="#">
     <meta property="og:video:type" content="text/html">
     <meta property="og:video:width" content="1280">
     <meta property="og:video:height" content="720">
+
+    <script>
+      ["og:url", "og:video:url", "og:video:secure_url", "twitter:player"].forEach(attribute => {
+        var link = document.createElement('meta');  
+        link.setAttribute('property', attribute);   
+        link.content = document.location;  
+        document.getElementsByTagName('head')[0].appendChild(link);
+      });
+    </script>
 
     <script type="text/javascript">
       window.vrDisabled = true;

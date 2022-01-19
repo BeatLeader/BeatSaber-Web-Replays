@@ -143,7 +143,7 @@ AFRAME.registerComponent('beat', {
     };
   },
 
-  update: function () {
+  update: function (oldData) {
     this.updateBlock();
     this.updateFragments();
 
@@ -154,11 +154,12 @@ AFRAME.registerComponent('beat', {
     }
 
     if (this.data.loadingCube) {
-      if (this.data.visible) {
+      if (!oldData.visible && this.data.visible) {
+        this.signEl.object3D.visible = false;
         this.setObjModelFromTemplate(this.signEl, this.signModels[this.data.type + this.data.color], this.el.sceneEl.systems.materials.clearStageAdditive);
         this.el.object3D.rotation.y = (this.data.color == 'red' ? 1 : -1) * Math.PI / 4;
         this.el.object3D.rotation.z = Math.PI / 4;
-      } else {
+      } else if (oldData.visible && !this.data.visible) {
         this.returnToPool();
       }
     }
@@ -236,6 +237,9 @@ AFRAME.registerComponent('beat', {
   tock: function (time, timeDelta) {
     if (this.data.loadingCube) {
       if (this.data.animating) {
+        if (!this.signEl.object3D.visible && this.signEl.getObject3D("mesh").material) {
+          this.signEl.object3D.visible = true;
+        }
         let object = this.el.object3D;
         const m = Math.cos(time / 300);
         const m2 = Math.cos(time / 300 - Math.PI / 2);
@@ -907,19 +911,23 @@ AFRAME.registerComponent('beat', {
       
     } else {
       const scoreEl = this.el.sceneEl.components["pool__beatscoreok"].requestEntity();
+      const colorAndScale = this.colorAndScaleForScore(score);
       scoreEl.setAttribute('text', 'value', "" + score);
+      scoreEl.setAttribute('text', 'color', colorAndScale.color);
+
+      scoreEl.setAttribute('text', 'wrapCount', 33 - colorAndScale.scale * 15);
 
       let duration = 500 / this.song.speed;
       scoreEl.setAttribute('animation__opacityin', 'dur', duration);
       scoreEl.setAttribute('animation__opacityout', 'dur', duration);
-      scoreEl.setAttribute('animation__motionz', 'dur', duration);
+      scoreEl.setAttribute('animation__motionz', 'dur', duration * 3);
       scoreEl.setAttribute('animation__motiony', 'dur', duration);
 
       let random = Math.random() / 4;
-      scoreEl.setAttribute('animation__motionz', 'to', -6 - random);
-      scoreEl.setAttribute('animation__motiony', 'to', -2 + this.el.object3D.position.y + random);
+      scoreEl.setAttribute('animation__motionz', 'to', -8 - random);
+      scoreEl.setAttribute('animation__motiony', 'to', -1 + this.el.object3D.position.y / 3);
       scoreEl.object3D.position.copy(this.el.object3D.position);
-      scoreEl.object3D.position.x += 0.6 + random; // One block right
+      scoreEl.object3D.position.x += 0.6; // One block right
       scoreEl.object3D.position.z -= 3;
       scoreEl.play();
       scoreEl.emit('beatscorestart', null, false);
@@ -930,6 +938,32 @@ AFRAME.registerComponent('beat', {
       // }
     }
   },
+
+  colorAndScaleForScore: (function () {
+    var color = new THREE.Color();
+    var fadeColor = new THREE.Color();
+
+    return function (score) {
+      const judgments = HSVConfig["judgments"];
+      let judgment;
+      let fadeJudgment;
+      for (var i = judgments.length - 1; i >= 0; i--) {
+        if (judgments[i].threshold >= score) {
+          judgment = judgments[i];
+          fadeJudgment = judgments[i + 1];
+          break;
+        }
+      }
+
+      color.setRGB(judgment.color[0], judgment.color[1], judgment.color[2])
+      fadeColor.setRGB(fadeJudgment.color[0], fadeJudgment.color[1], fadeJudgment.color[2]);
+
+      const resultColor = fadeColor.lerp(color, (score - fadeJudgment.threshold) / (judgment.threshold - fadeJudgment.threshold));
+      const resultScale = (1.4 - (115 - score) / 115);
+
+      return {color: "#" + resultColor.getHexString(), scale: Math.max(0.7, resultScale)};
+    }
+  })(),
 
   tockDestroyed: (function () {
     var leftCutNormal = new THREE.Vector3();
@@ -1015,4 +1049,98 @@ AFRAME.registerComponent('beat', {
 function getGravityVelocity (velocity, timeDelta) {
   const GRAVITY = -9.8;
   return velocity + (GRAVITY * (timeDelta / 1000));
+}
+
+const HSVConfig = {
+  "judgments": [
+    {
+      "threshold": 115,
+      "text": "<size=115%>%s</size>%n%n%B %C %A",
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "fade": false
+    },
+    {
+      "threshold": 113,
+      "text": "<size=115%>%s</size>%n%n%B %C %A",
+      "color": [
+        0.5,
+        0.0,
+        0.85,
+        1.0
+      ],
+      "fade": false
+    },
+
+    {
+      "threshold": 110,
+      "text": "<size=115%>%s</size>%n%n%B %C %A",
+      "color": [
+        0.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "fade": false
+    },
+    {
+      "threshold": 105,
+      "text": "<size=115%>%s</size>%n%n%B %C %A",
+      "color": [
+        0.0,
+        1.0,
+        0.0,
+        1.0
+      ],
+      "fade": false
+    },
+    {
+      "threshold": 100,
+      "text": "<size=115%>%s</size>%n%n%B %C %A",
+      "color": [
+        1.0,
+        0.980392158,
+        0.0,
+        1.0
+      ],
+      "fade": false
+    },
+    {
+      "threshold": 70,
+      "text": "<size=115%>%s</size>%n%n%B %C %A",
+      "color": [
+        1.0,
+        0.6,
+        0.0,
+        1.0
+      ],
+      "fade": false
+    },
+    {
+      "threshold": 50,
+      "text": "<size=115%>%s</size>%n%n%B %C %A",
+      "color": [
+        1.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "fade": false
+    },
+    {
+      "threshold": 0,
+      "text": "<size=115%>%s</size>%n%n%B %C %A",
+      "color": [
+        0.3,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "fade": false
+    }
+  ],
 }

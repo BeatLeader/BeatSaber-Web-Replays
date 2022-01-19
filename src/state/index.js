@@ -26,6 +26,19 @@ const emptyChallenge = {
   songSubNameShort: ''
 };
 
+const emptyScore = {
+  accuracy: 0,
+  beatsHit: 0,
+  beatsMissed: 0,
+  beatsText: '',
+  combo: 0,
+  maxCombo: 0,
+  multiplier: 1,
+  rank: '',
+  score: 0,
+  misses: 0
+};
+
 const isSafari = navigator.userAgent.toLowerCase().indexOf('safari') !== -1 &&
                  navigator.userAgent.toLowerCase().indexOf('chrome') === -1;
                  
@@ -61,17 +74,7 @@ AFRAME.registerState({
       isBeatsPreloaded: false,  // Whether we have passed the negative time.
       loadErrorText: '',
     }, emptyChallenge),
-    score: {
-      accuracy: 0,  // Out of 100.
-      beatsHit: 0,
-      beatsMissed: 0,
-      beatsText: '',
-      combo: 0,
-      maxCombo: 0,
-      multiplier: 1,
-      rank: '',  // Grade (S to F).
-      score: 0
-    },
+    score: emptyScore,
     notes: null,
     replay: {
       isLoading: false,
@@ -95,6 +98,7 @@ AFRAME.registerState({
     useractive: false,
     showControls: true,
     wrongMisses: 0,
+    timeoffset: 0.0,
     settings: {showHeadset: false}
   },
 
@@ -261,17 +265,7 @@ AFRAME.registerState({
       state.isPaused = false;
       state.isFinished = false;
       state.isSongBufferProcessing = true;
-      state.score = {
-        accuracy: 0,
-        beatsHit: 0,
-        beatsMissed: 0,
-        beatsText: '',
-        combo: 0,
-        maxCombo: 0,
-        multiplier: 1,
-        rank: '',
-        score: 0
-      }
+      state.score = emptyScore;
       state.lastNoteTime = 0;
     },
 
@@ -407,8 +401,9 @@ function updateScore (state, payload) {
   state.score.combo = note.combo;
   state.score.multiplier = note.multiplier;
   state.score.accuracy = note.accuracy;
+  state.score.misses = note.misses;
   state.lastNoteTime = note.time;
 
-  // console.log(note.totalScore + " - " + note.index + " - " + note.time + " - " + payload.index);
+  // console.log(note.totalScore + " - " + note.index + " - " + note.i + " - " + note.time + " - " + payload.index + " - " + note.score);
 }
 

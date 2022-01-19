@@ -28,6 +28,16 @@
   </a-entity>
 
   <a-entity
+    id="misses"
+    mixin="scoreText"
+    bind__text="value: 'Misses\n' + score.misses"
+    text="width: 1; lineHeight: 40"
+    position="-1.8 2.0 -4"
+    bind__visible="score.misses > 0"
+    scale="5 5 5">
+  </a-entity>
+
+  <a-entity
     id="combo"
     mixin="scoreText"
     bind__text="value: 'COMBO\n' + score.combo"

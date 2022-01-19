@@ -26,6 +26,7 @@ AFRAME.registerComponent('replay-player', {
         this.euler = new THREE.Euler();
         this.v1 = new THREE.Vector3();
         this.v2 = new THREE.Vector3();
+        this.v3 = new THREE.Vector3();
 
         this.q1 = new THREE.Quaternion();
         this.q2 = new THREE.Quaternion();
@@ -115,7 +116,9 @@ AFRAME.registerComponent('replay-player', {
           var hrotation = euler.setFromQuaternion(hquat);
           headset.rotation.set(hrotation.x, hrotation.y + Math.PI, -hrotation.z + Math.PI);
 
-          povCamera.position.copy(povCamera.position.lerp(headset.position, 5 * delta));
+          this.v3.copy(headset.position);
+          this.v3.z += 1;
+          povCamera.position.copy(povCamera.position.lerp(this.v3, 5 * delta));
 
           if (povCamera.hquat) {
             hquat = povCamera.hquat.slerp(hquat, 5 * delta);
@@ -167,7 +170,9 @@ AFRAME.registerComponent('replay-player', {
           var hrotation = euler.setFromQuaternion(hquat);
           headset.rotation.set(-hrotation.x, hrotation.y + Math.PI, -hrotation.z + Math.PI);
 
-          povCamera.position.copy(povCamera.position.lerp(headset.position, 5 * delta));
+          this.v3.copy(headset.position);
+          this.v3.z += 1;
+          povCamera.position.copy(povCamera.position.lerp(this.v3, 5 * delta));
 
           if (povCamera.hquat) {
             hquat = povCamera.hquat.slerp(hquat, 5 * delta);

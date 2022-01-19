@@ -164,6 +164,7 @@ AFRAME.registerComponent('wall', {
     const data = this.data;
     const halfDepth = data.durationSeconds * data.speed / 2;
     const position = this.el.object3D.position;
+    const currentTime = this.song.getCurrentTime();
     
     this.updatePosition();
 

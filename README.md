@@ -3,13 +3,13 @@
 [![Netlify Status](https://api.netlify.com/api/v1/badges/08ead0d0-ade4-4f38-8af4-9b6c3c679234/deploy-status)](https://app.netlify.com/sites/musing-aryabhata-6ae6ea/deploys)
 
 [A-Frame]: https://github.com/radulov/ngoframe
-[visit]: https://replay.beatleader.xyz/
+[visit]: https://www.replay.beatleader.xyz/?id=c32d&difficulty=ExpertPlus&playerID=76561198333869741
 
 Web-based viewer for BeatSaber replays, built with [A-Frame] and JavaScript.
 
 **[CLICK TO VIEW][visit]**
 
-![https://replay.beatleader.xyz/](assets/img/preview.png)
+![https://www.replay.beatleader.xyz/?id=c32d&difficulty=ExpertPlus&playerID=76561198333869741](assets/img/preview.png)
 
 ## Usage
 
@@ -44,7 +44,7 @@ To specify notes jump distance use the `?jd` paramater in the URL (meters, float
 
 ## Community
 
-*The ScoreSaber replays is an unofficial community project and not officially
+*The BeatSaber Web Replays is an unofficial community project and not officially
 affiliated with Beat Saber.*
 
 - [BeatLeader Discord](https://discord.gg/2RG5YVqtG6)

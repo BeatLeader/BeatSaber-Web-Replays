@@ -12,7 +12,8 @@ AFRAME.registerComponent('settings', {
         volume: 0.3,
         showFps: false,
         savedCameraDefault: false,
-        highlightErrors: false
+        highlightErrors: false,
+        colorScores: true
       }
 
       try {

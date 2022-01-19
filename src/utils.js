@@ -31,6 +31,13 @@ const NoteCutDirection = {
   None: 9,
 }
 
+const NoteErrorType = {
+  BadCut: -2,
+  Miss: -3,
+  Bomb: -4,
+  Wall: -5
+}
+
 function directionVector(cutDirection) {
   switch (cutDirection) {
     case NoteCutDirection.Up:
@@ -71,5 +78,6 @@ module.exports.getVerticalPosition = getVerticalPosition;
 module.exports.get2DNoteOffset = get2DNoteOffset;
 module.exports.directionVector = directionVector;
 module.exports.NoteCutDirection = NoteCutDirection;
+module.exports.NoteErrorType = NoteErrorType;
 module.exports.signedAngle = signedAngle;
 module.exports.clamp = clamp;

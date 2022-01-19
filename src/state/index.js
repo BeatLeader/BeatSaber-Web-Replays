@@ -98,7 +98,6 @@ AFRAME.registerState({
     useractive: false,
     showControls: true,
     wrongMisses: 0,
-    timeoffset: 0.0,
     settings: {showHeadset: false}
   },
 

@@ -1,6 +1,6 @@
 import { toLong } from 'ip';
 import {BEAT_WARMUP_OFFSET, BEAT_WARMUP_SPEED, BEAT_WARMUP_TIME} from '../constants/beat';
-import {getHorizontalPosition, getVerticalPosition} from '../utils';
+import {getHorizontalPosition, getVerticalPosition, NoteErrorType} from '../utils';
 const COLORS = require('../constants/colors.js');
 
 const auxObj3D = new THREE.Object3D();
@@ -261,8 +261,13 @@ AFRAME.registerComponent('beat', {
 
       this.updatePosition();
 
-      this.backToPool = position.z >= 2;
+      if (this.data.type != 'mine' && position.z > 0 && this.replayNote.score != NoteErrorType.Miss && this.song.getCurrentTime() > this.replayNote.time) {
+        this.showScore();
+        this.destroyBeat(this.saberEls[this.replayNote.colorType]);
+      } else {
+        this.backToPool = position.z >= 2;
         if (this.backToPool) { this.missHit(); }
+      }
     }
     if (this.hitboxObject) {
       this.hitboxObject.visible = !this.destroyed && this.settings.settings.showHitboxes;
@@ -302,7 +307,6 @@ AFRAME.registerComponent('beat', {
     // Reset mine.
     if (data.type == 'mine') { 
       this.resetMineFragments();
-      this.blockEl.getObject3D('mesh').material = this.el.sceneEl.systems.materials['mineMaterial' + this.data.color];
       const bombs = this.replayLoader.bombs;
       if (bombs) {
         for (var i = 0; i < bombs.length; i++) {
@@ -384,30 +388,31 @@ AFRAME.registerComponent('beat', {
     const signEl = this.signEl;
     if (!blockEl) { return; }
 
-    blockEl.setAttribute('material', {
-      metalness: 0.7,
-      roughness: 0.1,
-      sphericalEnvMap: '#envmapTexture',
-      emissive: this.materialColor[this.data.color],
-      emissiveIntensity: 0.05,
-      color: this.materialColor[this.data.color]
-    });
+    if (this.data.type === 'mine') {
+      blockEl.setAttribute('material', {
+        roughness: 0.38,
+        metalness: 0.48,
+        sphericalEnvMap: '#mineTexture',
+        emissive: new THREE.Color(COLORS.MINE_RED_EMISSION),
+        color: new THREE.Color(COLORS.MINE_RED),
+      });
+    } else {
+      blockEl.setAttribute('material', {
+        metalness: 0.7,
+        roughness: 0.1,
+        sphericalEnvMap: '#envmapTexture',
+        emissive: this.materialColor[this.data.color],
+        emissiveIntensity: 0.05,
+        color: this.materialColor[this.data.color]
+      });
+    }
     this.setObjModelFromTemplate(blockEl, this.models[this.data.type]);
 
     // Model is 0.29 size. We make it 1.0 so we can easily scale based on 1m size.
     blockEl.object3D.scale.set(1, 1, 1);
     blockEl.object3D.scale.multiplyScalar(3.45).multiplyScalar(this.data.size);
 
-    if (this.data.type === 'mine') {
-      const model = blockEl.getObject3D('mesh');
-      if (model) {
-        model.material = this.el.sceneEl.systems.materials['mineMaterial' + this.data.color];
-      } else {
-        blockEl.addEventListener('model-loaded', () => {
-          model.material = this.el.sceneEl.systems.materials['mineMaterial' + this.data.color];
-        }, ONCE);
-      }
-    } else {
+    if (this.data.type !== 'mine') {
       // Uncomment in case of new Chrome version 
       // signEl.setAttribute('materials', "name: clearStageAdditive");
       this.setObjModelFromTemplate(signEl, this.signModels[this.data.type + this.data.color], this.el.sceneEl.systems.materials.clearStageAdditive);
@@ -548,7 +553,7 @@ AFRAME.registerComponent('beat', {
   },
 
   postScoreEvent: function () {
-      this.el.emit('scoreChanged', {index: this.replayNote.i}, true);
+    this.el.emit('scoreChanged', {index: this.replayNote.i}, true);
   },
 
   destroyMine: function () {
@@ -913,14 +918,23 @@ AFRAME.registerComponent('beat', {
       const scoreEl = this.el.sceneEl.components["pool__beatscoreok"].requestEntity();
       const colorAndScale = this.colorAndScaleForScore(score);
       scoreEl.setAttribute('text', 'value', "" + score);
-      scoreEl.setAttribute('text', 'color', colorAndScale.color);
-
-      scoreEl.setAttribute('text', 'wrapCount', 33 - colorAndScale.scale * 15);
 
       let duration = 500 / this.song.speed;
+      if (this.settings.settings.colorScores) {
+        scoreEl.setAttribute('text', 'color', colorAndScale.color);
+        scoreEl.setAttribute('text', 'wrapCount', 33 - colorAndScale.scale * 15);
+        scoreEl.setAttribute('animation__motionz', 'dur', duration * 3);
+        scoreEl.setAttribute('animation__motionz', 'easing', 'linear');
+      } else {
+        scoreEl.setAttribute('text', 'color', "#fff");
+        scoreEl.setAttribute('text', 'wrapCount', 18);
+        scoreEl.setAttribute('animation__motionz', 'dur', duration);
+        scoreEl.setAttribute('animation__motionz', 'easing', 'easeOutQuart');
+      }
+      
       scoreEl.setAttribute('animation__opacityin', 'dur', duration);
       scoreEl.setAttribute('animation__opacityout', 'dur', duration);
-      scoreEl.setAttribute('animation__motionz', 'dur', duration * 3);
+      
       scoreEl.setAttribute('animation__motiony', 'dur', duration);
 
       let random = Math.random() / 4;
@@ -1028,7 +1042,7 @@ AFRAME.registerComponent('beat', {
         } else {
           templateEl.addEventListener('model-loaded', () => {
             geometries[templateId] = templateEl.getObject3D('mesh').children[0].geometry;
-            this.setObjModelFromTemplate(el, templateId);
+            this.setObjModelFromTemplate(el, templateId, material);
           });
           return;
         }

@@ -198,15 +198,16 @@ AFRAME.registerComponent('song', {
     if (this.songStartTime === undefined) return 0;
 
     let lastCurrentTime = this.lastCurrentTime;
+    const currentTime = this.context.currentTime;
     var newCurrent
     if (lastCurrentTime) {
-      newCurrent = lastCurrentTime + (this.context.currentTime - this.lastContextTime) * this.speed;
+      newCurrent = lastCurrentTime + (currentTime - this.lastContextTime) * this.speed;
     } else {
-      newCurrent = (this.context.currentTime - this.songStartTime) * this.speed;
+      newCurrent = (currentTime - this.songStartTime) * this.speed;
     }
 
     this.lastCurrentTime = newCurrent;
-    this.lastContextTime = this.context.currentTime;
+    this.lastContextTime = currentTime;
 
     return newCurrent;
   }

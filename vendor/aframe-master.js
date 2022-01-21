@@ -69108,7 +69108,12 @@ module.exports.Component = registerComponent('position', {
   update: function () {
     var object3D = this.el.object3D;
     var data = this.data;
+    this.needsUpdateMatrix = true;
     object3D.position.set(data.x, data.y, data.z);
+
+    setTimeout(() => {
+      object3D.updateMatrix(true);
+    }, 100);
   },
 
   remove: function () {
@@ -72802,7 +72807,7 @@ module.exports.Component = registerComponent('windows-motion-controls', {
 },{"../constants":98,"../core/component":106,"../utils/":179,"../utils/bind":173,"../utils/tracked-controls":185}],98:[function(_dereq_,module,exports){
 module.exports = {
   AFRAME_INJECTED: 'aframe-injected',
-  DEFAULT_CAMERA_HEIGHT: 1.6,
+  DEFAULT_CAMERA_HEIGHT: 1.75,
   DEFAULT_HANDEDNESS: 'right',
   keyboardevent: _dereq_('./keyboardevent')
 };
@@ -73342,6 +73347,7 @@ var proto = Object.create(ANode.prototype, {
         throw new Error("Trying to add an element that doesn't have an `object3D`");
       }
       this.object3D.add(el.object3D);
+      this.object3D.updateMatrixWorld(true);
       this.emit('child-attached', {el: el});
     }
   },
@@ -78366,7 +78372,7 @@ _dereq_('./core/a-mixin');
 _dereq_('./extras/components/');
 _dereq_('./extras/primitives/');
 
-console.log('A-Frame Version: 0.8.2 (Date 2022-01-18, Commit #ea721416)');
+console.log('A-Frame Version: 0.8.2 (Date 2022-01-21, Commit #ea721416)');
 console.log('three Version:', pkg.dependencies['three']);
 console.log('WebVR Polyfill Version:', pkg.dependencies['webvr-polyfill']);
 
@@ -81584,7 +81590,7 @@ THREE.VRControls = function ( object, onError ) {
 
   // Distance from the users eyes to the floor in meters. Used when
   // standing=true but the VRDisplay doesn't provide stageParameters.
-  this.userHeight = 1.6;
+  this.userHeight = 1.75;
 
   this.getVRDisplay = function () {
 

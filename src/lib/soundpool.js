@@ -9,7 +9,7 @@ module.exports = function SoundPool (src, volume) {
   pool.push(sound);
 
   return {
-    play: function () {
+    play: function (volume) {
       // Dynamic size pool.
       if (pool[currSound].currentTime !== 0 || !pool[currSound].ended) {
         sound = new Audio(src);
@@ -19,6 +19,7 @@ module.exports = function SoundPool (src, volume) {
       }
 
       if (pool[currSound].currentTime === 0 || pool[currSound].ended) {
+        pool[currSound].volume = volume;
         pool[currSound].play();
       }
       currSound = (currSound + 1) % pool.length;

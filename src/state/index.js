@@ -98,7 +98,7 @@ AFRAME.registerState({
     useractive: false,
     showControls: true,
     wrongMisses: 0,
-    settings: {showHeadset: false}
+    settings: {showHeadset: false, volume: 0.0}
   },
 
   handlers: {

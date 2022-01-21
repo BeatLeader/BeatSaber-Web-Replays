@@ -51,5 +51,6 @@ AFRAME.registerComponent('settings', {
     },
     sync: function() {
       localStorage.setItem('settings', JSON.stringify(this.settings))
+      this.el.sceneEl.emit('settingsChanged', {settings: this.settings}, false);
     }
   });

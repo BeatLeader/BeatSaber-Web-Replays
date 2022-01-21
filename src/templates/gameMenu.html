@@ -27,7 +27,8 @@
   render-order="hud"
   bind__visible="isPaused"
   position="0 1.1 -2"
-  play-sound="event: mouseenter; sound: #hoverSound; volume: 0.03">
+  play-sound="event: mouseenter; sound: #hoverSound"
+  bind__play-sound="volume: settings.volume * 0.1">
 
   <!-- Actions. -->
   <a-entity

@@ -9,7 +9,7 @@ AFRAME.registerComponent('score-beat', {
   play: function () {
     this.poolComponent = `pool__beatscore${this.data.type}`;
     this.startTime = this.el.sceneEl.time;
-    this.animationDuration = this.el.getAttribute('animation__motionz', 'dur').dur;
+    this.animationDuration = Math.min(this.el.getAttribute('animation__motionz', 'dur').dur, 3000);
   },
 
   tick: function (time) {

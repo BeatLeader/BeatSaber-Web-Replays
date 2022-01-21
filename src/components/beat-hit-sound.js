@@ -3,7 +3,7 @@ var sourceCreatedCallback;
 const LAYER_BOTTOM = 'bottom';
 const LAYER_MIDDLE = 'middle';
 const LAYER_TOP = 'top';
-const VOLUME = 0.05;
+const VOLUME = 0.0;
 
 // Allows for modifying detune. PR has been sent to three.js.
 THREE.Audio.prototype.play = function () {
@@ -52,6 +52,7 @@ AFRAME.registerComponent('beat-hit-sound', {
     this.currentBeatEl = null;
     this.currentCutDirection = '';
     this.processSound = this.processSound.bind(this);
+    this.volume = VOLUME;
     sourceCreatedCallback = this.sourceCreatedCallback.bind(this);
 
     // Sound pools.
@@ -99,11 +100,13 @@ AFRAME.registerComponent('beat-hit-sound', {
   },
 
   playSound: function (beatEl, cutDirection) {
+    if (this.volume == 0) return;
+    
     const rand = 1 + Math.floor(Math.random() * 10);
     const dir = this.directionsToSounds[cutDirection || 'up'];
     const soundPool = this.el.components[`sound__beathit${rand}${dir}`];
     this.currentBeatEl = beatEl;
-    soundPool.playSound(this.processSound, soundPool.volume);
+    soundPool.playSound(this.processSound);
   },
 
   /**
@@ -111,6 +114,7 @@ AFRAME.registerComponent('beat-hit-sound', {
    */
   processSound: function (audio) {
     audio.detune = 0;
+    audio.setVolume(this.volume);
     this.currentBeatEl.object3D.getWorldPosition(audio.position);
   },
 
@@ -147,6 +151,7 @@ AFRAME.registerComponent('beat-hit-sound', {
 
   setVolume: function (volume) {
     volume = volume * 0.4;
+    this.volume = volume;
     for (let i = 1; i <= 10; i++) {
       for (let j = 0; j < 4; j++) {
         this.el.components[`sound__beathit${i}`].data.volume = volume;

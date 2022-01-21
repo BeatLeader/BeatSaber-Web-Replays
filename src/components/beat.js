@@ -158,7 +158,7 @@ AFRAME.registerComponent('beat', {
         this.signEl.object3D.visible = false;
         this.setObjModelFromTemplate(this.signEl, this.signModels[this.data.type + this.data.color], this.el.sceneEl.systems.materials.clearStageAdditive);
         this.el.object3D.rotation.y = (this.data.color == 'red' ? 1 : -1) * Math.PI / 4;
-        this.el.object3D.rotation.z = Math.PI / 4;
+        this.el.object3D.rotation.z = (this.data.color == 'red' ? 1 : -1) * Math.PI / 4;
       } else if (oldData.visible && !this.data.visible) {
         this.returnToPool();
       }

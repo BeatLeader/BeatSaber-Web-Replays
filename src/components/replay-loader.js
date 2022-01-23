@@ -1,6 +1,8 @@
+const dragDrop = require('drag-drop');
+
 AFRAME.registerComponent('replay-loader', {
     schema: {
-      playerID: {default: (AFRAME.utils.getUrlParameter('playerID') || '76561198059961776')},
+      playerID: {default: (AFRAME.utils.getUrlParameter('playerID'))},
       isSafari: {default: false},
       difficulty: {default: (AFRAME.utils.getUrlParameter('difficulty') || 'ExpertPlus' )},
       mode: {default: AFRAME.utils.getUrlParameter('mode') || 'Standard'}
@@ -11,12 +13,20 @@ AFRAME.registerComponent('replay-loader', {
       this.user = null;
 
       let captureThis = this;
-      document.addEventListener('songFetched', (e) => {
-        captureThis.songFetched(e.detail.hash);
-      });
+      
       this.el.addEventListener('challengeloadend', (e) => {
         captureThis.challengeloadend(e.detail);
       });
+
+      if (!this.data.playerID.length) {
+        dragDrop('#body', (files) => {
+          this.fetchByFile(files[0]);
+        });
+      } else {
+        document.addEventListener('songFetched', (e) => {
+          captureThis.songFetched(e.detail.hash);
+        });
+      }
     },
 
     difficultyNumber: function (name) {
@@ -42,6 +52,7 @@ AFRAME.registerComponent('replay-loader', {
     },
 
     songFetched: function (hash) {
+      console.log("fetched");
       this.el.sceneEl.emit('replayloadstart', null);
       fetch(`/cors/score-saber/api/leaderboard/by-hash/${hash}/info?difficulty=${this.difficultyNumber(this.data.difficulty)}`).then(res => {
         res.json().then(leaderbord => {
@@ -50,6 +61,7 @@ AFRAME.registerComponent('replay-loader', {
               let replay = JSON.parse(data);
               if (replay.frames) {
                 this.replay = replay;
+                this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash }, null);
                 if (this.challenge) {
                   this.processScores();
                 }
@@ -72,6 +84,43 @@ AFRAME.registerComponent('replay-loader', {
             }, null);
         });
       });
+    },
+
+    fetchByFile: function (file) {
+      this.el.sceneEl.emit('replayloadstart', null);
+      fetch('https://sspreviewdecode.azurewebsites.net', {
+        method: 'POST',
+        body: file
+      }).then(response => response.json()).then(
+        data => {
+          let replay = JSON.parse(data);
+          if (replay.frames) {
+            this.replay = replay;
+            this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash }, null);
+            if (this.challenge) {
+              this.processScores();
+            }
+          } else {
+            this.el.sceneEl.emit('replayloadfailed', { error: replay.errorMessage }, null);
+          }
+      }).catch(
+        error => this.el.sceneEl.emit('replayloadfailed', {error}, null) // Handle the error response object
+      );
+      let playerId = file.name.split("-")[0];
+      if (playerId) {
+        fetch(`/cors/score-saber/api/player/${playerId}/full`).then(res => {
+          res.json().then(data => {
+              this.user = data;
+              this.el.sceneEl.emit('userloaded', {
+                name: this.user.name, 
+                avatar: this.user.profilePicture.replace('https://cdn.scoresaber.com/', '/cors/score-saber-cdn/'),
+                country: this.user.country,
+                countryIcon: `https://scoresaber.com/imports/images/flags/${this.user.country.toLowerCase()}.png`,
+                id: this.user.id
+              }, null);
+          });
+        });
+      }
     },
     processScores: function () {
       const replay = this.replay;

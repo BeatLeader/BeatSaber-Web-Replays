@@ -1,7 +1,7 @@
 <a-entity
   id="loadingSongInfoContainer"
   render-order="hud"
-  bind__visible="challenge.isLoading || replay.isLoading || !hasReceivedUserGesture || challenge.hasLoadError || replay.hasError"
+  bind__visible="challenge.isLoading || replay.isLoading || !hasReceivedUserGesture || challenge.hasLoadError || replay.hasError || localReplay"
   position="0 1.5 -1">
 
   <a-entity mixin="slice" slice9="opacity: 0.9; width: 0.77; height: 1; padding: 0.08" position="0 -0.02 -0.03"></a-entity>
@@ -12,6 +12,12 @@
     material="shader: flat; transparent: true; depthWrite: false"
     position="0 0.24 0"
     bind__visible="!!challenge.image && !challenge.hasLoadError"></a-entity>
+
+  <a-entity id="loadingSongImage"
+    geometry="primitive: plane; buffer: false; skipCache: true; height: 0.3; width: 0.3"
+    material="shader: flat; transparent: true; depthWrite: false; src: #favicon"
+    position="0 0.24 0"
+    bind__visible="!challenge.image || challenge.hasLoadError"></a-entity>
 
   <a-entity id="loadingSongInfo">
     <a-entity position="0 -0.05 0" mixin="font"
@@ -58,14 +64,34 @@
     </a-entity>
 
     <a-entity
+      id="loadingText"
+      mixin="font"
+      bind__visible="localReplay"
+      text="align: center; color: #FAFAFA; wrapCount: 18; width: 0.65; value: BeatSaber replay viewer"
+      position="0 -0.1 0.001"></a-entity>
+
+    <a-entity
       id="loadingGestureButton"
       mixin="bigMenuButton"
-      bind__visible-raycastable="!challenge.isLoading && !replay.isLoading && !isPlaying && !isPaused && !hasReceivedUserGesture && !isSongBufferProcessing && !challenge.hasLoadError && !replay.hasError"
+      bind__visible-raycastable="!challenge.isLoading && !replay.isLoading && !isPlaying && !isPaused && (!hasReceivedUserGesture || localReplay) && !isSongBufferProcessing && !challenge.hasLoadError && !replay.hasError"
       position="0 -0.31923 0.01"
       proxy-event="event: click; to: a-scene; as: usergesturereceive"
       slice9="width: 0.725"
       visible="false">
-      <a-entity id="loadingGestureText" mixin="font" text="align: center; color: #FAFAFA; wrapCount: 40; value: CLICK ANYWHERE TO PLAY" position="0 -0.0329 0.001"></a-entity>
+      <a-entity 
+        id="loadingGestureText" 
+        mixin="font" 
+        text="align: center; color: #FAFAFA; wrapCount: 40; value: CLICK ANYWHERE TO PLAY"
+        bind__visible="!localReplay"
+        position="0 -0.0329 0.001">
+      </a-entity>
+      <a-entity 
+        id="loadingGestureText" 
+        mixin="font" 
+        text="align: center; color: #FAFAFA; wrapCount: 40; value: DROP YOUR REPLAY HERE"
+        bind__visible="localReplay"
+        position="0 -0.0329 0.001">
+      </a-entity>
     </a-entity>
   </a-entity>
 </a-entity>
@@ -75,11 +101,11 @@
   bind__beat="animating: challenge.isLoading || replay.isLoading; visible: challenge.isLoading || replay.isLoading || !hasReceivedUserGesture || challenge.hasLoadError || replay.hasError"
   beat="color: blue; type: arrow; loadingCube: true" 
   position="1.0 1.5 -1.0" 
-  bind__visible="challenge.isLoading || replay.isLoading || !hasReceivedUserGesture || challenge.hasLoadError || replay.hasError"></a-entity>
+  bind__visible="challenge.isLoading || replay.isLoading || !hasReceivedUserGesture || challenge.hasLoadError || replay.hasError || localReplay"></a-entity>
 
 <a-entity 
   mixin="beat"
   bind__beat="animating: challenge.isLoading || replay.isLoading; visible: challenge.isLoading || replay.isLoading || !hasReceivedUserGesture || challenge.hasLoadError || replay.hasError"
   beat="color: red; type: arrow; loadingCube: true" 
   position="-1.0 1.5 -1.0" 
-  bind__visible="challenge.isLoading || replay.isLoading || !hasReceivedUserGesture || challenge.hasLoadError || replay.hasError"></a-entity>
+  bind__visible="challenge.isLoading || replay.isLoading || !hasReceivedUserGesture || challenge.hasLoadError || replay.hasError || localReplay"></a-entity>

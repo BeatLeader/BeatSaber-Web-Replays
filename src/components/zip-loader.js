@@ -20,6 +20,12 @@ AFRAME.registerComponent('zip-loader', {
     if (zipUrl) {
       this.fetchZip(zipUrl);
     }
+
+    if (!this.data.id && !this.data.hash) {
+      this.el.sceneEl.addEventListener('replayfetched', (e) => {
+        this.fetchData(e.detail.hash.replace("custom_level_", ""), true);
+      });
+    }
   },
 
   update: function (oldData) {
@@ -34,8 +40,6 @@ AFRAME.registerComponent('zip-loader', {
         this.fetchData(this.data.hash, true);
       }
      }
-
-    
   },
 
   play: function () {

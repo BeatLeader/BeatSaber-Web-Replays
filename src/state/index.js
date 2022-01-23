@@ -98,7 +98,8 @@ AFRAME.registerState({
     useractive: false,
     showControls: true,
     wrongMisses: 0,
-    settings: {showHeadset: false, volume: 0.0}
+    settings: {showHeadset: false, volume: 0.0},
+    localReplay: !AFRAME.utils.getUrlParameter('id') && !AFRAME.utils.getUrlParameter('hash')
   },
 
   handlers: {
@@ -160,6 +161,7 @@ AFRAME.registerState({
     },
 
     replayloadstart: (state, payload) => {
+      state.localReplay = false;
       state.replay.isLoading = true;
     },
 
@@ -373,7 +375,7 @@ AFRAME.registerState({
   computeState: state => {
     state.isPlaying =
       !state.isPaused && !state.isSongBufferProcessing &&
-      !state.challenge.isLoading && !state.replay.isLoading && !state.challenge.hasLoadError && !state.replay.hasError && state.hasReceivedUserGesture;
+      !state.challenge.isLoading && !state.replay.isLoading && !state.challenge.hasLoadError && !state.replay.hasError && state.hasReceivedUserGesture && !state.localReplay;
 
     state.showControls = state.useractive || !state.isPlaying;
   }

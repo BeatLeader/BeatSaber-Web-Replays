@@ -86,9 +86,9 @@ AFRAME.registerComponent('song-controls', {
       document.body.classList.remove('isPlaying');
     }
 
-    if (data.showControls) {
+    if (data.showControls && !oldData.showControls) {
       document.body.classList.add('showControls');
-    } else {
+    } else if (!data.showControls && oldData.showControls) {
       document.body.classList.remove('showControls');
     }
 

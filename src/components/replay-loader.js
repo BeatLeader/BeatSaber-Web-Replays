@@ -19,7 +19,7 @@ AFRAME.registerComponent('replay-loader', {
       });
 
       if (!this.data.playerID.length) {
-        dragDrop('#body', (files) => {
+        this.cleanup = dragDrop('#body', (files) => {
           this.fetchByFile(files[0]);
         });
       } else {
@@ -93,6 +93,7 @@ AFRAME.registerComponent('replay-loader', {
         body: file
       }).then(response => response.json()).then(
         data => {
+          this.cleanup();
           let replay = JSON.parse(data);
           if (replay.frames) {
             this.replay = replay;

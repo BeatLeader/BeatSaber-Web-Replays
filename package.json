@@ -39,6 +39,7 @@
     "classnames": "^2.2.5",
     "css-loader": "^0.23.1",
     "debug": "^4.1.0",
+    "drag-drop": "^7.2.0",
     "fswatch": "^0.1.4",
     "html-entities": "^1.2.1",
     "html-minifier": "^3.5.11",

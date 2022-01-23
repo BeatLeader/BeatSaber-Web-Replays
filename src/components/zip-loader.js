@@ -23,6 +23,7 @@ AFRAME.registerComponent('zip-loader', {
 
     if (!this.data.id && !this.data.hash) {
       this.el.sceneEl.addEventListener('replayfetched', (e) => {
+        this.data.difficulty = this.difficultyFromId(e.detail.difficulty);
         this.fetchData(e.detail.hash.replace("custom_level_", ""), true);
       });
     }
@@ -188,24 +189,14 @@ AFRAME.registerComponent('zip-loader', {
     loader.load();
   },
 
-  /**
-    * From dragged ZIP.
-    */
-  readFile: function (file) {
-    this.data.difficulty = '';
-    this.data.id = '';
-    this.el.emit('challengeloadstart', '', false);
-    ZipLoader.unzip(file).then(loader => {
-      Object.keys(loader.files).forEach(filename => {
-        if (filename.toLowerCase().endsWith('info.dat')) {
-          const id = jsonParseClean(loader.extractAsText(filename)).id;
-          this.el.emit('challengeloadstart', id, false);
-        }
-      });
-
-      removeIdQueryParam();
-      this.processFiles(loader, true);
-    });
+  difficultyFromId: function (diffId) {
+    switch (diffId) {
+      case 1: return "Easy"
+      case 3: return "Normal"
+      case 5: return "Hard"
+      case 7: return "Expert"
+      case 9: return "ExpertPlus"
+    }
   }
 });
 

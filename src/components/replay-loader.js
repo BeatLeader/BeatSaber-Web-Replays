@@ -61,7 +61,7 @@ AFRAME.registerComponent('replay-loader', {
               let replay = JSON.parse(data);
               if (replay.frames) {
                 this.replay = replay;
-                this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash }, null);
+                this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: replay.info.difficulty }, null);
                 if (this.challenge) {
                   this.processScores();
                 }
@@ -93,11 +93,11 @@ AFRAME.registerComponent('replay-loader', {
         body: file
       }).then(response => response.json()).then(
         data => {
-          this.cleanup();
           let replay = JSON.parse(data);
           if (replay.frames) {
             this.replay = replay;
-            this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash }, null);
+            this.cleanup();
+            this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: replay.info.difficulty }, null);
             if (this.challenge) {
               this.processScores();
             }

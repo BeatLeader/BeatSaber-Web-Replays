@@ -163,6 +163,8 @@ AFRAME.registerState({
     replayloadstart: (state, payload) => {
       state.localReplay = false;
       state.replay.isLoading = true;
+      state.replay.hasError = false;
+      state.replay.errorText = null;
     },
 
     replayloaded: (state, payload) => {
@@ -174,6 +176,7 @@ AFRAME.registerState({
       state.replay.isLoading = false;
       state.replay.hasError = true;
       state.replay.errorText = payload.error;
+      state.localReplay = !AFRAME.utils.getUrlParameter('id') && !AFRAME.utils.getUrlParameter('hash')
     },
 
     userloaded: (state, payload) => {

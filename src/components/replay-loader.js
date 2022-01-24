@@ -1,8 +1,10 @@
 const dragDrop = require('drag-drop');
+const DECODER_LINK = 'https://sspreviewdecode.azurewebsites.net'
 
 AFRAME.registerComponent('replay-loader', {
     schema: {
       playerID: {default: (AFRAME.utils.getUrlParameter('playerID'))},
+      link: {default: (AFRAME.utils.getUrlParameter('link'))},
       isSafari: {default: false},
       difficulty: {default: (AFRAME.utils.getUrlParameter('difficulty') || 'ExpertPlus' )},
       mode: {default: AFRAME.utils.getUrlParameter('mode') || 'Standard'}
@@ -11,14 +13,13 @@ AFRAME.registerComponent('replay-loader', {
     init: function () {
       this.replay = null;
       this.user = null;
+    },
 
+    update: function () {
       let captureThis = this;
-      
-      this.el.addEventListener('challengeloadend', (e) => {
-        captureThis.challengeloadend(e.detail);
-      });
-
-      if (!this.data.playerID.length) {
+      if (this.data.link.length) {
+        setTimeout(() => this.fetchByFile(this.data.link, true), 300);
+      } else if (!this.data.playerID.length) {
         this.cleanup = dragDrop('#body', (files) => {
           this.fetchByFile(files[0]);
         });
@@ -27,6 +28,10 @@ AFRAME.registerComponent('replay-loader', {
           captureThis.songFetched(e.detail.hash);
         });
       }
+
+      this.el.addEventListener('challengeloadend', (e) => {
+        captureThis.challengeloadend(e.detail);
+      });
     },
 
     difficultyNumber: function (name) {
@@ -56,7 +61,7 @@ AFRAME.registerComponent('replay-loader', {
       this.el.sceneEl.emit('replayloadstart', null);
       fetch(`/cors/score-saber/api/leaderboard/by-hash/${hash}/info?difficulty=${this.difficultyNumber(this.data.difficulty)}`).then(res => {
         res.json().then(leaderbord => {
-          fetch(`https://sspreviewdecode.azurewebsites.net/?playerID=${this.data.playerID}&songID=${leaderbord.id}`).then(res => {
+          fetch(`${DECODER_LINK}/?playerID=${this.data.playerID}&songID=${leaderbord.id}`).then(res => {
             res.json().then(data => {
               let replay = JSON.parse(data);
               if (replay.frames) {
@@ -86,17 +91,21 @@ AFRAME.registerComponent('replay-loader', {
       });
     },
 
-    fetchByFile: function (file) {
+    fetchByFile: function (file, itsLink) {
+      if (!itsLink && file.size > 40000000) { // 40 MB cap
+        this.el.sceneEl.emit('replayloadfailed', { error: "File is too big" }, null);
+        return;
+      }
       this.el.sceneEl.emit('replayloadstart', null);
-      fetch('https://sspreviewdecode.azurewebsites.net', {
-        method: 'POST',
-        body: file
-      }).then(response => response.json()).then(
+      (!itsLink
+      ? fetch(DECODER_LINK, { method: 'POST', body: file })
+      : fetch(`${DECODER_LINK}/?link=${file}`))
+      .then(response => response.json()).then(
         data => {
           let replay = JSON.parse(data);
           if (replay.frames) {
             this.replay = replay;
-            this.cleanup();
+            this.cleanup && this.cleanup();
             this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: replay.info.difficulty }, null);
             if (this.challenge) {
               this.processScores();
@@ -107,7 +116,7 @@ AFRAME.registerComponent('replay-loader', {
       }).catch(
         error => this.el.sceneEl.emit('replayloadfailed', {error}, null) // Handle the error response object
       );
-      let playerId = file.name.split("-")[0];
+      let playerId = (itsLink ? file : file.name).split(/\.|-|\//).find(el => (el.length == 16 || el.length == 17) && parseInt(el, 10));
       if (playerId) {
         fetch(`/cors/score-saber/api/player/${playerId}/full`).then(res => {
           res.json().then(data => {

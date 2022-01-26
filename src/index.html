@@ -235,11 +235,11 @@
 
             <!-- Player. -->
       <a-entity id="defaultRig" class="floatingCamera">
-        <a-entity id="mainCamera" class="mainCamera"  position="0 1.6 0.5" camera look-controls wasd-controls active="true">
+        <a-entity id="mainCamera" class="mainCamera" position="0 1.75 2.0" camera="active: true" look-controls wasd-controls>
         </a-entity>
       </a-entity>
       <a-entity id="headRig" class="headCamera">
-        <a-entity id="povCamera" class="povCamera" rotation="0 0 -1" camera active="false"
+        <a-entity id="povCamera" class="povCamera" rotation="0 0 -1" camera="fov: 60; active: false"
         bind__aabb-collider="enabled: isPlaying"
         aabb-collider="objects: [data-collidable-head]; interval: 50; collideNonVisible: false"
         proxy-event__wallhitstart="event: hitstart; to: a-scene; as: wallhitstart"

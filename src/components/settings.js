@@ -8,7 +8,7 @@ AFRAME.registerComponent('settings', {
         reducedDebris: false,
         noEffects: false,
         showHitboxes: false,
-        pixelRatio: 1.6,
+        pixelRatio: 1.5,
         volume: 0.3,
         showFps: false,
         savedCameraDefault: false,

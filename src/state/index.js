@@ -98,6 +98,8 @@ AFRAME.registerState({
     useractive: false,
     showControls: true,
     wrongMisses: 0,
+    saberScale: new THREE.Vector3(1, 1, 1),
+    saberGlowScale: new THREE.Vector3(1, 1.05, 1),
     settings: {showHeadset: false, volume: 0.0},
     localReplay: !AFRAME.utils.getUrlParameter('id') && !AFRAME.utils.getUrlParameter('hash')
   },
@@ -348,6 +350,12 @@ AFRAME.registerState({
 
     settingsChanged: (state, payload) => {
       state.settings = payload.settings;
+
+      const defaultSaberWidth = 0.02;
+      const saberScale = payload.settings.saberWidth / defaultSaberWidth;
+      
+      state.saberScale = new THREE.Vector3(saberScale, 1, saberScale);
+      state.saberGlowScale = new THREE.Vector3(saberScale, 1.05, saberScale);
     },
 
     povchanged: (state, payload) => {

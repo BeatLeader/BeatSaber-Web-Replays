@@ -28,13 +28,17 @@ To directly link to a seeked time, use the `?time` parameter in the URL (millise
 
 `https://www.replay.beatleader.xyz/?id=c32d&difficulty=ExpertPlus&playerID=76561198333869741&time=15000` - 15 sec
 
-To specify replay speed use the `?speed` paramater in the URL (percent, int, 0 to 200):
+To specify replay speed use the `?speed` parameter in the URL (percent, int, 0 to 200):
 
 `https://www.replay.beatleader.xyz/?id=c32d&difficulty=ExpertPlus&playerID=76561198333869741&speed=50` - 50% speed
 
-To specify notes jump distance use the `?jd` paramater in the URL (meters, float, 5 to 50):
+To specify notes jump distance use the `?jd` parameter in the URL (meters, float, 5 to 50):
 
 `https://www.replay.beatleader.xyz/?id=c32d&difficulty=ExpertPlus&playerID=76561198333869741&jd=18.6` - 18.6 JD
+
+To specify replay download link use the `?link` parameter in the URL. Make sure the link(name of file) contains playerID:
+
+`https://www.replay.beatleader.xyz/?link=https://cdn.discordapp.com/attachments/921820046345523314/934953493624660058/76561198059961776-Cheshires_dance-ExpertPlus-Standard-A2B943FE75E48394352B4FD912CEE8306788D0B1.dat`
 
 ## Roadmap
 

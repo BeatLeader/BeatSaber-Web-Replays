@@ -55,7 +55,7 @@ html
       cursor pointer
       padding 0
       width 100px
-  
+
   #controlsSettings
     cursor pointer
     margin 6px 0px 0 0px
@@ -96,18 +96,20 @@ html
     width: 30px
     img
       height 30px
-      width 26px  
+      width 26px
+
   #settingsContainer
     background rgba(85, 85, 85, 0.85)
     border-radius 5px 5px 5px 5px
     bottom 60px
     cursor pointer
     display none
+    grid-template-columns: 1fr 1fr
     right 0px
     padding-top 4px
     position absolute
     z-index 999999999
-    width: 130px
+    width: 250px
 
     input
       cursor pointer
@@ -130,7 +132,7 @@ html
       cursor pointer
       padding 0
       width 100px
-  
+
   #cameraPositionContainer,
   #cameraSaveContainer
     align-items: center;
@@ -166,7 +168,7 @@ html
       z-index 100
       border-radius: 10px;
       background: #4776e6; /* fallback for old browsers */
-      background: 
+      background:
         -webkit-linear-gradient(to right, transparent 0%, transparent calc((var(--value) / 2) * 100%), white calc((var(--value) / 2) * 100%), white 100%),
         -webkit-linear-gradient(to right, #8e54e9, #dd1853);
       background:
@@ -230,7 +232,7 @@ html
   margin-left 15px
   margin-right 0
   width 70px
-  
+
 #songSpeed
   color $gray
   font-size 11px
@@ -376,7 +378,7 @@ html
         display block
     #settingsContainer
       &.settingsActive
-        display block
+        display grid
     #volumeSliderContainer
       &.volumeActive
         display block
@@ -443,7 +445,7 @@ html
     color #ffffff
     font-size 15px
     margin-left 5px
-    
+
     padding 2px 5px 3px 5px
     border-radius: 4px
   #songCustomDifficulty
@@ -471,7 +473,7 @@ html
     overflow: hidden
     display: -webkit-box;
     -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;  
+    -webkit-box-orient: vertical;
     p
       font-family $font
 
@@ -538,7 +540,7 @@ html
   font-family $font
   font-size 11px
 }
-    
+
 
 .switch {
   position: relative;
@@ -738,7 +740,7 @@ input:checked + .slider:before {
   fill: #a0a0a0;
 }
 
-.range__point 
+.range__point
   fill: #a0a0a0;
   font-size: 10px
   white-space: pre
@@ -748,14 +750,14 @@ input:checked + .slider:before {
 #rangeTicks {
   position: absolute
   bottom: 35px
-  margin-left: 1.5px 
+  margin-left: 1.5px
   width: 100px
-}  
+}
 
 #rangePoints {
   position: absolute
   bottom: 11px
-  margin-left: 1.5px 
+  margin-left: 1.5px
   width: 100px;
   height: 8px;
 }
@@ -793,7 +795,7 @@ input:checked + .slider:before {
   transform: translateX(2px);
 }
 
-.jd__point 
+.jd__point
   fill: #a0a0a0;
   font-size: 10px
   white-space: pre

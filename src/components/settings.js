@@ -9,12 +9,16 @@ AFRAME.registerComponent('settings', {
         noEffects: false,
         showHitboxes: false,
         pixelRatio: 1.5,
-        saberWidth: 0.02,
+        saberWidth: 100,
         volume: 0.3,
         showFps: false,
         savedCameraDefault: false,
         highlightErrors: false,
         colorScores: true
+      }
+
+      this.units = {
+        saberWidth: '%'
       }
 
       try {
@@ -40,12 +44,12 @@ AFRAME.registerComponent('settings', {
           let label = document.getElementById(key + "Label");
           toggle.addEventListener('input', (event) => {
             this.settings[key] = event.srcElement.value;
-            label.innerHTML = this.settings[key];
+            label.innerHTML = this.settings[key] + (this.units[key] ? this.units[key] : "");
             localStorage.setItem('settings', JSON.stringify(this.settings))
             this.el.sceneEl.emit('settingsChanged', {settings: this.settings}, false);
           });
           toggle.value = this.settings[key];
-          label.innerHTML = this.settings[key];
+          label.innerHTML = this.settings[key] + (this.units[key] ? this.units[key] : "");
         }
         
       });

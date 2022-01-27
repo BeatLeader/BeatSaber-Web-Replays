@@ -351,8 +351,7 @@ AFRAME.registerState({
     settingsChanged: (state, payload) => {
       state.settings = payload.settings;
 
-      const defaultSaberWidth = 0.02;
-      const saberScale = payload.settings.saberWidth / defaultSaberWidth;
+      const saberScale = payload.settings.saberWidth / 100;
       
       state.saberScale = new THREE.Vector3(saberScale, 1, saberScale);
       state.saberGlowScale = new THREE.Vector3(saberScale, 1.05, saberScale);

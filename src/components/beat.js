@@ -329,6 +329,10 @@ AFRAME.registerComponent('beat', {
       this.replayNote = result;
     }
 
+    if (!this.replayNote) {
+      this.replayNote = {}
+    }
+
     if (this.settings.settings.highlightErrors && this.replayNote && this.replayNote.score < 0) {
       if (data.type == 'mine') {
         this.blockEl.getObject3D('mesh').material = this.el.sceneEl.systems.materials['mineMaterialyellow'];

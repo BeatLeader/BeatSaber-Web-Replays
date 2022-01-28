@@ -38,6 +38,29 @@ const NoteErrorType = {
   Wall: -5
 }
 
+function mirrorDirection(cutDirection) {
+  switch (cutDirection) {
+    case NoteCutDirection.Up:
+      return NoteCutDirection.Up;
+    case NoteCutDirection.Down:
+      return NoteCutDirection.Down;
+    case NoteCutDirection.Left:
+      return NoteCutDirection.Right;
+    case NoteCutDirection.Right:
+      return NoteCutDirection.Left;
+    case NoteCutDirection.UpLeft:
+      return NoteCutDirection.UpRight;
+    case NoteCutDirection.UpRight:
+      return NoteCutDirection.UpLeft;
+    case NoteCutDirection.DownLeft:
+      return NoteCutDirection.DownRight;
+    case NoteCutDirection.DownRight:
+      return NoteCutDirection.DownLeft;
+    default:
+      return cutDirection;
+  }
+}
+
 function directionVector(cutDirection) {
   switch (cutDirection) {
     case NoteCutDirection.Up:
@@ -79,5 +102,6 @@ module.exports.get2DNoteOffset = get2DNoteOffset;
 module.exports.directionVector = directionVector;
 module.exports.NoteCutDirection = NoteCutDirection;
 module.exports.NoteErrorType = NoteErrorType;
+module.exports.mirrorDirection = mirrorDirection;
 module.exports.signedAngle = signedAngle;
 module.exports.clamp = clamp;

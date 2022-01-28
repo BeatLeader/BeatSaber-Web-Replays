@@ -1,6 +1,8 @@
 const dragDrop = require('drag-drop');
 const DECODER_LINK = 'https://sspreviewdecode.azurewebsites.net'
 
+import {mirrorDirection} from '../utils';
+
 AFRAME.registerComponent('replay-loader', {
     schema: {
       playerID: {default: (AFRAME.utils.getUrlParameter('playerID'))},
@@ -169,16 +171,22 @@ AFRAME.registerComponent('replay-loader', {
       }
 
       var group, groupIndex, groupTime;
+      const leftHanded = replay.info.leftHanded;
 
       const processGroup = () => {
         for (var j = 0; j < group.length; j++) {
           const mapnote = mapnotes[group[j]];
           for (var m = 0; m < group.length; m++) {
             const replaynote = noteStructs[groupIndex + m];
-            if (replaynote.lineIndex == mapnote._lineIndex &&
+
+            const lineIndex = leftHanded ? 3 - replaynote.lineIndex : replaynote.lineIndex;
+            const colorType = leftHanded ? 1 - replaynote.colorType : replaynote.colorType;
+            const cutDirection = leftHanded ? mirrorDirection(replaynote.cutDirection) : replaynote.cutDirection;
+
+            if (lineIndex == mapnote._lineIndex &&
               replaynote.noteLineLayer == mapnote._lineLayer &&
-              replaynote.cutDirection == mapnote._cutDirection &&
-              replaynote.colorType == mapnote._type) {
+              cutDirection == mapnote._cutDirection &&
+              colorType == mapnote._type) {
                 replaynote.index = group[j];
                 break;
             }

@@ -14,7 +14,8 @@ AFRAME.registerComponent('settings', {
         showFps: false,
         savedCameraDefault: false,
         highlightErrors: false,
-        colorScores: true
+        colorScores: true,
+        realHitsounds: false
       }
 
       this.units = {

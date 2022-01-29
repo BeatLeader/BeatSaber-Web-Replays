@@ -651,6 +651,7 @@ AFRAME.registerComponent('song-controls', {
     let hitsoundSlider = document.getElementById('hitsoundSlider');
     let musicSlider = document.getElementById('musicSlider');
     let mixerButton = document.getElementById('mixer');
+    const captureThis = this;
 
     let volumeHandler = () => {
       this.song.audioAnalyser.gainNode.gain.cancelScheduledValues(0);
@@ -665,7 +666,7 @@ AFRAME.registerComponent('song-controls', {
     }
 
     let masterVolumeHandler = () => {
-      hitsoundSlider.value = (hitsoundSlider.value / musicSlider.value) * volumeSlider.value;
+      hitsoundSlider.value = volumeSlider.value * this.soundKoeff;
       musicSlider.value = volumeSlider.value;
       volumeHandler();
     }
@@ -674,15 +675,18 @@ AFRAME.registerComponent('song-controls', {
     });
     musicSlider.addEventListener('input', evt => {
       volumeSlider.value = musicSlider.value;
+      captureThis.soundKoeff = hitsoundSlider.value / Math.max(musicSlider.value, 0.01)
       volumeHandler();
     });
     hitsoundSlider.addEventListener('input', evt => {
+      captureThis.soundKoeff = hitsoundSlider.value / Math.max(musicSlider.value, 0.01)
       volumeHandler();
     });
 
     volumeSlider.value = this.settings.settings.volume;
     musicSlider.value = this.settings.settings.volume;
     hitsoundSlider.value = this.settings.settings.hitSoundVolume;
+    this.soundKoeff = hitsoundSlider.value / Math.max(musicSlider.value, 0.01);
     document.getElementById('beatContainer').components['beat-hit-sound']
         .setVolume(hitsoundSlider.value);
 
@@ -705,7 +709,6 @@ AFRAME.registerComponent('song-controls', {
     })
     
     let mixerContainer = document.getElementById('mixerContainer');
-    const captureThis = this;
     mixerButton.addEventListener("click", function () {
       if (mixerButton.classList.contains("selected")) {
         mixerButton.classList.remove("selected")
@@ -739,17 +742,19 @@ AFRAME.registerComponent('song-controls', {
       }
 
       if (e.keyCode === 77) { // m
-        if (volumeSlider.value != 0) {
+        if (this.lastVolume == null) {
           this.lastVolume = volumeSlider.value;
           this.lastHitsoundVolume = hitsoundSlider.value;
-          volumeSlider.value = 0;
+          volumeSlider.valueAsNumber = 0;
+          hitsoundSlider.valueAsNumber = 0;
+          musicSlider.valueAsNumber = 0;
         } else if (this.lastVolume) {
           volumeSlider.valueAsNumber = this.lastVolume;
-          hitsoundSlider.value = this.lastHitsoundVolume;
-          musicSlider.value = this.lastVolume;
+          hitsoundSlider.valueAsNumber = this.lastHitsoundVolume;
+          musicSlider.valueAsNumber = this.lastVolume;
           this.lastVolume = null;
         }
-        masterVolumeHandler();
+        volumeHandler();
       }
     });
   }

@@ -345,10 +345,6 @@ AFRAME.registerComponent('beat', {
       this.replayNote = result;
     }
 
-    if (!this.replayNote) {
-      this.replayNote = {}
-    }
-
     if (this.settings.settings.highlightErrors && this.replayNote && this.replayNote.score < 0) {
       if (data.type == 'mine') {
         this.blockEl.getObject3D('mesh').material = this.el.sceneEl.systems.materials['mineMaterialyellow'];
@@ -1007,7 +1003,7 @@ AFRAME.registerComponent('beat', {
   })(),
 
   checkStaticHitsound: function () {
-    if (this.hitSoundState == SOUND_STATE.hitPlayed) return;
+    if (this.data.type === 'mine' || this.hitSoundState == SOUND_STATE.hitPlayed) return;
 
     const currentTime = this.song.getCurrentTime();
     const noteTime = this.data.time - SWORD_OFFSET / this.data.speed;

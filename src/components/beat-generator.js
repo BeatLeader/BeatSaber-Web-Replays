@@ -469,10 +469,12 @@ AFRAME.registerComponent('beat-generator', {
       for (let i = 0; i < this.beatContainer.children.length; i++) {
         let child = this.beatContainer.children[i];
         if (child.components.beat) {
-          child.components.beat.anticipationTime = this.beatAnticipationTime;
+          child.components.beat.data.anticipationTime = this.beatAnticipationTime;
+          child.components.beat.data.anticipationPosition = -this.beatAnticipationTime * this.beatSpeed - this.swordOffset;
         }
         if (child.components.wall) {
-          child.components.wall.anticipationTime = this.beatAnticipationTime;
+          child.components.wall.data.anticipationTime = this.beatAnticipationTime;
+          child.components.wall.data.anticipationPosition = -this.beatAnticipationTime * this.beatSpeed - this.swordOffset;
         }
       }
     }

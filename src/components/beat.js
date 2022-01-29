@@ -1,6 +1,6 @@
 import { toLong } from 'ip';
 import {BEAT_WARMUP_OFFSET, BEAT_WARMUP_SPEED, BEAT_WARMUP_TIME} from '../constants/beat';
-import {getHorizontalPosition, getVerticalPosition, NoteErrorType} from '../utils';
+import {getHorizontalPosition, getVerticalPosition, NoteErrorType, SWORD_OFFSET} from '../utils';
 const COLORS = require('../constants/colors.js');
 
 const auxObj3D = new THREE.Object3D();
@@ -11,11 +11,10 @@ const BEAT_WARMUP_ROTATION_TIME = 0.75;
 const DESTROYED_SPEED = 1.0;
 const ONCE = {once: true};
 
-const SCORE_POOL = {
-  OK : 'pool__beatscoreok',
-  GOOD : 'pool__beatscoregood',
-  GREAT : 'pool__beatscoregreat',
-  SUPER : 'pool__beatscoresuper'
+const SOUND_STATE = {
+  initial: 0,
+  waitingForHitSound: 1,
+  hitPlayed: 2
 };
 
 /**
@@ -83,23 +82,27 @@ AFRAME.registerComponent('beat', {
   },
 
   init: function () {
-    this.beams = document.getElementById('beams').components.beams;
     this.beatBoundingBox = new THREE.Box3();
     this.beatBigBoundingBox = new THREE.Box3();
     this.currentRotationWarmupTime = 0;
     this.cutDirection = new THREE.Vector3();
     this.destroyed = false;
     this.gravityVelocity = 0;
+
     this.hitEventDetail = {};
-    this.hitBoundingBox = new THREE.Box3();
+    this.hitSoundState = SOUND_STATE.initial;
+
     this.poolName = undefined;
     this.returnToPoolTimeStart = undefined;
     this.rotationAxis = new THREE.Vector3();
+
+    this.beams = document.getElementById('beams').components.beams;
     this.saberEls = this.el.sceneEl.querySelectorAll('[saber-controls]');
     this.headset = this.el.sceneEl.querySelectorAll('.headset')[0];
     this.replayLoader = this.el.sceneEl.components['replay-loader'];
     this.settings = this.el.sceneEl.components['settings'];
-    this.frameNum = 0;
+    this.song = this.el.sceneEl.components.song;
+
     this.scoreEl = null;
     this.scoreElTime = undefined;
     this.startPositionZ = undefined;
@@ -127,9 +130,9 @@ AFRAME.registerComponent('beat', {
     this.explodeEventDetail = {position: new THREE.Vector3(), rotation: new THREE.Euler()};
     this.saberColors = {right: 'blue', left: 'red'};
     this.glow = null;
-    this.song = this.el.sceneEl.components.song;
 
     this.onEndStroke = this.onEndStroke.bind(this);
+
     this.rotEuler = new THREE.Euler();
     this.strokeDirectionVector = new THREE.Vector3();
     this.bladeTipPosition = new THREE.Vector3();
@@ -250,6 +253,13 @@ AFRAME.registerComponent('beat', {
       
       return;
     }
+
+    if (!this.settings.realHitsounds) { 
+      this.checkStaticHitsound();
+      if (this.hitSoundState == SOUND_STATE.waitingForHitSound) {
+        return;
+      }
+    }
     const el = this.el;
     const position = el.object3D.position;
 
@@ -301,12 +311,18 @@ AFRAME.registerComponent('beat', {
     if (Math.random > 0.5) { this.rotationZChange *= -1; }
     this.el.object3D.rotation.z -= this.rotationZChange;
     this.rotationZStart = this.el.object3D.rotation.z;
-    this.hitSaberEl = null;
-    this.replayNote = null;
     
-    // Reset mine.
-    if (data.type == 'mine') { 
+    // Reset the state properties.
+    this.returnToPoolTimeStart = undefined;
+    this.hitSoundState = SOUND_STATE.initial;
+    this.hitSaberEl = null;
+
+    // Find corresponding score from replay
+    this.replayNote = null;
+    if (data.type == 'mine') {
+      // Reset mine.
       this.resetMineFragments();
+
       const bombs = this.replayLoader.bombs;
       if (bombs) {
         for (var i = 0; i < bombs.length; i++) {
@@ -342,8 +358,6 @@ AFRAME.registerComponent('beat', {
     }
 
     this.updatePosition();
-
-    this.returnToPoolTimeStart = undefined;
 
     if (!this.hitboxObject) {
       let itsMine = this.data.type === 'mine';
@@ -571,6 +585,7 @@ AFRAME.registerComponent('beat', {
       this.gravityVelocity = 0.1;
       this.returnToPoolTimer = 800;
     } else {
+      this.destroyed = true;
       this.returnToPool(true);
     }
     
@@ -689,7 +704,13 @@ AFRAME.registerComponent('beat', {
         auxObj3D.up.copy(rightCutPlane.normal);
         auxObj3D.lookAt(direction);
       } else {
-        this.returnToPool(true);
+        this.destroyed = true;
+        if (!this.settings.realHitsounds && this.hitSoundState != SOUND_STATE.hitPlayed) {
+          this.el.object3D.visible = false;
+          this.hitSoundState = SOUND_STATE.waitingForHitSound;
+        } else {
+          this.returnToPool(true);
+        }
       }
 
       // if (!this.settings.settings.noEffects) {
@@ -805,9 +826,11 @@ AFRAME.registerComponent('beat', {
       const hand = saberControls.data.hand;
 
       if ((saberControls.hitboxGood && saberBoundingBox.intersectsBox(beatSmallBoundingBox) && this.replayNote && this.replayNote.score != -3) || this.checkBigCollider(beatBigBoundingBox, hand, saberControls)) {
-
         // Sound.
-        this.el.parentNode.components['beat-hit-sound'].playSound(this.el);
+
+        if (this.settings.realHitsounds) {
+          this.el.parentNode.components['beat-hit-sound'].playSound(this.el, this.data.cutDirection);
+        }
 
         if (this.data.type === 'mine') {
           if (this.replayNote) {
@@ -982,6 +1005,21 @@ AFRAME.registerComponent('beat', {
       return {color: "#" + resultColor.getHexString(), scale: Math.max(0.7, resultScale)};
     }
   })(),
+
+  checkStaticHitsound: function () {
+    if (this.hitSoundState == SOUND_STATE.hitPlayed) return;
+
+    const currentTime = this.song.getCurrentTime();
+    const noteTime = this.data.time - SWORD_OFFSET / this.data.speed;
+
+    if (currentTime > noteTime) {
+      this.el.parentNode.components['beat-hit-sound'].playSound(this.el, this.data.cutDirection);
+      if (this.hitSoundState == SOUND_STATE.waitingForHitSound) {
+        this.returnToPool(true);
+      }
+      this.hitSoundState = SOUND_STATE.hitPlayed;
+    }
+  },
 
   tockDestroyed: (function () {
     var leftCutNormal = new THREE.Vector3();

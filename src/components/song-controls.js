@@ -413,33 +413,7 @@ AFRAME.registerComponent('song-controls', {
       document.getElementById('cameraSettingsContainer').classList.toggle('settingsActive');
     });
 
-    // Update volume.
-    let volumeSlider = document.getElementById('volumeSlider');
-    let volumeHandler = () => {
-      this.song.audioAnalyser.gainNode.gain.cancelScheduledValues(0);
-      this.song.audioAnalyser.gainNode.gain.value = volumeSlider.value;
-      this.settings.settings.volume = volumeSlider.value;
-      this.settings.sync();
-      document.getElementById('beatContainer').components['beat-hit-sound']
-        .setVolume(volumeSlider.value);
-    }
-    volumeSlider.addEventListener('input', evt => {
-      volumeHandler();
-    });
-    volumeSlider.value = this.settings.settings.volume;
-    document.getElementById('beatContainer').components['beat-hit-sound']
-        .setVolume(volumeSlider.value);
-
-    volumeSlider.addEventListener("wheel", function(e){
-      if (e.deltaY < 0){
-        volumeSlider.valueAsNumber += 0.05;
-      }else{
-        volumeSlider.value -= 0.05;
-      }
-      volumeHandler();
-      e.preventDefault();
-      e.stopPropagation();
-    })
+    this.setupVolumeControls();
 
     let speedSlider = document.getElementById('speedSlider');
     let speedHandler = () => {
@@ -525,27 +499,6 @@ AFRAME.registerComponent('song-controls', {
       if (e.keyCode === 37) { // left
         let currentTime = captureThis.song.getCurrentTime();
         doSeek(null, currentTime - Math.max(0.01, 5 * captureThis.song.speed));
-      }
-
-      if (e.keyCode === 38) { // up
-        volumeSlider.valueAsNumber += 0.05;
-        volumeHandler();
-      }
-
-      if (e.keyCode === 40) { // up
-        volumeSlider.value -= 0.05;
-        volumeHandler();
-      }
-
-      if (e.keyCode === 77) { // m
-        if (volumeSlider.value != 0) {
-          this.lastVolume = volumeSlider.value;
-          volumeSlider.value = 0;
-        } else if (this.lastVolume) {
-          volumeSlider.valueAsNumber = this.lastVolume;
-          this.lastVolume = null;
-        }
-        volumeHandler();
       }
     });
 
@@ -690,6 +643,115 @@ AFRAME.registerComponent('song-controls', {
     if (seek) {
       this.el.sceneEl.emit('timechanged', { newTime: this.song.getCurrentTime() }, null);
     }
+  },
+
+  setupVolumeControls: function () {
+    // Update volume.
+    let volumeSlider = document.getElementById('volumeSlider');
+    let hitsoundSlider = document.getElementById('hitsoundSlider');
+    let musicSlider = document.getElementById('musicSlider');
+    let mixerButton = document.getElementById('mixer');
+
+    let volumeHandler = () => {
+      this.song.audioAnalyser.gainNode.gain.cancelScheduledValues(0);
+      this.song.audioAnalyser.gainNode.gain.value = musicSlider.value;
+
+      this.settings.settings.volume = musicSlider.value;
+      this.settings.settings.hitSoundVolume = hitsoundSlider.value;
+
+      this.settings.sync();
+      document.getElementById('beatContainer').components['beat-hit-sound']
+        .setVolume(hitsoundSlider.value);
+    }
+
+    let masterVolumeHandler = () => {
+      hitsoundSlider.value = (hitsoundSlider.value / musicSlider.value) * volumeSlider.value;
+      musicSlider.value = volumeSlider.value;
+      volumeHandler();
+    }
+    volumeSlider.addEventListener('input', evt => {
+      masterVolumeHandler();
+    });
+    musicSlider.addEventListener('input', evt => {
+      volumeSlider.value = musicSlider.value;
+      volumeHandler();
+    });
+    hitsoundSlider.addEventListener('input', evt => {
+      volumeHandler();
+    });
+
+    volumeSlider.value = this.settings.settings.volume;
+    musicSlider.value = this.settings.settings.volume;
+    hitsoundSlider.value = this.settings.settings.hitSoundVolume;
+    document.getElementById('beatContainer').components['beat-hit-sound']
+        .setVolume(hitsoundSlider.value);
+
+    [volumeSlider, hitsoundSlider, musicSlider].forEach(el => {
+      el.addEventListener("wheel", function(e){
+        if (e.deltaY < 0){
+          el.valueAsNumber += 0.05;
+        }else{
+          el.value -= 0.05;
+        }
+        if (el == volumeSlider) {
+          masterVolumeHandler();
+        } else {
+          volumeHandler();
+        }
+        
+        e.preventDefault();
+        e.stopPropagation();
+      })
+    })
+    
+    let mixerContainer = document.getElementById('mixerContainer');
+    const captureThis = this;
+    mixerButton.addEventListener("click", function () {
+      if (mixerButton.classList.contains("selected")) {
+        mixerButton.classList.remove("selected")
+        volumeSlider.classList.remove("volumeHide")
+        mixerContainer.classList.add("volumeHide")
+      } else {
+        mixerButton.classList.add("selected")
+        volumeSlider.classList.add("volumeHide")
+        mixerContainer.classList.remove("volumeHide")
+      }
+
+      captureThis.settings.settings.volumeMixed = !captureThis.settings.settings.volumeMixed;
+      captureThis.settings.sync();
+    });
+
+    if (this.settings.settings.volumeMixed) {
+      mixerButton.classList.add("selected")
+      volumeSlider.classList.add("volumeHide")
+      mixerContainer.classList.remove("volumeHide")
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.keyCode === 38) { // up
+        volumeSlider.valueAsNumber += 0.05;
+        masterVolumeHandler();
+      }
+
+      if (e.keyCode === 40) { // up
+        volumeSlider.value -= 0.05;
+        masterVolumeHandler();
+      }
+
+      if (e.keyCode === 77) { // m
+        if (volumeSlider.value != 0) {
+          this.lastVolume = volumeSlider.value;
+          this.lastHitsoundVolume = hitsoundSlider.value;
+          volumeSlider.value = 0;
+        } else if (this.lastVolume) {
+          volumeSlider.valueAsNumber = this.lastVolume;
+          hitsoundSlider.value = this.lastHitsoundVolume;
+          musicSlider.value = this.lastVolume;
+          this.lastVolume = null;
+        }
+        masterVolumeHandler();
+      }
+    });
   }
 });
 

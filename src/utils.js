@@ -38,6 +38,8 @@ const NoteErrorType = {
   Wall: -5
 }
 
+const SWORD_OFFSET = 0.65;
+
 function mirrorDirection(cutDirection) {
   switch (cutDirection) {
     case NoteCutDirection.Up:
@@ -105,3 +107,4 @@ module.exports.NoteErrorType = NoteErrorType;
 module.exports.mirrorDirection = mirrorDirection;
 module.exports.signedAngle = signedAngle;
 module.exports.clamp = clamp;
+module.exports.SWORD_OFFSET = SWORD_OFFSET;

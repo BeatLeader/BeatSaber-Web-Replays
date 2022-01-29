@@ -1,5 +1,5 @@
 import {BEAT_WARMUP_OFFSET, BEAT_WARMUP_SPEED, BEAT_WARMUP_TIME} from '../constants/beat';
-import {get2DNoteOffset, directionVector, NoteCutDirection, signedAngle} from '../utils';
+import {get2DNoteOffset, directionVector, NoteCutDirection, signedAngle, SWORD_OFFSET} from '../utils';
 
 let skipDebug = AFRAME.utils.getUrlParameter('skip') || 0;
 skipDebug = parseInt(skipDebug, 10);
@@ -55,7 +55,7 @@ AFRAME.registerComponent('beat-generator', {
     this.bpm = undefined;
     this.stageColors = this.el.components['stage-colors'];
     // Beats arrive at sword stroke distance synced with the music.
-    this.swordOffset = 0.65;
+    this.swordOffset = SWORD_OFFSET;
     this.twister = document.getElementById('twister');
     this.leftStageLasers = document.getElementById('leftStageLasers');
     this.rightStageLasers = document.getElementById('rightStageLasers');

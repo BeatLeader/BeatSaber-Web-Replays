@@ -10,13 +10,18 @@ AFRAME.registerComponent('settings', {
         showHitboxes: false,
         pixelRatio: 1.5,
         saberWidth: 100,
-        volume: 0.3,
         fov: 60,
         cameraXRotation: 0,
         showFps: false,
         savedCameraDefault: false,
         highlightErrors: false,
-        colorScores: true
+        colorScores: true,
+        realHitsounds: false,
+
+        // Volume
+        volume: 0.3,
+        hitSoundVolume: 0.3 * 0.4,
+        volumeMixed: false
       }
 
       this.units = {

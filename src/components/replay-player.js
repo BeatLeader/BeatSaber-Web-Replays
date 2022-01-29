@@ -9,6 +9,7 @@ AFRAME.registerComponent('replay-player', {
         this.replayDecoder = this.el.sceneEl.components['replay-loader'];
         this.fpsCounter = this.el.sceneEl.components['fps-counter'];
         this.song = this.el.sceneEl.components.song;
+        this.settings = this.el.sceneEl.components.settings;
         this.score = {
           totalScore: 0,
           combo: 0,
@@ -126,6 +127,8 @@ AFRAME.registerComponent('replay-player', {
             hquat = new THREE.Quaternion().copy(hquat);
           }
           hrotation = euler.setFromQuaternion(hquat);
+
+          hrotation.x += this.settings.settings.cameraXRotation * 0.017453;
           
           povCamera.rotation.set(hrotation.x, hrotation.y + Math.PI, -hrotation.z + Math.PI);
           povCamera.hquat = hquat;
@@ -180,6 +183,8 @@ AFRAME.registerComponent('replay-player', {
             hquat = new THREE.Quaternion().copy(hquat);
           }
           hrotation = euler.setFromQuaternion(hquat);
+
+          hrotation.x += this.settings.settings.cameraXRotation * 0.017453;
           
           povCamera.rotation.set(-hrotation.x, hrotation.y + Math.PI, -hrotation.z + Math.PI);
           povCamera.hquat = hquat;

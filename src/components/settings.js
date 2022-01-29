@@ -11,6 +11,8 @@ AFRAME.registerComponent('settings', {
         pixelRatio: 1.5,
         saberWidth: 100,
         volume: 0.3,
+        fov: 60,
+        cameraXRotation: 0,
         showFps: false,
         savedCameraDefault: false,
         highlightErrors: false,

@@ -60,6 +60,26 @@
   <a id="controlsCamera" title="Camera position"><img src="assets/img/camera.png"></a>
 
   <div id="cameraSettingsContainer">
+    <div class="settingHeader">First person camera</div>
+    <div class="toggleButton" title="First person camera field of view">
+      <label>
+        <div>
+          <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Field of view:</nobr></td></label>
+          <label id="fovLabel" class="toggleButtonLabel" style="margin-left: 33px;">60</label>
+        </div>
+        <input id="fov" type="range" min="30" max="150" step="1" value="60">
+      </label>
+    </div>
+    <div class="toggleButton" title="Rotate camera higher or lower on X axis">
+      <label>
+        <div>
+          <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>X rotation offset:</nobr></td></label>
+          <label id="cameraXRotationLabel" class="toggleButtonLabel" style="margin-left: 51px;">0</label>
+        </div>
+        <input id="cameraXRotation" type="range" min="-100" max="100" step="1" value="0">
+      </label>
+    </div>
+    <div class="settingHeader">Main camera</div>
     <div id="cameraPositionContainer">
       <button id="cameraToLeft" title='Select left camera'>< left</button>
       <button id="cameraToCenter" title='Select center(default) camera'>center</button>

@@ -245,6 +245,7 @@
       </a-entity>
       <a-entity id="headRig" class="headCamera">
         <a-entity id="povCamera" class="povCamera" rotation="0 0 -1" camera="fov: 60; active: false"
+        bind__camera="fov: settings.fov"
         bind__aabb-collider="enabled: isPlaying"
         aabb-collider="objects: [data-collidable-head]; interval: 50; collideNonVisible: false"
         proxy-event__wallhitstart="event: hitstart; to: a-scene; as: wallhitstart"

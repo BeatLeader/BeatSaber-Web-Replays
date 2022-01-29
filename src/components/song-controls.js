@@ -416,8 +416,24 @@ AFRAME.registerComponent('song-controls', {
     this.setupVolumeControls();
 
     let speedSlider = document.getElementById('speedSlider');
+
+    let firefoxHandler = () => {
+      // Firefox seems to not like zeros
+      if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) {
+        if (speedSlider.value == 0) {
+          this.song.audioAnalyser.suspendContext();
+          this.firefoxZeroed = true;
+        } else if (this.firefoxZeroed && this.song.isPlaying) {
+          this.song.audioAnalyser.resumeContext();
+          this.firefoxZeroed = undefined;
+        }
+      }
+    }
+
     let speedHandler = () => {
+      firefoxHandler();
       this.song.source.playbackRate.value = speedSlider.value;
+      
       this.song.speed = speedSlider.value;
       speedSlider.style.setProperty('--value', speedSlider.value)
       this.songSpeedPercent.innerHTML = (Math.round(speedSlider.value * 10000) / 10000) + "x";
@@ -449,6 +465,10 @@ AFRAME.registerComponent('song-controls', {
     this.songSpeedPercent.innerHTML = (this.song.speed) + "x";
     speedSlider.value = this.song.speed;
     speedSlider.style.setProperty('--value', this.song.speed)
+
+    this.el.addEventListener('songstartaudio', () => {
+      firefoxHandler();
+    });
 
     let fullscreen = document.getElementById('controlsFullscreen');
 

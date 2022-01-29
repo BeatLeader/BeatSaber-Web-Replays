@@ -665,8 +665,8 @@ AFRAME.registerComponent('song-controls', {
     }
 
     let masterVolumeHandler = () => {
+      hitsoundSlider.value = (hitsoundSlider.value / musicSlider.value) * volumeSlider.value;
       musicSlider.value = volumeSlider.value;
-      hitsoundSlider.value = volumeSlider.value * 0.4;
       volumeHandler();
     }
     volumeSlider.addEventListener('input', evt => {
@@ -741,9 +741,12 @@ AFRAME.registerComponent('song-controls', {
       if (e.keyCode === 77) { // m
         if (volumeSlider.value != 0) {
           this.lastVolume = volumeSlider.value;
+          this.lastHitsoundVolume = hitsoundSlider.value;
           volumeSlider.value = 0;
         } else if (this.lastVolume) {
           volumeSlider.valueAsNumber = this.lastVolume;
+          hitsoundSlider.value = this.lastHitsoundVolume;
+          musicSlider.value = this.lastVolume;
           this.lastVolume = null;
         }
         masterVolumeHandler();

@@ -150,7 +150,6 @@ AFRAME.registerComponent('beat-hit-sound', {
   },
 
   setVolume: function (volume) {
-    volume = volume * 0.4;
     this.volume = volume;
     for (let i = 1; i <= 10; i++) {
       for (let j = 0; j < 4; j++) {

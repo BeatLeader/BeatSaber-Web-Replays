@@ -1,6 +1,6 @@
 import { toLong } from 'ip';
 import {BEAT_WARMUP_OFFSET, BEAT_WARMUP_SPEED, BEAT_WARMUP_TIME} from '../constants/beat';
-import {getHorizontalPosition, getVerticalPosition, NoteErrorType} from '../utils';
+import {getHorizontalPosition, getVerticalPosition, NoteErrorType, SWORD_OFFSET} from '../utils';
 const COLORS = require('../constants/colors.js');
 
 const auxObj3D = new THREE.Object3D();
@@ -829,7 +829,7 @@ AFRAME.registerComponent('beat', {
         // Sound.
 
         if (this.settings.realHitsounds) {
-          this.el.parentNode.components['beat-hit-sound'].playSound(this.el);
+          this.el.parentNode.components['beat-hit-sound'].playSound(this.el, this.data.cutDirection);
         }
 
         if (this.data.type === 'mine') {
@@ -1010,10 +1010,10 @@ AFRAME.registerComponent('beat', {
     if (this.hitSoundState == SOUND_STATE.hitPlayed) return;
 
     const currentTime = this.song.getCurrentTime();
-    const noteTime = this.data.time - 0.65 / this.data.speed;
+    const noteTime = this.data.time - SWORD_OFFSET / this.data.speed;
 
     if (currentTime > noteTime) {
-      this.el.parentNode.components['beat-hit-sound'].playSound(this.el);
+      this.el.parentNode.components['beat-hit-sound'].playSound(this.el, this.data.cutDirection);
       if (this.hitSoundState == SOUND_STATE.waitingForHitSound) {
         this.returnToPool(true);
       }

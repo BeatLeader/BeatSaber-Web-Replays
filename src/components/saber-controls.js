@@ -111,8 +111,7 @@ AFRAME.registerComponent('saber-controls', {
       hitboxSaber.localToWorld(this.hitboxBladePosition);
 
       this.threePointsToBox(this.hitboxBladeTipPosition, this.hitboxBladePosition, new THREE.Vector3().addVectors(this.hitboxBladePreviousPosition, this.hitboxBladeTipPreviousPosition).multiplyScalar(0.5));
-
-      console.log(this.frameIndex + " -- " + this.previousFrameIndex);
+      
       this.hitboxBladePreviousPosition.copy(this.hitboxBladePosition);
       this.hitboxBladeTipPreviousPosition.copy(this.hitboxBladeTipPosition);
       this.previousFrameIndex = this.frameIndex;

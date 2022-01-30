@@ -77,7 +77,7 @@
       <label>
         <div>
           <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Field of view:</nobr></td></label>
-          <label id="fovLabel" class="toggleButtonLabel" style="margin-left: 33px;">60</label>
+          <label id="fovLabel" class="toggleButtonLabel" style="margin-left: 33px;">60°</label>
         </div>
         <input id="fov" type="range" min="30" max="150" step="1" value="60">
       </label>
@@ -86,9 +86,18 @@
       <label>
         <div>
           <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>X rotation offset:</nobr></td></label>
-          <label id="cameraXRotationLabel" class="toggleButtonLabel" style="margin-left: 51px;">0</label>
+          <label id="cameraXRotationLabel" class="toggleButtonLabel" style="margin-left: 51px;">0°</label>
         </div>
         <input id="cameraXRotation" type="range" min="-100" max="100" step="1" value="0">
+      </label>
+    </div>
+    <div class="toggleButton" title="How far back would be camera relative to the player.">
+      <label>
+        <div>
+          <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Z position offset:</nobr></td></label>
+          <label id="cameraZPositionLabel" class="toggleButtonLabel" style="margin-left: 51px;">1m</label>
+        </div>
+        <input id="cameraZPosition" type="range" min="-5" max="5" step="0.1" value="1">
       </label>
     </div>
     <div class="settingHeader">Main camera</div>
@@ -229,7 +238,7 @@
             <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Saber width:</nobr></td></label>
             <label id="saberWidthLabel" class="toggleButtonLabel" style="margin-left: 28px;">100</label>
           </div>
-          <input id="saberWidth" type="range" min="0" max="200" step="10" value="100">
+          <input id="saberWidth" type="range" min="0" max="200" step="1" value="100">
         </label>
       </div>
 

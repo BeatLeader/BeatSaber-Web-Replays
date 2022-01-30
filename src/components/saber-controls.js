@@ -25,6 +25,8 @@ AFRAME.registerComponent('saber-controls', {
     this.bladeVector = new THREE.Vector3();
     this.bladeTipPreviousPosition = new THREE.Vector3();
     this.bladePreviousPosition = new THREE.Vector3();
+    this.bladeTipPreviousPosition2 = new THREE.Vector3();
+    this.bladePreviousPosition2 = new THREE.Vector3();
     this.projectedBladeVector = new THREE.Vector3();
     this.saberPosition = new THREE.Vector3();
     this.swinging = false;
@@ -41,6 +43,8 @@ AFRAME.registerComponent('saber-controls', {
     };
     this.accumulatedDistance = 0;
     this.accumulatedDelta = 0;
+    this.frameIndex = -1;
+    this.previousFrameIndex = -1;
 
     const hand = {hand: data.hand, model: false};
 
@@ -90,7 +94,7 @@ AFRAME.registerComponent('saber-controls', {
     saberObj.localToWorld(this.bladeTipPosition);
     saberObj.localToWorld(this.bladePosition);
 
-    this.threePointsToBox(this.bladeTipPosition, this.bladePosition, new THREE.Vector3().addVectors(this.bladePreviousPosition, this.bladeTipPreviousPosition).multiplyScalar(0.5));
+    this.threePointsToBox(this.bladeTipPosition, this.bladePosition, new THREE.Vector3().addVectors(this.bladePreviousPosition2, this.bladeTipPreviousPosition2).multiplyScalar(0.5));
 
     // Angles between saber and major planes.
     this.bladeVector.copy(this.bladeTipPosition).sub(this.bladePosition).normalize();
@@ -135,6 +139,12 @@ AFRAME.registerComponent('saber-controls', {
       if (!anglePlaneXIncreased && !anglePlaneYIncreased) { this.endStroke(); }
     } else {
       this.endStroke();
+    }
+    if (this.frameIndex > this.previousFrameIndex) {
+      console.log(this.frameIndex + " -- " + this.previousFrameIndex);
+      this.bladePreviousPosition2.copy(this.bladePosition);
+      this.bladeTipPreviousPosition2.copy(this.bladeTipPosition);
+      this.previousFrameIndex = this.frameIndex;
     }
 
     this.bladePreviousPosition.copy(this.bladePosition);

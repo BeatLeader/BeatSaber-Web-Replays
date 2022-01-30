@@ -55,6 +55,8 @@ AFRAME.registerComponent('replay-player', {
           if (frame.a == 0 && nextFrame.a == 0) return;
 
           this.fpsCounter.replayFps = frame.i;
+          this.saberEls[0].components["saber-controls"].frameIndex = frameIndex + 1;
+          this.saberEls[1].components["saber-controls"].frameIndex = frameIndex + 1;
 
           var replayHeight;
           if (replay.dynamicHeight.length) {

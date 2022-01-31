@@ -20,14 +20,14 @@
 
 [[redirects]]
     from = "/cors/score-saber/*"
-    to = "https://proxier324.herokuapp.com/https://scoresaber.com/:splat"
+    to = "https://scoresaber.com/:splat"
     status = 200
     force = true
-    headers = {X-From = "Netlify", origin = "Netlify"}
+    headers = {X-From = "Netlify"}
 
 [[redirects]]
     from = "/cors/score-saber-cdn/*"
-    to = "https://proxier324.herokuapp.com/https://cdn.scoresaber.com/:splat"
+    to = "https://cdn.scoresaber.com/:splat"
     status = 200
     force = true
-    headers = {X-From = "Netlify", origin = "Netlify"}
+    headers = {X-From = "Netlify"}

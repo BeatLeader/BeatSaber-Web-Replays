@@ -160,7 +160,7 @@ AFRAME.registerComponent('song-controls', {
       document.getElementById('playerName').setAttribute('title', player.name);
       document.getElementById('playerCountry').src = player.countryIcon;
       document.getElementById('playerCountry').setAttribute('title', player.country);
-      document.getElementById('playerLink').setAttribute('href', "https://beatleader.xyz/u/" + player.id);
+      document.getElementById('playerLink').setAttribute('href', "https://scoresaber.com/u/" + player.id);
     });
 
     var timelineClicked = false, timelineHovered = false;

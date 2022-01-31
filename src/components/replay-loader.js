@@ -61,7 +61,7 @@ AFRAME.registerComponent('replay-loader', {
     songFetched: function (hash) {
       console.log("fetched");
       this.el.sceneEl.emit('replayloadstart', null);
-      fetch(`/cors/score-saber/api/leaderboard/by-hash/${hash}/info?difficulty=${this.difficultyNumber(this.data.difficulty)}`, {referrer: "beatlooser.com"}).then(res => {
+      fetch(`/cors/score-saber/api/leaderboard/by-hash/${hash}/info?difficulty=${this.difficultyNumber(this.data.difficulty)}`, {referrer: "https://www.beatlooser.com"}).then(res => {
         res.json().then(leaderbord => {
           fetch(`${DECODER_LINK}/?playerID=${this.data.playerID}&songID=${leaderbord.id}`).then(res => {
             res.json().then(data => {
@@ -79,7 +79,7 @@ AFRAME.registerComponent('replay-loader', {
           });
         });
       });
-      fetch(`/cors/score-saber/api/player/${this.data.playerID}/full`, {referrer: "beatlooser.com"}).then(res => {
+      fetch(`/cors/score-saber/api/player/${this.data.playerID}/full`, {referrer: "https://www.beatlooser.com"}).then(res => {
         res.json().then(data => {
             this.user = data;
             this.el.sceneEl.emit('userloaded', {

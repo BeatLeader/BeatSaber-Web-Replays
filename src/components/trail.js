@@ -8,7 +8,7 @@ AFRAME.registerComponent('trail', {
   init: function () {
     //TRAIL CONFIG ---------------------------------------------------------------------
     //You must call init (and potentially dispose already existing mesh) after any config change
-    this.trailType = 'acc' //available types: 'bright', 'dim', 'acc'
+    this.trailType = 'bright' //available types: 'bright', 'dim', 'acc'
 
     this.lifetime = 20; //frames
     this.verticalResolution = 120; //quads

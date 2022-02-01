@@ -6,58 +6,261 @@ AFRAME.registerComponent('trail', {
   },
 
   init: function () {
-    var geometry = this.geometry = new THREE.BufferGeometry();
-    var maxPoints = this.maxPoints = 12;
-    var vertices = this.vertices = new Float32Array(36 * maxPoints);
-    var colors = this.colors = new Float32Array(48 * maxPoints);
-    var bladeColor = this.bladeColor = new THREE.Color(this.data.color);
+    //TRAIL CONFIG ---------------------------------------------------------------------
+    //You must call init (and potentially dispose already existing mesh) after any config change
+    this.trailType = 'bright' //available types: 'bright', 'dim', 'acc'
+    this.lifetime = 20; //frames
+    this.verticalResolution = 120; //quads
+    this.horizontalResolution = 2; //quads
+    this.tippingTrailHalfWidth = 0.03; //meters
+    //TRAIL CONFIG ---------------------------------------------------------------------
 
-    this.bladeColor = {
-      red: bladeColor.r,
-      green: bladeColor.g,
-      blue: bladeColor.b,
-      alpha: 1.0
-    };
     this.saberEl = this.el.querySelector('.blade');
+    this.bladeColor = new THREE.Color(this.data.color);
 
-    this.layers = 0;
-    this.saberTrajectory = [
-      {top: new THREE.Vector3(-0.5, 0, 0), center: new THREE.Vector3(0, 0, 0), bottom: new THREE.Vector3(0.5, 0, 0)},
-      {top: new THREE.Vector3(-0.5, 0.5, 0), center: new THREE.Vector3(0, 0.5, 0), bottom: new THREE.Vector3(0.5, 0.5, 0)},
-      {top: new THREE.Vector3(-0.5, 1.0, 0), center: new THREE.Vector3(0, 1.0, 0), bottom: new THREE.Vector3(0.5, 1.0, 0)}
-    ];
+    this.verticalRatioPerStep = 1 / this.verticalResolution;
+    this.horizontalRatioPerStep = 1 / this.horizontalResolution;
+    this.columnsCount = this.horizontalResolution + 1;
+    this.rowsCount = this.verticalResolution + 1;
+
+    this.previousTipPosition = new THREE.Vector3(0, 0, 0);
+    this.mesh = this.createMesh();
+  },
+
+  createMesh: function () {
+    const quadCount = this.verticalResolution * this.horizontalResolution;
+
+    const geometry = this.geometry = new THREE.BufferGeometry();
+    const vertices = this.vertices = new Float32Array(quadCount * 6 * 3);
+    const colors = this.vertices = new Float32Array(quadCount * 6 * 4);
+    const uv = this.uv = new Float32Array(quadCount * 6 * 2);
+
+    this.handlesArray = [];
+    this.curvedSegmentsArray = [];
+    this.linearSegment = null;
+    this.lastAddedNode = null;
+    this.hasFirstNode = false;
 
     geometry.addAttribute('position', new THREE.BufferAttribute(vertices, 3).setDynamic(true));
-    geometry.addAttribute('vertexColor', new THREE.BufferAttribute(colors, 4).setDynamic(true));
+    geometry.addAttribute('colors', new THREE.BufferAttribute(colors, 4).setDynamic(true));
+    geometry.addAttribute('uv', new THREE.BufferAttribute(uv, 2).setDynamic(true));
 
-    const material = new THREE.ShaderMaterial({
+    const material = this.createMaterial();
+
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.frustumCulled = false;
+    mesh.vertices = vertices;
+    mesh.uv = uv;
+    mesh.renderOrder = 5;
+    this.el.sceneEl.setObject3D(`trail__${this.data.hand}`, mesh);
+
+    this.fillUvAndColorArrays();
+
+    return mesh;
+  },
+
+  createMaterial: function () {
+    const vertexShader = `
+      varying vec4 vColor;
+      varying vec2 uv0;
+      attribute vec4 colors;
+      
+      void main() {
+        vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
+        uv0 = uv;
+        vColor = colors;
+        gl_Position = projectionMatrix * modelViewPosition;
+      }`;
+
+    const brightFragmentShader = `
+      varying vec4 vColor;
+      varying vec2 uv0;
+      
+      #define tipColor vec4(1.0, 1.0, 1.0, 1.0)
+      
+      vec4 lerpColor(const vec4 a, const vec4 b, const float t) {
+        return vec4(
+          a.r + (b.r - a.r) * t,
+          a.g + (b.g - a.g) * t,
+          a.b + (b.b - a.b) * t,
+          a.a + (b.a - a.a) * t
+        );
+      }
+      
+      void main() {
+        float nullFade = pow(uv0.y, 2.0) * pow(uv0.x, 0.5);
+        float tipFade = 0.8 * pow(uv0.x, 10.0 + 60.0 * (1.0 - uv0.y)) * pow(uv0.y, 0.4);
+        vec4 col = vColor * nullFade;
+        col = lerpColor(col, tipColor, tipFade);
+        gl_FragColor = col;
+      }`;
+
+    const dimFragmentShader = `
+      varying vec4 vColor;
+      varying vec2 uv0;
+      
+      #define tipColor vec4(1.0, 1.0, 1.0, 1.0)
+      
+      vec4 lerpColor(const vec4 a, const vec4 b, const float t) {
+        return vec4(
+          a.r + (b.r - a.r) * t,
+          a.g + (b.g - a.g) * t,
+          a.b + (b.b - a.b) * t,
+          a.a + (b.a - a.a) * t
+        );
+      }
+      
+      void main() {
+        float nullFade = pow(uv0.y, 2.0) * pow(uv0.x, 0.8);
+        float tipFade = 0.2 * pow(uv0.x, 10.0 + 60.0 * (1.0 - uv0.y)) * pow(uv0.y, 0.4);
+        vec4 col = vColor * nullFade;
+        col = lerpColor(col, tipColor, tipFade);
+        gl_FragColor = col;
+      }`;
+
+    const tippingFragmentShader = `
+      varying vec4 vColor;
+      varying vec2 uv0;
+      
+      #define pi 3.1415926
+      #define tip_color vec4(1.0, 1.0, 1.0, 1.0)
+      #define start_curve_to 0.1
+      #define start_curve_maximum 1.0
+      #define middle_curve_to 0.5
+      #define middle_curve_minimum 0.4
+      #define end_curve_to 1.0
+      #define end_curve_maximum 0.0
+      
+      float lerp(const float a, const float b, const float t) {
+        return a + (b - a) * t;
+      }
+      
+      vec4 lerpColor(const vec4 a, const vec4 b, const float t) {
+        return vec4(
+          a.r + (b.r - a.r) * t,
+          a.g + (b.g - a.g) * t,
+          a.b + (b.b - a.b) * t,
+          a.a + (b.a - a.a) * t
+        );
+      }
+      
+      float start_curve(const float t)
+      {
+          return pow(t, 0.6) * start_curve_maximum;
+      }
+      
+      float middle_curve(const float t)
+      {
+          float lerp_t = (cos(pi * (1.0 - t)) + 1.0) / 2.0;
+          return lerp(start_curve_maximum, middle_curve_minimum, lerp_t);
+      }
+      
+      float end_curve(const float t)
+      {
+          float lerp_t = (cos(pi * (1.0 - t)) + 1.0) / 2.0;
+          return lerp(middle_curve_minimum, end_curve_maximum, lerp_t);
+      }
+      
+      float get_range_ratio(const float range_start, const float range_end, const float value)
+      {
+          float range_amplitude = range_end - range_start;
+          return (value - range_start) / range_amplitude;
+      }
+      
+      float get_fade_value(const float x, const float y)
+      {
+          float start_curve_ratio = get_range_ratio(0.0, start_curve_to, y);
+          float middle_curve_ratio = get_range_ratio(start_curve_to, middle_curve_to, y);
+          float end_curve_ratio = get_range_ratio(middle_curve_to, end_curve_to, y);
+          
+          float start_curve_value = ((start_curve_ratio >= 0.0 && start_curve_ratio <= 1.0) ? 1.0 : 0.0) * start_curve(start_curve_ratio);
+          float middle_curve_value = ((middle_curve_ratio > 0.0 && middle_curve_ratio <= 1.0) ? 1.0 : 0.0) * middle_curve(middle_curve_ratio);
+          float end_curve_value = ((end_curve_ratio > 0.0 && end_curve_ratio <= 1.0) ? 1.0 : 0.0) * end_curve(end_curve_ratio);
+          
+          return (x < start_curve_value + middle_curve_value + end_curve_value) ? 1.0 : 0.0;
+      }
+      
+      void main() {
+        float x = abs(uv0.x - 0.5) * 2.0;
+        float y = 1.0 - uv0.y;
+        float fade_value = get_fade_value(x, y);
+        vec4 col = lerpColor(vColor, tip_color, 0.4);
+        gl_FragColor = col * fade_value;
+      }`;
+
+    let fragmentShader;
+    switch (this.trailType) {
+      case 'bright':
+        fragmentShader = brightFragmentShader;
+        break;
+      case 'dim':
+        fragmentShader = dimFragmentShader
+        break;
+      case 'acc':
+        fragmentShader = tippingFragmentShader
+        break;
+    }
+
+    return new THREE.ShaderMaterial({
       side: THREE.DoubleSide,
       vertexColors: THREE.VertexColors,
       transparent: true,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
-      vertexShader: [
-        'varying vec4 vColor;',
-        'attribute vec4 vertexColor;',
-        'void main() {',
-        'vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);',
-        'vColor = vertexColor;',
-        'gl_Position = projectionMatrix * modelViewPosition;',
-        '}'
-      ].join(''),
-      fragmentShader: [
-        'varying vec4 vColor;',
-        'void main() {',
-        'gl_FragColor = vColor;',
-        '}'
-      ].join('')
+      vertexShader: vertexShader,
+      fragmentShader: fragmentShader
     });
+  },
 
-    const mesh = this.mesh = new THREE.Mesh(geometry, material);
-    mesh.frustumCulled = false;
-    mesh.vertices = vertices;
-    mesh.renderOrder = 5;
-    this.el.sceneEl.setObject3D(`trail__${this.data.hand}`, mesh);
+  fillUvAndColorArrays: function () {
+    const uv = this.geometry.attributes.uv.array;
+    const colors = this.geometry.attributes.colors.array;
+
+    for (let rowIndex = 0; rowIndex < this.rowsCount; rowIndex++) {
+      for (let columnIndex = 0; columnIndex < this.columnsCount; columnIndex++) {
+        const colorIndexOffset = (rowIndex * this.columnsCount + columnIndex) * 6 * 4;
+        for (let i = 0; i < 6; i++) {
+          const fromIndex = colorIndexOffset + i * 4;
+          colors[fromIndex] = this.bladeColor.r;
+          colors[fromIndex + 1] = this.bladeColor.g;
+          colors[fromIndex + 2] = this.bladeColor.b;
+          colors[fromIndex + 3] = 1;
+        }
+      }
+    }
+
+    let verticalRatio = 1;
+    for (let rowIndex = 0; rowIndex < (this.rowsCount - 1); rowIndex++, verticalRatio -= this.verticalRatioPerStep) {
+      const nextVerticalRatio = verticalRatio - this.verticalRatioPerStep
+
+      let horizontalRatio = 0;
+      for (let columnIndex = 0; columnIndex < (this.columnsCount - 1); columnIndex++, horizontalRatio += this.horizontalRatioPerStep) {
+        const nextHorizontalRatio = horizontalRatio + this.horizontalRatioPerStep
+
+        const uvIndexOffset = (rowIndex * this.horizontalResolution + columnIndex) * 6 * 2;
+
+        uv[uvIndexOffset] = nextHorizontalRatio;
+        uv[uvIndexOffset + 1] = verticalRatio;
+
+        uv[uvIndexOffset + 2] = horizontalRatio;
+        uv[uvIndexOffset + 3] = nextVerticalRatio;
+
+        uv[uvIndexOffset + 4] = horizontalRatio;
+        uv[uvIndexOffset + 5] = verticalRatio;
+
+        uv[uvIndexOffset + 6] = nextHorizontalRatio;
+        uv[uvIndexOffset + 7] = verticalRatio;
+
+        uv[uvIndexOffset + 8] = nextHorizontalRatio;
+        uv[uvIndexOffset + 9] = nextVerticalRatio;
+
+        uv[uvIndexOffset + 10] = horizontalRatio;
+        uv[uvIndexOffset + 11] = nextVerticalRatio;
+      }
+    }
+
+    this.geometry.attributes.uv.needsUpdate = true;
+    this.geometry.attributes.colors.needsUpdate = true;
   },
 
   update: function (oldData) {
@@ -72,268 +275,269 @@ AFRAME.registerComponent('trail', {
   },
 
   tick: function (time, delta) {
-    if (!this.data.enabled) { return; }
+    if (!this.data.enabled) {
+      return;
+    }
     // Delay before showing after enabled to prevent flash from old saber position.
-    if (!this.mesh.visible && time > this.enabledTime + 250) { this.mesh.visible = true; }
-    this.sampleSaberPosition();
-  },
-
-  addLayer: function (length) {
-    var startX = -1.0;
-    var segments = this.segments;
-    var dx = 2 / segments;
-    var colors = this.colors;
-    var vertices = this.vertices;
-    var color = this.bladeColor;
-
-    if (this.layers >= this.maxLayers) { this.layers = 0; }
-
-    const bottomLayer = this.layers * length;
-    length = bottomLayer + length;
-    const indexOffset = this.layers * segments * 18;
-    const colorOffset = this.layers * segments * 24;
-
-    for (var i = 0; i < segments; ++i) {
-      vertices[indexOffset + 18 * i] = startX + i * dx;
-      vertices[indexOffset + 18 * i + 1] = bottomLayer;
-      vertices[indexOffset + 18 * i + 2] = 0.0;
-
-      // Color
-      colors[colorOffset + 24 * i] = color.red;
-      colors[colorOffset + 24 * i + 1] = color.green;
-      colors[colorOffset + 24 * i + 2] = color.blue;
-      colors[colorOffset + 24 * i + 3] = color.alpha;
-
-      vertices[indexOffset + 18 * i + 3] = startX + i * dx;
-      vertices[indexOffset + 18 * i + 4] = length;
-      vertices[indexOffset + 18 * i + 5] = 0.0;
-
-      // Color
-      colors[colorOffset + 24 * i + 4] = color.red;
-      colors[colorOffset + 24 * i + 5] = color.green;
-      colors[colorOffset + 24 * i + 6] = color.blue;
-      colors[colorOffset + 24 * i + 7] = color.alpha;
-
-      vertices[indexOffset + 18 * i + 6] = startX + i * dx + dx;
-      vertices[indexOffset + 18 * i + 7] = length;
-      vertices[indexOffset + 18 * i + 8] = 0.0;
-
-      // Color
-      colors[colorOffset + 24 * i + 8] = color.red;
-      colors[colorOffset + 24 * i + 9] = color.green;
-      colors[colorOffset + 24 * i + 10] = color.blue;
-      colors[colorOffset + 24 * i + 11] = color.alpha;
-
-      vertices[indexOffset + 18 * i + 9] = startX + i * dx + dx;
-      vertices[indexOffset + 18 * i + 10] = bottomLayer;
-      vertices[indexOffset + 18 * i + 11] = 0.0;
-
-      // Color
-      colors[colorOffset + 24 * i + 12] = color.red;
-      colors[colorOffset + 24 * i + 13] = color.green;
-      colors[colorOffset + 24 * i + 14] = color.blue;
-      colors[colorOffset + 24 * i + 15] = color.alpha;
-
-      vertices[indexOffset + 18 * i + 12] = startX + i * dx;
-      vertices[indexOffset + 18 * i + 13] = bottomLayer;
-      vertices[indexOffset + 18 * i + 14] = 0.0;
-
-      // Color
-      colors[colorOffset + 24 * i + 16] = color.red;
-      colors[colorOffset + 24 * i + 17] = color.green;
-      colors[colorOffset + 24 * i + 18] = color.blue;
-      colors[colorOffset + 24 * i + 19] = color.alpha;
-
-      vertices[indexOffset + 18 * i + 15] = startX + i * dx + dx;
-      vertices[indexOffset + 18 * i + 16] = length;
-      vertices[indexOffset + 18 * i + 17] = 0.0;
-
-      // Color
-      colors[colorOffset + 24 * i + 20] = color.red;
-      colors[colorOffset + 24 * i + 21] = color.green;
-      colors[colorOffset + 24 * i + 22] = color.blue;
-      colors[colorOffset + 24 * i + 23] = color.alpha;
+    if (!this.mesh.visible && time > this.enabledTime + 250) {
+      this.mesh.visible = true;
     }
 
-    this.layers++;
-    this.geometry.attributes.position.needsUpdate = true;
-    this.geometry.attributes.vertexColor.needsUpdate = true;
-    this.geometry.attributes.uv.needsUpdate = true;
+    if (!this.addNode(this.createNewNode())) return;
+    this.updateMesh(this.calculateRowNodes());
   },
 
-  initGeometry: function () {
-    var i;
-    var previousPoint;
-    var currentPoint;
-    var saberTrajectory = this.saberTrajectory;
-    var vertices = this.geometry.attributes.position.array;
-    var colors = this.geometry.attributes.vertexColor.array;
-    var color = this.bladeColor;
-    var alpha = 0.2;
-    var previousAlpha;
+  updateMesh: function (rowNodes) {
+    const vertices = this.geometry.attributes.position.array;
 
-    for (i = 1; i < saberTrajectory.length; i++) {
-      if (i === 1) { previousAlpha = alpha; }
-      alpha = 1.0 - ((saberTrajectory.length - i) / saberTrajectory.length);
+    const horizontalRatioPerStep = 1 / this.horizontalResolution;
 
-      currentPoint = saberTrajectory[i];
-      previousPoint = saberTrajectory[i - 1];
+    for (let rowIndex = 0; rowIndex < (this.rowsCount - 1); rowIndex++) {
+      const currentNode = rowNodes[rowIndex];
+      const nextNode = rowNodes[rowIndex + 1];
 
-      vertices[36 * i] = previousPoint.center.x;
-      vertices[36 * i + 1] = previousPoint.center.y;
-      vertices[36 * i + 2] = previousPoint.center.z;
+      let currentHorizontalRatio = 0;
+      for (let columnIndex = 0; columnIndex < (this.columnsCount - 1); columnIndex++, currentHorizontalRatio += horizontalRatioPerStep) {
+        const nextHorizontalRatio = currentHorizontalRatio + horizontalRatioPerStep;
 
-      // Color
-      colors[48 * i] = color.red;
-      colors[48 * i + 1] = color.green;
-      colors[48 * i + 2] = color.blue;
-      colors[48 * i + 3] = previousAlpha * 0.2;
+        const topLeftVertex = this.lerpNode(currentNode, currentHorizontalRatio);
+        const topRightVertex = this.lerpNode(currentNode, nextHorizontalRatio);
+        const bottomLeftVertex = this.lerpNode(nextNode, currentHorizontalRatio);
+        const bottomRightVertex = this.lerpNode(nextNode, nextHorizontalRatio);
 
-      vertices[36 * i + 3] = currentPoint.top.x;
-      vertices[36 * i + 4] = currentPoint.top.y;
-      vertices[36 * i + 5] = currentPoint.top.z;
+        const vertexIndexOffset = (rowIndex * this.horizontalResolution + columnIndex) * 6 * 3;
 
-      // Color
-      colors[48 * i + 4] = color.red;
-      colors[48 * i + 5] = color.green;
-      colors[48 * i + 6] = color.blue;
-      colors[48 * i + 7] = alpha;
+        vertices[vertexIndexOffset] = topRightVertex.x;
+        vertices[vertexIndexOffset + 1] = topRightVertex.y;
+        vertices[vertexIndexOffset + 2] = topRightVertex.z;
 
-      vertices[36 * i + 6] = previousPoint.top.x;
-      vertices[36 * i + 7] = previousPoint.top.y;
-      vertices[36 * i + 8] = previousPoint.top.z;
+        vertices[vertexIndexOffset + 3] = bottomLeftVertex.x;
+        vertices[vertexIndexOffset + 4] = bottomLeftVertex.y;
+        vertices[vertexIndexOffset + 5] = bottomLeftVertex.z;
 
-      // Color
-      colors[48 * i + 8] = color.red;
-      colors[48 * i + 9] = color.green;
-      colors[48 * i + 10] = color.blue;
-      colors[48 * i + 11] = previousAlpha;
+        vertices[vertexIndexOffset + 6] = topLeftVertex.x;
+        vertices[vertexIndexOffset + 7] = topLeftVertex.y;
+        vertices[vertexIndexOffset + 8] = topLeftVertex.z;
 
-      vertices[36 * i + 9] = previousPoint.center.x;
-      vertices[36 * i + 10] = previousPoint.center.y;
-      vertices[36 * i + 11] = previousPoint.center.z;
+        vertices[vertexIndexOffset + 9] = topRightVertex.x;
+        vertices[vertexIndexOffset + 10] = topRightVertex.y;
+        vertices[vertexIndexOffset + 11] = topRightVertex.z;
 
-      // Color
-      colors[48 * i + 12] = color.red;
-      colors[48 * i + 13] = color.green;
-      colors[48 * i + 14] = color.blue;
-      colors[48 * i + 15] = previousAlpha * 0.2;
+        vertices[vertexIndexOffset + 12] = bottomRightVertex.x;
+        vertices[vertexIndexOffset + 13] = bottomRightVertex.y;
+        vertices[vertexIndexOffset + 14] = bottomRightVertex.z;
 
-      vertices[36 * i + 12] = currentPoint.center.x;
-      vertices[36 * i + 13] = currentPoint.center.y;
-      vertices[36 * i + 14] = currentPoint.center.z;
-
-      // Color
-      colors[48 * i + 16] = color.red;
-      colors[48 * i + 17] = color.green;
-      colors[48 * i + 18] = color.blue;
-      colors[48 * i + 19] = alpha * 0.2;
-
-      vertices[36 * i + 15] = currentPoint.top.x;
-      vertices[36 * i + 16] = currentPoint.top.y;
-      vertices[36 * i + 17] = currentPoint.top.z;
-
-      // Color
-      colors[48 * i + 20] = color.red;
-      colors[48 * i + 21] = color.green;
-      colors[48 * i + 22] = color.blue;
-      colors[48 * i + 23] = alpha;
-
-      vertices[36 * i + 18] = previousPoint.bottom.x;
-      vertices[36 * i + 19] = previousPoint.bottom.y;
-      vertices[36 * i + 20] = previousPoint.bottom.z;
-
-      // Color
-      colors[48 * i + 24] = color.red;
-      colors[48 * i + 25] = color.green;
-      colors[48 * i + 26] = color.blue;
-      colors[48 * i + 27] = 0.0;
-
-      vertices[36 * i + 21] = currentPoint.center.x;
-      vertices[36 * i + 22] = currentPoint.center.y;
-      vertices[36 * i + 23] = currentPoint.center.z;
-
-      // Color
-      colors[48 * i + 28] = color.red;
-      colors[48 * i + 29] = color.green;
-      colors[48 * i + 30] = color.blue;
-      colors[48 * i + 31] = alpha * 0.2;
-
-      vertices[36 * i + 24] = previousPoint.center.x;
-      vertices[36 * i + 25] = previousPoint.center.y;
-      vertices[36 * i + 26] = previousPoint.center.z;
-
-      // Color
-      colors[48 * i + 32] = color.red;
-      colors[48 * i + 33] = color.green;
-      colors[48 * i + 34] = color.blue;
-      colors[48 * i + 35] = previousAlpha * 0.2;
-
-      vertices[36 * i + 27] = previousPoint.bottom.x;
-      vertices[36 * i + 28] = previousPoint.bottom.y;
-      vertices[36 * i + 29] = previousPoint.bottom.z;
-
-      // Color
-      colors[48 * i + 36] = color.red;
-      colors[48 * i + 37] = color.green;
-      colors[48 * i + 38] = color.blue;
-      colors[48 * i + 39] = 0.0;
-
-      vertices[36 * i + 30] = currentPoint.bottom.x;
-      vertices[36 * i + 31] = currentPoint.bottom.y;
-      vertices[36 * i + 32] = currentPoint.bottom.z;
-
-      // Color
-      colors[48 * i + 40] = color.red;
-      colors[48 * i + 41] = color.green;
-      colors[48 * i + 42] = color.blue;
-      colors[48 * i + 43] = 0.0;
-
-      vertices[36 * i + 33] = currentPoint.center.x;
-      vertices[36 * i + 34] = currentPoint.center.y;
-      vertices[36 * i + 35] = currentPoint.center.z;
-
-      // Color
-      colors[48 * i + 44] = color.red;
-      colors[48 * i + 45] = color.green;
-      colors[48 * i + 46] = color.blue;
-      colors[48 * i + 47] = alpha * 0.2;
-
-      previousAlpha = alpha;
+        vertices[vertexIndexOffset + 15] = bottomLeftVertex.x;
+        vertices[vertexIndexOffset + 16] = bottomLeftVertex.y;
+        vertices[vertexIndexOffset + 17] = bottomLeftVertex.z;
+      }
     }
 
     this.geometry.attributes.position.needsUpdate = true;
-    this.geometry.attributes.vertexColor.needsUpdate = true;
   },
 
-  sampleSaberPosition: function () {
-    var saberEl = this.saberEl;
-    var saberObject;
-    var sample;
+  createNewNode: function () {
+    const saberObject = this.saberEl.object3D;
 
-    if (this.saberTrajectory.length === this.maxPoints) {
-      // Dump oldest point.
-      sample = this.saberTrajectory.shift();
-      sample.top.set(0, -0.5, 0);
-      sample.center.set(0, 0, 0);
-      sample.bottom.set(0, 0.4, 0);
-    } else {
-      sample = {
-        top: new THREE.Vector3(0, -0.5, 0),
-        center: new THREE.Vector3(0, 0, 0),
-        bottom: new THREE.Vector3(0, 0.4, 0)
-      };
+    let newNode;
+
+    switch (this.trailType) {
+      case 'bright':
+        newNode = {
+          from: new THREE.Vector3(0, 0.4, 0),
+          to: new THREE.Vector3(0, -0.5, 0)
+        }
+        break;
+      case 'dim':
+        newNode = {
+          from: new THREE.Vector3(0, -0.2, 0),
+          to: new THREE.Vector3(0, -0.5, 0)
+        }
+        break;
+      case 'acc':
+        newNode = {
+          from: new THREE.Vector3(this.tippingTrailHalfWidth, -0.5, 0),
+          to: new THREE.Vector3(-this.tippingTrailHalfWidth, -0.5, 0)
+        }
+        break;
     }
-
-    saberObject = saberEl.object3D;
 
     saberObject.parent.updateMatrixWorld();
-    saberObject.localToWorld(sample.top);
-    saberObject.localToWorld(sample.center);
-    saberObject.localToWorld(sample.bottom);
+    saberObject.localToWorld(newNode.from);
+    saberObject.localToWorld(newNode.to);
 
-    this.saberTrajectory.push(sample);
+    return newNode;
+  },
 
-    this.initGeometry();
-  }
+  addNode: function (newNode) {
+    const newTipPosition = newNode.from;
+    let totalDifference = 0.0;
+    totalDifference += Math.abs(this.previousTipPosition.x - newTipPosition.x);
+    totalDifference += Math.abs(this.previousTipPosition.y - newTipPosition.y);
+    totalDifference += Math.abs(this.previousTipPosition.z - newTipPosition.z);
+    if (totalDifference < 0.0001) return false;
+    this.previousTipPosition = newTipPosition;
+
+    if (this.hasFirstNode) {
+      const linearFrom = this.divideNode(this.sumNodes(this.lastAddedNode, newNode), 2);
+      this.linearSegment = this.createLinearSegment(linearFrom, newNode);
+      this.lastAddedNode = newNode;
+    } else {
+      this.lastAddedNode = newNode;
+      this.hasFirstNode = true;
+    }
+
+    const handlesArray = this.handlesArray;
+    if (handlesArray.length === 3) {
+      handlesArray.shift();
+    }
+    handlesArray.push(newNode);
+
+    if (handlesArray.length < 3) return false;
+
+    const newSegment = this.createCurvedSegment(handlesArray[0], handlesArray[1], handlesArray[2])
+    if (this.curvedSegmentsArray.length === this.lifetime) {
+      this.curvedSegmentsArray.shift()
+    }
+    this.curvedSegmentsArray.push(newSegment)
+    return true;
+  },
+
+  createLinearSegment: function (from, to) {
+    return {
+      from: from,
+      amplitude: this.subtractNodes(to, from)
+    }
+  },
+
+  createCurvedSegment: function (handleA, handleB, handleC) {
+    const p00 = this.divideNode(this.sumNodes(handleA, handleB), 2);
+    const p01 = handleB;
+    const p02 = this.divideNode(this.sumNodes(handleB, handleC), 2);
+    const v00 = this.subtractNodes(p01, p00);
+    const v01 = this.subtractNodes(p02, p01);
+    return {
+      p00: p00,
+      p01: p01,
+      v00: v00,
+      v01: v01
+    }
+  },
+
+  calculateRowNodes: function () {
+    const rowNodesArray = [];
+
+    const linearWeight = 0.5;
+    const splinesWeight = this.curvedSegmentsArray.length;
+    const totalWeight = linearWeight + splinesWeight;
+    const linearAmplitude = linearWeight / totalWeight;
+    const splinesAmplitude = splinesWeight / totalWeight;
+
+    let i;
+    let tt = 0.0;
+    let localT;
+    const tPerStep = 1 / this.verticalResolution;
+
+    for (i = 0; i < this.rowsCount; i++, tt += tPerStep) {
+      const t = tt;
+      if (t <= linearAmplitude) {
+        localT = 1 - t / linearAmplitude;
+        rowNodesArray.push(this.getPointLinear(localT));
+      } else {
+        localT = 1 - (t - linearAmplitude) / splinesAmplitude;
+        rowNodesArray.push(this.getPointSplines(localT));
+      }
+    }
+
+    return rowNodesArray;
+  },
+
+  getPointLinear: function (localT) {
+    const linearSegment = this.linearSegment;
+    return this.sumNodes(linearSegment.from, this.multiplyNode(linearSegment.amplitude, localT))
+  },
+
+  getPointSplines: function (localT) {
+    const tPerSpline = 1 / this.curvedSegmentsArray.length;
+    let splineIndex = Math.floor(localT / tPerSpline);
+    if (splineIndex < 0) splineIndex = 0;
+    if (splineIndex >= this.curvedSegmentsArray.length) splineIndex = this.curvedSegmentsArray.length - 1;
+    const splineT = (localT - tPerSpline * splineIndex) / tPerSpline;
+    return this.evaluateCurvedSegment(this.curvedSegmentsArray[splineIndex], splineT);
+  },
+
+  evaluateCurvedSegment: function (segment, t) {
+    const p10 = this.sumNodes(segment.p00, this.multiplyNode(segment.v00, t));
+    const p11 = this.sumNodes(segment.p01, this.multiplyNode(segment.v01, t));
+    const v10 = this.subtractNodes(p11, p10);
+    return this.sumNodes(p10, this.multiplyNode(v10, t));
+  },
+
+  lerpNode: function (node, t) {
+    return new THREE.Vector3(
+      node.from.x + (node.to.x - node.from.x) * t,
+      node.from.y + (node.to.y - node.from.y) * t,
+      node.from.z + (node.to.z - node.from.z) * t,
+    );
+  },
+
+  sumNodes: function (nodeA, nodeB) {
+    return {
+      from: new THREE.Vector3(
+        nodeA.from.x + nodeB.from.x,
+        nodeA.from.y + nodeB.from.y,
+        nodeA.from.z + nodeB.from.z
+      ),
+      to: new THREE.Vector3(
+        nodeA.to.x + nodeB.to.x,
+        nodeA.to.y + nodeB.to.y,
+        nodeA.to.z + nodeB.to.z
+      )
+    }
+  },
+
+  subtractNodes: function (nodeA, nodeB) {
+    return {
+      from: new THREE.Vector3(
+        nodeA.from.x - nodeB.from.x,
+        nodeA.from.y - nodeB.from.y,
+        nodeA.from.z - nodeB.from.z
+      ),
+      to: new THREE.Vector3(
+        nodeA.to.x - nodeB.to.x,
+        nodeA.to.y - nodeB.to.y,
+        nodeA.to.z - nodeB.to.z
+      )
+    }
+  },
+
+  multiplyNode: function (node, number) {
+    return {
+      from: new THREE.Vector3(
+        node.from.x * number,
+        node.from.y * number,
+        node.from.z * number
+      ),
+      to: new THREE.Vector3(
+        node.to.x * number,
+        node.to.y * number,
+        node.to.z * number
+      )
+    }
+  },
+
+  divideNode: function (node, number) {
+    return {
+      from: new THREE.Vector3(
+        node.from.x / number,
+        node.from.y / number,
+        node.from.z / number
+      ),
+      to: new THREE.Vector3(
+        node.to.x / number,
+        node.to.y / number,
+        node.to.z / number
+      )
+    }
+  },
 });

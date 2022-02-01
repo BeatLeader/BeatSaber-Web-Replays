@@ -603,7 +603,6 @@ AFRAME.registerComponent('beat', {
     var point3 = new THREE.Vector3();
 
     return function (saberEl) {
-
       if (!this.settings.settings.reducedDebris) {
         var coplanarPoint;
         var cutThickness = this.cutThickness = 0.02;
@@ -616,11 +615,11 @@ AFRAME.registerComponent('beat', {
         var rightBorderInnerPlane = this.rightBorderInnerPlane;
         var rightBorderOuterPlane = this.rightBorderOuterPlane;
         var rightCutPlane = this.rightCutPlane;
-        var trailPoints = saberEl.components.trail.saberTrajectory;
+        var cutPlaneComponent = saberEl.components['cut-plane'];
 
-        point1.copy(trailPoints[0].top);
-        point2.copy(trailPoints[0].center);
-        point3.copy(trailPoints[trailPoints.length - 1].top);
+        point1.copy(cutPlaneComponent.currentFrameSaberTop);
+        point2.copy(cutPlaneComponent.currentFrameSaberCenter);
+        point3.copy(cutPlaneComponent.previousFrameSaberTop);
         direction.copy(point1).sub(point3);
 
         this.partRightEl.object3D.position.set(0, 0, 0);

@@ -12,7 +12,7 @@ AFRAME.registerComponent('trail', {
     this.lifetime = 20; //frames
     this.verticalResolution = 120; //quads
     this.horizontalResolution = 2; //quads
-    this.tippingTrailHalfWidth = 0.03; //meters
+    this.accTrailHalfWidth = 0.03; //meters
     //TRAIL CONFIG ---------------------------------------------------------------------
 
     this.saberEl = this.el.querySelector('.blade');
@@ -356,8 +356,8 @@ AFRAME.registerComponent('trail', {
         break;
       case 'acc':
         newNode = {
-          from: new THREE.Vector3(this.tippingTrailHalfWidth, -0.5, 0),
-          to: new THREE.Vector3(-this.tippingTrailHalfWidth, -0.5, 0)
+          from: new THREE.Vector3(this.accTrailHalfWidth, -0.5, 0),
+          to: new THREE.Vector3(-this.accTrailHalfWidth, -0.5, 0)
         }
         break;
     }

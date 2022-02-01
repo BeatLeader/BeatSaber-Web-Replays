@@ -1,83 +1,8 @@
-AFRAME.registerComponent('trail', {
-  schema: {
-    color: {type: 'color'},
-    enabled: {default: false},
-    hand: {type: 'string'}
-  },
-
-  init: function () {
-    //TRAIL CONFIG ---------------------------------------------------------------------
-    //You must call init (and potentially dispose already existing mesh) after any config change
-    this.trailType = 'bright' //available types: 'bright', 'dim', 'acc'
-
-    this.lifetime = 20; //frames
-    this.verticalResolution = 120; //quads
-    this.horizontalResolution = 2; //quads
-
-    this.brightTrailWidth = 0.9; //meters
-    this.dimTrailWidth = 0.3; //meters
-    this.accTrailHalfWidth = 0.05; //meters
-    //TRAIL CONFIG ---------------------------------------------------------------------
-
-    this.saberEl = this.el.querySelector('.blade');
-    this.bladeColor = new THREE.Color(this.data.color);
-
-    this.verticalRatioPerStep = 1 / this.verticalResolution;
-    this.horizontalRatioPerStep = 1 / this.horizontalResolution;
-    this.columnsCount = this.horizontalResolution + 1;
-    this.rowsCount = this.verticalResolution + 1;
-
-    this.previousTipPosition = new THREE.Vector3(0, 0, 0);
-    this.mesh = this.createMesh();
-  },
-
-  createMesh: function () {
-    const quadCount = this.verticalResolution * this.horizontalResolution;
-
-    const geometry = this.geometry = new THREE.BufferGeometry();
-    const vertices = this.vertices = new Float32Array(quadCount * 6 * 3);
-    const colors = this.vertices = new Float32Array(quadCount * 6 * 4);
-    const uv = this.uv = new Float32Array(quadCount * 6 * 2);
-
-    this.handlesArray = [];
-    this.curvedSegmentsArray = [];
-    this.linearSegment = null;
-    this.lastAddedNode = null;
-    this.hasFirstNode = false;
-
-    geometry.addAttribute('position', new THREE.BufferAttribute(vertices, 3).setDynamic(true));
-    geometry.addAttribute('colors', new THREE.BufferAttribute(colors, 4).setDynamic(true));
-    geometry.addAttribute('uv', new THREE.BufferAttribute(uv, 2).setDynamic(true));
-
-    const material = this.createMaterial();
-
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.frustumCulled = false;
-    mesh.vertices = vertices;
-    mesh.uv = uv;
-    mesh.renderOrder = 5;
-    this.el.sceneEl.setObject3D(`trail__${this.data.hand}`, mesh);
-
-    this.fillUvAndColorArrays();
-
-    return mesh;
-  },
-
-  createMaterial: function () {
-    const vertexShader = `
-      varying vec4 vColor;
-      varying vec2 uv0;
-      attribute vec4 colors;
-      
-      void main() {
-        vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
-        uv0 = uv;
-        vColor = colors;
-        gl_Position = projectionMatrix * modelViewPosition;
-      }`;
-
-    const brightFragmentShader = `
-      varying vec4 vColor;
+const TRAILS = {
+  bright: {
+    width: 0.9,
+    fragmentShader: `
+      uniform vec4 bladeColor;
       varying vec2 uv0;
       
       #define tipColor vec4(1.0, 1.0, 1.0, 1.0)
@@ -94,13 +19,15 @@ AFRAME.registerComponent('trail', {
       void main() {
         float nullFade = pow(uv0.y, 2.0) * pow(uv0.x, 0.5);
         float tipFade = 0.8 * pow(uv0.x, 10.0 + 60.0 * (1.0 - uv0.y)) * pow(uv0.y, 0.4);
-        vec4 col = vColor * nullFade;
+        vec4 col = bladeColor * nullFade;
         col = lerpColor(col, tipColor, tipFade);
         gl_FragColor = col;
-      }`;
-
-    const dimFragmentShader = `
-      varying vec4 vColor;
+      }`
+  },
+  dim: {
+    width: 0.3,
+    fragmentShader: `
+      uniform vec4 bladeColor;
       varying vec2 uv0;
       
       #define tipColor vec4(1.0, 1.0, 1.0, 1.0)
@@ -117,13 +44,15 @@ AFRAME.registerComponent('trail', {
       void main() {
         float nullFade = pow(uv0.y, 2.0) * pow(uv0.x, 0.8);
         float tipFade = 0.2 * pow(uv0.x, 10.0 + 60.0 * (1.0 - uv0.y)) * pow(uv0.y, 0.4);
-        vec4 col = vColor * nullFade;
+        vec4 col = bladeColor * nullFade;
         col = lerpColor(col, tipColor, tipFade);
         gl_FragColor = col;
-      }`;
-
-    const accFragmentShader = `
-      varying vec4 vColor;
+      }`
+  },
+  slim: {
+    width: 0.05,
+    fragmentShader: `
+      uniform vec4 bladeColor;
       varying vec2 uv0;
       
       #define pi 3.1415926
@@ -188,50 +117,91 @@ AFRAME.registerComponent('trail', {
         float x = abs(uv0.x - 0.5) * 2.0;
         float y = 1.0 - uv0.y;
         float fade_value = get_fade_value(x, y);
-        vec4 col = lerpColor(vColor, tip_color, 0.4);
+        vec4 col = lerpColor(bladeColor, tip_color, 0.4);
         gl_FragColor = col * fade_value;
-      }`;
+      }`
+  }
+}
 
-    let fragmentShader;
-    switch (this.trailType) {
-      case 'bright':
-        fragmentShader = brightFragmentShader;
-        break;
-      case 'dim':
-        fragmentShader = dimFragmentShader
-        break;
-      case 'acc':
-        fragmentShader = accFragmentShader
-        break;
-    }
+AFRAME.registerComponent('trail', {
+  schema: {
+    color: {type: 'color'},
+    enabled: {default: false},
+    hand: {type: 'string'}
+  },
+
+  init: function () {
+    //TRAIL CONFIG ---------------------------------------------------------------------
+    //You must call init (and potentially dispose already existing mesh) after any config change
+    this.trailType = TRAILS.bright
+    this.lifetime = 20; //frames
+    this.verticalResolution = 120; //quads
+    this.horizontalResolution = 2; //quads
+    //TRAIL CONFIG ---------------------------------------------------------------------
+
+    this.saberEl = this.el.querySelector('.blade');
+
+    this.verticalRatioPerStep = 1 / this.verticalResolution;
+    this.horizontalRatioPerStep = 1 / this.horizontalResolution;
+    this.columnsCount = this.horizontalResolution + 1;
+    this.rowsCount = this.verticalResolution + 1;
+
+    this.previousTipPosition = new THREE.Vector3(0, 0, 0);
+    this.material = this.createMaterial();
+    this.mesh = this.createMesh();
+
+    this.handlesArray = [];
+    this.curvedSegmentsArray = [];
+    this.linearSegment = null;
+    this.lastAddedNode = null;
+  },
+
+  createMesh: function () {
+    const quadCount = this.verticalResolution * this.horizontalResolution;
+
+    const geometry = this.geometry = new THREE.BufferGeometry();
+    const vertices = this.vertices = new Float32Array(quadCount * 6 * 3);
+    const uv = this.uv = new Float32Array(quadCount * 6 * 2);
+
+    geometry.addAttribute('position', new THREE.BufferAttribute(vertices, 3).setDynamic(true));
+    geometry.addAttribute('uv', new THREE.BufferAttribute(uv, 2).setDynamic(true));
+
+    const mesh = new THREE.Mesh(geometry, this.material);
+    mesh.frustumCulled = false;
+    mesh.vertices = vertices;
+    mesh.uv = uv;
+    mesh.renderOrder = 5;
+    this.el.sceneEl.setObject3D(`trail__${this.data.hand}`, mesh);
+
+    this.fillUvArray();
+    return mesh;
+  },
+
+  createMaterial: function () {
+    const vertexShader = `
+      varying vec2 uv0;
+      
+      void main() {
+        uv0 = uv;
+        vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
+        gl_Position = projectionMatrix * modelViewPosition;
+      }`;
 
     return new THREE.ShaderMaterial({
       side: THREE.DoubleSide,
-      vertexColors: THREE.VertexColors,
       transparent: true,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
       vertexShader: vertexShader,
-      fragmentShader: fragmentShader
+      fragmentShader: this.trailType.fragmentShader,
+      uniforms: {
+        bladeColor: {value: {x: 0, y: 0, z: 0, w: 0}}
+      }
     });
   },
 
-  fillUvAndColorArrays: function () {
+  fillUvArray: function () {
     const uv = this.geometry.attributes.uv.array;
-    const colors = this.geometry.attributes.colors.array;
-
-    for (let rowIndex = 0; rowIndex < this.rowsCount; rowIndex++) {
-      for (let columnIndex = 0; columnIndex < this.columnsCount; columnIndex++) {
-        const colorIndexOffset = (rowIndex * this.horizontalResolution + columnIndex) * 6 * 4;
-        for (let i = 0; i < 6; i++) {
-          const fromIndex = colorIndexOffset + i * 4;
-          colors[fromIndex] = this.bladeColor.r;
-          colors[fromIndex + 1] = this.bladeColor.g;
-          colors[fromIndex + 2] = this.bladeColor.b;
-          colors[fromIndex + 3] = 1;
-        }
-      }
-    }
 
     let verticalRatio = 1;
     for (let rowIndex = 0; rowIndex < (this.rowsCount - 1); rowIndex++, verticalRatio -= this.verticalRatioPerStep) {
@@ -264,7 +234,17 @@ AFRAME.registerComponent('trail', {
     }
 
     this.geometry.attributes.uv.needsUpdate = true;
-    this.geometry.attributes.colors.needsUpdate = true;
+  },
+
+  updateColor: function () {
+    const bladeColor = new THREE.Color(this.data.color);
+    this.material.uniforms.bladeColor.value = {
+      x: bladeColor.r,
+      y: bladeColor.g,
+      z: bladeColor.b,
+      w: 1
+    };
+    this.material.uniformsNeedUpdate = true;
   },
 
   update: function (oldData) {
@@ -276,6 +256,8 @@ AFRAME.registerComponent('trail', {
     if (oldData.enabled && !this.data.enabled) {
       this.mesh.visible = false;
     }
+
+    this.updateColor();
   },
 
   tick: function (time, delta) {
@@ -346,22 +328,17 @@ AFRAME.registerComponent('trail', {
     let newNode;
 
     switch (this.trailType) {
-      case 'bright':
+      case TRAILS.bright:
+      case TRAILS.dim:
         newNode = {
-          from: new THREE.Vector3(0, -0.5 + this.brightTrailWidth, 0),
+          from: new THREE.Vector3(0, -0.5 + this.trailType.width, 0),
           to: new THREE.Vector3(0, -0.5, 0)
         }
         break;
-      case 'dim':
+      case TRAILS.slim:
         newNode = {
-          from: new THREE.Vector3(0, -0.5 + this.dimTrailWidth, 0),
-          to: new THREE.Vector3(0, -0.5, 0)
-        }
-        break;
-      case 'acc':
-        newNode = {
-          from: new THREE.Vector3(this.accTrailHalfWidth, -0.5, 0),
-          to: new THREE.Vector3(-this.accTrailHalfWidth, -0.5, 0)
+          from: new THREE.Vector3(this.trailType.width / 2.0, -0.5, 0),
+          to: new THREE.Vector3(-this.trailType.width / 2.0, -0.5, 0)
         }
         break;
     }
@@ -382,13 +359,12 @@ AFRAME.registerComponent('trail', {
     if (totalDifference < 0.0001) return false;
     this.previousTipPosition = newTipPosition;
 
-    if (this.hasFirstNode) {
+    if (this.lastAddedNode) {
       const linearFrom = this.divideNode(this.sumNodes(this.lastAddedNode, newNode), 2);
       this.linearSegment = this.createLinearSegment(linearFrom, newNode);
       this.lastAddedNode = newNode;
     } else {
       this.lastAddedNode = newNode;
-      this.hasFirstNode = true;
     }
 
     const handlesArray = this.handlesArray;

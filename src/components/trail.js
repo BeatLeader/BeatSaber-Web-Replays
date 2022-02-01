@@ -118,7 +118,7 @@ AFRAME.registerComponent('trail', {
         gl_FragColor = col;
       }`;
 
-    const tippingFragmentShader = `
+    const accFragmentShader = `
       varying vec4 vColor;
       varying vec2 uv0;
       
@@ -197,7 +197,7 @@ AFRAME.registerComponent('trail', {
         fragmentShader = dimFragmentShader
         break;
       case 'acc':
-        fragmentShader = tippingFragmentShader
+        fragmentShader = accFragmentShader
         break;
     }
 

@@ -8,11 +8,15 @@ AFRAME.registerComponent('trail', {
   init: function () {
     //TRAIL CONFIG ---------------------------------------------------------------------
     //You must call init (and potentially dispose already existing mesh) after any config change
-    this.trailType = 'bright' //available types: 'bright', 'dim', 'acc'
+    this.trailType = 'acc' //available types: 'bright', 'dim', 'acc'
+
     this.lifetime = 20; //frames
     this.verticalResolution = 120; //quads
     this.horizontalResolution = 2; //quads
-    this.accTrailHalfWidth = 0.03; //meters
+
+    this.brightTrailWidth = 0.9; //meters
+    this.dimTrailWidth = 0.3; //meters
+    this.accTrailHalfWidth = 0.05; //meters
     //TRAIL CONFIG ---------------------------------------------------------------------
 
     this.saberEl = this.el.querySelector('.blade');
@@ -218,7 +222,7 @@ AFRAME.registerComponent('trail', {
 
     for (let rowIndex = 0; rowIndex < this.rowsCount; rowIndex++) {
       for (let columnIndex = 0; columnIndex < this.columnsCount; columnIndex++) {
-        const colorIndexOffset = (rowIndex * this.columnsCount + columnIndex) * 6 * 4;
+        const colorIndexOffset = (rowIndex * this.horizontalResolution + columnIndex) * 6 * 4;
         for (let i = 0; i < 6; i++) {
           const fromIndex = colorIndexOffset + i * 4;
           colors[fromIndex] = this.bladeColor.r;
@@ -344,13 +348,13 @@ AFRAME.registerComponent('trail', {
     switch (this.trailType) {
       case 'bright':
         newNode = {
-          from: new THREE.Vector3(0, 0.4, 0),
+          from: new THREE.Vector3(0, -0.5 + this.brightTrailWidth, 0),
           to: new THREE.Vector3(0, -0.5, 0)
         }
         break;
       case 'dim':
         newNode = {
-          from: new THREE.Vector3(0, -0.2, 0),
+          from: new THREE.Vector3(0, -0.5 + this.dimTrailWidth, 0),
           to: new THREE.Vector3(0, -0.5, 0)
         }
         break;
@@ -434,12 +438,11 @@ AFRAME.registerComponent('trail', {
     const splinesAmplitude = splinesWeight / totalWeight;
 
     let i;
-    let tt = 0.0;
+    let t = 0.0;
     let localT;
     const tPerStep = 1 / this.verticalResolution;
 
-    for (i = 0; i < this.rowsCount; i++, tt += tPerStep) {
-      const t = tt;
+    for (i = 0; i < this.rowsCount; i++, t += tPerStep) {
       if (t <= linearAmplitude) {
         localT = 1 - t / linearAmplitude;
         rowNodesArray.push(this.getPointLinear(localT));

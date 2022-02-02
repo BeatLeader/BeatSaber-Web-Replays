@@ -453,70 +453,34 @@ AFRAME.registerComponent('trail', {
   },
 
   lerpNode: function (node, t) {
-    return new THREE.Vector3(
-      node.from.x + (node.to.x - node.from.x) * t,
-      node.from.y + (node.to.y - node.from.y) * t,
-      node.from.z + (node.to.z - node.from.z) * t,
-    );
+    return new THREE.Vector3().lerpVectors(node.from, node.to, t);
   },
 
   sumNodes: function (nodeA, nodeB) {
     return {
-      from: new THREE.Vector3(
-        nodeA.from.x + nodeB.from.x,
-        nodeA.from.y + nodeB.from.y,
-        nodeA.from.z + nodeB.from.z
-      ),
-      to: new THREE.Vector3(
-        nodeA.to.x + nodeB.to.x,
-        nodeA.to.y + nodeB.to.y,
-        nodeA.to.z + nodeB.to.z
-      )
+      from: new THREE.Vector3().addVectors(nodeA.from, nodeB.from),
+      to: new THREE.Vector3().addVectors(nodeA.to, nodeB.to)
     }
   },
 
   subtractNodes: function (nodeA, nodeB) {
     return {
-      from: new THREE.Vector3(
-        nodeA.from.x - nodeB.from.x,
-        nodeA.from.y - nodeB.from.y,
-        nodeA.from.z - nodeB.from.z
-      ),
-      to: new THREE.Vector3(
-        nodeA.to.x - nodeB.to.x,
-        nodeA.to.y - nodeB.to.y,
-        nodeA.to.z - nodeB.to.z
-      )
+      from: new THREE.Vector3().subVectors(nodeA.from, nodeB.from),
+      to: new THREE.Vector3().subVectors(nodeA.to, nodeB.to)
     }
   },
 
   multiplyNode: function (node, number) {
     return {
-      from: new THREE.Vector3(
-        node.from.x * number,
-        node.from.y * number,
-        node.from.z * number
-      ),
-      to: new THREE.Vector3(
-        node.to.x * number,
-        node.to.y * number,
-        node.to.z * number
-      )
+      from: new THREE.Vector3().copy(node.from).multiplyScalar(number),
+      to: new THREE.Vector3().copy(node.to).multiplyScalar(number)
     }
   },
 
   divideNode: function (node, number) {
     return {
-      from: new THREE.Vector3(
-        node.from.x / number,
-        node.from.y / number,
-        node.from.z / number
-      ),
-      to: new THREE.Vector3(
-        node.to.x / number,
-        node.to.y / number,
-        node.to.z / number
-      )
+      from: node.from.clone().divideScalar(number),
+      to: node.to.clone().divideScalar(number)
     }
   },
 });

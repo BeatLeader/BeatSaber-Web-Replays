@@ -5,6 +5,9 @@ AFRAME.registerComponent('replay-player', {
 
     init: function () {
         this.saberEls = this.el.sceneEl.querySelectorAll('[saber-controls]');
+
+        this.firstSaberControl = this.saberEls[0].components["saber-controls"];
+        this.secondSaberControl = this.saberEls[1].components["saber-controls"];
         
         this.replayDecoder = this.el.sceneEl.components['replay-loader'];
         this.fpsCounter = this.el.sceneEl.components['fps-counter'];
@@ -55,6 +58,8 @@ AFRAME.registerComponent('replay-player', {
           if (frame.a == 0 && nextFrame.a == 0) return;
 
           this.fpsCounter.replayFps = frame.i;
+          this.firstSaberControl.frameIndex = frameIndex;
+          this.secondSaberControl.frameIndex = frameIndex;
 
           var replayHeight;
           if (replay.dynamicHeight.length) {
@@ -80,6 +85,8 @@ AFRAME.registerComponent('replay-player', {
     rightHandedTock: function(frame, nextFrame, height, slerpValue, delta) {
           const leftSaber = this.saberEls[0].object3D;
           const rightSaber = this.saberEls[1].object3D;
+          const leftHitboxSaber = this.firstSaberControl.hitboxSaber;
+          const rightHitboxSaber = this.secondSaberControl.hitboxSaber;
           const headset = this.headset.object3D;
           const povCamera = this.povCameraRig.object3D;
 
@@ -87,10 +94,12 @@ AFRAME.registerComponent('replay-player', {
           const v2 = this.v2;
           
           v1.set(frame.l.p.x, frame.l.p.y, frame.l.p.z); v2.set(nextFrame.l.p.x, nextFrame.l.p.y, nextFrame.l.p.z);
+          leftHitboxSaber.position.set(v1.x, v1.y - height, -v1.z);
           const lposition = v1.lerp(v2, slerpValue);
           leftSaber.position.set(lposition.x, lposition.y - height, -lposition.z);
 
           v1.set(frame.r.p.x, frame.r.p.y, frame.r.p.z); v2.set(nextFrame.r.p.x, nextFrame.r.p.y, nextFrame.r.p.z);
+          rightHitboxSaber.position.set(v1.x, v1.y - height, -v1.z);
           const rposition = v1.lerp(v2, slerpValue);
           rightSaber.position.set(rposition.x, rposition.y - height, -rposition.z);
 
@@ -99,13 +108,19 @@ AFRAME.registerComponent('replay-player', {
           const q2 = this.q2;
 
           q1.set(frame.l.r.w, frame.l.r.z, frame.l.r.y, frame.l.r.x); q2.set(nextFrame.l.r.w, nextFrame.l.r.z, nextFrame.l.r.y, nextFrame.l.r.x);
+          let lrotation = euler.setFromQuaternion(q1);
+          leftHitboxSaber.rotation.set(lrotation.x, lrotation.y + Math.PI, -lrotation.z)
+
           const lquat = q1.slerp(q2, slerpValue);
-          const lrotation = euler.setFromQuaternion(lquat);
+          lrotation = euler.setFromQuaternion(lquat);
           leftSaber.rotation.set(lrotation.x, lrotation.y + Math.PI, -lrotation.z)
 
           q1.set(frame.r.r.w, frame.r.r.z, frame.r.r.y, frame.r.r.x); q2.set(nextFrame.r.r.w, nextFrame.r.r.z, nextFrame.r.r.y, nextFrame.r.r.x);
+          let rrotation = euler.setFromQuaternion(q1);
+          rightHitboxSaber.rotation.set(rrotation.x, rrotation.y + Math.PI, -rrotation.z);
+
           const rquat = q1.slerp(q2, slerpValue);
-          const rrotation = euler.setFromQuaternion(rquat);
+          rrotation = euler.setFromQuaternion(rquat);
           rightSaber.rotation.set(rrotation.x, rrotation.y + Math.PI, -rrotation.z);
 
           v1.set(frame.h.p.x, frame.h.p.y, frame.h.p.z); v2.set(nextFrame.h.p.x, nextFrame.h.p.y, nextFrame.h.p.z);
@@ -136,6 +151,8 @@ AFRAME.registerComponent('replay-player', {
     leftHandedTock: function(frame, nextFrame, height, slerpValue, delta) {
           const leftSaber = this.saberEls[0].object3D;
           const rightSaber = this.saberEls[1].object3D;
+          const leftHitboxSaber = this.firstSaberControl.hitboxSaber;
+          const rightHitboxSaber = this.secondSaberControl.hitboxSaber;
           const headset = this.headset.object3D;
           const povCamera = this.povCameraRig.object3D;
 
@@ -143,10 +160,12 @@ AFRAME.registerComponent('replay-player', {
           const v2 = this.v2;
 
           v1.set(frame.l.p.x, frame.l.p.y, frame.l.p.z); v2.set(nextFrame.l.p.x, nextFrame.l.p.y, nextFrame.l.p.z);
+          rightHitboxSaber.position.set(-v1.x, v1.y - height, -v1.z);
           const lposition = v1.lerp(v2, slerpValue);
           rightSaber.position.set(-lposition.x, lposition.y - height, -lposition.z);
 
           v1.set(frame.r.p.x, frame.r.p.y, frame.r.p.z); v2.set(nextFrame.r.p.x, nextFrame.r.p.y, nextFrame.r.p.z);
+          leftHitboxSaber.position.set(-v1.x, v1.y - height, -v1.z);
           const rposition = v1.lerp(v2, slerpValue);
           leftSaber.position.set(-rposition.x, rposition.y - height, -rposition.z);
 
@@ -155,13 +174,19 @@ AFRAME.registerComponent('replay-player', {
           const q2 = this.q2;
 
           q1.set(frame.l.r.w, -frame.l.r.z, -frame.l.r.y, frame.l.r.x); q2.set(nextFrame.l.r.w, -nextFrame.l.r.z, -nextFrame.l.r.y, nextFrame.l.r.x);
+          let lrotation = euler.setFromQuaternion(q1);
+          rightHitboxSaber.rotation.set(lrotation.x, lrotation.y + Math.PI, lrotation.z)
+
           const lquat = q1.slerp(q2, slerpValue);
-          const lrotation = euler.setFromQuaternion(lquat);
+          lrotation = euler.setFromQuaternion(lquat);
           rightSaber.rotation.set(lrotation.x, lrotation.y + Math.PI, lrotation.z);
 
           q1.set(frame.r.r.w, -frame.r.r.z, -frame.r.r.y, frame.r.r.x); q2.set(nextFrame.r.r.w, -nextFrame.r.r.z, -nextFrame.r.r.y, nextFrame.r.r.x);
+          let rrotation = euler.setFromQuaternion(q1);
+          leftHitboxSaber.rotation.set(rrotation.x, rrotation.y + Math.PI, -rrotation.z);
+
           const rquat = q1.slerp(q2, slerpValue);
-          const rrotation = euler.setFromQuaternion(rquat);
+          rrotation = euler.setFromQuaternion(rquat);
           leftSaber.rotation.set(rrotation.x, rrotation.y + Math.PI, -rrotation.z);
 
           v1.set(frame.h.p.x, frame.h.p.y, frame.h.p.z); v2.set(nextFrame.h.p.x, nextFrame.h.p.y, nextFrame.h.p.z);

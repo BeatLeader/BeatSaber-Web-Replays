@@ -41,11 +41,22 @@ AFRAME.registerComponent('saber-controls', {
     };
     this.accumulatedDistance = 0;
     this.accumulatedDelta = 0;
+    this.frameIndex = -1;
+    this.previousFrameIndex = -1;
 
     const hand = {hand: data.hand, model: false};
 
     this.bladeEl = this.el.querySelector('.blade');
     this.containerEl = this.el.querySelector('.saberContainer');
+
+    this.hitboxSaber = this.el.object3D.clone();
+    this.hitboxSaber.visible = false;
+    this.containerEl.sceneEl.object3D.add(this.hitboxSaber);
+
+    this.hitboxBladeTipPreviousPosition = new THREE.Vector3();
+    this.hitboxBladePreviousPosition = new THREE.Vector3();
+    this.hitboxBladeTipPosition = new THREE.Vector3();
+    this.hitboxBladePosition = new THREE.Vector3();
 
     this.initBoxVars();
   },
@@ -90,7 +101,21 @@ AFRAME.registerComponent('saber-controls', {
     saberObj.localToWorld(this.bladeTipPosition);
     saberObj.localToWorld(this.bladePosition);
 
-    this.threePointsToBox(this.bladeTipPosition, this.bladePosition, new THREE.Vector3().addVectors(this.bladePreviousPosition, this.bladeTipPreviousPosition).multiplyScalar(0.5));
+    if (this.frameIndex != this.previousFrameIndex) {
+      this.hitboxBladeTipPosition.set(0, 0, -0.85);
+      this.hitboxBladePosition.set(0, 0, 0.1);
+
+      const hitboxSaber = this.hitboxSaber;
+      hitboxSaber.parent.updateMatrixWorld();
+      hitboxSaber.localToWorld(this.hitboxBladeTipPosition);
+      hitboxSaber.localToWorld(this.hitboxBladePosition);
+
+      this.threePointsToBox(this.hitboxBladeTipPosition, this.hitboxBladePosition, new THREE.Vector3().addVectors(this.hitboxBladePreviousPosition, this.hitboxBladeTipPreviousPosition).multiplyScalar(0.5));
+      
+      this.hitboxBladePreviousPosition.copy(this.hitboxBladePosition);
+      this.hitboxBladeTipPreviousPosition.copy(this.hitboxBladeTipPosition);
+      this.previousFrameIndex = this.frameIndex;
+    }
 
     // Angles between saber and major planes.
     this.bladeVector.copy(this.bladeTipPosition).sub(this.bladePosition).normalize();

@@ -273,8 +273,24 @@ AFRAME.registerComponent('trail', {
       this.mesh.visible = true;
     }
 
+    const song = this.el.sceneEl.components.song;
+    if (song) {
+      this.hotUpdateLifetime(this.data.lifetime / song.speed);
+    }
+
     if (!this.addNode(this.createNewNode())) return;
     this.updateMesh(this.calculateRowNodes());
+  },
+
+  hotUpdateLifetime: function (newLifetime) {
+    if (newLifetime < 1) newLifetime = 1;
+    if (newLifetime > 200) newLifetime = 200;
+    if (this.lifetime === newLifetime) return;
+    this.lifetime = newLifetime;
+
+    if (this.curvedSegmentsArray.length > this.lifetime) {
+      this.curvedSegmentsArray = this.curvedSegmentsArray.slice(0, this.lifetime);
+    }
   },
 
   updateMesh: function (rowNodes) {
@@ -385,7 +401,7 @@ AFRAME.registerComponent('trail', {
     if (handlesArray.length < 3) return false;
 
     const newSegment = this.createCurvedSegment(handlesArray[0], handlesArray[1], handlesArray[2])
-    if (this.curvedSegmentsArray.length === this.lifetime) {
+    if (this.curvedSegmentsArray.length >= this.lifetime) {
       this.curvedSegmentsArray.shift()
     }
     this.curvedSegmentsArray.push(newSegment)

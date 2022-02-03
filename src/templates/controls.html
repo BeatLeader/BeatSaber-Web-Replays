@@ -123,7 +123,7 @@
 
   <div id="settingsContainer">
 
-    <div class="toggleButtons">
+    <div class="toggleButtons" style="display: flex; flex-direction: column; justify-content: space-between;">
       <div class="toggleButton" title="Show 3D model of headset synced with replay.">
         <label class="switch">
           <input type="checkbox" id="showHeadset">
@@ -210,11 +210,11 @@
 
     </div>
 
-    <div class="sliders">
+    <div class="sliders" style="display: flex; flex-direction: column; justify-content: space-between;">
 
       <div class="toggleButton" title="Distance from player to note slowdown.">
         <label>
-          <div>
+          <div style="height: .9em">
             <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Jump Distance:</nobr></td></label>
             <label id="jdLabel" class="toggleButtonLabel" style="margin-left: 40px;">18</label>
           </div>
@@ -234,7 +234,7 @@
 
       <div class="toggleButton" title="How wide sabers would be compared to normal.">
         <label>
-          <div>
+          <div style="height: .9em">
             <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Saber width:</nobr></td></label>
             <label id="saberWidthLabel" class="toggleButtonLabel" style="margin-left: 28px;">100</label>
           </div>
@@ -244,20 +244,30 @@
 
       <div class="toggleButton" title="How saber trails will appear">
         <label>
-          <div>
+          <div style="height: .9em">
             <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Trail type:</nobr></td></label>
           </div>
           <select name="trails" style="margin-left: 5px; margin-bottom: 5px;" id="trailType">
             <option value="bright" selected>Bright</option>
             <option value="dim">Dim</option>
-            <option value="slim">None</option>
+            <option value="slim">Slim</option>
           </select>
+        </label>
+      </div>
+
+      <div class="toggleButton" title="Trail length">
+        <label>
+          <div style="height: .9em">
+            <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Trail length: </nobr></td></label>
+            <label id="trailLengthLabel" class="toggleButtonLabel" style="margin-left: 28px;">20.0</label>
+          </div>
+          <input id="trailLength" type="range" min="5.0" max="40.0" step="1.0" value="20.0">
         </label>
       </div>
 
       <div class="toggleButton" title="How many pixels would be rendered for point.">
         <label>
-          <div>
+          <div style="height: .9em">
             <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Pixel ratio:</nobr></td></label>
             <label id="pixelRatioLabel" class="toggleButtonLabel" style="margin-left: 20px;">1.5</label>
           </div>

@@ -17,15 +17,16 @@ const TRAILS = {
       }
       
       void main() {
-        float nullFade = pow(uv0.y, 2.0) * pow(uv0.x, 0.5);
+        float edgeFade = clamp((1.0 - uv0.x) / 0.014, 0.0, 1.0);
+        float nullFade = pow(uv0.y, 2.0) * pow(uv0.x, 0.4);
         float tipFade = 0.8 * pow(uv0.x, 10.0 + 60.0 * (1.0 - uv0.y)) * pow(uv0.y, 0.4);
         vec4 col = bladeColor * nullFade;
         col = lerpColor(col, tipColor, tipFade);
-        gl_FragColor = col;
+        gl_FragColor = col * edgeFade;
       }`
   },
   dim: {
-    width: 0.3,
+    width: 0.4,
     fragmentShader: `
       uniform vec4 bladeColor;
       varying vec2 uv0;
@@ -42,15 +43,16 @@ const TRAILS = {
       }
       
       void main() {
-        float nullFade = pow(uv0.y, 2.0) * pow(uv0.x, 0.8);
+        float edgeFade = clamp((1.0 - uv0.x) / 0.022, 0.0, 1.0);
+        float nullFade = pow(uv0.y, 2.0) * pow(uv0.x, 0.6);
         float tipFade = 0.2 * pow(uv0.x, 10.0 + 60.0 * (1.0 - uv0.y)) * pow(uv0.y, 0.4);
         vec4 col = bladeColor * nullFade;
         col = lerpColor(col, tipColor, tipFade);
-        gl_FragColor = col;
+        gl_FragColor = col * edgeFade;
       }`
   },
   slim: {
-    width: 0.05,
+    width: 0.04,
     fragmentShader: `
       uniform vec4 bladeColor;
       varying vec2 uv0;
@@ -128,13 +130,13 @@ AFRAME.registerComponent('trail', {
     color: {type: 'color'},
     enabled: {default: false},
     hand: {type: 'string'},
-    trailType: {default: 'bright'}
+    trailType: {default: 'bright'},
+    lifetime: {default: 20} //frames
   },
 
   init: function () {
     //TRAIL CONFIG ---------------------------------------------------------------------
     //You must call init (and potentially dispose already existing mesh) after any config change
-    this.lifetime = 20; //frames
     this.verticalResolution = 120; //quads
     this.horizontalResolution = 2; //quads
     //TRAIL CONFIG ---------------------------------------------------------------------
@@ -240,6 +242,7 @@ AFRAME.registerComponent('trail', {
 
   update: function (oldData) {
     this.trailType = TRAILS[this.data.trailType];
+    this.lifetime = this.data.lifetime;
 
     this.previousTipPosition = new THREE.Vector3(0, 0, 0);
     this.material = this.createMaterial();
@@ -270,8 +273,24 @@ AFRAME.registerComponent('trail', {
       this.mesh.visible = true;
     }
 
+    const song = this.el.sceneEl.components.song;
+    if (song) {
+      this.hotUpdateLifetime(this.data.lifetime / song.speed);
+    }
+
     if (!this.addNode(this.createNewNode())) return;
     this.updateMesh(this.calculateRowNodes());
+  },
+
+  hotUpdateLifetime: function (newLifetime) {
+    if (newLifetime < 1) newLifetime = 1;
+    if (newLifetime > 200) newLifetime = 200;
+    if (this.lifetime === newLifetime) return;
+    this.lifetime = newLifetime;
+
+    if (this.curvedSegmentsArray.length > this.lifetime) {
+      this.curvedSegmentsArray = this.curvedSegmentsArray.slice(0, this.lifetime);
+    }
   },
 
   updateMesh: function (rowNodes) {
@@ -338,8 +357,8 @@ AFRAME.registerComponent('trail', {
         break;
       case TRAILS.slim:
         newNode = {
-          from: new THREE.Vector3(this.trailType.width / 2.0, -0.5, 0),
-          to: new THREE.Vector3(-this.trailType.width / 2.0, -0.5, 0)
+          from: new THREE.Vector3(0, -0.5, 0),
+          to: new THREE.Vector3(0, -0.5, 0)
         }
         break;
     }
@@ -347,6 +366,11 @@ AFRAME.registerComponent('trail', {
     saberObject.parent.updateMatrixWorld();
     saberObject.localToWorld(newNode.from);
     saberObject.localToWorld(newNode.to);
+
+    if (this.trailType === TRAILS.slim) {
+      newNode.from.x -= this.trailType.width / 2.0;
+      newNode.to.x += this.trailType.width / 2.0;
+    }
 
     return newNode;
   },
@@ -377,7 +401,7 @@ AFRAME.registerComponent('trail', {
     if (handlesArray.length < 3) return false;
 
     const newSegment = this.createCurvedSegment(handlesArray[0], handlesArray[1], handlesArray[2])
-    if (this.curvedSegmentsArray.length === this.lifetime) {
+    if (this.curvedSegmentsArray.length >= this.lifetime) {
       this.curvedSegmentsArray.shift()
     }
     this.curvedSegmentsArray.push(newSegment)

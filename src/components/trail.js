@@ -127,13 +127,13 @@ AFRAME.registerComponent('trail', {
   schema: {
     color: {type: 'color'},
     enabled: {default: false},
-    hand: {type: 'string'}
+    hand: {type: 'string'},
+    trailType: {default: 'bright'}
   },
 
   init: function () {
     //TRAIL CONFIG ---------------------------------------------------------------------
     //You must call init (and potentially dispose already existing mesh) after any config change
-    this.trailType = TRAILS.bright
     this.lifetime = 20; //frames
     this.verticalResolution = 120; //quads
     this.horizontalResolution = 2; //quads
@@ -145,15 +145,6 @@ AFRAME.registerComponent('trail', {
     this.horizontalRatioPerStep = 1 / this.horizontalResolution;
     this.columnsCount = this.horizontalResolution + 1;
     this.rowsCount = this.verticalResolution + 1;
-
-    this.previousTipPosition = new THREE.Vector3(0, 0, 0);
-    this.material = this.createMaterial();
-    this.mesh = this.createMesh();
-
-    this.handlesArray = [];
-    this.curvedSegmentsArray = [];
-    this.linearSegment = null;
-    this.lastAddedNode = null;
   },
 
   createMesh: function () {
@@ -248,6 +239,18 @@ AFRAME.registerComponent('trail', {
   },
 
   update: function (oldData) {
+    this.trailType = TRAILS[this.data.trailType];
+
+    this.previousTipPosition = new THREE.Vector3(0, 0, 0);
+    this.material = this.createMaterial();
+    this.mesh = this.createMesh();
+    this.updateColor();
+
+    this.handlesArray = [];
+    this.curvedSegmentsArray = [];
+    this.linearSegment = null;
+    this.lastAddedNode = null;
+
     if (!oldData.enabled && this.data.enabled) {
       this.enabledTime = this.el.sceneEl.time;
       this.mesh.visible = false;
@@ -256,8 +259,6 @@ AFRAME.registerComponent('trail', {
     if (oldData.enabled && !this.data.enabled) {
       this.mesh.visible = false;
     }
-
-    this.updateColor();
   },
 
   tick: function (time, delta) {

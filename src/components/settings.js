@@ -15,6 +15,7 @@ AFRAME.registerComponent('settings', {
         highlightErrors: false,
         colorScores: true,
         realHitsounds: false,
+        trailType: 'bright',
 
         // Camera
         cameraZPosition: 1,
@@ -63,6 +64,13 @@ AFRAME.registerComponent('settings', {
           });
           toggle.value = this.settings[key];
           label.innerHTML = this.settings[key] + (this.units[key] ? this.units[key] : "");
+        } else if (toggle.type == 'select-one') {
+          toggle.addEventListener('change', (event) => {
+            this.settings[key] = event.srcElement.value;
+            localStorage.setItem('settings', JSON.stringify(this.settings))
+            this.el.sceneEl.emit('settingsChanged', {settings: this.settings}, false);
+          });
+          toggle.value = this.settings[key];
         }
         
       });

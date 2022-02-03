@@ -321,6 +321,7 @@ AFRAME.registerComponent('beat', {
     this.replayNote = null;
     if (data.type == 'mine') {
       // Reset mine.
+      this.blockEl.getObject3D('mesh').material = this.el.sceneEl.systems.materials['mineMaterial' + this.data.color];
       this.resetMineFragments();
 
       const bombs = this.replayLoader.bombs;

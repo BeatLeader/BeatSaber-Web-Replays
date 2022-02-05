@@ -1,5 +1,6 @@
 const dragDrop = require('drag-drop');
-const DECODER_LINK = 'https://sspreviewdecode.azurewebsites.net'
+import {isOpenReplay, NoteEventType} from '../open-replay-decoder';
+const DECODER_LINK = 'https://localhost:44352'
 
 import {mirrorDirection} from '../utils';
 
@@ -27,7 +28,7 @@ AFRAME.registerComponent('replay-loader', {
         });
       } else {
         document.addEventListener('songFetched', (e) => {
-          captureThis.songFetched(e.detail.hash);
+          captureThis.downloadSSReplay(e.detail.hash);
         });
       }
 
@@ -58,8 +59,7 @@ AFRAME.registerComponent('replay-loader', {
       }
     },
 
-    songFetched: function (hash) {
-      console.log("fetched");
+    downloadSSReplay: function (hash) {
       this.el.sceneEl.emit('replayloadstart', null);
       fetch(`/cors/score-saber/api/leaderboard/by-hash/${hash}/info?difficulty=${this.difficultyNumber(this.data.difficulty)}`, {referrer: "https://www.beatlooser.com"}).then(res => {
         res.json().then(leaderbord => {
@@ -99,75 +99,93 @@ AFRAME.registerComponent('replay-loader', {
         return;
       }
       this.el.sceneEl.emit('replayloadstart', null);
-      (!itsLink
-      ? fetch(DECODER_LINK, { method: 'POST', body: file })
-      : fetch(`${DECODER_LINK}/?link=${file}`))
-      .then(response => response.json()).then(
-        data => {
-          let replay = JSON.parse(data);
-          if (replay.frames) {
-            this.replay = replay;
-            this.cleanup && this.cleanup();
-            this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: replay.info.difficulty }, null);
-            if (this.challenge) {
-              this.processScores();
-            }
-          } else {
-            this.el.sceneEl.emit('replayloadfailed', { error: replay.errorMessage }, null);
-          }
-      }).catch(
-        error => this.el.sceneEl.emit('replayloadfailed', {error}, null) // Handle the error response object
-      );
-      let playerId = (itsLink ? file : file.name).split(/\.|-|\//).find(el => (el.length == 16 || el.length == 17) && parseInt(el, 10));
-      if (playerId) {
-        fetch(`/cors/score-saber/api/player/${playerId}/full`).then(res => {
-          res.json().then(data => {
-              this.user = data;
-              this.el.sceneEl.emit('userloaded', {
-                name: this.user.name, 
-                avatar: this.user.profilePicture.replace('https://cdn.scoresaber.com/', '/cors/score-saber-cdn/'),
-                country: this.user.country,
-                countryIcon: `/cors/score-saber/imports/images/flags/${this.user.country.toLowerCase()}.png`,
-                id: this.user.id
-              }, null);
-          });
-        });
-      }
+      isOpenReplay(file, itsLink, (replay) => {
+        if (replay) {
+          this.replay = replay;
+          this.el.sceneEl.emit('userloaded', {
+                      name: replay.info.playerName, 
+                      avatar: '/cors/score-saber-cdn/' + replay.info.playerID + '.jpg',
+                      country: 'ua',
+                      countryIcon: `/cors/score-saber/imports/images/flags/ua.png`,
+                      id: replay.info.playerID
+                    }, null);
+          this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: this.difficultyNumber(replay.info.difficulty), mode: replay.info.mode }, null);
+        }
+      });
+      // (!itsLink
+      // ? fetch(DECODER_LINK, { method: 'POST', body: file })
+      // : fetch(`${DECODER_LINK}/?link=${file}`))
+      // .then(response => response.json()).then(
+      //   data => {
+      //     let replay = JSON.parse(data);
+      //     if (replay.frames) {
+      //       this.replay = replay;
+      //       this.cleanup && this.cleanup();
+      //       this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: replay.info.difficulty }, null);
+      //       if (this.challenge) {
+      //         this.processScores();
+      //       }
+      //     } else {
+      //       this.el.sceneEl.emit('replayloadfailed', { error: replay.errorMessage }, null);
+      //     }
+      // }).catch(
+      //   error => this.el.sceneEl.emit('replayloadfailed', {error}, null) // Handle the error response object
+      // );
+      // let playerId = (itsLink ? file : file.name).split(/\.|-|\//).find(el => (el.length == 16 || el.length == 17) && parseInt(el, 10));
+      // if (playerId) {
+      //   fetch(`/cors/score-saber/api/player/${playerId}/full`).then(res => {
+      //     res.json().then(data => {
+      //         this.user = data;
+      //         this.el.sceneEl.emit('userloaded', {
+      //           name: this.user.name, 
+      //           avatar: this.user.profilePicture.replace('https://cdn.scoresaber.com/', '/cors/score-saber-cdn/'),
+      //           country: this.user.country,
+      //           countryIcon: `/cors/score-saber/imports/images/flags/${this.user.country.toLowerCase()}.png`,
+      //           id: this.user.id
+      //         }, null);
+      //     });
+      //   });
+      // }
     },
     processScores: function () {
       const replay = this.replay;
-      var mapnotes = this.challenge.beatmaps[this.data.mode][this.data.difficulty]._notes;
+      var mapnotes = this.challenge.beatmaps[this.challenge.mode][this.challenge.difficulty]._notes;
       mapnotes = mapnotes.sort((a, b) => { return a._time - b._time; }).filter(a => a._type == 0 || a._type == 1);
 
       var noteStructs = new Array();
       var bombStructs = new Array();
-      var wallStructs = new Array();
-      for (var i = 0; i < replay.scores.length; i++) {
-        if (replay.scores[i] == -4) {
-          let bomb = {
-            score: -4,
-            time: replay.noteTime[i]
-          }
-          bombStructs.push(bomb);
-        } else if (replay.scores[i] == -5) {
-          let wall = {
-            score: -5,
-            time: replay.noteTime[i]
-          }
-          wallStructs.push(wall);
+      for (var i = 0; i < replay.notes.length; i++) {
+        const info = replay.notes[i];
+        let note = {
+          cutInfo: info.noteCutInfo,
+          spawnTime: info.spawnTime,
+          time: info.eventTime,
+          id: info.noteID,
+          score: ScoreForNote(info)
+        }
+        if (note.eventType == NoteEventType.bomb) {
+          bombStructs.push(note);
         } else {
-          const info = replay.noteInfos[i];
-          let note = {
-            score: replay.scores[i],
-            time: replay.noteTime[i],
-            lineIndex: parseInt(info[0]),
-            noteLineLayer: parseInt(info[1]),
-            cutDirection: parseInt(info[2]),
-            colorType: parseInt(info[3]),
-            isBlock: true
-          }
+          note.isBlock = true;
           noteStructs.push(note);
         }
+      }
+
+      noteStructs.sort(function(a, b) {
+        if (a.spawnTime < b.spawnTime) return -1;
+        if (a.spawnTime > b.spawnTime) return 1;
+        return 0;
+      });
+
+      var wallStructs = new Array();
+      for (var i = 0; i < replay.walls.length; i++) {
+        const info = replay.walls[i];
+        let note = {
+          time: info.time,
+          id: info.wallID,
+          score: -5
+        }
+        wallStructs.push(note);
       }
 
       var group, groupIndex, groupTime;
@@ -179,14 +197,13 @@ AFRAME.registerComponent('replay-loader', {
           for (var m = 0; m < group.length; m++) {
             const replaynote = noteStructs[groupIndex + m];
 
-            const lineIndex = leftHanded ? 3 - replaynote.lineIndex : replaynote.lineIndex;
-            const colorType = leftHanded ? 1 - replaynote.colorType : replaynote.colorType;
-            const cutDirection = leftHanded ? mirrorDirection(replaynote.cutDirection) : replaynote.cutDirection;
+            const lineIndex = leftHanded ? 3 - mapnote._lineIndex : mapnote._lineIndex;
+            const colorType = leftHanded ? 1 - mapnote._type : mapnote._type;
+            const cutDirection = leftHanded ? mirrorDirection(mapnote._cutDirection) : mapnote._cutDirection;
+            const lineLayer = mapnote._lineLayer;
+            const id = lineIndex * 1000 + lineLayer * 100 + colorType * 10 + cutDirection;
 
-            if (lineIndex == mapnote._lineIndex &&
-              replaynote.noteLineLayer == mapnote._lineLayer &&
-              cutDirection == mapnote._cutDirection &&
-              colorType == mapnote._type) {
+            if (replaynote.id == id) {
                 replaynote.index = group[j];
                 break;
             }
@@ -225,7 +242,7 @@ AFRAME.registerComponent('replay-loader', {
         if (a.index > b.index) return 1;
         return 0;
       });
-      
+
       for (var i = 0; i < allStructs.length; i++) {
         allStructs[i].i = i;
       }
@@ -310,3 +327,29 @@ AFRAME.registerComponent('replay-loader', {
       }
     },
 });
+
+function Clamp(value) {
+	if (value < 0.0) return 0.0;
+	return value > 1.0 ? 1.0 : value;
+}
+
+function ScoreForNote(note) {
+  if (note.eventType == NoteEventType.good) {
+    const cut = note.noteCutInfo;
+    const beforeCutRawScore = Math.round(70 * cut.beforeCutRating);
+    const afterCutRawScore = Math.round(30 * cut.afterCutRating);
+    const num = 1 - Clamp(cut.cutDistanceToCenter / 0.3);
+    const cutDistanceRawScore = Math.round(15 * num);
+  
+    return beforeCutRawScore + afterCutRawScore + cutDistanceRawScore;
+  } else {
+    switch (note.eventType) {
+      case NoteEventType.bad:
+        return -2;
+      case NoteEventType.miss:
+        return -3;
+      case NoteEventType.bomb:
+        return -4;
+    }
+  } 
+}

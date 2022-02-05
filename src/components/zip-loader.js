@@ -24,6 +24,7 @@ AFRAME.registerComponent('zip-loader', {
     if (!this.data.id && !this.data.hash) {
       this.el.sceneEl.addEventListener('replayfetched', (e) => {
         this.data.difficulty = this.difficultyFromId(e.detail.difficulty);
+        this.data.mode = e.detail.mode;
         this.fetchData(e.detail.hash.replace("custom_level_", ""), true);
       });
     }
@@ -108,8 +109,9 @@ AFRAME.registerComponent('zip-loader', {
 
     // Default to hardest of first beatmap.
     if (!event.difficulty) {
-      event.difficulty = this.data.difficulty || event.difficulties.Standard[0]._difficulty;
+      event.difficulty = this.data.difficulty || event.difficulties[this.data.mode][0]._difficulty;
     }
+    event.mode = this.data.mode;
 
     Object.keys(loader.files).forEach(filename => {
       // Only needed if loading ZIP directly and not from API.

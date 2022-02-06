@@ -17,15 +17,16 @@ const TRAILS = {
       }
       
       void main() {
-        float nullFade = pow(uv0.y, 2.0) * pow(uv0.x, 0.5);
+        float edgeFade = clamp((1.0 - uv0.x) / 0.014, 0.0, 1.0);
+        float nullFade = pow(uv0.y, 2.0) * pow(uv0.x, 0.4);
         float tipFade = 0.8 * pow(uv0.x, 10.0 + 60.0 * (1.0 - uv0.y)) * pow(uv0.y, 0.4);
         vec4 col = bladeColor * nullFade;
         col = lerpColor(col, tipColor, tipFade);
-        gl_FragColor = col;
+        gl_FragColor = col * edgeFade;
       }`
   },
   dim: {
-    width: 0.3,
+    width: 0.4,
     fragmentShader: `
       uniform vec4 bladeColor;
       varying vec2 uv0;
@@ -42,15 +43,58 @@ const TRAILS = {
       }
       
       void main() {
-        float nullFade = pow(uv0.y, 2.0) * pow(uv0.x, 0.8);
+        float edgeFade = clamp((1.0 - uv0.x) / 0.022, 0.0, 1.0);
+        float nullFade = pow(uv0.y, 0.8) * pow(uv0.x, 0.6);
         float tipFade = 0.2 * pow(uv0.x, 10.0 + 60.0 * (1.0 - uv0.y)) * pow(uv0.y, 0.4);
         vec4 col = bladeColor * nullFade;
         col = lerpColor(col, tipColor, tipFade);
-        gl_FragColor = col;
+        gl_FragColor = col * edgeFade;
+      }`
+  },
+  timeDependence: {
+    width: 0.9,
+    fragmentShader: `
+      uniform vec4 bladeColor;
+      varying vec2 uv0;
+      varying float td;
+      
+      #define goodTdValue 0.0
+      #define goodTdColor vec4(0.0, 1.0, 0.0, 1.0)
+      
+      #define neutralTdValue 0.15
+      #define neutralTdColor vec4(1.0, 1.0, 0.0, 1.0)
+      
+      #define badTdValue 0.3
+      #define badTdColor vec4(1.0, 0.0, 0.0, 1.0)
+      
+      float inverseLerpClamped01(const float from, const float to, const float value) {
+        return clamp((value - from) / (to - from), 0.0, 1.0);
+      }
+      
+      vec4 lerpColor(const vec4 a, const vec4 b, const float t) {
+        return vec4(
+          a.r + (b.r - a.r) * t,
+          a.g + (b.g - a.g) * t,
+          a.b + (b.b - a.b) * t,
+          a.a + (b.a - a.a) * t
+        );
+      }
+      
+      void main() {
+        float edgeFade = clamp((1.0 - uv0.x) / 0.022, 0.0, 1.0);
+        float nullFade = pow(uv0.y, 1.0) * pow(uv0.x, 0.2);
+        
+        float neutralTdRatio = inverseLerpClamped01(goodTdValue, neutralTdValue, td);
+        float badTdRatio = inverseLerpClamped01(neutralTdValue, badTdValue, td);
+        
+        vec4 col = goodTdColor;
+        col = lerpColor(col, neutralTdColor, neutralTdRatio);
+        col = lerpColor(col, badTdColor, badTdRatio);
+        gl_FragColor = col * nullFade * edgeFade;
       }`
   },
   slim: {
-    width: 0.05,
+    width: 0.04,
     fragmentShader: `
       uniform vec4 bladeColor;
       varying vec2 uv0;
@@ -128,13 +172,13 @@ AFRAME.registerComponent('trail', {
     color: {type: 'color'},
     enabled: {default: false},
     hand: {type: 'string'},
-    trailType: {default: 'bright'}
+    trailType: {default: 'bright'},
+    lifetime: {default: 20} //frames
   },
 
   init: function () {
     //TRAIL CONFIG ---------------------------------------------------------------------
     //You must call init (and potentially dispose already existing mesh) after any config change
-    this.lifetime = 20; //frames
     this.verticalResolution = 120; //quads
     this.horizontalResolution = 2; //quads
     //TRAIL CONFIG ---------------------------------------------------------------------
@@ -145,6 +189,7 @@ AFRAME.registerComponent('trail', {
     this.horizontalRatioPerStep = 1 / this.horizontalResolution;
     this.columnsCount = this.horizontalResolution + 1;
     this.rowsCount = this.verticalResolution + 1;
+    this.cutPlane = new THREE.Plane();
   },
 
   createMesh: function () {
@@ -153,9 +198,11 @@ AFRAME.registerComponent('trail', {
     const geometry = this.geometry = new THREE.BufferGeometry();
     const vertices = this.vertices = new Float32Array(quadCount * 6 * 3);
     const uv = this.uv = new Float32Array(quadCount * 6 * 2);
+    const timeDependence = this.timeDependence = new Float32Array(quadCount * 6);
 
     geometry.addAttribute('position', new THREE.BufferAttribute(vertices, 3).setDynamic(true));
     geometry.addAttribute('uv', new THREE.BufferAttribute(uv, 2).setDynamic(true));
+    geometry.addAttribute('timeDependence', new THREE.BufferAttribute(timeDependence, 1).setDynamic(true));
 
     const mesh = new THREE.Mesh(geometry, this.material);
     mesh.frustumCulled = false;
@@ -171,9 +218,13 @@ AFRAME.registerComponent('trail', {
   createMaterial: function () {
     const vertexShader = `
       varying vec2 uv0;
+      varying float td;
+      
+      attribute float timeDependence;
       
       void main() {
         uv0 = uv;
+        td = timeDependence;
         vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
         gl_Position = projectionMatrix * modelViewPosition;
       }`;
@@ -240,6 +291,7 @@ AFRAME.registerComponent('trail', {
 
   update: function (oldData) {
     this.trailType = TRAILS[this.data.trailType];
+    this.lifetime = this.data.lifetime;
 
     this.previousTipPosition = new THREE.Vector3(0, 0, 0);
     this.material = this.createMaterial();
@@ -270,12 +322,29 @@ AFRAME.registerComponent('trail', {
       this.mesh.visible = true;
     }
 
+    const song = this.el.sceneEl.components.song;
+    if (song) {
+      this.hotUpdateLifetime(this.data.lifetime / song.speed);
+    }
+
     if (!this.addNode(this.createNewNode())) return;
     this.updateMesh(this.calculateRowNodes());
   },
 
+  hotUpdateLifetime: function (newLifetime) {
+    if (newLifetime < 1) newLifetime = 1;
+    if (newLifetime > 200) newLifetime = 200;
+    if (this.lifetime === newLifetime) return;
+    this.lifetime = newLifetime;
+
+    if (this.curvedSegmentsArray.length > this.lifetime) {
+      this.curvedSegmentsArray = this.curvedSegmentsArray.slice(0, this.lifetime);
+    }
+  },
+
   updateMesh: function (rowNodes) {
     const vertices = this.geometry.attributes.position.array;
+    const tdArray = this.geometry.attributes.timeDependence.array;
 
     const horizontalRatioPerStep = 1 / this.horizontalResolution;
 
@@ -292,28 +361,35 @@ AFRAME.registerComponent('trail', {
         const bottomLeftVertex = this.lerpNode(nextNode, currentHorizontalRatio);
         const bottomRightVertex = this.lerpNode(nextNode, nextHorizontalRatio);
 
-        const vertexIndexOffset = (rowIndex * this.horizontalResolution + columnIndex) * 6 * 3;
+        const tdIndexOffset = (rowIndex * this.horizontalResolution + columnIndex) * 6;
+        const vertexIndexOffset = tdIndexOffset * 3;
 
+        tdArray[tdIndexOffset] = currentNode.timeDependence;
         vertices[vertexIndexOffset] = topRightVertex.x;
         vertices[vertexIndexOffset + 1] = topRightVertex.y;
         vertices[vertexIndexOffset + 2] = topRightVertex.z;
 
+        tdArray[tdIndexOffset + 1] = nextNode.timeDependence;
         vertices[vertexIndexOffset + 3] = bottomLeftVertex.x;
         vertices[vertexIndexOffset + 4] = bottomLeftVertex.y;
         vertices[vertexIndexOffset + 5] = bottomLeftVertex.z;
 
+        tdArray[tdIndexOffset + 2] = currentNode.timeDependence;
         vertices[vertexIndexOffset + 6] = topLeftVertex.x;
         vertices[vertexIndexOffset + 7] = topLeftVertex.y;
         vertices[vertexIndexOffset + 8] = topLeftVertex.z;
 
+        tdArray[tdIndexOffset + 3] = currentNode.timeDependence;
         vertices[vertexIndexOffset + 9] = topRightVertex.x;
         vertices[vertexIndexOffset + 10] = topRightVertex.y;
         vertices[vertexIndexOffset + 11] = topRightVertex.z;
 
+        tdArray[tdIndexOffset + 4] = nextNode.timeDependence;
         vertices[vertexIndexOffset + 12] = bottomRightVertex.x;
         vertices[vertexIndexOffset + 13] = bottomRightVertex.y;
         vertices[vertexIndexOffset + 14] = bottomRightVertex.z;
 
+        tdArray[tdIndexOffset + 5] = nextNode.timeDependence;
         vertices[vertexIndexOffset + 15] = bottomLeftVertex.x;
         vertices[vertexIndexOffset + 16] = bottomLeftVertex.y;
         vertices[vertexIndexOffset + 17] = bottomLeftVertex.z;
@@ -321,6 +397,7 @@ AFRAME.registerComponent('trail', {
     }
 
     this.geometry.attributes.position.needsUpdate = true;
+    this.geometry.attributes.timeDependence.needsUpdate = true;
   },
 
   createNewNode: function () {
@@ -331,15 +408,18 @@ AFRAME.registerComponent('trail', {
     switch (this.trailType) {
       case TRAILS.bright:
       case TRAILS.dim:
+      case TRAILS.timeDependence:
         newNode = {
           from: new THREE.Vector3(0, -0.5 + this.trailType.width, 0),
-          to: new THREE.Vector3(0, -0.5, 0)
+          to: new THREE.Vector3(0, -0.5, 0),
+          timeDependence: 0.0
         }
         break;
       case TRAILS.slim:
         newNode = {
-          from: new THREE.Vector3(this.trailType.width / 2.0, -0.5, 0),
-          to: new THREE.Vector3(-this.trailType.width / 2.0, -0.5, 0)
+          from: new THREE.Vector3(0, -0.5, 0),
+          to: new THREE.Vector3(0, -0.5, 0),
+          timeDependence: 0.0
         }
         break;
     }
@@ -347,6 +427,11 @@ AFRAME.registerComponent('trail', {
     saberObject.parent.updateMatrixWorld();
     saberObject.localToWorld(newNode.from);
     saberObject.localToWorld(newNode.to);
+
+    if (this.trailType === TRAILS.slim) {
+      newNode.from.x -= this.trailType.width / 2.0;
+      newNode.to.x += this.trailType.width / 2.0;
+    }
 
     return newNode;
   },
@@ -358,6 +443,8 @@ AFRAME.registerComponent('trail', {
     totalDifference += Math.abs(this.previousTipPosition.y - newTipPosition.y);
     totalDifference += Math.abs(this.previousTipPosition.z - newTipPosition.z);
     if (totalDifference < 0.0001) return false;
+    const cutPlane = this.cutPlane.setFromCoplanarPoints(this.previousTipPosition, newNode.from, newNode.to);
+    newNode.timeDependence = Math.abs(cutPlane.normal.z);
     this.previousTipPosition = newTipPosition;
 
     if (this.lastAddedNode) {
@@ -377,7 +464,7 @@ AFRAME.registerComponent('trail', {
     if (handlesArray.length < 3) return false;
 
     const newSegment = this.createCurvedSegment(handlesArray[0], handlesArray[1], handlesArray[2])
-    if (this.curvedSegmentsArray.length === this.lifetime) {
+    if (this.curvedSegmentsArray.length >= this.lifetime) {
       this.curvedSegmentsArray.shift()
     }
     this.curvedSegmentsArray.push(newSegment)
@@ -460,28 +547,32 @@ AFRAME.registerComponent('trail', {
   sumNodes: function (nodeA, nodeB) {
     return {
       from: new THREE.Vector3().addVectors(nodeA.from, nodeB.from),
-      to: new THREE.Vector3().addVectors(nodeA.to, nodeB.to)
+      to: new THREE.Vector3().addVectors(nodeA.to, nodeB.to),
+      timeDependence: nodeA.timeDependence + nodeB.timeDependence
     }
   },
 
   subtractNodes: function (nodeA, nodeB) {
     return {
       from: new THREE.Vector3().subVectors(nodeA.from, nodeB.from),
-      to: new THREE.Vector3().subVectors(nodeA.to, nodeB.to)
+      to: new THREE.Vector3().subVectors(nodeA.to, nodeB.to),
+      timeDependence: nodeA.timeDependence - nodeB.timeDependence
     }
   },
 
   multiplyNode: function (node, number) {
     return {
-      from: new THREE.Vector3().copy(node.from).multiplyScalar(number),
-      to: new THREE.Vector3().copy(node.to).multiplyScalar(number)
+      from: node.from.clone().multiplyScalar(number),
+      to: node.to.clone().multiplyScalar(number),
+      timeDependence: node.timeDependence * number
     }
   },
 
   divideNode: function (node, number) {
     return {
       from: node.from.clone().divideScalar(number),
-      to: node.to.clone().divideScalar(number)
+      to: node.to.clone().divideScalar(number),
+      timeDependence: node.timeDependence / number
     }
   },
 });

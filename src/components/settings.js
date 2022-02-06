@@ -16,6 +16,7 @@ AFRAME.registerComponent('settings', {
         colorScores: true,
         realHitsounds: false,
         trailType: 'bright',
+        trailLength: 20,
 
         // Camera
         cameraZPosition: 1,

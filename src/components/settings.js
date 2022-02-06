@@ -21,6 +21,10 @@ AFRAME.registerComponent('settings', {
         cameraZPosition: 1,
         fov: 60,
         cameraXRotation: 0,
+        orthographicBackEnabled: true,
+        orthographicBackFrustum: 1.4,
+        orthographicRightEnabled: false,
+        orthographicRightFrustum: 2,
 
         // Volume
         volume: 0.3,

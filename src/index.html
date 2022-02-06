@@ -262,6 +262,25 @@
         </a-entity>
       </a-entity>
 
+      <a-entity 
+        id="orthographicBack" 
+        class="orthographicBack" 
+        position="0 1.4 4.0" 
+        orthographic-camera="viewportPosition: 2; far: 25"
+        bind__orthographic-camera="active: settings.orthographicBackEnabled; frustum: settings.orthographicBackFrustum"
+        
+        >
+      </a-entity>
+      <a-entity 
+        id="orthographicRight" 
+        class="orthographicRight" 
+        position="2.0 1.4 0.0" 
+        rotation="0 90 0" 
+        orthographic-camera="viewportPosition: 1; far: 10"
+        bind__orthographic-camera="active: settings.orthographicRightEnabled; frustum: settings.orthographicRightFrustum"
+        >
+      </a-entity>
+
       <a-entity
         id="mouseCursor"
         bind__raycaster="enabled: !inVR"

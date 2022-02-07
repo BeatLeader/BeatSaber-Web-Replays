@@ -568,7 +568,15 @@ AFRAME.registerComponent('beat', {
   },
 
   postScoreEvent: function () {
-    this.el.emit('scoreChanged', {index: this.replayNote.i}, true);
+    const timeToScore = this.replayNote.time - this.song.getCurrentTime();
+
+    const payload = {index: this.replayNote.i};
+    const scoreChanged = () => this.el.emit('scoreChanged', payload, true);
+    if (timeToScore < 0) {
+      scoreChanged();
+    } else {
+      setTimeout(scoreChanged, timeToScore * 1000);
+    }
   },
 
   destroyMine: function () {

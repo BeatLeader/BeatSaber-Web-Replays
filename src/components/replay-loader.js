@@ -218,12 +218,14 @@ AFRAME.registerComponent('replay-loader', {
       }
 
       const allStructs = [].concat(bombStructs, noteStructs, wallStructs);
-
       allStructs.sort(function(a, b) {
         if (a.time < b.time) return -1;
         if (a.time > b.time) return 1;
+        if (a.index < b.index) return -1;
+        if (a.index > b.index) return 1;
         return 0;
       });
+      
       for (var i = 0; i < allStructs.length; i++) {
         allStructs[i].i = i;
       }

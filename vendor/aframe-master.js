@@ -65675,7 +65675,10 @@ module.exports.Component = registerComponent('camera', {
     fov: {default: 80, min: 0},
     near: {default: 0.005, min: 0},
     spectator: {default: false},
-    zoom: {default: 1, min: 0}
+    zoom: {default: 1, min: 0},
+    viewportPosition: {default: 0},
+    viewport: {default: 4},
+    fullscreen: {default: true},
   },
 
   /**
@@ -68363,9 +68366,10 @@ module.exports.Component = registerComponent('orthographic-camera', {
     fov: {default: 80, min: 0},
     near: {default: 0.005, min: 0},
     viewportPosition: {default: 0},
-    viewportWidth: {default: 4},
-    viewportHeight: {default: 4},
-    frustum: {default: 1.8}
+    viewport: {default: 4},
+    fullscreen: {default: false},
+    frustum: {default: 1.8},
+    aspect: {default: null}
   },
 
   /**
@@ -68377,7 +68381,7 @@ module.exports.Component = registerComponent('orthographic-camera', {
     var el = this.el;
 
     // Create camera.
-    const aspect = (window.innerWidth / window.innerHeight);
+    const aspect = this.data.aspect || (window.innerWidth / window.innerHeight);
     const frustum = this.data.frustum;
     camera = this.camera = new THREE.OrthographicCamera(-frustum, frustum, frustum / aspect, -frustum / aspect, this.data.near, this.data.far);
     el.setObject3D('camera', camera);
@@ -68394,8 +68398,8 @@ module.exports.Component = registerComponent('orthographic-camera', {
   update: function (oldData) {
     var data = this.data;
     var camera = this.camera;
-    const frustum = this.data.frustum;
-    const aspect = (window.innerWidth / window.innerHeight);
+    const frustum = data.frustum;
+    const aspect = data.aspect && !data.fullscreen ? data.aspect : (window.innerWidth / window.innerHeight);
 
     // Update properties.
     camera.fov = data.fov;
@@ -74831,7 +74835,7 @@ module.exports.AScene = registerElement('a-scene', {
         if (effectComposer) {
           effectComposer.render();
         } else {
-          effect.render(this.object3D, this.camera, this.renderTarget);
+          effect.render(this.object3D, this.camera, this.renderTarget, false, this.camera.el.components.camera.data);
           if (this.additiveCameras) {
             this.additiveCameras.forEach(element => {
               effect.render(this.object3D, element.getObject3D('camera'), this.renderTarget, false, element.components["orthographic-camera"].data);
@@ -76810,7 +76814,7 @@ _dereq_('./core/a-mixin');
 _dereq_('./extras/components/');
 _dereq_('./extras/primitives/');
 
-console.log('A-Frame Version: 0.8.2 (Date 2022-02-06, Commit #ea721416)');
+console.log('A-Frame Version: 0.8.2 (Date 2022-02-07, Commit #ea721416)');
 console.log('three Version:', pkg.dependencies['three']);
 console.log('WebVR Polyfill Version:', pkg.dependencies['webvr-polyfill']);
 
@@ -80401,7 +80405,7 @@ THREE.VREffect = function( renderer, onError ) {
   var cameraR = new THREE.PerspectiveCamera();
   cameraR.layers.enable( 2 );
 
-  this.render = function( scene, camera, renderTarget, forceClear, viewport ) {
+  this.render = function( scene, camera, renderTarget, forceClear, cameraData ) {
 
     if ( vrDisplay && scope.isPresenting ) {
 
@@ -80566,10 +80570,11 @@ THREE.VREffect = function( renderer, onError ) {
 
     }
 
-    if (viewport) {
-      var size = renderer.getSize();
-      var x, y, width = size.width / viewport.viewportWidth, height = size.height / viewport.viewportHeight;
-      switch (viewport.viewportPosition) {
+    var size = renderer.getSize();
+    if (cameraData && cameraData.viewport && cameraData.viewportPosition != null && !cameraData.fullscreen) {
+      
+      var x, y, width = size.width / cameraData.viewport, height = cameraData.aspect ? width / cameraData.aspect : size.height / cameraData.viewport;
+      switch (cameraData.viewportPosition) {
         case 0: // Top left
           x = 0; y = 0;
           break;
@@ -80587,6 +80592,8 @@ THREE.VREffect = function( renderer, onError ) {
           break;
       }
       renderer.setViewport(x, y, width, height );
+    } else {
+      renderer.setViewport( 0, 0, size.width, size.height );
     }
 
     // Regular render mode if not HMD

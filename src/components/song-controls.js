@@ -414,6 +414,7 @@ AFRAME.registerComponent('song-controls', {
     });
 
     this.setupVolumeControls();
+    this.setupOrtoCameraControls();
 
     let speedSlider = document.getElementById('speedSlider');
 
@@ -776,6 +777,53 @@ AFRAME.registerComponent('song-controls', {
         }
         volumeHandler();
       }
+    });
+  },
+  setupOrtoCameraControls: function () {
+    var cameraToggles = {};
+    var fullscreenCamera = "Main";
+    ["Back", "Right", "Top", "Main"].forEach(element => cameraToggles[element] = document.getElementById('orthographic' + element + 'Fullscreen'));
+    const updateToggles = () => {
+      Object.keys(cameraToggles).forEach(key => {
+        const toggle = cameraToggles[key];
+
+        toggle.style.display = this.settings.settings["orthographic" + key + "Enabled"] ? "block" : "none";
+        if (fullscreenCamera != key) {
+          toggle.classList.remove("inFullscreen")
+        } else {
+          toggle.classList.add("inFullscreen")
+        }
+        if (key != "Main") {
+          let camera = this.el.sceneEl.querySelectorAll('.orthographic' + key)[0];
+          if (camera.components) {
+            camera.setAttribute('orthographic-camera', 'fullscreen', fullscreenCamera == key);
+          }
+          
+        } else {
+          const mainCamera = this.el.sceneEl.querySelectorAll('.mainCamera')[0];
+          if (mainCamera.components) {
+            mainCamera.components.camera.data.fullscreen = fullscreenCamera == key;
+          }
+          const povCamera = this.el.sceneEl.querySelectorAll('.povCamera')[0];
+          if (povCamera.components) {
+            povCamera.components.camera.data.fullscreen = fullscreenCamera == key;
+          }
+          toggle.style.display = fullscreenCamera != key ? "block" : "none";
+        }
+      })
+    }
+    this.el.sceneEl.addEventListener('settingsChanged', (e) => {
+      if (fullscreenCamera != "Main" && !this.settings.settings["orthographic" + fullscreenCamera + "Enabled"]) {
+        fullscreenCamera = 'Main';
+      }
+      updateToggles();
+    });
+    updateToggles();
+    Object.keys(cameraToggles).forEach(key => {
+      cameraToggles[key].addEventListener('click', evt => {
+        fullscreenCamera = fullscreenCamera == key ? "Main" : key;
+        updateToggles();
+      });
     });
   }
 });

@@ -853,3 +853,25 @@ input:checked + .slider:before {
   -o-transform: translateY(-8px);
   transform: translateY(-8px);
 }
+
+.orthographicFullscreen
+  cursor pointer
+  position: absolute
+  width: 1.5%
+  svg
+    fill: white
+    height 100%
+    width 100%
+  .exitFullscreen
+      display none
+
+#body:not(.showControls) .orthographicFullscreen
+    .enterFullscreen
+      display none
+    .exitFullscreen
+      display none
+.orthographicFullscreen.inFullscreen
+    .enterFullscreen
+      display none
+    .exitFullscreen
+      display block

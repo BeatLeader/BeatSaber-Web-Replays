@@ -94,7 +94,8 @@ const TRAILS = {
       }`
   },
   slim: {
-    width: 0.04,
+    halfWidth: 0.02,
+    zDepth: 0.012,
     fragmentShader: `
       uniform vec4 bladeColor;
       varying vec2 uv0;
@@ -416,9 +417,10 @@ AFRAME.registerComponent('trail', {
         }
         break;
       case TRAILS.slim:
+        let zOffset = (this.data.hand === 'left') ? this.trailType.zDepth : -this.trailType.zDepth;
         newNode = {
-          from: new THREE.Vector3(0, -0.5, 0),
-          to: new THREE.Vector3(0, -0.5, 0),
+          from: new THREE.Vector3(0, -0.5 + zOffset, 0),
+          to: new THREE.Vector3(0, -0.5 - zOffset, 0),
           timeDependence: 0.0
         }
         break;
@@ -429,8 +431,8 @@ AFRAME.registerComponent('trail', {
     saberObject.localToWorld(newNode.to);
 
     if (this.trailType === TRAILS.slim) {
-      newNode.from.x -= this.trailType.width / 2.0;
-      newNode.to.x += this.trailType.width / 2.0;
+      newNode.from.x -= this.trailType.halfWidth;
+      newNode.to.x += this.trailType.halfWidth;
     }
 
     return newNode;

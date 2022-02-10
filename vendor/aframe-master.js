@@ -65660,7 +65660,7 @@ function isRawProperty (data) {
          data.property.startsWith(STRING_OBJECT3D);
 }
 
-},{"../core/component":99,"../lib/three":149,"../utils":172,"animejs":2}],52:[function(_dereq_,module,exports){
+},{"../core/component":96,"../lib/three":146,"../utils":169,"animejs":2}],52:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 var THREE = _dereq_('../lib/three');
 
@@ -65755,7 +65755,7 @@ module.exports.Component = registerComponent('camera', {
   }
 });
 
-},{"../core/component":99,"../lib/three":149}],53:[function(_dereq_,module,exports){
+},{"../core/component":96,"../lib/three":146}],53:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 var THREE = _dereq_('../lib/three');
 
@@ -65789,7 +65789,7 @@ module.exports.Component = registerComponent('collada-model', {
   }
 });
 
-},{"../core/component":99,"../lib/three":149}],54:[function(_dereq_,module,exports){
+},{"../core/component":96,"../lib/three":146}],54:[function(_dereq_,module,exports){
 /* global THREE */
 var registerComponent = _dereq_('../core/component').registerComponent;
 var utils = _dereq_('../utils/');
@@ -66180,7 +66180,7 @@ module.exports.Component = registerComponent('cursor', {
   }
 });
 
-},{"../core/component":99,"../utils/":172}],55:[function(_dereq_,module,exports){
+},{"../core/component":96,"../utils/":169}],55:[function(_dereq_,module,exports){
 var geometries = _dereq_('../core/geometry').geometries;
 var geometryNames = _dereq_('../core/geometry').geometryNames;
 var registerComponent = _dereq_('../core/component').registerComponent;
@@ -66259,7 +66259,7 @@ module.exports.Component = registerComponent('geometry', {
   }
 });
 
-},{"../core/component":99,"../core/geometry":101,"../lib/three":149}],56:[function(_dereq_,module,exports){
+},{"../core/component":96,"../core/geometry":98,"../lib/three":146}],56:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 var THREE = _dereq_('../lib/three');
 var utils = _dereq_('../utils/');
@@ -66307,390 +66307,7 @@ module.exports.Component = registerComponent('gltf-model', {
   }
 });
 
-},{"../core/component":99,"../lib/three":149,"../utils/":172}],57:[function(_dereq_,module,exports){
-/* global THREE */
-var registerComponent = _dereq_('../core/component').registerComponent;
-
-// Found at https://github.com/aframevr/assets.
-var MODEL_URLS = {
-  left: 'https://cdn.aframe.io/controllers/oculus-hands/v2/leftHand.json',
-  right: 'https://cdn.aframe.io/controllers/oculus-hands/v2/rightHand.json'
-};
-
-// Poses.
-var ANIMATIONS = {
-  open: 'Open',
-  // point: grip active, trackpad surface active, trigger inactive.
-  point: 'Point',
-  // pointThumb: grip active, trigger inactive, trackpad surface inactive.
-  pointThumb: 'Point + Thumb',
-  // fist: grip active, trigger active, trackpad surface active.
-  fist: 'Fist',
-  // hold: trigger active, grip inactive.
-  hold: 'Hold',
-  // thumbUp: grip active, trigger active, trackpad surface inactive.
-  thumbUp: 'Thumb Up'
-};
-
-// Map animation to public events for the API.
-var EVENTS = {};
-EVENTS[ANIMATIONS.fist] = 'grip';
-EVENTS[ANIMATIONS.thumbUp] = 'pistol';
-EVENTS[ANIMATIONS.point] = 'pointing';
-EVENTS[ANIMATIONS.thumb] = 'thumb';
-
-/**
- * Hand controls component that abstracts 6DoF controls:
- *   oculus-touch-controls, vive-controls, windows-motion-controls.
- *
- * Originally meant to be a sample implementation of applications-specific controls that
- * abstracts multiple types of controllers.
- *
- * Auto-detect appropriate controller.
- * Handle common events coming from the detected vendor-specific controls.
- * Translate button events to semantic hand-related event names:
- *   (gripclose, gripopen, thumbup, thumbdown, pointup, pointdown)
- * Load hand model with gestures that are applied based on the button pressed.
- *
- * @property {string} Hand mapping (`left`, `right`).
- */
-module.exports.Component = registerComponent('hand-controls', {
-  schema: {default: 'left'},
-
-  init: function () {
-    var self = this;
-    var el = this.el;
-    // Current pose.
-    this.gesture = ANIMATIONS.open;
-    // Active buttons populated by events provided by the attached controls.
-    this.pressedButtons = {};
-    this.touchedButtons = {};
-    this.loader = new THREE.ObjectLoader();
-    this.loader.setCrossOrigin('anonymous');
-
-    this.onGripDown = function () { self.handleButton('grip', 'down'); };
-    this.onGripUp = function () { self.handleButton('grip', 'up'); };
-    this.onTrackpadDown = function () { self.handleButton('trackpad', 'down'); };
-    this.onTrackpadUp = function () { self.handleButton('trackpad', 'up'); };
-    this.onTrackpadTouchStart = function () { self.handleButton('trackpad', 'touchstart'); };
-    this.onTrackpadTouchEnd = function () { self.handleButton('trackpad', 'touchend'); };
-    this.onTriggerDown = function () { self.handleButton('trigger', 'down'); };
-    this.onTriggerUp = function () { self.handleButton('trigger', 'up'); };
-    this.onTriggerTouchStart = function () { self.handleButton('trigger', 'touchstart'); };
-    this.onTriggerTouchEnd = function () { self.handleButton('trigger', 'touchend'); };
-    this.onGripTouchStart = function () { self.handleButton('grip', 'touchstart'); };
-    this.onGripTouchEnd = function () { self.handleButton('grip', 'touchend'); };
-    this.onThumbstickDown = function () { self.handleButton('thumbstick', 'down'); };
-    this.onThumbstickUp = function () { self.handleButton('thumbstick', 'up'); };
-    this.onAorXTouchStart = function () { self.handleButton('AorX', 'touchstart'); };
-    this.onAorXTouchEnd = function () { self.handleButton('AorX', 'touchend'); };
-    this.onBorYTouchStart = function () { self.handleButton('BorY', 'touchstart'); };
-    this.onBorYTouchEnd = function () { self.handleButton('BorY', 'touchend'); };
-    this.onSurfaceTouchStart = function () { self.handleButton('surface', 'touchstart'); };
-    this.onSurfaceTouchEnd = function () { self.handleButton('surface', 'touchend'); };
-    this.onControllerConnected = function () { self.setModelVisibility(true); };
-    this.onControllerDisconnected = function () { self.setModelVisibility(false); };
-
-    el.addEventListener('controllerconnected', this.onControllerConnected);
-    el.addEventListener('controllerdisconnected', this.onControllerDisconnected);
-  },
-
-  play: function () {
-    this.addEventListeners();
-  },
-
-  pause: function () {
-    this.removeEventListeners();
-  },
-
-  tick: function (time, delta) {
-    var mesh = this.el.getObject3D('mesh');
-
-    if (!mesh || !mesh.mixer) { return; }
-
-    mesh.mixer.update(delta / 1000);
-  },
-
-  addEventListeners: function () {
-    var el = this.el;
-    el.addEventListener('gripdown', this.onGripDown);
-    el.addEventListener('gripup', this.onGripUp);
-    el.addEventListener('trackpaddown', this.onTrackpadDown);
-    el.addEventListener('trackpadup', this.onTrackpadUp);
-    el.addEventListener('trackpadtouchstart', this.onTrackpadTouchStart);
-    el.addEventListener('trackpadtouchend', this.onTrackpadTouchEnd);
-    el.addEventListener('triggerdown', this.onTriggerDown);
-    el.addEventListener('triggerup', this.onTriggerUp);
-    el.addEventListener('triggertouchstart', this.onTriggerTouchStart);
-    el.addEventListener('triggertouchend', this.onTriggerTouchEnd);
-    el.addEventListener('griptouchstart', this.onGripTouchStart);
-    el.addEventListener('griptouchend', this.onGripTouchEnd);
-    el.addEventListener('thumbstickdown', this.onThumbstickDown);
-    el.addEventListener('thumbstickup', this.onThumbstickUp);
-    el.addEventListener('abuttontouchstart', this.onAorXTouchStart);
-    el.addEventListener('abuttontouchend', this.onAorXTouchEnd);
-    el.addEventListener('bbuttontouchstart', this.onBorYTouchStart);
-    el.addEventListener('bbuttontouchend', this.onBorYTouchEnd);
-    el.addEventListener('xbuttontouchstart', this.onAorXTouchStart);
-    el.addEventListener('xbuttontouchend', this.onAorXTouchEnd);
-    el.addEventListener('ybuttontouchstart', this.onBorYTouchStart);
-    el.addEventListener('ybuttontouchend', this.onBorYTouchEnd);
-    el.addEventListener('surfacetouchstart', this.onSurfaceTouchStart);
-    el.addEventListener('surfacetouchend', this.onSurfaceTouchEnd);
-  },
-
-  removeEventListeners: function () {
-    var el = this.el;
-    el.removeEventListener('gripdown', this.onGripDown);
-    el.removeEventListener('gripup', this.onGripUp);
-    el.removeEventListener('trackpaddown', this.onTrackpadDown);
-    el.removeEventListener('trackpadup', this.onTrackpadUp);
-    el.removeEventListener('trackpadtouchstart', this.onTrackpadTouchStart);
-    el.removeEventListener('trackpadtouchend', this.onTrackpadTouchEnd);
-    el.removeEventListener('triggerdown', this.onTriggerDown);
-    el.removeEventListener('triggerup', this.onTriggerUp);
-    el.removeEventListener('triggertouchstart', this.onTriggerTouchStart);
-    el.removeEventListener('triggertouchend', this.onTriggerTouchEnd);
-    el.removeEventListener('griptouchstart', this.onGripTouchStart);
-    el.removeEventListener('griptouchend', this.onGripTouchEnd);
-    el.removeEventListener('thumbstickdown', this.onThumbstickDown);
-    el.removeEventListener('thumbstickup', this.onThumbstickUp);
-    el.removeEventListener('abuttontouchstart', this.onAorXTouchStart);
-    el.removeEventListener('abuttontouchend', this.onAorXTouchEnd);
-    el.removeEventListener('bbuttontouchstart', this.onBorYTouchStart);
-    el.removeEventListener('bbuttontouchend', this.onBorYTouchEnd);
-    el.removeEventListener('xbuttontouchstart', this.onAorXTouchStart);
-    el.removeEventListener('xbuttontouchend', this.onAorXTouchEnd);
-    el.removeEventListener('ybuttontouchstart', this.onBorYTouchStart);
-    el.removeEventListener('ybuttontouchend', this.onBorYTouchEnd);
-    el.removeEventListener('surfacetouchstart', this.onSurfaceTouchStart);
-    el.removeEventListener('surfacetouchend', this.onSurfaceTouchEnd);
-  },
-
-  /**
-   * Update handler. More like the `init` handler since the only property is the hand, and
-   * that won't be changing much.
-   */
-  update: function (previousHand) {
-    var controlConfiguration;
-    var el = this.el;
-    var hand = this.data;
-
-    // Get common configuration to abstract different vendor controls.
-    controlConfiguration = {
-      hand: hand,
-      model: false,
-      orientationOffset: {x: 0, y: 0, z: hand === 'left' ? 90 : -90}
-    };
-
-    // Set model.
-    if (hand !== previousHand) {
-      this.loader.load(MODEL_URLS[hand], function (scene) {
-        var mesh = scene.getObjectByName('Hand');
-        mesh.material.skinning = true;
-        mesh.mixer = new THREE.AnimationMixer(mesh);
-        el.setObject3D('mesh', mesh);
-        mesh.position.set(0, 0, 0);
-        mesh.rotation.set(0, 0, 0);
-        // hidden by default
-        mesh.visible = false;
-        el.setAttribute('vive-controls', controlConfiguration);
-        el.setAttribute('oculus-touch-controls', controlConfiguration);
-        el.setAttribute('windows-motion-controls', controlConfiguration);
-      });
-    }
-  },
-
-  remove: function () {
-    this.el.removeObject3D('mesh');
-  },
-
-  /**
-   * Play model animation, based on which button was pressed and which kind of event.
-   *
-   * 1. Process buttons.
-   * 2. Determine gesture (this.determineGesture()).
-   * 3. Animation gesture (this.animationGesture()).
-   * 4. Emit gesture events (this.emitGestureEvents()).
-   *
-   * @param {string} button - Name of the button.
-   * @param {string} evt - Type of event for the button (i.e., down/up/touchstart/touchend).
-   */
-  handleButton: function (button, evt) {
-    var lastGesture;
-    var isPressed = evt === 'down';
-    var isTouched = evt === 'touchstart';
-
-    // Update objects.
-    if (evt.indexOf('touch') === 0) {
-      // Update touch object.
-      if (isTouched === this.touchedButtons[button]) { return; }
-      this.touchedButtons[button] = isTouched;
-    } else {
-      // Update button object.
-      if (isPressed === this.pressedButtons[button]) { return; }
-      this.pressedButtons[button] = isPressed;
-    }
-
-    // Determine the gesture.
-    lastGesture = this.gesture;
-    this.gesture = this.determineGesture();
-
-    // Same gesture.
-    if (this.gesture === lastGesture) { return; }
-
-    // Animate gesture.
-    this.animateGesture(this.gesture, lastGesture);
-
-    // Emit events.
-    this.emitGestureEvents(this.gesture, lastGesture);
-  },
-
-  /**
-   * Determine which pose hand should be in considering active and touched buttons.
-   */
-  determineGesture: function () {
-    var gesture;
-    var isGripActive = this.pressedButtons['grip'];
-    var isSurfaceActive = this.pressedButtons['surface'] || this.touchedButtons['surface'];
-    var isTrackpadActive = this.pressedButtons['trackpad'] || this.touchedButtons['trackpad'];
-    var isTriggerActive = this.pressedButtons['trigger'] || this.touchedButtons['trigger'];
-    var isABXYActive = this.touchedButtons['AorX'] || this.touchedButtons['BorY'];
-    var isVive = isViveController(this.el.components['tracked-controls']);
-
-    // Works well with Oculus Touch and Windows Motion Controls, but Vive needs tweaks.
-    if (isGripActive) {
-      if (isVive) {
-        gesture = ANIMATIONS.fist;
-      } else
-        if (isSurfaceActive || isABXYActive || isTrackpadActive) {
-          gesture = isTriggerActive ? ANIMATIONS.fist : ANIMATIONS.point;
-        } else {
-          gesture = isTriggerActive ? ANIMATIONS.thumbUp : ANIMATIONS.pointThumb;
-        }
-    } else {
-      if (isTriggerActive) {
-        gesture = !isVive ? ANIMATIONS.hold : ANIMATIONS.fist;
-      } else if (isVive && isTrackpadActive) {
-        gesture = ANIMATIONS.point;
-      }
-    }
-
-    return gesture;
-  },
-
-  /**
-   * Play gesture animation.
-   *
-   * @param {string} gesture - Which pose to animate to. If absent, then animate to open.
-   * @param {string} lastGesture - Previous gesture, to reverse back to open if needed.
-   */
-  animateGesture: function (gesture, lastGesture) {
-    if (gesture) {
-      this.playAnimation(gesture || ANIMATIONS.open, lastGesture, false);
-      return;
-    }
-    // If no gesture, then reverse the current gesture back to open pose.
-    this.playAnimation(lastGesture, lastGesture, true);
-  },
-
-  /**
-   * Emit `hand-controls`-specific events.
-   */
-  emitGestureEvents: function (gesture, lastGesture) {
-    var el = this.el;
-    var eventName;
-
-    if (lastGesture === gesture) { return; }
-
-    // Emit event for lastGesture not inactive.
-    eventName = getGestureEventName(lastGesture, false);
-    if (eventName) { el.emit(eventName); }
-
-    // Emit event for current gesture now active.
-    eventName = getGestureEventName(gesture, true);
-    if (eventName) { el.emit(eventName); }
-  },
-
-/**
-  * Play hand animation based on button state.
-  *
-  * @param {string} gesture - Name of the animation as specified by the model.
-  * @param {string} lastGesture - Previous pose.
-  * @param {boolean} reverse - Whether animation should play in reverse.
-  */
-  playAnimation: function (gesture, lastGesture, reverse) {
-    var fromAction;
-    var mesh = this.el.getObject3D('mesh');
-    var toAction;
-
-    if (!mesh) { return; }
-
-    // Grab clip action.
-    toAction = mesh.mixer.clipAction(gesture);
-    toAction.clampWhenFinished = true;
-    toAction.loop = THREE.LoopRepeat;
-    toAction.repetitions = 0;
-    toAction.timeScale = reverse ? -1 : 1;
-    toAction.weight = 1;
-
-    // No gesture to gesture or gesture to no gesture.
-    if (!lastGesture || gesture === lastGesture) {
-      // Stop all current animations.
-      mesh.mixer.stopAllAction();
-
-      // Play animation.
-      toAction.play();
-      return;
-    }
-
-    // Animate or crossfade from gesture to gesture.
-    fromAction = mesh.mixer.clipAction(lastGesture);
-    mesh.mixer.stopAllAction();
-    fromAction.weight = 0.15;
-    fromAction.play();
-    toAction.play();
-    fromAction.crossFadeTo(toAction, 0.15, true);
-  },
-
-  setModelVisibility: function (visible) {
-    var model = this.el.getObject3D('mesh');
-    if (!model) { return; }
-    model.visible = visible;
-  }
-});
-
-/**
- * Suffix gestures based on toggle state (e.g., open/close, up/down, start/end).
- *
- * @param {string} gesture
- * @param {boolean} active
- */
-function getGestureEventName (gesture, active) {
-  var eventName;
-
-  if (!gesture) { return; }
-
-  eventName = EVENTS[gesture];
-  if (eventName === 'grip') {
-    return eventName + (active ? 'close' : 'open');
-  }
-  if (eventName === 'point' || eventName === 'thumb') {
-    return eventName + (active ? 'up' : 'down');
-  }
-  if (eventName === 'pointing' || eventName === 'pistol') {
-    return eventName + (active ? 'start' : 'end');
-  }
-  return;
-}
-
-function isViveController (trackedControls) {
-  var controllerId = trackedControls && trackedControls.controller &&
-                     trackedControls.controller.id;
-  return controllerId && controllerId.indexOf('OpenVR ') === 0;
-}
-
-},{"../core/component":99}],58:[function(_dereq_,module,exports){
+},{"../core/component":96,"../lib/three":146,"../utils/":169}],57:[function(_dereq_,module,exports){
 _dereq_('./animation');
 _dereq_('./camera');
 _dereq_('./orthographic-camera');
@@ -66698,8 +66315,6 @@ _dereq_('./collada-model');
 _dereq_('./cursor');
 _dereq_('./geometry');
 _dereq_('./gltf-model');
-_dereq_('./hand-controls');
-_dereq_('./laser-controls');
 _dereq_('./light');
 _dereq_('./line');
 _dereq_('./link');
@@ -66713,7 +66328,6 @@ _dereq_('./scale');
 _dereq_('./shadow');
 _dereq_('./sound');
 _dereq_('./text');
-_dereq_('./tracked-controls');
 _dereq_('./visible');
 _dereq_('./wasd-controls');
 
@@ -66729,106 +66343,7 @@ _dereq_('./scene/renderer');
 _dereq_('./scene/screenshot');
 _dereq_('./scene/stats');
 
-},{"./animation":51,"./camera":52,"./collada-model":53,"./cursor":54,"./geometry":55,"./gltf-model":56,"./hand-controls":57,"./laser-controls":59,"./light":60,"./line":61,"./link":62,"./look-controls":63,"./material":64,"./obj-model":65,"./orthographic-camera":66,"./position":67,"./raycaster":68,"./rotation":69,"./scale":70,"./scene/background":71,"./scene/debug":72,"./scene/effects":74,"./scene/embedded":77,"./scene/fog":78,"./scene/inspector":79,"./scene/overlay":80,"./scene/pool":81,"./scene/renderer":82,"./scene/screenshot":83,"./scene/stats":84,"./shadow":85,"./sound":86,"./text":87,"./tracked-controls":88,"./visible":89,"./wasd-controls":90}],59:[function(_dereq_,module,exports){
-var registerComponent = _dereq_('../core/component').registerComponent;
-var utils = _dereq_('../utils/');
-
-registerComponent('laser-controls', {
-  schema: {
-    hand: {default: 'right'}
-  },
-
-  init: function () {
-    var config = this.config;
-    var data = this.data;
-    var el = this.el;
-    var self = this;
-
-    // Set all controller models.
-    el.setAttribute('daydream-controls', {hand: data.hand});
-    el.setAttribute('gearvr-controls', {hand: data.hand});
-    el.setAttribute('oculus-go-controls', {hand: data.hand});
-    el.setAttribute('oculus-touch-controls', {hand: data.hand});
-    el.setAttribute('vive-controls', {hand: data.hand});
-    el.setAttribute('windows-motion-controls', {hand: data.hand});
-
-    // Wait for controller to connect, or have a valid pointing pose, before creating ray
-    el.addEventListener('controllerconnected', createRay);
-    el.addEventListener('controllerdisconnected', hideRay);
-    el.addEventListener('controllermodelready', function (evt) {
-      createRay(evt);
-      self.modelReady = true;
-    });
-
-    function createRay (evt) {
-      var controllerConfig = config[evt.detail.name];
-
-      if (!controllerConfig) { return; }
-
-      // Show the line unless a particular config opts to hide it, until a controllermodelready
-      // event comes through.
-      var raycasterConfig = utils.extend({
-        showLine: true
-      }, controllerConfig.raycaster || {});
-
-      // The controllermodelready event contains a rayOrigin that takes into account
-      // offsets specific to the loaded model.
-      if (evt.detail.rayOrigin) {
-        raycasterConfig.origin = evt.detail.rayOrigin.origin;
-        raycasterConfig.direction = evt.detail.rayOrigin.direction;
-        raycasterConfig.showLine = true;
-      }
-
-      // Only apply a default raycaster if it does not yet exist. This prevents it overwriting
-      // config applied from a controllermodelready event.
-      if (evt.detail.rayOrigin || !self.modelReady) {
-        el.setAttribute('raycaster', raycasterConfig);
-      } else {
-        el.setAttribute('raycaster', 'showLine', true);
-      }
-
-      el.setAttribute('cursor', utils.extend({
-        fuse: false
-      }, controllerConfig.cursor));
-    }
-
-    function hideRay () {
-      el.setAttribute('raycaster', 'showLine', false);
-    }
-  },
-
-  config: {
-    'daydream-controls': {
-      cursor: {downEvents: ['trackpaddown'], upEvents: ['trackpadup']}
-    },
-
-    'gearvr-controls': {
-      cursor: {downEvents: ['triggerdown'], upEvents: ['triggerup']},
-      raycaster: {origin: {x: 0, y: 0.0005, z: 0}}
-    },
-
-    'oculus-go-controls': {
-      cursor: {downEvents: ['triggerdown'], upEvents: ['triggerup']},
-      raycaster: {origin: {x: 0, y: 0.0005, z: 0}}
-    },
-
-    'oculus-touch-controls': {
-      cursor: {downEvents: ['triggerdown'], upEvents: ['triggerup']},
-      raycaster: {origin: {x: 0, y: 0, z: 0}}
-    },
-
-    'vive-controls': {
-      cursor: {downEvents: ['triggerdown'], upEvents: ['triggerup']}
-    },
-
-    'windows-motion-controls': {
-      cursor: {downEvents: ['triggerdown'], upEvents: ['triggerup']},
-      raycaster: {showLine: false}
-    }
-  }
-});
-
-},{"../core/component":99,"../utils/":172}],60:[function(_dereq_,module,exports){
+},{"./animation":51,"./camera":52,"./collada-model":53,"./cursor":54,"./geometry":55,"./gltf-model":56,"./light":58,"./line":59,"./link":60,"./look-controls":61,"./material":62,"./obj-model":63,"./orthographic-camera":64,"./position":65,"./raycaster":66,"./rotation":67,"./scale":68,"./scene/background":69,"./scene/debug":70,"./scene/effects":72,"./scene/embedded":75,"./scene/fog":76,"./scene/inspector":77,"./scene/overlay":78,"./scene/pool":79,"./scene/renderer":80,"./scene/screenshot":81,"./scene/stats":82,"./shadow":83,"./sound":84,"./text":85,"./visible":86,"./wasd-controls":87}],58:[function(_dereq_,module,exports){
 var bind = _dereq_('../utils/bind');
 var diff = _dereq_('../utils').diff;
 var debug = _dereq_('../utils/debug');
@@ -67109,7 +66624,7 @@ module.exports.Component = registerComponent('light', {
   }
 });
 
-},{"../core/component":99,"../lib/three":149,"../utils":172,"../utils/bind":166,"../utils/debug":168}],61:[function(_dereq_,module,exports){
+},{"../core/component":96,"../lib/three":146,"../utils":169,"../utils/bind":163,"../utils/debug":165}],59:[function(_dereq_,module,exports){
 /* global THREE */
 var registerComponent = _dereq_('../core/component').registerComponent;
 
@@ -67184,7 +66699,7 @@ function isEqualVec3 (a, b) {
   return (a.x === b.x && a.y === b.y && a.z === b.z);
 }
 
-},{"../core/component":99}],62:[function(_dereq_,module,exports){
+},{"../core/component":96}],60:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 var registerShader = _dereq_('../core/shader').registerShader;
 var THREE = _dereq_('../lib/three');
@@ -67556,7 +67071,7 @@ registerShader('portal', {
 });
 /* eslint-enable */
 
-},{"../core/component":99,"../core/shader":110,"../lib/three":149}],63:[function(_dereq_,module,exports){
+},{"../core/component":96,"../core/shader":107,"../lib/three":146}],61:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 var THREE = _dereq_('../lib/three');
 var utils = _dereq_('../utils/');
@@ -67598,7 +67113,6 @@ module.exports.Component = registerComponent('look-controls', {
     this.savedPose = null;
     this.pointerLocked = false;
     this.setupMouseControls();
-    this.setupHMDControls();
     this.bindMethods();
 
     this.savedPose = {
@@ -67634,7 +67148,6 @@ module.exports.Component = registerComponent('look-controls', {
   tick: function (t) {
     var data = this.data;
     if (!data.enabled) { return; }
-    this.controls.update();
     this.updateOrientation();
     this.updatePosition();
   },
@@ -67676,17 +67189,6 @@ module.exports.Component = registerComponent('look-controls', {
   },
 
   /**
-    * Set up VR controls that will copy data to the dolly.
-  */
-  setupHMDControls: function () {
-    this.dolly = new THREE.Object3D();
-    this.euler = new THREE.Euler();
-    this.hmdQuaternion = new THREE.Quaternion();
-    this.controls = new THREE.VRControls(this.dolly);
-    this.controls.userHeight = 0.0;
-  },
-
-  /**
    * Add mouse and touch event listeners to canvas.
    */
   addEventListeners: function () {
@@ -67708,10 +67210,6 @@ module.exports.Component = registerComponent('look-controls', {
     canvasEl.addEventListener('touchstart', this.onTouchStart);
     window.addEventListener('touchmove', this.onTouchMove);
     window.addEventListener('touchend', this.onTouchEnd);
-
-    // sceneEl events.
-    sceneEl.addEventListener('enter-vr', this.onEnterVR);
-    sceneEl.addEventListener('exit-vr', this.onExitVR);
 
     // Pointer Lock events.
     if (this.data.pointerLockEnabled) {
@@ -67911,21 +67409,6 @@ module.exports.Component = registerComponent('look-controls', {
   },
 
   /**
-   * Save pose.
-   */
-  onEnterVR: function () {
-    this.saveCameraPose();
-  },
-
-  /**
-   * Restore the pose.
-   */
-  onExitVR: function () {
-    this.restoreCameraPose();
-    this.previousHMDPosition.set(0, 0, 0);
-  },
-
-  /**
    * Update Pointer Lock state.
    */
   onPointerLockChange: function () {
@@ -67999,7 +67482,7 @@ module.exports.Component = registerComponent('look-controls', {
   }
 });
 
-},{"../core/component":99,"../lib/three":149,"../utils":172,"../utils/":172}],64:[function(_dereq_,module,exports){
+},{"../core/component":96,"../lib/three":146,"../utils":169,"../utils/":169}],62:[function(_dereq_,module,exports){
 /* global Promise */
 var utils = _dereq_('../utils/');
 var component = _dereq_('../core/component');
@@ -68268,7 +67751,7 @@ function disposeMaterial (material, system) {
   system.unregisterMaterial(material);
 }
 
-},{"../core/component":99,"../core/shader":110,"../lib/three":149,"../utils/":172}],65:[function(_dereq_,module,exports){
+},{"../core/component":96,"../core/shader":107,"../lib/three":146,"../utils/":169}],63:[function(_dereq_,module,exports){
 var debug = _dereq_('../utils/debug');
 var registerComponent = _dereq_('../core/component').registerComponent;
 var THREE = _dereq_('../lib/three');
@@ -68351,7 +67834,7 @@ module.exports.Component = registerComponent('obj-model', {
   }
 });
 
-},{"../core/component":99,"../lib/three":149,"../utils/debug":168}],66:[function(_dereq_,module,exports){
+},{"../core/component":96,"../lib/three":146,"../utils/debug":165}],64:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 var THREE = _dereq_('../lib/three');
 
@@ -68439,7 +67922,7 @@ module.exports.Component = registerComponent('orthographic-camera', {
   }
 });
 
-},{"../core/component":99,"../lib/three":149}],67:[function(_dereq_,module,exports){
+},{"../core/component":96,"../lib/three":146}],65:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 
 module.exports.Component = registerComponent('position', {
@@ -68462,7 +67945,7 @@ module.exports.Component = registerComponent('position', {
   }
 });
 
-},{"../core/component":99}],68:[function(_dereq_,module,exports){
+},{"../core/component":96}],66:[function(_dereq_,module,exports){
 /* global MutationObserver */
 
 var registerComponent = _dereq_('../core/component').registerComponent;
@@ -68907,7 +68390,7 @@ function copyArray (a, b) {
   }
 }
 
-},{"../core/component":99,"../lib/three":149,"../utils/":172}],69:[function(_dereq_,module,exports){
+},{"../core/component":96,"../lib/three":146,"../utils/":169}],67:[function(_dereq_,module,exports){
 var degToRad = _dereq_('../lib/three').Math.degToRad;
 var registerComponent = _dereq_('../core/component').registerComponent;
 
@@ -68930,7 +68413,7 @@ module.exports.Component = registerComponent('rotation', {
   }
 });
 
-},{"../core/component":99,"../lib/three":149}],70:[function(_dereq_,module,exports){
+},{"../core/component":96,"../lib/three":146}],68:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 
 // Avoids triggering a zero-determinant which makes object3D matrix non-invertible.
@@ -68957,7 +68440,7 @@ module.exports.Component = registerComponent('scale', {
   }
 });
 
-},{"../core/component":99}],71:[function(_dereq_,module,exports){
+},{"../core/component":96}],69:[function(_dereq_,module,exports){
 /* global THREE */
 var register = _dereq_('../../core/component').registerComponent;
 
@@ -68977,14 +68460,14 @@ module.exports.Component = register('background', {
   }
 });
 
-},{"../../core/component":99}],72:[function(_dereq_,module,exports){
+},{"../../core/component":96}],70:[function(_dereq_,module,exports){
 var register = _dereq_('../../core/component').registerComponent;
 
 module.exports.Component = register('debug', {
   schema: {default: true}
 });
 
-},{"../../core/component":99}],73:[function(_dereq_,module,exports){
+},{"../../core/component":96}],71:[function(_dereq_,module,exports){
 /* global THREE */
 var registerEffect = _dereq_('../../../core/effect').registerEffect;
 
@@ -69014,13 +68497,13 @@ registerEffect('bloom', {
   }
 });
 
-},{"../../../../vendor/effects/CopyShader":181,"../../../../vendor/effects/LuminosityHighPassShader":183,"../../../../vendor/effects/ShaderPass":188,"../../../../vendor/effects/UnrealBloomPass":189,"../../../core/effect":100}],74:[function(_dereq_,module,exports){
+},{"../../../../vendor/effects/CopyShader":177,"../../../../vendor/effects/LuminosityHighPassShader":179,"../../../../vendor/effects/ShaderPass":184,"../../../../vendor/effects/UnrealBloomPass":185,"../../../core/effect":97}],72:[function(_dereq_,module,exports){
 _dereq_('./bloom');
 _dereq_('./sepia');
 _dereq_('./ssao');
 
 
-},{"./bloom":73,"./sepia":75,"./ssao":76}],75:[function(_dereq_,module,exports){
+},{"./bloom":71,"./sepia":73,"./ssao":74}],73:[function(_dereq_,module,exports){
 /* global THREE */
 var registerEffect = _dereq_('../../../core/effect').registerEffect;
 
@@ -69044,7 +68527,7 @@ registerEffect('sepia', {
   }
 });
 
-},{"../../../../vendor/effects/SepiaShader":187,"../../../../vendor/effects/ShaderPass":188,"../../../core/effect":100}],76:[function(_dereq_,module,exports){
+},{"../../../../vendor/effects/SepiaShader":183,"../../../../vendor/effects/ShaderPass":184,"../../../core/effect":97}],74:[function(_dereq_,module,exports){
 /* global THREE */
 var registerEffect = _dereq_('../../../core/effect').registerEffect;
 
@@ -69072,7 +68555,7 @@ registerEffect('ssao', {
   }
 });
 
-},{"../../../../vendor/effects/SSAOPass":185,"../../../../vendor/effects/SSAOShader":186,"../../../core/effect":100}],77:[function(_dereq_,module,exports){
+},{"../../../../vendor/effects/SSAOPass":181,"../../../../vendor/effects/SSAOShader":182,"../../../core/effect":97}],75:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../../core/component').registerComponent;
 
 /**
@@ -69097,7 +68580,7 @@ module.exports.Component = registerComponent('embedded', {
 
 });
 
-},{"../../core/component":99}],78:[function(_dereq_,module,exports){
+},{"../../core/component":96}],76:[function(_dereq_,module,exports){
 var register = _dereq_('../../core/component').registerComponent;
 var THREE = _dereq_('../../lib/three');
 var debug = _dereq_('../../utils/debug');
@@ -69170,7 +68653,7 @@ function getFog (data) {
   return fog;
 }
 
-},{"../../core/component":99,"../../lib/three":149,"../../utils/debug":168}],79:[function(_dereq_,module,exports){
+},{"../../core/component":96,"../../lib/three":146,"../../utils/debug":165}],77:[function(_dereq_,module,exports){
 (function (process){(function (){
 /* global AFRAME */
 var AFRAME_INJECTED = _dereq_('../../constants').AFRAME_INJECTED;
@@ -69275,7 +68758,7 @@ module.exports.Component = registerComponent('inspector', {
 
 }).call(this)}).call(this,_dereq_('_process'))
 
-},{"../../../package":50,"../../constants":91,"../../core/component":99,"../../utils/bind":166,"_process":31}],80:[function(_dereq_,module,exports){
+},{"../../../package":50,"../../constants":88,"../../core/component":96,"../../utils/bind":163,"_process":31}],78:[function(_dereq_,module,exports){
 /* global THREE */
 var register = _dereq_('../../core/component').registerComponent;
 
@@ -69337,7 +68820,7 @@ module.exports.Component = register('overlay', {
   }
 });
 
-},{"../../core/component":99}],81:[function(_dereq_,module,exports){
+},{"../../core/component":96}],79:[function(_dereq_,module,exports){
 var debug = _dereq_('../../utils/debug');
 var registerComponent = _dereq_('../../core/component').registerComponent;
 
@@ -69455,7 +68938,7 @@ module.exports.Component = registerComponent('pool', {
   }
 });
 
-},{"../../core/component":99,"../../utils/debug":168}],82:[function(_dereq_,module,exports){
+},{"../../core/component":96,"../../utils/debug":165}],80:[function(_dereq_,module,exports){
 var register = _dereq_('../../core/component').registerComponent;
 var debug = _dereq_('../../utils/debug');
 
@@ -69537,7 +69020,7 @@ module.exports.Component = register('renderer', {
   }
 });
 
-},{"../../core/component":99,"../../utils/debug":168}],83:[function(_dereq_,module,exports){
+},{"../../core/component":96,"../../utils/debug":165}],81:[function(_dereq_,module,exports){
 /* global ImageData, URL */
 var registerComponent = _dereq_('../../core/component').registerComponent;
 var THREE = _dereq_('../../lib/three');
@@ -69796,7 +69279,7 @@ module.exports.Component = registerComponent('screenshot', {
   }
 });
 
-},{"../../core/component":99,"../../lib/three":149}],84:[function(_dereq_,module,exports){
+},{"../../core/component":96,"../../lib/three":146}],82:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../../core/component').registerComponent;
 var RStats = _dereq_('../../../vendor/rStats');
 var utils = _dereq_('../../utils');
@@ -69876,7 +69359,7 @@ function createStats (scene) {
   });
 }
 
-},{"../../../vendor/rStats":191,"../../../vendor/rStats.extras":190,"../../core/component":99,"../../lib/rStatsAframe":148,"../../utils":172}],85:[function(_dereq_,module,exports){
+},{"../../../vendor/rStats":187,"../../../vendor/rStats.extras":186,"../../core/component":96,"../../lib/rStatsAframe":145,"../../utils":169}],83:[function(_dereq_,module,exports){
 var component = _dereq_('../core/component');
 var THREE = _dereq_('../lib/three');
 var bind = _dereq_('../utils/bind');
@@ -69930,7 +69413,7 @@ module.exports.Component = registerComponent('shadow', {
   }
 });
 
-},{"../core/component":99,"../lib/three":149,"../utils/bind":166}],86:[function(_dereq_,module,exports){
+},{"../core/component":96,"../lib/three":146,"../utils/bind":163}],84:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 var debug = _dereq_('../utils/debug');
 var THREE = _dereq_('../lib/three');
@@ -70181,7 +69664,7 @@ module.exports.Component = registerComponent('sound', {
   }
 });
 
-},{"../core/component":99,"../lib/three":149,"../utils/debug":168}],87:[function(_dereq_,module,exports){
+},{"../core/component":96,"../lib/three":146,"../utils/debug":165}],85:[function(_dereq_,module,exports){
 var createTextGeometry = _dereq_('three-bmfont-text');
 var loadBMFont = _dereq_('load-bmfont');
 
@@ -70666,340 +70149,7 @@ function PromiseCache () {
   };
 }
 
-},{"../core/component":99,"../core/shader":110,"../lib/three":149,"../utils/":172,"load-bmfont":22,"three-bmfont-text":34}],88:[function(_dereq_,module,exports){
-var registerComponent = _dereq_('../core/component').registerComponent;
-var controllerUtils = _dereq_('../utils/tracked-controls');
-var DEFAULT_CAMERA_HEIGHT = _dereq_('../constants').DEFAULT_CAMERA_HEIGHT;
-var THREE = _dereq_('../lib/three');
-
-var DEFAULT_HANDEDNESS = _dereq_('../constants').DEFAULT_HANDEDNESS;
-// Vector from eyes to elbow (divided by user height).
-var EYES_TO_ELBOW = {x: 0.175, y: -0.3, z: -0.03};
-// Vector from eyes to elbow (divided by user height).
-var FOREARM = {x: 0, y: 0, z: -0.175};
-
-// Due to unfortunate name collision, add empty touches array to avoid Daydream error.
-var EMPTY_DAYDREAM_TOUCHES = {touches: []};
-
-var EVENTS = {
-  AXISMOVE: 'axismove',
-  BUTTONCHANGED: 'buttonchanged',
-  BUTTONDOWN: 'buttondown',
-  BUTTONUP: 'buttonup',
-  TOUCHSTART: 'touchstart',
-  TOUCHEND: 'touchend'
-};
-
-/**
- * Tracked controls component.
- * Wrap the gamepad API for pose and button states.
- * Select the appropriate controller and apply pose to the entity.
- * Observe button states and emit appropriate events.
- *
- * @property {number} controller - Index of controller in array returned by Gamepad API.
- *  Only used if hand property is not set.
- * @property {string} id - Selected controller among those returned by Gamepad API.
- * @property {number} hand - If multiple controllers found with id, choose the one with the
- *  given value for hand. If set, we ignore 'controller' property
- */
-module.exports.Component = registerComponent('tracked-controls', {
-  schema: {
-    controller: {default: 0},
-    id: {type: 'string', default: ''},
-    hand: {type: 'string', default: ''},
-    idPrefix: {type: 'string', default: ''},
-    orientationOffset: {type: 'vec3'},
-    // Arm model parameters when not 6DoF.
-    armModel: {default: true},
-    headElement: {type: 'selector'}
-  },
-
-  init: function () {
-    this.axis = [0, 0, 0];
-    this.buttonStates = {};
-    this.changedAxes = [];
-    this.targetControllerNumber = this.data.controller;
-
-    this.axisMoveEventDetail = {axis: this.axis, changed: this.changedAxes};
-    this.deltaControllerPosition = new THREE.Vector3();
-    this.controllerQuaternion = new THREE.Quaternion();
-    this.controllerEuler = new THREE.Euler();
-
-    this.updateGamepad();
-
-    this.buttonEventDetails = {};
-  },
-
-  tick: function (time, delta) {
-    var mesh = this.el.getObject3D('mesh');
-    // Update mesh animations.
-    if (mesh && mesh.update) { mesh.update(delta / 1000); }
-    this.updateGamepad();
-    this.updatePose();
-    this.updateButtons();
-  },
-
-  /**
-   * Return default user height to use for non-6DOF arm model.
-   */
-  defaultUserHeight: function () {
-    return DEFAULT_CAMERA_HEIGHT;
-  },
-
-  /**
-   * Return head element to use for non-6DOF arm model.
-   */
-  getHeadElement: function () {
-    return this.data.headElement || this.el.sceneEl.camera.el;
-  },
-
-  /**
-   * Handle update controller match criteria (such as `id`, `idPrefix`, `hand`, `controller`)
-   */
-  updateGamepad: function () {
-    var data = this.data;
-    var controller = controllerUtils.findMatchingController(
-      this.system.controllers,
-      data.id,
-      data.idPrefix,
-      data.hand,
-      data.controller
-    );
-
-    this.controller = controller;
-  },
-
-  /**
-   * Applies an artificial arm model to simulate elbow to wrist positioning
-   * based on the orientation of the controller.
-   *
-   * @param {object} controllerPosition - Existing vector to update with controller position.
-   */
-  applyArmModel: function (controllerPosition) {
-    // Use controllerPosition and deltaControllerPosition to avoid creating variables.
-    var controller = this.controller;
-    var controllerEuler = this.controllerEuler;
-    var controllerQuaternion = this.controllerQuaternion;
-    var deltaControllerPosition = this.deltaControllerPosition;
-    var hand;
-    var headEl;
-    var headObject3D;
-    var pose;
-    var userHeight;
-
-    headEl = this.getHeadElement();
-    headObject3D = headEl.object3D;
-    userHeight = this.defaultUserHeight();
-
-    pose = controller.pose;
-    hand = (controller ? controller.hand : undefined) || DEFAULT_HANDEDNESS;
-
-    // Use camera position as head position.
-    controllerPosition.copy(headObject3D.position);
-    // Set offset for degenerate "arm model" to elbow.
-    deltaControllerPosition.set(
-      EYES_TO_ELBOW.x * (hand === 'left' ? -1 : hand === 'right' ? 1 : 0),
-      EYES_TO_ELBOW.y,  // Lower than our eyes.
-      EYES_TO_ELBOW.z);  // Slightly out in front.
-    // Scale offset by user height.
-    deltaControllerPosition.multiplyScalar(userHeight);
-    // Apply camera Y rotation (not X or Z, so you can look down at your hand).
-    deltaControllerPosition.applyAxisAngle(headObject3D.up, headObject3D.rotation.y);
-    // Apply rotated offset to position.
-    controllerPosition.add(deltaControllerPosition);
-
-    // Set offset for degenerate "arm model" forearm. Forearm sticking out from elbow.
-    deltaControllerPosition.set(FOREARM.x, FOREARM.y, FOREARM.z);
-    // Scale offset by user height.
-    deltaControllerPosition.multiplyScalar(userHeight);
-    // Apply controller X/Y rotation (tilting up/down/left/right is usually moving the arm).
-    if (pose.orientation) {
-      controllerQuaternion.fromArray(pose.orientation);
-    } else {
-      controllerQuaternion.copy(headObject3D.quaternion);
-    }
-    controllerEuler.setFromQuaternion(controllerQuaternion);
-    controllerEuler.set(controllerEuler.x, controllerEuler.y, 0);
-    deltaControllerPosition.applyEuler(controllerEuler);
-    // Apply rotated offset to position.
-    controllerPosition.add(deltaControllerPosition);
-  },
-
-  /**
-   * Read pose from controller (from Gamepad API), apply transforms, apply to entity.
-   */
-  updatePose: function () {
-    var controller = this.controller;
-    var data = this.data;
-    var object3D = this.el.object3D;
-    var pose;
-    var vrDisplay = this.system.vrDisplay;
-    var standingMatrix;
-
-    if (!controller) { return; }
-
-    // Compose pose from Gamepad.
-    pose = controller.pose;
-
-    if (pose.position) {
-      object3D.position.fromArray(pose.position);
-    } else {
-      // Controller not 6DOF, apply arm model.
-      if (data.armModel) { this.applyArmModel(object3D.position); }
-    }
-
-    if (pose.orientation) {
-      object3D.quaternion.fromArray(pose.orientation);
-    }
-
-    // Apply transforms, if 6DOF and in VR.
-    if (vrDisplay && pose.position) {
-      standingMatrix = this.el.sceneEl.camera.el.components['look-controls'].controls.getStandingMatrix();
-      object3D.matrix.compose(object3D.position, object3D.quaternion, object3D.scale);
-      object3D.matrix.multiplyMatrices(standingMatrix, object3D.matrix);
-      object3D.matrix.decompose(object3D.position, object3D.quaternion, object3D.scale);
-    }
-
-    object3D.rotateX(this.data.orientationOffset.x * THREE.Math.DEG2RAD);
-    object3D.rotateY(this.data.orientationOffset.y * THREE.Math.DEG2RAD);
-    object3D.rotateZ(this.data.orientationOffset.z * THREE.Math.DEG2RAD);
-
-    object3D.updateMatrix();
-    object3D.matrixWorldNeedsUpdate = true;
-  },
-
-  /**
-   * Handle button changes including axes, presses, touches, values.
-   */
-  updateButtons: function () {
-    var buttonState;
-    var controller = this.controller;
-    var id;
-
-    if (!controller) { return; }
-
-    // Check every button.
-    for (id = 0; id < controller.buttons.length; ++id) {
-      // Initialize button state.
-      if (!this.buttonStates[id]) {
-        this.buttonStates[id] = {pressed: false, touched: false, value: 0};
-      }
-      if (!this.buttonEventDetails[id]) {
-        this.buttonEventDetails[id] = {id: id, state: this.buttonStates[id]};
-      }
-
-      buttonState = controller.buttons[id];
-      this.handleButton(id, buttonState);
-    }
-    // Check axes.
-    this.handleAxes();
-  },
-
-  /**
-   * Handle presses and touches for a single button.
-   *
-   * @param {number} id - Index of button in Gamepad button array.
-   * @param {number} buttonState - Value of button state from 0 to 1.
-   * @returns {boolean} Whether button has changed in any way.
-   */
-  handleButton: function (id, buttonState) {
-    var changed;
-    changed = this.handlePress(id, buttonState) |
-              this.handleTouch(id, buttonState) |
-              this.handleValue(id, buttonState);
-    if (!changed) { return false; }
-    this.el.emit(EVENTS.BUTTONCHANGED, this.buttonEventDetails[id], false);
-    return true;
-  },
-
-  /**
-   * An axis is an array of values from -1 (up, left) to 1 (down, right).
-   * Compare each component of the axis to the previous value to determine change.
-   *
-   * @returns {boolean} Whether axes changed.
-   */
-  handleAxes: function () {
-    var changed = false;
-    var controllerAxes = this.controller.axes;
-    var i;
-    var previousAxis = this.axis;
-    var changedAxes = this.changedAxes;
-
-    // Check if axis changed.
-    this.changedAxes.length = 0;
-    for (i = 0; i < controllerAxes.length; ++i) {
-      changedAxes.push(previousAxis[i] !== controllerAxes[i]);
-      if (changedAxes[i]) { changed = true; }
-    }
-    if (!changed) { return false; }
-
-    this.axis.length = 0;
-    for (i = 0; i < controllerAxes.length; i++) {
-      this.axis.push(controllerAxes[i]);
-    }
-    this.el.emit(EVENTS.AXISMOVE, this.axisMoveEventDetail, false);
-    return true;
-  },
-
-  /**
-   * Determine whether a button press has occured and emit events as appropriate.
-   *
-   * @param {string} id - ID of the button to check.
-   * @param {object} buttonState - State of the button to check.
-   * @returns {boolean} Whether button press state changed.
-   */
-  handlePress: function (id, buttonState) {
-    var evtName;
-    var previousButtonState = this.buttonStates[id];
-
-    // Not changed.
-    if (buttonState.pressed === previousButtonState.pressed) { return false; }
-
-    evtName = buttonState.pressed ? EVENTS.BUTTONDOWN : EVENTS.BUTTONUP;
-    this.el.emit(evtName, this.buttonEventDetails[id], false);
-    previousButtonState.pressed = buttonState.pressed;
-    return true;
-  },
-
-  /**
-   * Determine whether a button touch has occured and emit events as appropriate.
-   *
-   * @param {string} id - ID of the button to check.
-   * @param {object} buttonState - State of the button to check.
-   * @returns {boolean} Whether button touch state changed.
-   */
-  handleTouch: function (id, buttonState) {
-    var evtName;
-    var previousButtonState = this.buttonStates[id];
-
-    // Not changed.
-    if (buttonState.touched === previousButtonState.touched) { return false; }
-
-    evtName = buttonState.touched ? EVENTS.TOUCHSTART : EVENTS.TOUCHEND;
-    this.el.emit(evtName, this.buttonEventDetails[id], false, EMPTY_DAYDREAM_TOUCHES);
-    previousButtonState.touched = buttonState.touched;
-    return true;
-  },
-
-  /**
-   * Determine whether a button value has changed.
-   *
-   * @param {string} id - Id of the button to check.
-   * @param {object} buttonState - State of the button to check.
-   * @returns {boolean} Whether button value changed.
-   */
-  handleValue: function (id, buttonState) {
-    var previousButtonState = this.buttonStates[id];
-
-    // Not changed.
-    if (buttonState.value === previousButtonState.value) { return false; }
-
-    previousButtonState.value = buttonState.value;
-    return true;
-  }
-});
-
-},{"../constants":91,"../core/component":99,"../lib/three":149,"../utils/tracked-controls":178}],89:[function(_dereq_,module,exports){
+},{"../core/component":96,"../core/shader":107,"../lib/three":146,"../utils/":169,"load-bmfont":22,"three-bmfont-text":34}],86:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 
 /**
@@ -71013,7 +70163,7 @@ module.exports.Component = registerComponent('visible', {
   }
 });
 
-},{"../core/component":99}],90:[function(_dereq_,module,exports){
+},{"../core/component":96}],87:[function(_dereq_,module,exports){
 var KEYCODE_TO_CODE = _dereq_('../constants').keyboardevent.KEYCODE_TO_CODE;
 var registerComponent = _dereq_('../core/component').registerComponent;
 var THREE = _dereq_('../lib/three');
@@ -71241,7 +70391,7 @@ function isEmptyObject (keys) {
   return true;
 }
 
-},{"../constants":91,"../core/component":99,"../lib/three":149,"../utils/":172}],91:[function(_dereq_,module,exports){
+},{"../constants":88,"../core/component":96,"../lib/three":146,"../utils/":169}],88:[function(_dereq_,module,exports){
 module.exports = {
   AFRAME_INJECTED: 'aframe-injected',
   DEFAULT_CAMERA_HEIGHT: 1.75,
@@ -71249,7 +70399,7 @@ module.exports = {
   keyboardevent: _dereq_('./keyboardevent')
 };
 
-},{"./keyboardevent":92}],92:[function(_dereq_,module,exports){
+},{"./keyboardevent":89}],89:[function(_dereq_,module,exports){
 module.exports = {
   // Tiny KeyboardEvent.code polyfill.
   KEYCODE_TO_CODE: {
@@ -71264,7 +70414,7 @@ module.exports = {
   }
 };
 
-},{}],93:[function(_dereq_,module,exports){
+},{}],90:[function(_dereq_,module,exports){
 var ANode = _dereq_('./a-node');
 var bind = _dereq_('../utils/bind');
 var debug = _dereq_('../utils/debug');
@@ -71529,7 +70679,7 @@ function inferResponseType (src) {
 }
 module.exports.inferResponseType = inferResponseType;
 
-},{"../lib/three":149,"../utils/bind":166,"../utils/debug":168,"./a-node":97,"./a-register-element":98}],94:[function(_dereq_,module,exports){
+},{"../lib/three":146,"../utils/bind":163,"../utils/debug":165,"./a-node":94,"./a-register-element":95}],91:[function(_dereq_,module,exports){
 var debug = _dereq_('../utils/debug');
 var registerElement = _dereq_('./a-register-element').registerElement;
 
@@ -71579,7 +70729,7 @@ module.exports = registerElement('a-cubemap', {
   })
 });
 
-},{"../utils/debug":168,"./a-register-element":98}],95:[function(_dereq_,module,exports){
+},{"../utils/debug":165,"./a-register-element":95}],92:[function(_dereq_,module,exports){
 var ANode = _dereq_('./a-node');
 var COMPONENTS = _dereq_('./component').components;
 var registerElement = _dereq_('./a-register-element').registerElement;
@@ -72472,7 +71622,7 @@ function getRotation (entityEl) {
 AEntity = registerElement('a-entity', {prototype: proto});
 module.exports = AEntity;
 
-},{"../lib/three":149,"../utils/":172,"./a-node":97,"./a-register-element":98,"./component":99}],96:[function(_dereq_,module,exports){
+},{"../lib/three":146,"../utils/":169,"./a-node":94,"./a-register-element":95,"./component":96}],93:[function(_dereq_,module,exports){
 var ANode = _dereq_('./a-node');
 var registerElement = _dereq_('./a-register-element').registerElement;
 var components = _dereq_('./component').components;
@@ -72588,7 +71738,7 @@ module.exports = registerElement('a-mixin', {
   })
 });
 
-},{"../utils":172,"./a-node":97,"./a-register-element":98,"./component":99}],97:[function(_dereq_,module,exports){
+},{"../utils":169,"./a-node":94,"./a-register-element":95,"./component":96}],94:[function(_dereq_,module,exports){
 /* global CustomEvent */
 var registerElement = _dereq_('./a-register-element').registerElement;
 var isNode = _dereq_('./a-register-element').isNode;
@@ -72859,7 +72009,7 @@ module.exports = registerElement('a-node', {
   })
 });
 
-},{"../utils/":172,"./a-register-element":98}],98:[function(_dereq_,module,exports){
+},{"../utils/":169,"./a-register-element":95}],95:[function(_dereq_,module,exports){
 /*
   ------------------------------------------------------------
   ------------- WARNING WARNING WARNING WARNING --------------
@@ -73046,7 +72196,7 @@ function copyProperties (source, destination) {
 ANode = _dereq_('./a-node');
 AEntity = _dereq_('./a-entity');
 
-},{"./a-entity":95,"./a-node":97,"document-register-element":12}],99:[function(_dereq_,module,exports){
+},{"./a-entity":92,"./a-node":94,"document-register-element":12}],96:[function(_dereq_,module,exports){
 /* global Node */
 var schema = _dereq_('./schema');
 var scenes = _dereq_('./scene/scenes');
@@ -73800,7 +72950,7 @@ function isObjectOrArray (value) {
   return value && (value.constructor === Object || value.constructor === Array);
 }
 
-},{"../utils/":172,"./scene/scenes":107,"./schema":109,"./system":111}],100:[function(_dereq_,module,exports){
+},{"../utils/":169,"./scene/scenes":104,"./schema":106,"./system":108}],97:[function(_dereq_,module,exports){
 _dereq_('../../vendor/effects/EffectComposer');
 _dereq_('../../vendor/effects/RenderPass');
 
@@ -73854,7 +73004,7 @@ var proto = {
 
   initEffectComposer: function () {
     var sceneEl = this.el;
-    var effectComposer = sceneEl.effectComposer = new THREE.EffectComposer(sceneEl.renderer, undefined, sceneEl.effect);
+    var effectComposer = sceneEl.effectComposer = new THREE.EffectComposer(sceneEl.renderer, undefined, sceneEl.mainRenderer);
     var renderPass = new THREE.RenderPass(sceneEl.object3D, sceneEl.camera);
     effectComposer.addPass(renderPass);
     lastEffectInitialized = renderPass;
@@ -73879,7 +73029,7 @@ module.exports.registerEffect = function (name, definition) {
   registerComponent('effect-' + name, proto);
 };
 
-},{"../../vendor/effects/EffectComposer":182,"../../vendor/effects/RenderPass":184,"../lib/three":149,"../utils/":172,"./component":99}],101:[function(_dereq_,module,exports){
+},{"../../vendor/effects/EffectComposer":178,"../../vendor/effects/RenderPass":180,"../lib/three":146,"../utils/":169,"./component":96}],98:[function(_dereq_,module,exports){
 var schema = _dereq_('./schema');
 
 var processSchema = schema.process;
@@ -73953,7 +73103,7 @@ module.exports.registerGeometry = function (name, definition) {
   return NewGeometry;
 };
 
-},{"../lib/three":149,"./schema":109}],102:[function(_dereq_,module,exports){
+},{"../lib/three":146,"./schema":106}],99:[function(_dereq_,module,exports){
 var coordinates = _dereq_('../utils/coordinates');
 var debug = _dereq_('debug');
 
@@ -74178,7 +73328,7 @@ function isValidDefaultCoordinate (possibleCoordinates, dimensions) {
 }
 module.exports.isValidDefaultCoordinate = isValidDefaultCoordinate;
 
-},{"../utils/coordinates":167,"debug":9}],103:[function(_dereq_,module,exports){
+},{"../utils/coordinates":164,"debug":9}],100:[function(_dereq_,module,exports){
 /* global Promise, screen */
 var initMetaTags = _dereq_('./metaTags').inject;
 var initWakelock = _dereq_('./wakelock');
@@ -74302,32 +73452,11 @@ module.exports.AScene = registerElement('a-scene', {
         scenes.push(this);
 
         // Handler to exit VR (e.g., Oculus Browser back button).
-        this.onVRPresentChangeBound = bind(this.onVRPresentChange, this);
-        window.addEventListener('vrdisplaypresentchange', this.onVRPresentChangeBound);
+        
 
         // bind functions
-        this.enterVRBound = function () { self.enterVR(); };
-        this.exitVRBound = function () { self.exitVR(); };
-        this.exitVRTrueBound = function () { self.exitVR(true); };
-        this.pointerRestrictedBound = function () { self.pointerRestricted(); };
-        this.pointerUnrestrictedBound = function () { self.pointerUnrestricted(); };
-
-        // Enter VR on `vrdisplayactivate` (e.g. putting on Rift headset).
-        window.addEventListener('vrdisplayactivate', this.enterVRBound);
-
-        // Exit VR on `vrdisplaydeactivate` (e.g. taking off Rift headset).
-        window.addEventListener('vrdisplaydeactivate', this.exitVRBound);
-
-        // Exit VR on `vrdisplaydisconnect` (e.g. unplugging Rift headset).
-        window.addEventListener('vrdisplaydisconnect', this.exitVRTrueBound);
-
-        // Register for mouse restricted events while in VR
-        // (e.g. mouse no longer available on desktop 2D view)
-        window.addEventListener('vrdisplaypointerrestricted', this.pointerRestrictedBound);
-
-        // Register for mouse unrestricted events while in VR
-        // (e.g. mouse once again available on desktop 2D view)
-        window.addEventListener('vrdisplaypointerunrestricted', this.pointerUnrestrictedBound);
+        
+        
       },
       writable: window.debug
     },
@@ -74369,13 +73498,7 @@ module.exports.AScene = registerElement('a-scene', {
         var sceneIndex = scenes.indexOf(this);
         scenes.splice(sceneIndex, 1);
 
-        window.removeEventListener('vrdisplaypresentchange', this.onVRPresentChangeBound);
-        window.removeEventListener('vrdisplayactivate', this.enterVRBound);
-        window.removeEventListener('vrdisplaydeactivate', this.exitVRBound);
-        window.removeEventListener('vrdisplayconnect', this.enterVRBound);
-        window.removeEventListener('vrdisplaydisconnect', this.exitVRTrueBound);
-        window.removeEventListener('vrdisplaypointerrestricted', this.pointerRestrictedBound);
-        window.removeEventListener('vrdisplaypointerunrestricted', this.pointerUnrestrictedBound);
+        
       }
     },
 
@@ -74419,103 +73542,6 @@ module.exports.AScene = registerElement('a-scene', {
       writable: window.debug
     },
 
-    /**
-     * Call `requestPresent` if WebVR or WebVR polyfill.
-     * Call `requestFullscreen` on desktop.
-     * Handle events, states, fullscreen styles.
-     *
-     * @returns {Promise}
-     */
-    enterVR: {
-      value: function () {
-        var self = this;
-        var effect = this.effect;
-        // Don't enter VR if already in VR.
-        if (this.is('vr-mode')) { return Promise.resolve('Already in VR.'); }
-        // Enter VR via WebVR API.
-        if (this.checkHeadsetConnected() || this.isMobile) {
-          return effect && effect.requestPresent().then(enterVRSuccess, enterVRFailure) || Promise.reject(new Error('VREffect not initialized'));
-        }
-        enterVRSuccess();
-        return Promise.resolve();
-
-        function enterVRSuccess () {
-          self.addState('vr-mode');
-          self.emit('enter-vr', {target: self});
-          // Lock to landscape orientation on mobile.
-          if (self.isMobile && screen.orientation && screen.orientation.lock) {
-            screen.orientation.lock('landscape');
-          }
-          self.addFullScreenStyles();
-
-          // On mobile, the polyfill handles fullscreen.
-          // TODO: 07/16 Chromium builds break when `requestFullscreen`ing on a canvas
-          // that we are also `requestPresent`ing. Until then, don't fullscreen if headset
-          // connected.
-          if (!self.isMobile && !self.checkHeadsetConnected()) {
-            requestFullscreen(self.canvas);
-          }
-          self.resize();
-        }
-
-        function enterVRFailure (err) {
-          if (err && err.message) {
-            throw new Error('Failed to enter VR mode (`requestPresent`): ' + err.message);
-          } else {
-            throw new Error('Failed to enter VR mode (`requestPresent`).');
-          }
-        }
-      },
-      writable: true
-    },
-     /**
-     * Call `exitPresent` if WebVR or WebVR polyfill.
-     * Handle events, states, fullscreen styles.
-     *
-     * @returns {Promise}
-     */
-    exitVR: {
-      value: function () {
-        var self = this;
-
-        // Don't exit VR if not in VR.
-        if (!this.is('vr-mode')) { return Promise.resolve('Not in VR.'); }
-
-        exitFullscreen();
-        // Handle exiting VR if not yet already and in a headset or polyfill.
-        if (this.checkHeadsetConnected() || this.isMobile) {
-          return this.effect.exitPresent().then(exitVRSuccess, exitVRFailure);
-        }
-
-        // Handle exiting VR in all other cases (2D fullscreen, external exit VR event).
-        exitVRSuccess();
-
-        return Promise.resolve();
-
-        function exitVRSuccess () {
-          self.removeState('vr-mode');
-          // Lock to landscape orientation on mobile.
-          if (self.isMobile && screen.orientation && screen.orientation.unlock) {
-            screen.orientation.unlock();
-          }
-          // Exiting VR in embedded mode, no longer need fullscreen styles.
-          if (self.hasAttribute('embedded')) { self.removeFullScreenStyles(); }
-          self.resize();
-          if (self.isIOS) { utils.forceCanvasResizeSafariMobile(self.canvas); }
-          self.emit('exit-vr', {target: self});
-        }
-
-        function exitVRFailure (err) {
-          if (err && err.message) {
-            throw new Error('Failed to exit VR mode (`exitPresent`): ' + err.message);
-          } else {
-            throw new Error('Failed to exit VR mode (`exitPresent`).');
-          }
-        }
-      },
-      writable: true
-    },
-
     pointerRestricted: {
       value: function () {
         if (this.canvas) {
@@ -74538,25 +73564,6 @@ module.exports.AScene = registerElement('a-scene', {
         if (pointerLockElement && pointerLockElement === this.canvas && document.exitPointerLock) {
           document.exitPointerLock();
         }
-      }
-    },
-
-    /**
-     * Handle `vrdisplaypresentchange` event for exiting VR through other means than
-     * `<ESC>` key. For example, GearVR back button on Oculus Browser.
-     */
-    onVRPresentChange: {
-      value: function (evt) {
-        // Polyfill places display inside the detail property
-        var display = evt.display || evt.detail.display;
-        // Entering VR.
-        if (display.isPresenting) {
-          this.enterVR(true);
-          this.effectComposer && this.effectComposer.reset();
-          return;
-        }
-        // Exiting VR.
-        this.exitVR();
       }
     },
 
@@ -74640,7 +73647,7 @@ module.exports.AScene = registerElement('a-scene', {
         var embedded;
         var isVRPresenting;
         var size;
-        isVRPresenting = this.effect.isPresenting;
+        isVRPresenting = this.mainRenderer.isPresenting;
         // Do not update renderer, if a camera or a canvas have not been injected.
         // In VR mode, three handles canvas resize based on the dimensions returned by
         // the getEyeParameters function of the WebVR API. These dimensions are independent of
@@ -74701,8 +73708,7 @@ module.exports.AScene = registerElement('a-scene', {
         }
 
         renderer = this.renderer = new THREE.WebGLRenderer(rendererConfig);
-        this.effect = new THREE.VREffect(renderer);
-        this.effect.autoSubmitFrame = false;
+        this.mainRenderer = new THREE.MainRenderer(renderer);
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.sortObjects = false;
         loadingScreen.setup(this, getCanvasSize);
@@ -74820,7 +73826,7 @@ module.exports.AScene = registerElement('a-scene', {
     render: {
       value: function () {
         var effectComposer = this.effectComposer;
-        var effect = this.effect;
+        var mainRenderer = this.mainRenderer;
 
         this.delta = this.clock.getDelta() * 1000;
         this.time = this.clock.elapsedTime * 1000;
@@ -74831,14 +73837,14 @@ module.exports.AScene = registerElement('a-scene', {
           this.renderer.setPixelRatio(window.devicePixelRatio * this.getAttribute('pixelRatio'));
         }
 
-        effect.requestAnimationFrame(this.render);
+        mainRenderer.requestAnimationFrame(this.render);
         if (effectComposer) {
           effectComposer.render();
         } else {
-          effect.render(this.object3D, this.camera, this.renderTarget, false, this.camera.el.components.camera.data);
+          mainRenderer.render(this.object3D, this.camera, this.renderTarget, false, this.camera.el.components.camera.data);
           if (this.additiveCameras) {
             this.additiveCameras.forEach(element => {
-              effect.render(this.object3D, element.getObject3D('camera'), this.renderTarget, false, element.components["orthographic-camera"].data);
+              mainRenderer.render(this.object3D, element.getObject3D('camera'), this.renderTarget, false, element.components["orthographic-camera"].data);
             });
           }
         }
@@ -74846,23 +73852,20 @@ module.exports.AScene = registerElement('a-scene', {
         if (this.isPlaying) { this.tock(this.time, this.delta, this.camera); }
 
         this.components.overlay && this.components.overlay.render();
-
-        effect.submitFrame();
       },
       writable: true
     },
 
     calculate: {
       value: function () {
-        var effectComposer = this.effectComposer;
-        var effect = this.effect;
+        var mainRenderer = this.mainRenderer;
 
         this.delta = this.clock.getDelta() * 1000;
         this.time = this.clock.elapsedTime * 1000;
 
         if (this.isPlaying) { this.tick(this.time, this.delta); }
 
-        effect.requestAnimationFrame(this.calculate);
+        mainRenderer.requestAnimationFrame(this.calculate);
 
         if (this.isPlaying) { this.tock(this.time, this.delta, this.camera); }
       },
@@ -74930,25 +73933,6 @@ function getMaxSize (maxSize, isVR) {
   return size;
 }
 
-function requestFullscreen (canvas) {
-  var requestFullscreen =
-    canvas.requestFullscreen ||
-    canvas.webkitRequestFullscreen ||
-    canvas.mozRequestFullScreen ||  // The capitalized `S` is not a typo.
-    canvas.msRequestFullscreen;
-  requestFullscreen.apply(canvas);
-}
-
-function exitFullscreen () {
-  if (document.exitFullscreen) {
-    document.exitFullscreen();
-  } else if (document.mozCancelFullScreen) {
-    document.mozCancelFullScreen();
-  } else if (document.webkitExitFullscreen) {
-    document.webkitExitFullscreen();
-  }
-}
-
 function setupCanvas (sceneEl) {
   var canvasEl;
 
@@ -74986,7 +73970,7 @@ function setupCanvas (sceneEl) {
 }
 module.exports.setupCanvas = setupCanvas;  // For testing.
 
-},{"../../lib/three":149,"../../utils/":172,"../a-entity":95,"../a-node":97,"../a-register-element":98,"../system":111,"./loadingScreen":104,"./metaTags":105,"./postMessage":106,"./scenes":107,"./wakelock":108}],104:[function(_dereq_,module,exports){
+},{"../../lib/three":146,"../../utils/":169,"../a-entity":92,"../a-node":94,"../a-register-element":95,"../system":108,"./loadingScreen":101,"./metaTags":102,"./postMessage":103,"./scenes":104,"./wakelock":105}],101:[function(_dereq_,module,exports){
 /* global THREE */
 var utils = _dereq_('../../utils/');
 var styleParser = utils.styleParser;
@@ -75042,7 +74026,7 @@ module.exports.setup = function setup (el, getCanvasSize) {
   clock = new THREE.Clock();
   time = 0;
   render = function () {
-    raf = sceneEl.effect.requestAnimationFrame(render);
+    raf = sceneEl.mainRenderer.requestAnimationFrame(render);
     // sceneEl.effect.render(loaderScene, camera);
     time = clock.getElapsedTime() % 4;
     sphereMesh1.visible = time >= 1;
@@ -75075,7 +74059,7 @@ module.exports.remove = function remove () {
   if (!titleEl) { return; }
   // Hide title.
   titleEl.style.display = 'none';
-  sceneEl.effect.cancelAnimationFrame(raf);
+  sceneEl.mainRenderer.cancelAnimationFrame(raf);
 };
 
 function resize (camera) {
@@ -75094,7 +74078,7 @@ function setupTitle () {
   sceneEl.appendChild(titleEl);
 }
 
-},{"../../utils/":172}],105:[function(_dereq_,module,exports){
+},{"../../utils/":169}],102:[function(_dereq_,module,exports){
 var constants = _dereq_('../../constants/');
 var extend = _dereq_('../../utils').extend;
 
@@ -75175,7 +74159,7 @@ function createTag (tagObj) {
   return extend(meta, tagObj.attributes);
 }
 
-},{"../../constants/":91,"../../utils":172}],106:[function(_dereq_,module,exports){
+},{"../../constants/":88,"../../utils":169}],103:[function(_dereq_,module,exports){
 var bind = _dereq_('../../utils/bind');
 var isIframed = _dereq_('../../utils/').isIframed;
 
@@ -75208,13 +74192,13 @@ function postMessageAPIHandler (event) {
   }
 }
 
-},{"../../utils/":172,"../../utils/bind":166}],107:[function(_dereq_,module,exports){
+},{"../../utils/":169,"../../utils/bind":163}],104:[function(_dereq_,module,exports){
 /*
   Scene index for keeping track of created scenes.
 */
 module.exports = [];
 
-},{}],108:[function(_dereq_,module,exports){
+},{}],105:[function(_dereq_,module,exports){
 var Wakelock = _dereq_('../../../vendor/wakelock/wakelock');
 
 module.exports = function initWakelock (scene) {
@@ -75225,7 +74209,7 @@ module.exports = function initWakelock (scene) {
   scene.addEventListener('exit-vr', function () { wakelock.release(); });
 };
 
-},{"../../../vendor/wakelock/wakelock":193}],109:[function(_dereq_,module,exports){
+},{"../../../vendor/wakelock/wakelock":189}],106:[function(_dereq_,module,exports){
 var utils = _dereq_('../utils/');
 var PropertyTypes = _dereq_('./propertyTypes');
 
@@ -75429,7 +74413,7 @@ function stringifyProperty (value, propDefinition) {
 }
 module.exports.stringifyProperty = stringifyProperty;
 
-},{"../utils/":172,"./propertyTypes":102}],110:[function(_dereq_,module,exports){
+},{"../utils/":169,"./propertyTypes":99}],107:[function(_dereq_,module,exports){
 var schema = _dereq_('./schema');
 
 var processSchema = schema.process;
@@ -75618,7 +74602,7 @@ module.exports.registerShader = function (name, definition) {
   return NewShader;
 };
 
-},{"../lib/three":149,"../utils":172,"./schema":109}],111:[function(_dereq_,module,exports){
+},{"../lib/three":146,"../utils":169,"./schema":106}],108:[function(_dereq_,module,exports){
 var components = _dereq_('./component');
 var schema = _dereq_('./schema');
 var utils = _dereq_('../utils/');
@@ -75776,10 +74760,10 @@ module.exports.registerSystem = function (name, definition) {
   for (i = 0; i < scenes.length; i++) { scenes[i].initSystem(name); }
 };
 
-},{"../utils/":172,"./component":99,"./schema":109}],112:[function(_dereq_,module,exports){
+},{"../utils/":169,"./component":96,"./schema":106}],109:[function(_dereq_,module,exports){
 _dereq_('./pivot');
 
-},{"./pivot":113}],113:[function(_dereq_,module,exports){
+},{"./pivot":110}],110:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../../core/component').registerComponent;
 var THREE = _dereq_('../../lib/three');
 
@@ -75828,7 +74812,7 @@ registerComponent('pivot', {
   }
 });
 
-},{"../../core/component":99,"../../lib/three":149}],114:[function(_dereq_,module,exports){
+},{"../../core/component":96,"../../lib/three":146}],111:[function(_dereq_,module,exports){
 /**
  * Common mesh defaults, mappings, and transforms.
  */
@@ -75855,7 +74839,7 @@ module.exports = function getMeshMixin () {
   };
 };
 
-},{"../../core/component":99,"../../core/shader":110,"../../utils/":172}],115:[function(_dereq_,module,exports){
+},{"../../core/component":96,"../../core/shader":107,"../../utils/":169}],112:[function(_dereq_,module,exports){
 _dereq_('./primitives/a-camera');
 _dereq_('./primitives/a-collada-model');
 _dereq_('./primitives/a-cursor');
@@ -75872,7 +74856,7 @@ _dereq_('./primitives/a-video');
 _dereq_('./primitives/a-videosphere');
 _dereq_('./primitives/meshPrimitives');
 
-},{"./primitives/a-camera":117,"./primitives/a-collada-model":118,"./primitives/a-cursor":119,"./primitives/a-curvedimage":120,"./primitives/a-gltf-model":121,"./primitives/a-image":122,"./primitives/a-light":123,"./primitives/a-link":124,"./primitives/a-obj-model":125,"./primitives/a-sky":126,"./primitives/a-sound":127,"./primitives/a-text":128,"./primitives/a-video":129,"./primitives/a-videosphere":130,"./primitives/meshPrimitives":131}],116:[function(_dereq_,module,exports){
+},{"./primitives/a-camera":114,"./primitives/a-collada-model":115,"./primitives/a-cursor":116,"./primitives/a-curvedimage":117,"./primitives/a-gltf-model":118,"./primitives/a-image":119,"./primitives/a-light":120,"./primitives/a-link":121,"./primitives/a-obj-model":122,"./primitives/a-sky":123,"./primitives/a-sound":124,"./primitives/a-text":125,"./primitives/a-video":126,"./primitives/a-videosphere":127,"./primitives/meshPrimitives":128}],113:[function(_dereq_,module,exports){
 var AEntity = _dereq_('../../core/a-entity');
 var components = _dereq_('../../core/component').components;
 var registerElement = _dereq_('../../core/a-register-element').registerElement;
@@ -76071,7 +75055,7 @@ function definePrimitive (tagName, defaultComponents, mappings) {
 }
 module.exports.definePrimitive = definePrimitive;
 
-},{"../../core/a-entity":95,"../../core/a-register-element":98,"../../core/component":99,"../../utils/":172}],117:[function(_dereq_,module,exports){
+},{"../../core/a-entity":92,"../../core/a-register-element":95,"../../core/component":96,"../../utils/":169}],114:[function(_dereq_,module,exports){
 var registerPrimitive = _dereq_('../primitives').registerPrimitive;
 
 registerPrimitive('a-camera', {
@@ -76095,7 +75079,7 @@ registerPrimitive('a-camera', {
   }
 });
 
-},{"../primitives":116}],118:[function(_dereq_,module,exports){
+},{"../primitives":113}],115:[function(_dereq_,module,exports){
 var registerPrimitive = _dereq_('../primitives').registerPrimitive;
 
 registerPrimitive('a-collada-model', {
@@ -76104,7 +75088,7 @@ registerPrimitive('a-collada-model', {
   }
 });
 
-},{"../primitives":116}],119:[function(_dereq_,module,exports){
+},{"../primitives":113}],116:[function(_dereq_,module,exports){
 var getMeshMixin = _dereq_('../getMeshMixin');
 var registerPrimitive = _dereq_('../primitives').registerPrimitive;
 var utils = _dereq_('../../../utils/');
@@ -76139,7 +75123,7 @@ registerPrimitive('a-cursor', utils.extendDeep({}, getMeshMixin(), {
   }
 }));
 
-},{"../../../utils/":172,"../getMeshMixin":114,"../primitives":116}],120:[function(_dereq_,module,exports){
+},{"../../../utils/":169,"../getMeshMixin":111,"../primitives":113}],117:[function(_dereq_,module,exports){
 var getMeshMixin = _dereq_('../getMeshMixin');
 var registerPrimitive = _dereq_('../primitives').registerPrimitive;
 var utils = _dereq_('../../../utils/');
@@ -76176,7 +75160,7 @@ registerPrimitive('a-curvedimage', utils.extendDeep({}, getMeshMixin(), {
   }
 }));
 
-},{"../../../utils/":172,"../getMeshMixin":114,"../primitives":116}],121:[function(_dereq_,module,exports){
+},{"../../../utils/":169,"../getMeshMixin":111,"../primitives":113}],118:[function(_dereq_,module,exports){
 var registerPrimitive = _dereq_('../primitives').registerPrimitive;
 
 registerPrimitive('a-gltf-model', {
@@ -76185,7 +75169,7 @@ registerPrimitive('a-gltf-model', {
   }
 });
 
-},{"../primitives":116}],122:[function(_dereq_,module,exports){
+},{"../primitives":113}],119:[function(_dereq_,module,exports){
 var getMeshMixin = _dereq_('../getMeshMixin');
 var registerPrimitive = _dereq_('../primitives').registerPrimitive;
 var utils = _dereq_('../../../utils/');
@@ -76209,7 +75193,7 @@ registerPrimitive('a-image', utils.extendDeep({}, getMeshMixin(), {
   }
 }));
 
-},{"../../../utils/":172,"../getMeshMixin":114,"../primitives":116}],123:[function(_dereq_,module,exports){
+},{"../../../utils/":169,"../getMeshMixin":111,"../primitives":113}],120:[function(_dereq_,module,exports){
 var registerPrimitive = _dereq_('../primitives').registerPrimitive;
 
 registerPrimitive('a-light', {
@@ -76230,7 +75214,7 @@ registerPrimitive('a-light', {
   }
 });
 
-},{"../primitives":116}],124:[function(_dereq_,module,exports){
+},{"../primitives":113}],121:[function(_dereq_,module,exports){
 var registerPrimitive = _dereq_('../primitives').registerPrimitive;
 
 registerPrimitive('a-link', {
@@ -76247,7 +75231,7 @@ registerPrimitive('a-link', {
   }
 });
 
-},{"../primitives":116}],125:[function(_dereq_,module,exports){
+},{"../primitives":113}],122:[function(_dereq_,module,exports){
 var meshMixin = _dereq_('../getMeshMixin')();
 var registerPrimitive = _dereq_('../primitives').registerPrimitive;
 var utils = _dereq_('../../../utils/');
@@ -76263,7 +75247,7 @@ registerPrimitive('a-obj-model', utils.extendDeep({}, meshMixin, {
   }
 }));
 
-},{"../../../utils/":172,"../getMeshMixin":114,"../primitives":116}],126:[function(_dereq_,module,exports){
+},{"../../../utils/":169,"../getMeshMixin":111,"../primitives":113}],123:[function(_dereq_,module,exports){
 var getMeshMixin = _dereq_('../getMeshMixin');
 var registerPrimitive = _dereq_('../primitives').registerPrimitive;
 var utils = _dereq_('../../../utils/');
@@ -76289,7 +75273,7 @@ registerPrimitive('a-sky', utils.extendDeep({}, getMeshMixin(), {
   mappings: utils.extendDeep({}, meshPrimitives['a-sphere'].prototype.mappings)
 }));
 
-},{"../../../utils/":172,"../getMeshMixin":114,"../primitives":116,"./meshPrimitives":131}],127:[function(_dereq_,module,exports){
+},{"../../../utils/":169,"../getMeshMixin":111,"../primitives":113,"./meshPrimitives":128}],124:[function(_dereq_,module,exports){
 var registerPrimitive = _dereq_('../primitives').registerPrimitive;
 
 registerPrimitive('a-sound', {
@@ -76306,12 +75290,12 @@ registerPrimitive('a-sound', {
   }
 });
 
-},{"../primitives":116}],128:[function(_dereq_,module,exports){
+},{"../primitives":113}],125:[function(_dereq_,module,exports){
 // <a-text> using `definePrimitive` helper.
 var definePrimitive = _dereq_('../primitives').definePrimitive;
 definePrimitive('a-text', {text: {anchor: 'align', width: 5}});
 
-},{"../primitives":116}],129:[function(_dereq_,module,exports){
+},{"../primitives":113}],126:[function(_dereq_,module,exports){
 var getMeshMixin = _dereq_('../getMeshMixin');
 var registerPrimitive = _dereq_('../primitives').registerPrimitive;
 var utils = _dereq_('../../../utils/');
@@ -76335,7 +75319,7 @@ registerPrimitive('a-video', utils.extendDeep({}, getMeshMixin(), {
   }
 }));
 
-},{"../../../utils/":172,"../getMeshMixin":114,"../primitives":116}],130:[function(_dereq_,module,exports){
+},{"../../../utils/":169,"../getMeshMixin":111,"../primitives":113}],127:[function(_dereq_,module,exports){
 var getMeshMixin = _dereq_('../getMeshMixin');
 var registerPrimitive = _dereq_('../primitives').registerPrimitive;
 var utils = _dereq_('../../../utils/');
@@ -76364,7 +75348,7 @@ registerPrimitive('a-videosphere', utils.extendDeep({}, getMeshMixin(), {
   }
 }));
 
-},{"../../../utils/":172,"../getMeshMixin":114,"../primitives":116}],131:[function(_dereq_,module,exports){
+},{"../../../utils/":169,"../getMeshMixin":111,"../primitives":113}],128:[function(_dereq_,module,exports){
 /**
  * Automated mesh primitive registration.
  */
@@ -76404,7 +75388,7 @@ function unCamelCase (str) {
   return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 }
 
-},{"../../../core/geometry":101,"../../../utils/":172,"../getMeshMixin":114,"../primitives":116}],132:[function(_dereq_,module,exports){
+},{"../../../core/geometry":98,"../../../utils/":169,"../getMeshMixin":111,"../primitives":113}],129:[function(_dereq_,module,exports){
 var registerGeometry = _dereq_('../core/geometry').registerGeometry;
 var THREE = _dereq_('../lib/three');
 
@@ -76425,7 +75409,7 @@ registerGeometry('box', {
   }
 });
 
-},{"../core/geometry":101,"../lib/three":149}],133:[function(_dereq_,module,exports){
+},{"../core/geometry":98,"../lib/three":146}],130:[function(_dereq_,module,exports){
 var registerGeometry = _dereq_('../core/geometry').registerGeometry;
 var THREE = _dereq_('../lib/three');
 
@@ -76445,7 +75429,7 @@ registerGeometry('circle', {
   }
 });
 
-},{"../core/geometry":101,"../lib/three":149}],134:[function(_dereq_,module,exports){
+},{"../core/geometry":98,"../lib/three":146}],131:[function(_dereq_,module,exports){
 var registerGeometry = _dereq_('../core/geometry').registerGeometry;
 var THREE = _dereq_('../lib/three');
 
@@ -76471,7 +75455,7 @@ registerGeometry('cone', {
   }
 });
 
-},{"../core/geometry":101,"../lib/three":149}],135:[function(_dereq_,module,exports){
+},{"../core/geometry":98,"../lib/three":146}],132:[function(_dereq_,module,exports){
 var registerGeometry = _dereq_('../core/geometry').registerGeometry;
 var THREE = _dereq_('../lib/three');
 
@@ -76495,7 +75479,7 @@ registerGeometry('cylinder', {
   }
 });
 
-},{"../core/geometry":101,"../lib/three":149}],136:[function(_dereq_,module,exports){
+},{"../core/geometry":98,"../lib/three":146}],133:[function(_dereq_,module,exports){
 var registerGeometry = _dereq_('../core/geometry').registerGeometry;
 var THREE = _dereq_('../lib/three');
 
@@ -76510,7 +75494,7 @@ registerGeometry('dodecahedron', {
   }
 });
 
-},{"../core/geometry":101,"../lib/three":149}],137:[function(_dereq_,module,exports){
+},{"../core/geometry":98,"../lib/three":146}],134:[function(_dereq_,module,exports){
 var registerGeometry = _dereq_('../core/geometry').registerGeometry;
 var THREE = _dereq_('../lib/three');
 
@@ -76525,7 +75509,7 @@ registerGeometry('icosahedron', {
   }
 });
 
-},{"../core/geometry":101,"../lib/three":149}],138:[function(_dereq_,module,exports){
+},{"../core/geometry":98,"../lib/three":146}],135:[function(_dereq_,module,exports){
 _dereq_('./box.js');
 _dereq_('./circle.js');
 _dereq_('./cone.js');
@@ -76541,7 +75525,7 @@ _dereq_('./torus.js');
 _dereq_('./torusKnot.js');
 _dereq_('./triangle.js');
 
-},{"./box.js":132,"./circle.js":133,"./cone.js":134,"./cylinder.js":135,"./dodecahedron.js":136,"./icosahedron.js":137,"./octahedron.js":139,"./plane.js":140,"./ring.js":141,"./sphere.js":142,"./tetrahedron.js":143,"./torus.js":144,"./torusKnot.js":145,"./triangle.js":146}],139:[function(_dereq_,module,exports){
+},{"./box.js":129,"./circle.js":130,"./cone.js":131,"./cylinder.js":132,"./dodecahedron.js":133,"./icosahedron.js":134,"./octahedron.js":136,"./plane.js":137,"./ring.js":138,"./sphere.js":139,"./tetrahedron.js":140,"./torus.js":141,"./torusKnot.js":142,"./triangle.js":143}],136:[function(_dereq_,module,exports){
 var registerGeometry = _dereq_('../core/geometry').registerGeometry;
 var THREE = _dereq_('../lib/three');
 
@@ -76556,7 +75540,7 @@ registerGeometry('octahedron', {
   }
 });
 
-},{"../core/geometry":101,"../lib/three":149}],140:[function(_dereq_,module,exports){
+},{"../core/geometry":98,"../lib/three":146}],137:[function(_dereq_,module,exports){
 var registerGeometry = _dereq_('../core/geometry').registerGeometry;
 var THREE = _dereq_('../lib/three');
 
@@ -76573,7 +75557,7 @@ registerGeometry('plane', {
   }
 });
 
-},{"../core/geometry":101,"../lib/three":149}],141:[function(_dereq_,module,exports){
+},{"../core/geometry":98,"../lib/three":146}],138:[function(_dereq_,module,exports){
 var registerGeometry = _dereq_('../core/geometry').registerGeometry;
 var THREE = _dereq_('../lib/three');
 
@@ -76596,7 +75580,7 @@ registerGeometry('ring', {
   }
 });
 
-},{"../core/geometry":101,"../lib/three":149}],142:[function(_dereq_,module,exports){
+},{"../core/geometry":98,"../lib/three":146}],139:[function(_dereq_,module,exports){
 var registerGeometry = _dereq_('../core/geometry').registerGeometry;
 var THREE = _dereq_('../lib/three');
 
@@ -76620,7 +75604,7 @@ registerGeometry('sphere', {
   }
 });
 
-},{"../core/geometry":101,"../lib/three":149}],143:[function(_dereq_,module,exports){
+},{"../core/geometry":98,"../lib/three":146}],140:[function(_dereq_,module,exports){
 var registerGeometry = _dereq_('../core/geometry').registerGeometry;
 var THREE = _dereq_('../lib/three');
 
@@ -76635,7 +75619,7 @@ registerGeometry('tetrahedron', {
   }
 });
 
-},{"../core/geometry":101,"../lib/three":149}],144:[function(_dereq_,module,exports){
+},{"../core/geometry":98,"../lib/three":146}],141:[function(_dereq_,module,exports){
 var registerGeometry = _dereq_('../core/geometry').registerGeometry;
 var THREE = _dereq_('../lib/three');
 
@@ -76657,7 +75641,7 @@ registerGeometry('torus', {
   }
 });
 
-},{"../core/geometry":101,"../lib/three":149}],145:[function(_dereq_,module,exports){
+},{"../core/geometry":98,"../lib/three":146}],142:[function(_dereq_,module,exports){
 var registerGeometry = _dereq_('../core/geometry').registerGeometry;
 var THREE = _dereq_('../lib/three');
 
@@ -76678,7 +75662,7 @@ registerGeometry('torusKnot', {
   }
 });
 
-},{"../core/geometry":101,"../lib/three":149}],146:[function(_dereq_,module,exports){
+},{"../core/geometry":98,"../lib/three":146}],143:[function(_dereq_,module,exports){
 var registerGeometry = _dereq_('../core/geometry').registerGeometry;
 var THREE = _dereq_('../lib/three');
 
@@ -76733,7 +75717,7 @@ registerGeometry('triangle', {
   }
 });
 
-},{"../core/geometry":101,"../lib/three":149}],147:[function(_dereq_,module,exports){
+},{"../core/geometry":98,"../lib/three":146}],144:[function(_dereq_,module,exports){
 var utils = _dereq_('./utils/');
 
 var debug = utils.debug;
@@ -76814,7 +75798,7 @@ _dereq_('./core/a-mixin');
 _dereq_('./extras/components/');
 _dereq_('./extras/primitives/');
 
-console.log('A-Frame Version: 0.8.2 (Date 2022-02-07, Commit #ea721416)');
+console.log('A-Frame Version: 0.8.2 (Date 2022-02-10, Commit #9be05e79)');
 console.log('three Version:', pkg.dependencies['three']);
 console.log('WebVR Polyfill Version:', pkg.dependencies['webvr-polyfill']);
 
@@ -76845,7 +75829,7 @@ module.exports = window.AFRAME = {
   version: pkg.version
 };
 
-},{"../package":50,"./components/index":58,"./core/a-assets":93,"./core/a-cubemap":94,"./core/a-entity":95,"./core/a-mixin":96,"./core/a-node":97,"./core/a-register-element":98,"./core/component":99,"./core/geometry":101,"./core/scene/a-scene":103,"./core/scene/scenes":107,"./core/schema":109,"./core/shader":110,"./core/system":111,"./extras/components/":112,"./extras/primitives/":115,"./extras/primitives/getMeshMixin":114,"./extras/primitives/primitives":116,"./geometries/index":138,"./lib/three":149,"./shaders/index":151,"./style/aframe.css":156,"./style/rStats.css":157,"./systems/index":161,"./utils/":172,"animejs":2,"present":30,"promise-polyfill":32,"webvr-polyfill":45}],148:[function(_dereq_,module,exports){
+},{"../package":50,"./components/index":57,"./core/a-assets":90,"./core/a-cubemap":91,"./core/a-entity":92,"./core/a-mixin":93,"./core/a-node":94,"./core/a-register-element":95,"./core/component":96,"./core/geometry":98,"./core/scene/a-scene":100,"./core/scene/scenes":104,"./core/schema":106,"./core/shader":107,"./core/system":108,"./extras/components/":109,"./extras/primitives/":112,"./extras/primitives/getMeshMixin":111,"./extras/primitives/primitives":113,"./geometries/index":135,"./lib/three":146,"./shaders/index":148,"./style/aframe.css":153,"./style/rStats.css":154,"./systems/index":158,"./utils/":169,"animejs":2,"present":30,"promise-polyfill":32,"webvr-polyfill":45}],145:[function(_dereq_,module,exports){
 window.aframeStats = function (scene) {
   var _rS = null;
   var _scene = scene;
@@ -76902,7 +75886,7 @@ if (typeof module === 'object') {
   };
 }
 
-},{}],149:[function(_dereq_,module,exports){
+},{}],146:[function(_dereq_,module,exports){
 (function (global){(function (){
 var THREE = global.THREE = _dereq_('three');
 
@@ -76930,8 +75914,7 @@ _dereq_('three/examples/js/loaders/GLTFLoader');  // THREE.GLTFLoader
 _dereq_('three/examples/js/loaders/OBJLoader');  // THREE.OBJLoader
 _dereq_('three/examples/js/loaders/MTLLoader');  // THREE.MTLLoader
 _dereq_('three/examples/js/loaders/ColladaLoader');  // THREE.ColladaLoader
-_dereq_('../../vendor/VRControls');  // THREE.VRControls
-_dereq_('../../vendor/VREffect'); // THREE.VREffect
+_dereq_('../../vendor/MainRenderer'); // was THREE.VREffect
 
 THREE.ColladaLoader.prototype.crossOrigin = 'anonymous';
 THREE.GLTFLoader.prototype.crossOrigin = 'anonymous';
@@ -76942,7 +75925,7 @@ module.exports = THREE;
 
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"../../vendor/VRControls":179,"../../vendor/VREffect":180,"three":38,"three/examples/js/loaders/ColladaLoader":39,"three/examples/js/loaders/DRACOLoader":40,"three/examples/js/loaders/GLTFLoader":41,"three/examples/js/loaders/MTLLoader":42,"three/examples/js/loaders/OBJLoader":43}],150:[function(_dereq_,module,exports){
+},{"../../vendor/MainRenderer":176,"three":38,"three/examples/js/loaders/ColladaLoader":39,"three/examples/js/loaders/DRACOLoader":40,"three/examples/js/loaders/GLTFLoader":41,"three/examples/js/loaders/MTLLoader":42,"three/examples/js/loaders/OBJLoader":43}],147:[function(_dereq_,module,exports){
 var registerShader = _dereq_('../core/shader').registerShader;
 var THREE = _dereq_('../lib/three');
 var utils = _dereq_('../utils/');
@@ -77009,14 +75992,14 @@ function getMaterialData (data, materialData) {
   return materialData;
 }
 
-},{"../core/shader":110,"../lib/three":149,"../utils/":172}],151:[function(_dereq_,module,exports){
+},{"../core/shader":107,"../lib/three":146,"../utils/":169}],148:[function(_dereq_,module,exports){
 _dereq_('./flat');
 _dereq_('./standard');
 _dereq_('./sdf');
 _dereq_('./msdf');
 _dereq_('./ios10hls');
 
-},{"./flat":150,"./ios10hls":152,"./msdf":153,"./sdf":154,"./standard":155}],152:[function(_dereq_,module,exports){
+},{"./flat":147,"./ios10hls":149,"./msdf":150,"./sdf":151,"./standard":152}],149:[function(_dereq_,module,exports){
 var registerShader = _dereq_('../core/shader').registerShader;
 
 /**
@@ -77051,7 +76034,7 @@ module.exports.Shader = registerShader('ios10hls', {
 });
 
 
-},{"../core/shader":110}],153:[function(_dereq_,module,exports){
+},{"../core/shader":107}],150:[function(_dereq_,module,exports){
 var registerShader = _dereq_('../core/shader').registerShader;
 
 /**
@@ -77119,7 +76102,7 @@ module.exports.Shader = registerShader('msdf', {
   ].join('\n')
 });
 
-},{"../core/shader":110}],154:[function(_dereq_,module,exports){
+},{"../core/shader":107}],151:[function(_dereq_,module,exports){
 var registerShader = _dereq_('../core/shader').registerShader;
 
 /**
@@ -77226,7 +76209,7 @@ module.exports.Shader = registerShader('sdf', {
   ].join('\n')
 });
 
-},{"../core/shader":110}],155:[function(_dereq_,module,exports){
+},{"../core/shader":107}],152:[function(_dereq_,module,exports){
 var registerShader = _dereq_('../core/shader').registerShader;
 var THREE = _dereq_('../lib/three');
 var utils = _dereq_('../utils/');
@@ -77413,11 +76396,11 @@ function getMaterialData (data, materialData) {
   return materialData;
 }
 
-},{"../core/shader":110,"../lib/three":149,"../utils/":172}],156:[function(_dereq_,module,exports){
+},{"../core/shader":107,"../lib/three":146,"../utils/":169}],153:[function(_dereq_,module,exports){
 var css = "html.a-fullscreen{bottom:0;left:0;position:fixed;right:0;top:0}html.a-fullscreen body{height:100%;margin:0;overflow:hidden;padding:0;width:100%}html.a-fullscreen .a-canvas{width:100%!important;height:100%!important;top:0!important;left:0!important;right:0!important;bottom:0!important;position:fixed!important}html:not(.a-fullscreen) .a-enter-vr{right:5px;bottom:5px}:-webkit-full-screen{background-color:transparent}.a-hidden{display:none!important}.a-canvas{height:100%;left:0;position:absolute;top:0;width:100%}.a-canvas.a-grab-cursor:hover{cursor:grab;cursor:-moz-grab;cursor:-webkit-grab}.a-inspector-loader{background-color:#ed3160;position:fixed;left:3px;top:3px;padding:6px 10px;color:#fff;text-decoration:none;font-size:12px;font-family:Roboto,sans-serif;text-align:center;z-index:99999;width:204px}@keyframes dots-1{from{opacity:0}25%{opacity:1}}@keyframes dots-2{from{opacity:0}50%{opacity:1}}@keyframes dots-3{from{opacity:0}75%{opacity:1}}@-webkit-keyframes dots-1{from{opacity:0}25%{opacity:1}}@-webkit-keyframes dots-2{from{opacity:0}50%{opacity:1}}@-webkit-keyframes dots-3{from{opacity:0}75%{opacity:1}}.a-inspector-loader .dots span{animation:dots-1 2s infinite steps(1);-webkit-animation:dots-1 2s infinite steps(1)}.a-inspector-loader .dots span:first-child+span{animation-name:dots-2;-webkit-animation-name:dots-2}.a-inspector-loader .dots span:first-child+span+span{animation-name:dots-3;-webkit-animation-name:dots-3}a-scene{display:block;position:relative;height:100%;width:100%}a-assets,a-scene audio,a-scene img,a-scene video{display:none}.a-enter-vr-modal,.a-orientation-modal{font-family:Consolas,Andale Mono,Courier New,monospace}.a-enter-vr-modal a{border-bottom:1px solid #fff;padding:2px 0;text-decoration:none;transition:.1s color ease-in}.a-enter-vr-modal a:hover{background-color:#fff;color:#111;padding:2px 4px;position:relative;left:-4px}.a-enter-vr{font-family:sans-serif,monospace;font-size:13px;width:100%;font-weight:200;line-height:16px;position:absolute;right:20px;bottom:20px}.a-enter-vr-button,.a-enter-vr-modal,.a-enter-vr-modal a{color:#fff}.a-enter-vr-button{background:url(data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20245.82%20141.73%22%3E%3Cdefs%3E%3Cstyle%3E.a%7Bfill%3A%23fff%3Bfill-rule%3Aevenodd%3B%7D%3C%2Fstyle%3E%3C%2Fdefs%3E%3Ctitle%3Emask%3C%2Ftitle%3E%3Cpath%20class%3D%22a%22%20d%3D%22M175.56%2C111.37c-22.52%2C0-40.77-18.84-40.77-42.07S153%2C27.24%2C175.56%2C27.24s40.77%2C18.84%2C40.77%2C42.07S198.08%2C111.37%2C175.56%2C111.37ZM26.84%2C69.31c0-23.23%2C18.25-42.07%2C40.77-42.07s40.77%2C18.84%2C40.77%2C42.07-18.26%2C42.07-40.77%2C42.07S26.84%2C92.54%2C26.84%2C69.31ZM27.27%2C0C11.54%2C0%2C0%2C12.34%2C0%2C28.58V110.9c0%2C16.24%2C11.54%2C30.83%2C27.27%2C30.83H99.57c2.17%2C0%2C4.19-1.83%2C5.4-3.7L116.47%2C118a8%2C8%2C0%2C0%2C1%2C12.52-.18l11.51%2C20.34c1.2%2C1.86%2C3.22%2C3.61%2C5.39%2C3.61h72.29c15.74%2C0%2C27.63-14.6%2C27.63-30.83V28.58C245.82%2C12.34%2C233.93%2C0%2C218.19%2C0H27.27Z%22%2F%3E%3C%2Fsvg%3E) 50% 50%/70% 70% no-repeat rgba(0,0,0,.35);border:0;bottom:0;cursor:pointer;min-width:50px;min-height:30px;padding-right:5%;padding-top:4%;position:absolute;right:0;transition:background-color .05s ease;-webkit-transition:background-color .05s ease;z-index:9999}.a-enter-vr-button:active,.a-enter-vr-button:hover{background-color:#666}[data-a-enter-vr-no-webvr] .a-enter-vr-button{border-color:#666;opacity:.65}[data-a-enter-vr-no-webvr] .a-enter-vr-button:active,[data-a-enter-vr-no-webvr] .a-enter-vr-button:hover{background-color:rgba(0,0,0,.35);cursor:not-allowed}.a-enter-vr-modal{background-color:#666;border-radius:0;display:none;min-height:32px;margin-right:70px;padding:9px;width:280px;right:2%;position:absolute}.a-enter-vr-modal:after{border-bottom:10px solid transparent;border-left:10px solid #666;border-top:10px solid transparent;display:inline-block;content:'';position:absolute;right:-5px;top:5px;width:0;height:0}.a-enter-vr-modal a,.a-enter-vr-modal p{display:inline}.a-enter-vr-modal p{margin:0}.a-enter-vr-modal p:after{content:' '}[data-a-enter-vr-no-headset].a-enter-vr:hover .a-enter-vr-modal,[data-a-enter-vr-no-webvr].a-enter-vr:hover .a-enter-vr-modal{display:block}.a-orientation-modal{background:url(data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20xmlns%3Axlink%3D%22http%3A//www.w3.org/1999/xlink%22%20version%3D%221.1%22%20x%3D%220px%22%20y%3D%220px%22%20viewBox%3D%220%200%2090%2090%22%20enable-background%3D%22new%200%200%2090%2090%22%20xml%3Aspace%3D%22preserve%22%3E%3Cpolygon%20points%3D%220%2C0%200%2C0%200%2C0%20%22%3E%3C/polygon%3E%3Cg%3E%3Cpath%20d%3D%22M71.545%2C48.145h-31.98V20.743c0-2.627-2.138-4.765-4.765-4.765H18.456c-2.628%2C0-4.767%2C2.138-4.767%2C4.765v42.789%20%20%20c0%2C2.628%2C2.138%2C4.766%2C4.767%2C4.766h5.535v0.959c0%2C2.628%2C2.138%2C4.765%2C4.766%2C4.765h42.788c2.628%2C0%2C4.766-2.137%2C4.766-4.765V52.914%20%20%20C76.311%2C50.284%2C74.173%2C48.145%2C71.545%2C48.145z%20M18.455%2C16.935h16.344c2.1%2C0%2C3.808%2C1.708%2C3.808%2C3.808v27.401H37.25V22.636%20%20%20c0-0.264-0.215-0.478-0.479-0.478H16.482c-0.264%2C0-0.479%2C0.214-0.479%2C0.478v36.585c0%2C0.264%2C0.215%2C0.478%2C0.479%2C0.478h7.507v7.644%20%20%20h-5.534c-2.101%2C0-3.81-1.709-3.81-3.81V20.743C14.645%2C18.643%2C16.354%2C16.935%2C18.455%2C16.935z%20M16.96%2C23.116h19.331v25.031h-7.535%20%20%20c-2.628%2C0-4.766%2C2.139-4.766%2C4.768v5.828h-7.03V23.116z%20M71.545%2C73.064H28.757c-2.101%2C0-3.81-1.708-3.81-3.808V52.914%20%20%20c0-2.102%2C1.709-3.812%2C3.81-3.812h42.788c2.1%2C0%2C3.809%2C1.71%2C3.809%2C3.812v16.343C75.354%2C71.356%2C73.645%2C73.064%2C71.545%2C73.064z%22%3E%3C/path%3E%3Cpath%20d%3D%22M28.919%2C58.424c-1.466%2C0-2.659%2C1.193-2.659%2C2.66c0%2C1.466%2C1.193%2C2.658%2C2.659%2C2.658c1.468%2C0%2C2.662-1.192%2C2.662-2.658%20%20%20C31.581%2C59.617%2C30.387%2C58.424%2C28.919%2C58.424z%20M28.919%2C62.786c-0.939%2C0-1.703-0.764-1.703-1.702c0-0.939%2C0.764-1.704%2C1.703-1.704%20%20%20c0.94%2C0%2C1.705%2C0.765%2C1.705%2C1.704C30.623%2C62.022%2C29.858%2C62.786%2C28.919%2C62.786z%22%3E%3C/path%3E%3Cpath%20d%3D%22M69.654%2C50.461H33.069c-0.264%2C0-0.479%2C0.215-0.479%2C0.479v20.288c0%2C0.264%2C0.215%2C0.478%2C0.479%2C0.478h36.585%20%20%20c0.263%2C0%2C0.477-0.214%2C0.477-0.478V50.939C70.131%2C50.676%2C69.917%2C50.461%2C69.654%2C50.461z%20M69.174%2C51.417V70.75H33.548V51.417H69.174z%22%3E%3C/path%3E%3Cpath%20d%3D%22M45.201%2C30.296c6.651%2C0%2C12.233%2C5.351%2C12.551%2C11.977l-3.033-2.638c-0.193-0.165-0.507-0.142-0.675%2C0.048%20%20%20c-0.174%2C0.198-0.153%2C0.501%2C0.045%2C0.676l3.883%2C3.375c0.09%2C0.075%2C0.198%2C0.115%2C0.312%2C0.115c0.141%2C0%2C0.273-0.061%2C0.362-0.166%20%20%20l3.371-3.877c0.173-0.2%2C0.151-0.502-0.047-0.675c-0.194-0.166-0.508-0.144-0.676%2C0.048l-2.592%2C2.979%20%20%20c-0.18-3.417-1.629-6.605-4.099-9.001c-2.538-2.461-5.877-3.817-9.404-3.817c-0.264%2C0-0.479%2C0.215-0.479%2C0.479%20%20%20C44.72%2C30.083%2C44.936%2C30.296%2C45.201%2C30.296z%22%3E%3C/path%3E%3C/g%3E%3C/svg%3E) center/50% 50% no-repeat rgba(244,244,244,1);bottom:0;font-size:14px;font-weight:600;left:0;line-height:20px;right:0;position:fixed;top:0;z-index:9999999}.a-orientation-modal:after{color:#666;content:\"Insert phone into Cardboard holder.\";display:block;position:absolute;text-align:center;top:70%;transform:translateY(-70%);width:100%}.a-orientation-modal button{background:url(data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20xmlns%3Axlink%3D%22http%3A//www.w3.org/1999/xlink%22%20version%3D%221.1%22%20x%3D%220px%22%20y%3D%220px%22%20viewBox%3D%220%200%20100%20100%22%20enable-background%3D%22new%200%200%20100%20100%22%20xml%3Aspace%3D%22preserve%22%3E%3Cpath%20fill%3D%22%23000000%22%20d%3D%22M55.209%2C50l17.803-17.803c1.416-1.416%2C1.416-3.713%2C0-5.129c-1.416-1.417-3.713-1.417-5.129%2C0L50.08%2C44.872%20%20L32.278%2C27.069c-1.416-1.417-3.714-1.417-5.129%2C0c-1.417%2C1.416-1.417%2C3.713%2C0%2C5.129L44.951%2C50L27.149%2C67.803%20%20c-1.417%2C1.416-1.417%2C3.713%2C0%2C5.129c0.708%2C0.708%2C1.636%2C1.062%2C2.564%2C1.062c0.928%2C0%2C1.856-0.354%2C2.564-1.062L50.08%2C55.13l17.803%2C17.802%20%20c0.708%2C0.708%2C1.637%2C1.062%2C2.564%2C1.062s1.856-0.354%2C2.564-1.062c1.416-1.416%2C1.416-3.713%2C0-5.129L55.209%2C50z%22%3E%3C/path%3E%3C/svg%3E) no-repeat;border:none;height:50px;text-indent:-9999px;width:50px}.a-loader-title{background-color:rgba(0,0,0,.6);font-family:sans-serif,monospace;text-align:center;font-size:20px;height:50px;font-weight:300;line-height:50px;position:absolute;right:0;left:0;top:0;color:#fff}"; (_dereq_("browserify-css").createStyle(css, { "href": "src\\style\\aframe.css"})); module.exports = css;
-},{"browserify-css":5}],157:[function(_dereq_,module,exports){
+},{"browserify-css":5}],154:[function(_dereq_,module,exports){
 var css = ".rs-base{background-color:#333;color:#fafafa;border-radius:0;font:10px monospace;left:5px;line-height:1em;opacity:.85;overflow:hidden;padding:10px;position:fixed;top:5px;width:300px;z-index:10000}.rs-base div.hidden{display:none}.rs-base h1{color:#fff;cursor:pointer;font-size:1.4em;font-weight:300;margin:0 0 5px;padding:0}.rs-group{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-flex-direction:column-reverse;flex-direction:column-reverse;margin-bottom:5px}.rs-group:last-child{margin-bottom:0}.rs-counter-base{align-items:center;display:-webkit-box;display:-webkit-flex;display:flex;height:10px;-webkit-justify-content:space-between;justify-content:space-between;margin:2px 0}.rs-counter-base.alarm{color:#b70000;text-shadow:0 0 0 #b70000,0 0 1px #fff,0 0 1px #fff,0 0 2px #fff,0 0 2px #fff,0 0 3px #fff,0 0 3px #fff,0 0 4px #fff,0 0 4px #fff}.rs-counter-id{font-weight:300;-webkit-box-ordinal-group:0;-webkit-order:0;order:0;width:54px}.rs-counter-value{font-weight:300;-webkit-box-ordinal-group:1;-webkit-order:1;order:1;text-align:right;width:35px}.rs-canvas{-webkit-box-ordinal-group:2;-webkit-order:2;order:2}@media (min-width:480px){.rs-base{left:20px;top:20px}}"; (_dereq_("browserify-css").createStyle(css, { "href": "src\\style\\rStats.css"})); module.exports = css;
-},{"browserify-css":5}],158:[function(_dereq_,module,exports){
+},{"browserify-css":5}],155:[function(_dereq_,module,exports){
 var constants = _dereq_('../constants/');
 var registerSystem = _dereq_('../core/system').registerSystem;
 
@@ -77696,7 +76679,7 @@ function removeDefaultCamera (sceneEl) {
   sceneEl.removeChild(defaultCamera);
 }
 
-},{"../constants/":91,"../core/system":111}],159:[function(_dereq_,module,exports){
+},{"../constants/":88,"../core/system":108}],156:[function(_dereq_,module,exports){
 var geometries = _dereq_('../core/geometry').geometries;
 var registerSystem = _dereq_('../core/system').registerSystem;
 var THREE = _dereq_('../lib/three');
@@ -77836,7 +76819,7 @@ function toBufferGeometry (geometry, doBuffer) {
   return bufferGeometry;
 }
 
-},{"../core/geometry":101,"../core/system":111,"../lib/three":149}],160:[function(_dereq_,module,exports){
+},{"../core/geometry":98,"../core/system":108,"../lib/three":146}],157:[function(_dereq_,module,exports){
 var registerSystem = _dereq_('../core/system').registerSystem;
 var THREE = _dereq_('../lib/three');
 
@@ -77864,7 +76847,7 @@ module.exports.System = registerSystem('gltf-model', {
   }
 });
 
-},{"../core/system":111,"../lib/three":149}],161:[function(_dereq_,module,exports){
+},{"../core/system":108,"../lib/three":146}],158:[function(_dereq_,module,exports){
 _dereq_('./camera');
 _dereq_('./geometry');
 _dereq_('./gltf-model');
@@ -77873,7 +76856,7 @@ _dereq_('./material');
 _dereq_('./shadow');
 _dereq_('./tracked-controls');
 
-},{"./camera":158,"./geometry":159,"./gltf-model":160,"./light":162,"./material":163,"./shadow":164,"./tracked-controls":165}],162:[function(_dereq_,module,exports){
+},{"./camera":155,"./geometry":156,"./gltf-model":157,"./light":159,"./material":160,"./shadow":161,"./tracked-controls":162}],159:[function(_dereq_,module,exports){
 var registerSystem = _dereq_('../core/system').registerSystem;
 var bind = _dereq_('../utils/bind');
 var constants = _dereq_('../constants/');
@@ -77959,7 +76942,7 @@ module.exports.System = registerSystem('light', {
   }
 });
 
-},{"../constants/":91,"../core/system":111,"../utils/bind":166}],163:[function(_dereq_,module,exports){
+},{"../constants/":88,"../core/system":108,"../utils/bind":163}],160:[function(_dereq_,module,exports){
 var registerSystem = _dereq_('../core/system').registerSystem;
 var THREE = _dereq_('../lib/three');
 var utils = _dereq_('../utils/');
@@ -78364,7 +77347,7 @@ function fixVideoAttributes (videoEl) {
   return videoEl;
 }
 
-},{"../core/system":111,"../lib/three":149,"../utils/":172,"../utils/material":173}],164:[function(_dereq_,module,exports){
+},{"../core/system":108,"../lib/three":146,"../utils/":169,"../utils/material":170}],161:[function(_dereq_,module,exports){
 var registerSystem = _dereq_('../core/system').registerSystem;
 var THREE = _dereq_('../lib/three');
 
@@ -78412,7 +77395,7 @@ module.exports.System = registerSystem('shadow', {
   }
 });
 
-},{"../core/system":111,"../lib/three":149}],165:[function(_dereq_,module,exports){
+},{"../core/system":108,"../lib/three":146}],162:[function(_dereq_,module,exports){
 var registerSystem = _dereq_('../core/system').registerSystem;
 var utils = _dereq_('../utils');
 
@@ -78474,7 +77457,7 @@ module.exports.System = registerSystem('tracked-controls', {
   }
 });
 
-},{"../core/system":111,"../utils":172}],166:[function(_dereq_,module,exports){
+},{"../core/system":108,"../utils":169}],163:[function(_dereq_,module,exports){
 /**
  * Faster version of Function.prototype.bind
  * @param {Function} fn - Function to wrap.
@@ -78491,7 +77474,7 @@ module.exports = function bind (fn, ctx/* , arg1, arg2 */) {
   })(Array.prototype.slice.call(arguments, 2));
 };
 
-},{}],167:[function(_dereq_,module,exports){
+},{}],164:[function(_dereq_,module,exports){
 /* global THREE */
 var debug = _dereq_('./debug');
 var extend = _dereq_('object-assign');
@@ -78589,7 +77572,7 @@ module.exports.toVector3 = function (vec3) {
   return new THREE.Vector3(vec3.x, vec3.y, vec3.z);
 };
 
-},{"./debug":168,"object-assign":24}],168:[function(_dereq_,module,exports){
+},{"./debug":165,"object-assign":24}],165:[function(_dereq_,module,exports){
 (function (process){(function (){
 var debugLib = _dereq_('debug');
 var extend = _dereq_('object-assign');
@@ -78686,7 +77669,7 @@ module.exports = debug;
 
 }).call(this)}).call(this,_dereq_('_process'))
 
-},{"_process":31,"debug":9,"object-assign":24}],169:[function(_dereq_,module,exports){
+},{"_process":31,"debug":9,"object-assign":24}],166:[function(_dereq_,module,exports){
 (function (process){(function (){
 var vrDisplay;
 
@@ -78825,7 +77808,7 @@ module.exports.PolyfillControls = function PolyfillControls (object) {
 
 }).call(this)}).call(this,_dereq_('_process'))
 
-},{"_process":31}],170:[function(_dereq_,module,exports){
+},{"_process":31}],167:[function(_dereq_,module,exports){
 /**
  * Split a delimited component property string (e.g., `material.color`) to an object
  * containing `component` name and `property` name. If there is no delimiter, just return the
@@ -78887,7 +77870,7 @@ module.exports.setComponentProperty = function (el, name, value, delimiter) {
   el.setAttribute(name, value);
 };
 
-},{}],171:[function(_dereq_,module,exports){
+},{}],168:[function(_dereq_,module,exports){
 module.exports = function forceCanvasResizeSafariMobile (canvasEl) {
   var width = canvasEl.style.width;
   var height = canvasEl.style.height;
@@ -78903,7 +77886,7 @@ module.exports = function forceCanvasResizeSafariMobile (canvasEl) {
   }, 200);
 };
 
-},{}],172:[function(_dereq_,module,exports){
+},{}],169:[function(_dereq_,module,exports){
 /* global location */
 
 /* Centralized place to reference utilities since utils is exposed to the user. */
@@ -79230,7 +78213,7 @@ module.exports.findAllScenes = function (el) {
 // Must be at bottom to avoid circular dependency.
 module.exports.srcLoader = _dereq_('./src-loader');
 
-},{"./bind":166,"./coordinates":167,"./debug":168,"./device":169,"./entity":170,"./forceCanvasResizeSafariMobile":171,"./material":173,"./object-pool":174,"./split":175,"./src-loader":176,"./styleParser":177,"./tracked-controls":178,"deep-assign":11,"object-assign":24}],173:[function(_dereq_,module,exports){
+},{"./bind":163,"./coordinates":164,"./debug":165,"./device":166,"./entity":167,"./forceCanvasResizeSafariMobile":168,"./material":170,"./object-pool":171,"./split":172,"./src-loader":173,"./styleParser":174,"./tracked-controls":175,"deep-assign":11,"object-assign":24}],170:[function(_dereq_,module,exports){
 var THREE = _dereq_('../lib/three');
 
 var HLS_MIMETYPES = ['application/x-mpegurl', 'application/vnd.apple.mpegurl'];
@@ -79385,7 +78368,7 @@ module.exports.isHLS = function (src, type) {
   return false;
 };
 
-},{"../lib/three":149}],174:[function(_dereq_,module,exports){
+},{"../lib/three":146}],171:[function(_dereq_,module,exports){
 /*
   Adapted deePool by Kyle Simpson.
   MIT License: http://getify.mit-license.org
@@ -79465,7 +78448,7 @@ function clearObject (obj) {
 }
 module.exports.clearObject = clearObject;
 
-},{}],175:[function(_dereq_,module,exports){
+},{}],172:[function(_dereq_,module,exports){
 /**
  * String split with cached result.
  */
@@ -79482,7 +78465,7 @@ module.exports.split = (function () {
   };
 })();
 
-},{}],176:[function(_dereq_,module,exports){
+},{}],173:[function(_dereq_,module,exports){
 /* global Image, XMLHttpRequest */
 var debug = _dereq_('./debug');
 
@@ -79641,7 +78624,7 @@ module.exports = {
   validateCubemapSrc: validateCubemapSrc
 };
 
-},{"./debug":168}],177:[function(_dereq_,module,exports){
+},{"./debug":165}],174:[function(_dereq_,module,exports){
 /**
  * Utils for parsing style-like strings (e.g., "primitive: box; width: 5; height: 4.5").
  * Some code adapted from `style-attr` (https://github.com/joshwnj/style-attr)
@@ -79794,7 +78777,7 @@ function styleStringify (obj) {
 
 function upperCase (str) { return str[1].toUpperCase(); }
 
-},{}],178:[function(_dereq_,module,exports){
+},{}],175:[function(_dereq_,module,exports){
 var DEFAULT_HANDEDNESS = _dereq_('../constants').DEFAULT_HANDEDNESS;
 var AXIS_LABELS = ['x', 'y', 'z', 'w'];
 var NUM_HANDS = 2;  // Number of hands in a pair. Should always be 2.
@@ -79974,185 +78957,7 @@ module.exports.onButtonEvent = function (id, evtName, component, hand) {
   }
 };
 
-},{"../constants":91}],179:[function(_dereq_,module,exports){
-/**
- * @author dmarcos / https://github.com/dmarcos
- * @author mrdoob / http://mrdoob.com
- */
-
-THREE.VRControls = function ( object, onError ) {
-
-  var scope = this;
-
-  var vrDisplay, vrDisplays;
-
-  var standingMatrix = new THREE.Matrix4();
-
-  var frameData = null;
-
-  if ( 'VRFrameData' in window ) {
-
-    frameData = new window.VRFrameData();
-
-  }
-
-  window.addEventListener('vrdisplayconnect', function (evt) { vrDisplay = evt.display; });
-  window.addEventListener('vrdisplaydisconnect', function () { vrDisplay = undefined });
-
-  function gotVRDisplays( displays ) {
-
-    vrDisplays = displays;
-
-    if ( displays.length > 0 ) {
-
-      vrDisplay = displays[ 0 ];
-
-    } else {
-
-      if ( onError ) onError( 'VR input not available.' );
-
-    }
-
-  }
-
-  if ( navigator.getVRDisplays ) {
-
-    navigator.getVRDisplays().then( gotVRDisplays ).catch ( function () {
-
-      console.warn( 'THREE.VRControls: Unable to get VR Displays' );
-
-    } );
-
-  }
-
-  // the Rift SDK returns the position in meters
-  // this scale factor allows the user to define how meters
-  // are converted to scene units.
-
-  this.scale = 1;
-
-  // If true will use "standing space" coordinate system where y=0 is the
-  // floor and x=0, z=0 is the center of the room.
-  this.standing = true;
-
-  // Distance from the users eyes to the floor in meters. Used when
-  // standing=true but the VRDisplay doesn't provide stageParameters.
-  this.userHeight = 1.75;
-
-  this.getVRDisplay = function () {
-
-    return vrDisplay;
-
-  };
-
-  this.setVRDisplay = function ( value ) {
-
-    vrDisplay = value;
-
-  };
-
-  this.getVRDisplays = function () {
-
-    console.warn( 'THREE.VRControls: getVRDisplays() is being deprecated.' );
-    return vrDisplays;
-
-  };
-
-  this.getStandingMatrix = function () {
-
-    return standingMatrix;
-
-  };
-
-  this.update = function () {
-
-    if ( vrDisplay ) {
-
-      var pose;
-
-      if ( vrDisplay.getFrameData ) {
-
-        vrDisplay.getFrameData( frameData );
-        pose = frameData.pose;
-
-      } else if ( vrDisplay.getPose ) {
-
-        pose = vrDisplay.getPose();
-
-      }
-
-      if ( pose.orientation !== null ) {
-
-        object.quaternion.fromArray( pose.orientation );
-
-      }
-
-      if ( pose.position !== null ) {
-
-        object.position.fromArray( pose.position );
-
-      } else {
-
-        object.position.set( 0, 0, 0 );
-
-      }
-
-      if ( this.standing ) {
-
-        if ( vrDisplay.stageParameters ) {
-
-          object.updateMatrix();
-
-          standingMatrix.fromArray( vrDisplay.stageParameters.sittingToStandingTransform );
-          object.applyMatrix( standingMatrix );
-
-        } else {
-
-          object.position.setY( object.position.y + this.userHeight );
-
-        }
-
-      }
-
-      object.position.multiplyScalar( scope.scale );
-
-    }
-
-  };
-
-  this.resetPose = function () {
-
-    if ( vrDisplay ) {
-
-      vrDisplay.resetPose();
-
-    }
-
-  };
-
-  this.resetSensor = function () {
-
-    console.warn( 'THREE.VRControls: .resetSensor() is now .resetPose().' );
-    this.resetPose();
-
-  };
-
-  this.zeroSensor = function () {
-
-    console.warn( 'THREE.VRControls: .zeroSensor() is now .resetPose().' );
-    this.resetPose();
-
-  };
-
-  this.dispose = function () {
-
-    vrDisplay = null;
-
-  };
-
-};
-
-},{}],180:[function(_dereq_,module,exports){
+},{"../constants":88}],176:[function(_dereq_,module,exports){
 /**
  * @author dmarcos / https://github.com/dmarcos
  * @author mrdoob / http://mrdoob.com
@@ -80164,60 +78969,7 @@ THREE.VRControls = function ( object, onError ) {
  *
  */
 
-THREE.VREffect = function( renderer, onError ) {
-
-  var vrDisplay, vrDisplays;
-  var eyeTranslationL = new THREE.Vector3();
-  var eyeTranslationR = new THREE.Vector3();
-  var renderRectL, renderRectR;
-
-  var frameData = null;
-
-  if ( 'VRFrameData' in window ) {
-
-    frameData = new window.VRFrameData();
-
-  }
-
-  window.addEventListener('vrdisplayconnect', function (evt) { vrDisplay = evt.display; });
-  window.addEventListener('vrdisplaydisconnect', function (evt) {
-    var f;
-    
-    scope.exitPresent();
-    // Cancels current request animation frame.
-    f = scope.cancelAnimationFrame();
-    vrDisplay = undefined;
-    // Resumes the request animation frame.
-    scope.requestAnimationFrame(f);
-  });
-
-  function gotVRDisplays( displays ) {
-
-    vrDisplays = displays;
-
-    if ( displays.length > 0 ) {
-
-      vrDisplay = displays[ 0 ];
-
-    } else {
-
-      if ( onError ) onError( 'HMD not available' );
-
-    }
-
-  }
-
-  if ( navigator.getVRDisplays ) {
-
-    navigator.getVRDisplays().then( gotVRDisplays ).catch( function() {
-
-      console.warn( 'THREE.VREffect: Unable to get VR Displays' );
-
-    } );
-
-  }
-
-  //
+THREE.MainRenderer = function( renderer, onError ) {
 
   this.isPresenting = false;
 
@@ -80227,128 +78979,17 @@ THREE.VREffect = function( renderer, onError ) {
   var rendererUpdateStyle = false;
   var rendererPixelRatio = renderer.getPixelRatio();
 
-  this.getVRDisplay = function() {
-
-    return vrDisplay;
-
-  };
-
-  this.setVRDisplay = function( value ) {
-
-    vrDisplay = value;
-
-  };
-
-  this.getVRDisplays = function() {
-
-    console.warn( 'THREE.VREffect: getVRDisplays() is being deprecated.' );
-    return vrDisplays;
-
-  };
-
   this.setSize = function( width, height, updateStyle ) {
 
     rendererSize = { width: width, height: height };
     rendererUpdateStyle = updateStyle;
 
-    if ( scope.isPresenting ) {
-      var eyeParamsL = vrDisplay.getEyeParameters( 'left' );
-      renderer.setPixelRatio( 1 );
-      renderer.setSize( eyeParamsL.renderWidth * 2, eyeParamsL.renderHeight, false );
-
-    } else {
-
-      renderer.setPixelRatio( rendererPixelRatio );
-      renderer.setSize( width, height, updateStyle );
-
-    }
-
+    renderer.setPixelRatio( rendererPixelRatio );
+    renderer.setSize( width, height, updateStyle );
   };
 
   renderer.autoClear = false;
   renderer.autoClearColor = false;
-
-  // VR presentation
-
-  var canvas = renderer.domElement;
-  var defaultLeftBounds = [ 0.0, 0.0, 0.5, 1.0 ];
-  var defaultRightBounds = [ 0.5, 0.0, 0.5, 1.0 ];
-
-  function onVRDisplayPresentChange() {
-
-    var wasPresenting = scope.isPresenting;
-    scope.isPresenting = vrDisplay !== undefined && vrDisplay.isPresenting;
-
-    if ( scope.isPresenting ) {
-
-      var eyeParamsL = vrDisplay.getEyeParameters( 'left' );
-      var eyeWidth = eyeParamsL.renderWidth;
-      var eyeHeight = eyeParamsL.renderHeight;
-
-      if ( ! wasPresenting ) {
-
-        rendererPixelRatio = renderer.getPixelRatio();
-        rendererSize = renderer.getSize();
-
-        renderer.setPixelRatio( 1 );
-        renderer.setSize( eyeWidth * 2, eyeHeight, false );
-
-      }
-
-    } else if ( wasPresenting ) {
-
-      renderer.setPixelRatio( rendererPixelRatio );
-      renderer.setSize( rendererSize.width, rendererSize.height, rendererUpdateStyle );
-
-    }
-
-  }
-
-  window.addEventListener( 'vrdisplaypresentchange', onVRDisplayPresentChange, false );
-
-  this.setFullScreen = function( boolean ) {
-
-    return new Promise( function( resolve, reject ) {
-
-      if ( vrDisplay === undefined ) {
-
-        reject( new Error( 'No VR hardware found.' ) );
-        return;
-
-      }
-
-      if ( scope.isPresenting === boolean ) {
-
-        resolve();
-        return;
-
-      }
-
-      if ( boolean ) {
-
-        resolve( vrDisplay.requestPresent( [ { source: canvas } ] ) );
-
-      } else {
-
-        resolve( vrDisplay.exitPresent() );
-
-      }
-
-    } );
-
-  };
-
-  this.requestPresent = function() {
-
-    return this.setFullScreen( true );
-
-  };
-
-  this.exitPresent = function() {
-
-    return this.setFullScreen( false );
-
-  };
 
   this.requestAnimationFrame = function( f ) {
 
@@ -80356,13 +78997,7 @@ THREE.VREffect = function( renderer, onError ) {
 
     if (!f) { return; }
 
-    if ( vrDisplay !== undefined ) {
-      return vrDisplay.requestAnimationFrame( f );
-    } else {
-
-      return window.requestAnimationFrame( f );
-
-    }
+    return window.requestAnimationFrame( f );
 
   };
 
@@ -80372,203 +79007,12 @@ THREE.VREffect = function( renderer, onError ) {
 
     scope.f = undefined;
 
-    if ( vrDisplay !== undefined ) {
-
-      vrDisplay.cancelAnimationFrame( h );
-
-    } else {
-
-      window.cancelAnimationFrame( h );
-
-    }
+    window.cancelAnimationFrame( h );
 
     return f;
   };
 
-  this.submitFrame = function() {
-
-    if ( vrDisplay !== undefined && scope.isPresenting ) {
-
-      vrDisplay.submitFrame();
-
-    }
-
-  };
-
-  this.autoSubmitFrame = true;
-
-  // render
-
-  var cameraL = new THREE.PerspectiveCamera();
-  cameraL.layers.enable( 1 );
-
-  var cameraR = new THREE.PerspectiveCamera();
-  cameraR.layers.enable( 2 );
-
   this.render = function( scene, camera, renderTarget, forceClear, cameraData ) {
-
-    if ( vrDisplay && scope.isPresenting ) {
-
-      var autoUpdate = scene.autoUpdate;
-      var currentOnAfterRender = scene.onAfterRender;
-      scene.onAfterRender = function () {};
-
-      if ( autoUpdate ) {
-
-        scene.updateMatrixWorld();
-        scene.autoUpdate = false;
-
-      }
-
-      var eyeParamsL = vrDisplay.getEyeParameters( 'left' );
-      var eyeParamsR = vrDisplay.getEyeParameters( 'right' );
-
-      eyeTranslationL.fromArray( eyeParamsL.offset );
-      eyeTranslationR.fromArray( eyeParamsR.offset );
-
-      if ( Array.isArray( scene ) ) {
-
-        console.warn( 'THREE.VREffect.render() no longer supports arrays. Use object.layers instead.' );
-        scene = scene[ 0 ];
-
-      }
-
-      // When rendering we don't care what the recommended size is, only what the actual size
-      // of the backbuffer is.
-      var size = renderer.getSize();
-      var layers = vrDisplay.getLayers();
-      var leftBounds;
-      var rightBounds;
-
-      if ( layers.length ) {
-
-        var layer = layers[ 0 ];
-
-        leftBounds = layer.leftBounds !== null && layer.leftBounds.length === 4 ? layer.leftBounds : defaultLeftBounds;
-        rightBounds = layer.rightBounds !== null && layer.rightBounds.length === 4 ? layer.rightBounds : defaultRightBounds;
-
-      } else {
-
-        leftBounds = defaultLeftBounds;
-        rightBounds = defaultRightBounds;
-
-      }
-
-      renderRectL = {
-        x: Math.round( size.width * leftBounds[ 0 ] ),
-        y: Math.round( size.height * leftBounds[ 1 ] ),
-        width: Math.round( size.width * leftBounds[ 2 ] ),
-        height: Math.round( size.height * leftBounds[ 3 ] )
-      };
-      renderRectR = {
-        x: Math.round( size.width * rightBounds[ 0 ] ),
-        y: Math.round( size.height * rightBounds[ 1 ] ),
-        width: Math.round( size.width * rightBounds[ 2 ] ),
-        height: Math.round( size.height * rightBounds[ 3 ] )
-      };
-
-      if ( renderTarget ) {
-
-        renderer.setRenderTarget( renderTarget );
-        renderTarget.scissorTest = true;
-
-      } else {
-
-        renderer.setRenderTarget( null );
-        renderer.setScissorTest( true );
-
-      }
-
-      if ( renderer.autoClear || forceClear ) {
-        renderer.clear();
-      }
-
-      if ( camera.parent === null ) camera.updateMatrixWorld();
-
-      camera.matrixWorld.decompose( cameraL.position, cameraL.quaternion, cameraL.scale );
-
-      cameraR.position.copy(cameraL.position);
-      cameraR.quaternion.copy(cameraL.quaternion);
-      cameraR.scale.copy(cameraL.scale);
-
-      cameraL.translateOnAxis( eyeTranslationL, cameraL.scale.x );
-      cameraR.translateOnAxis( eyeTranslationR, cameraR.scale.x );
-
-      if ( vrDisplay.getFrameData ) {
-
-        vrDisplay.depthNear = camera.near;
-        vrDisplay.depthFar = camera.far;
-
-        vrDisplay.getFrameData( frameData );
-
-        cameraL.projectionMatrix.elements = frameData.leftProjectionMatrix;
-        cameraR.projectionMatrix.elements = frameData.rightProjectionMatrix;
-
-      } else {
-
-        cameraL.projectionMatrix = fovToProjection( eyeParamsL.fieldOfView, true, camera.near, camera.far );
-        cameraR.projectionMatrix = fovToProjection( eyeParamsR.fieldOfView, true, camera.near, camera.far );
-
-      }
-
-      // render left eye
-      if ( renderTarget ) {
-
-        renderTarget.viewport.set( renderRectL.x, renderRectL.y, renderRectL.width, renderRectL.height );
-        renderTarget.scissor.set( renderRectL.x, renderRectL.y, renderRectL.width, renderRectL.height );
-
-      } else {
-
-        renderer.setViewport( renderRectL.x, renderRectL.y, renderRectL.width, renderRectL.height );
-        renderer.setScissor( renderRectL.x, renderRectL.y, renderRectL.width, renderRectL.height );
-
-      }
-
-      renderer.render( scene, cameraL, renderTarget, forceClear );
-
-      // render right eye
-      if ( renderTarget ) {
-
-        renderTarget.viewport.set( renderRectR.x, renderRectR.y, renderRectR.width, renderRectR.height );
-        renderTarget.scissor.set( renderRectR.x, renderRectR.y, renderRectR.width, renderRectR.height );
-
-      } else {
-
-        renderer.setViewport( renderRectR.x, renderRectR.y, renderRectR.width, renderRectR.height );
-        renderer.setScissor( renderRectR.x, renderRectR.y, renderRectR.width, renderRectR.height );
-
-      }
-
-      renderer.render( scene, cameraR, renderTarget, forceClear );
-
-      if ( renderTarget ) {
-
-        renderTarget.viewport.set( 0, 0, size.width, size.height );
-        renderTarget.scissor.set( 0, 0, size.width, size.height );
-        renderTarget.scissorTest = false;
-        renderer.setRenderTarget( null );
-
-      } else {
-        renderer.setViewport( 0, 0, size.width, size.height );
-        renderer.setScissorTest( false );
-
-      }
-
-      if ( autoUpdate ) {
-
-        scene.autoUpdate = true;
-
-      }
-
-      if ( scope.autoSubmitFrame ) {
-
-        scope.submitFrame();
-
-      }
-
-      return;
-
-    }
 
     var size = renderer.getSize();
     if (cameraData && cameraData.viewport && cameraData.viewportPosition != null && !cameraData.fullscreen) {
@@ -80596,15 +79040,7 @@ THREE.VREffect = function( renderer, onError ) {
       renderer.setViewport( 0, 0, size.width, size.height );
     }
 
-    // Regular render mode if not HMD
     renderer.render( scene, camera, renderTarget, forceClear );
-
-  };
-
-  this.dispose = function() {
-
-    window.removeEventListener( 'vrdisplaypresentchange', onVRDisplayPresentChange, false );
-
   };
 
   this.getDrawingBufferSize = function () {
@@ -80624,82 +79060,9 @@ THREE.VREffect = function( renderer, onError ) {
     return renderer.setClearColor(color);
   }
 
-  //
-
-  function fovToNDCScaleOffset( fov ) {
-
-    var pxscale = 2.0 / ( fov.leftTan + fov.rightTan );
-    var pxoffset = ( fov.leftTan - fov.rightTan ) * pxscale * 0.5;
-    var pyscale = 2.0 / ( fov.upTan + fov.downTan );
-    var pyoffset = ( fov.upTan - fov.downTan ) * pyscale * 0.5;
-    return { scale: [ pxscale, pyscale ], offset: [ pxoffset, pyoffset ] };
-
-  }
-
-  function fovPortToProjection( fov, rightHanded, zNear, zFar ) {
-
-    rightHanded = rightHanded === undefined ? true : rightHanded;
-    zNear = zNear === undefined ? 0.01 : zNear;
-    zFar = zFar === undefined ? 10000.0 : zFar;
-
-    var handednessScale = rightHanded ? - 1.0 : 1.0;
-
-    // start with an identity matrix
-    var mobj = new THREE.Matrix4();
-    var m = mobj.elements;
-
-    // and with scale/offset info for normalized device coords
-    var scaleAndOffset = fovToNDCScaleOffset( fov );
-
-    // X result, map clip edges to [-w,+w]
-    m[ 0 * 4 + 0 ] = scaleAndOffset.scale[ 0 ];
-    m[ 0 * 4 + 1 ] = 0.0;
-    m[ 0 * 4 + 2 ] = scaleAndOffset.offset[ 0 ] * handednessScale;
-    m[ 0 * 4 + 3 ] = 0.0;
-
-    // Y result, map clip edges to [-w,+w]
-    // Y offset is negated because this proj matrix transforms from world coords with Y=up,
-    // but the NDC scaling has Y=down (thanks D3D?)
-    m[ 1 * 4 + 0 ] = 0.0;
-    m[ 1 * 4 + 1 ] = scaleAndOffset.scale[ 1 ];
-    m[ 1 * 4 + 2 ] = - scaleAndOffset.offset[ 1 ] * handednessScale;
-    m[ 1 * 4 + 3 ] = 0.0;
-
-    // Z result (up to the app)
-    m[ 2 * 4 + 0 ] = 0.0;
-    m[ 2 * 4 + 1 ] = 0.0;
-    m[ 2 * 4 + 2 ] = zFar / ( zNear - zFar ) * - handednessScale;
-    m[ 2 * 4 + 3 ] = ( zFar * zNear ) / ( zNear - zFar );
-
-    // W result (= Z in)
-    m[ 3 * 4 + 0 ] = 0.0;
-    m[ 3 * 4 + 1 ] = 0.0;
-    m[ 3 * 4 + 2 ] = handednessScale;
-    m[ 3 * 4 + 3 ] = 0.0;
-
-    mobj.transpose();
-    return mobj;
-
-  }
-
-  function fovToProjection( fov, rightHanded, zNear, zFar ) {
-
-    var DEG2RAD = Math.PI / 180.0;
-
-    var fovPort = {
-      upTan: Math.tan( fov.upDegrees * DEG2RAD ),
-      downTan: Math.tan( fov.downDegrees * DEG2RAD ),
-      leftTan: Math.tan( fov.leftDegrees * DEG2RAD ),
-      rightTan: Math.tan( fov.rightDegrees * DEG2RAD )
-    };
-
-    return fovPortToProjection( fovPort, rightHanded, zNear, zFar );
-
-  }
-
 };
 
-},{}],181:[function(_dereq_,module,exports){
+},{}],177:[function(_dereq_,module,exports){
 /**
  * @author alteredq / http://alteredqualia.com/
  *
@@ -80747,7 +79110,7 @@ THREE.CopyShader = {
 
 };
 
-},{}],182:[function(_dereq_,module,exports){
+},{}],178:[function(_dereq_,module,exports){
 /**
  * @author alteredq / http://alteredqualia.com/
  */
@@ -80952,7 +79315,7 @@ Object.assign( THREE.Pass.prototype, {
 
 } );
 
-},{}],183:[function(_dereq_,module,exports){
+},{}],179:[function(_dereq_,module,exports){
 /**
  * @author bhouston / http://clara.io/
  *
@@ -81018,7 +79381,7 @@ THREE.LuminosityHighPassShader = {
 
 };
 
-},{}],184:[function(_dereq_,module,exports){
+},{}],180:[function(_dereq_,module,exports){
 /**
  * @author alteredq / http://alteredqualia.com/
  */
@@ -81083,7 +79446,7 @@ THREE.RenderPass.prototype = Object.assign( Object.create( THREE.Pass.prototype 
 
 } );
 
-},{}],185:[function(_dereq_,module,exports){
+},{}],181:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -81242,7 +79605,7 @@ THREE.SSAOPass.prototype.setSize = function( width, height ) {
 
 };
 
-},{}],186:[function(_dereq_,module,exports){
+},{}],182:[function(_dereq_,module,exports){
 /**
  * @author alteredq / http://alteredqualia.com/
  *
@@ -81477,7 +79840,7 @@ THREE.SSAOShader = {
 
 };
 
-},{}],187:[function(_dereq_,module,exports){
+},{}],183:[function(_dereq_,module,exports){
 /**
  * @author alteredq / http://alteredqualia.com/
  *
@@ -81533,7 +79896,7 @@ THREE.SepiaShader = {
 
 };
 
-},{}],188:[function(_dereq_,module,exports){
+},{}],184:[function(_dereq_,module,exports){
 /**
  * @author alteredq / http://alteredqualia.com/
  */
@@ -81602,7 +79965,7 @@ THREE.ShaderPass.prototype = Object.assign( Object.create( THREE.Pass.prototype 
 
 } );
 
-},{}],189:[function(_dereq_,module,exports){
+},{}],185:[function(_dereq_,module,exports){
 /**
  * @author spidersharma / http://eduperiment.com/
  * 
@@ -81985,7 +80348,7 @@ THREE.UnrealBloomPass.prototype = Object.assign( Object.create( THREE.Pass.proto
 THREE.UnrealBloomPass.BlurDirectionX = new THREE.Vector2( 1.0, 0.0 );
 THREE.UnrealBloomPass.BlurDirectionY = new THREE.Vector2( 0.0, 1.0 );
 
-},{}],190:[function(_dereq_,module,exports){
+},{}],186:[function(_dereq_,module,exports){
 window.glStats = function () {
 
     var _rS = null;
@@ -82246,7 +80609,7 @@ if (typeof module === 'object') {
   };
 }
 
-},{}],191:[function(_dereq_,module,exports){
+},{}],187:[function(_dereq_,module,exports){
 // performance.now() polyfill from https://gist.github.com/paulirish/5438650
 'use strict';
 
@@ -82701,7 +81064,7 @@ if (typeof module === 'object') {
   module.exports = window.rStats;
 }
 
-},{}],192:[function(_dereq_,module,exports){
+},{}],188:[function(_dereq_,module,exports){
 /*
  * Copyright 2015 Google Inc. All Rights Reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -82763,7 +81126,7 @@ Util.isLandscapeMode = function() {
 
 module.exports = Util;
 
-},{}],193:[function(_dereq_,module,exports){
+},{}],189:[function(_dereq_,module,exports){
 /*
  * Copyright 2015 Google Inc. All Rights Reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -82839,6 +81202,6 @@ function getWakeLock() {
 
 module.exports = getWakeLock();
 
-},{"./util.js":192}]},{},[147])(147)
+},{"./util.js":188}]},{},[144])(144)
 });
 //# sourceMappingURL=aframe-master.js.map

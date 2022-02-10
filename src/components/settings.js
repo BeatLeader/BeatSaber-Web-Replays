@@ -22,7 +22,7 @@ AFRAME.registerComponent('settings', {
         cameraZPosition: 1,
         fov: 60,
         cameraXRotation: 0,
-        orthographicBackEnabled: true,
+        orthographicBackEnabled: document.body.clientWidth > 600,
         orthographicBackFrustum: 1.4,
         orthographicRightEnabled: false,
         orthographicRightFrustum: 2,

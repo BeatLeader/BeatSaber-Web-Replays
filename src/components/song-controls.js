@@ -143,6 +143,7 @@ AFRAME.registerComponent('song-controls', {
       songDifficulty.innerHTML = diffInfo.name;
       songDifficulty.setAttribute('title', diffInfo.name);
       songDifficulty.style.backgroundColor = diffInfo.color;
+      document.getElementById('songInfoOverlay').style.display = 'flex';
 
       let customDiff = this.customDifficultyLabels[this.data.difficulty];
       if (customDiff) {
@@ -161,6 +162,7 @@ AFRAME.registerComponent('song-controls', {
       document.getElementById('playerCountry').src = player.countryIcon;
       document.getElementById('playerCountry').setAttribute('title', player.country);
       document.getElementById('playerLink').setAttribute('href', "https://scoresaber.com/u/" + player.id);
+      document.getElementById('playerInfoOverlay').style.display = 'flex';
     });
 
     var timelineClicked = false, timelineHovered = false;

@@ -15,6 +15,43 @@ html
   .a-canvas
     cursor: none !important;
 
+@media screen and (max-width: 600px)
+  #speedSliderContainer, #songSpeed, #povswitch
+    display: none !important;
+  #songInfoOverlay
+    padding-left: 1px !important;
+    left: 10px !important;
+
+    img
+      height 60px !important;
+      width 60px !important;
+    p
+      font-size 20px !important;
+    #songSubName
+      font-size 15px !important;
+    #difficultyLabel
+      margin-top 2px !important;
+    #songDifficulty
+      font-size 10px !important;
+    #songCustomDifficulty
+      font-size 10px !important;
+  #playerInfoOverlay
+    padding-left: 1px !important;
+    left: 10px !important;
+
+    img
+      height 60px !important;
+      width 60px !important;
+    #playerName
+      font-size 20px !important;
+    #playerCountry
+      height 15px !important;
+      width 15px !important;
+
+@media screen and (max-width: 400px)
+  #controlsSettings, #controlsCamera
+    display: none !important;
+
 #controls
   align-items center
   background rgba(0, 0, 0, 0.85)
@@ -122,6 +159,11 @@ html
       fill: white
       height 26px
       width 26px
+  
+  @media not all and (min-resolution:.001dpcm)
+    @supports(-webkit-appearance:none)
+      #controlsFullscreen, #controlsCamera, #controlsSettings
+        margin 2px 0px 0 0px !important
 
   #controlsCamera
     cursor pointer
@@ -282,6 +324,7 @@ html
   right: 93px
   position: absolute
   width 30px
+  align-self baseline
 
 #controlsModes,
 #controlsDifficultyOptions
@@ -455,7 +498,7 @@ html
 
 #songInfoOverlay
   align-items top
-  display flex
+  display none
   padding-left: 5px
   position absolute
   left: 20px
@@ -526,7 +569,7 @@ html
 
 #playerInfoOverlay
   align-items top
-  display flex
+  display none
   padding-left: 5px
   position absolute
   left: 20px

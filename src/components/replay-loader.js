@@ -66,14 +66,15 @@ AFRAME.registerComponent('replay-loader', {
       fetch(`/cors/score-saber/api/leaderboard/by-hash/${hash}/info?difficulty=${this.difficultyNumber(this.data.difficulty)}`, {referrer: "https://www.beatlooser.com"}).then(res => {
         res.json().then(leaderbord => {
           this.userIds.forEach((playerID, i) => {
+            const index = i;
             fetch(`${DECODER_LINK}/?playerID=${playerID}&songID=${leaderbord.id}`).then(res => {
               res.json().then(data => {
                 let replay = JSON.parse(data);
                 if (replay.frames) {
                   replay.color = getRandomColor();
                   replay.info.playerID = playerID;
-                  this.replays.push(replay);
-                  this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: replay.info.difficulty, index: i, color: replay.color, playerID }, null);
+                  this.replays[index] = replay;
+                  this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: replay.info.difficulty, index, color: replay.color, playerID }, null);
                   if (this.challenge) {
                     this.processScores(replay);
                   }

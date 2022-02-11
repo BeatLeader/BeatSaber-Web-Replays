@@ -925,6 +925,8 @@ AFRAME.registerComponent('beat', {
   },
 
   showScore: function (hand) {
+    if (this.replayLoader.replays.length > 1) return;
+
     let score = this.replayNote.score;
     if (score < 0) {
       if (score == -3) {

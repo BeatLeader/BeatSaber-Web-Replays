@@ -61,7 +61,7 @@ AFRAME.registerComponent('saber-controls', {
 
     this.el.sceneEl.addEventListener('replayfetched', (e) => {
       if (e.detail.index == this.data.index && e.detail.color) {
-        
+        this.el.components.trail.data.color = e.detail.color;
         this.el.querySelector('.saberHandle').setAttribute('material', 'color', e.detail.color);
         this.el.querySelector('.saberglow').setAttribute('material', 'color', e.detail.color);
       }

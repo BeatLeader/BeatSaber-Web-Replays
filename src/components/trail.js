@@ -174,6 +174,7 @@ AFRAME.registerComponent('trail', {
     enabled: {default: false},
     hand: {type: 'string'},
     trailType: {default: 'bright'},
+    index: {default: 0},
     lifetime: {default: 20} //frames
   },
 
@@ -210,7 +211,7 @@ AFRAME.registerComponent('trail', {
     mesh.vertices = vertices;
     mesh.uv = uv;
     mesh.renderOrder = 5;
-    this.el.sceneEl.setObject3D(`trail__${this.data.hand}`, mesh);
+    this.el.sceneEl.setObject3D(`trail__${this.data.hand}${this.data.index}`, mesh);
 
     this.fillUvArray();
     return mesh;

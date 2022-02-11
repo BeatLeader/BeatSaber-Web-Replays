@@ -858,7 +858,7 @@ AFRAME.registerComponent('song-controls', {
       tableBodyRow.className = 'tableBodyRow'
       tableBodyRow.style.height = '60px';
 
-      const replay = loader.replays.find(el => el.info.playerID == user.id);
+      const replay = loader.replays.find(el => el && el.info.playerID == user.id);
       if (replay) {
         tableBodyRow.style.backgroundColor = replay.color;
         user.replay = replay;
@@ -866,7 +866,7 @@ AFRAME.registerComponent('song-controls', {
         this.el.sceneEl.addEventListener('replayfetched', (event) => {
           if (event.detail.playerID == user.id) {
             tableBodyRow.style.backgroundColor = event.detail.color;
-            user.replay = loader.replays.find(el => el.info.playerID == user.id);
+            user.replay = loader.replays.find(el => el && el.info.playerID == user.id);
           }
         });
       }
@@ -939,7 +939,7 @@ AFRAME.registerComponent('song-controls', {
       rows = table.rows;
       /* Loop through all table rows (except the
       first, which contains table headers): */
-      for (i = 1; i < (rows.length - 1); i++) {
+      for (i = (rows.length - 2); i >= 0; i--) {
         // Start by saying there should be no switching:
         shouldSwitch = false;
         /* Get the two elements you want to compare,

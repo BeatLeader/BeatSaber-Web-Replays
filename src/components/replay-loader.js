@@ -16,6 +16,7 @@ AFRAME.registerComponent('replay-loader', {
     init: function () {
       this.replays = [];
       this.users = [];
+      this.processedScores = 0;
     },
 
     update: function () {
@@ -71,6 +72,7 @@ AFRAME.registerComponent('replay-loader', {
               res.json().then(data => {
                 let replay = JSON.parse(data);
                 if (replay.frames) {
+                  replay.index = index;
                   replay.color = getRandomColor();
                   replay.info.playerID = playerID;
                   this.replays[index] = replay;
@@ -280,6 +282,10 @@ AFRAME.registerComponent('replay-loader', {
       }
 
       replay.noteStructs = allStructs;
+      this.processedScores++;
+      if (this.processedScores == this.replays.length) {
+        this.noteCountForBattle = Math.round(this.allStructs.length / (this.replays.length - 1));
+      }
     },
     challengeloadend: function(event) {
       this.challenge = event;
@@ -287,7 +293,6 @@ AFRAME.registerComponent('replay-loader', {
         this.replays.forEach(replay => {
           this.processScores(replay);
         });
-        
       }
     },
     maxScoreForNote(index) {

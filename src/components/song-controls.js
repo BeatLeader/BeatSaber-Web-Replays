@@ -9,6 +9,8 @@ if (!queryParamTime || isNaN(queryParamTime)) {
   queryParamTime = parseFloat(queryParamTime) / 1000;
 }
 
+let disabledRoyale = AFRAME.utils.getUrlParameter('noRoyale');
+
 /**
  * Update the 2D UI. Handle pause and seek.
  */
@@ -402,7 +404,9 @@ AFRAME.registerComponent('song-controls', {
       } else if (AFRAME.utils.getUrlParameter('jd') ) {
         jdParam = "&jd=" + AFRAME.utils.getUrlParameter('jd');
       }
-      let base = location.protocol + "//" + location.host + "/" + `${songParam}&playerID=${AFRAME.utils.getUrlParameter('playerID')}&difficulty=${AFRAME.utils.getUrlParameter('difficulty')}${jdParam}`
+      let playerParam = (AFRAME.utils.getUrlParameter('playerID') ? `&playerID=${AFRAME.utils.getUrlParameter('playerID')}` : `&players=${AFRAME.utils.getUrlParameter('players')}`);
+
+      let base = location.protocol + "//" + location.host + "/" + `${songParam}${playerParam}&difficulty=${AFRAME.utils.getUrlParameter('difficulty')}${jdParam}`
       input.value = base + (time ? `&time=${Math.round(this.song.getCurrentTime()*1000)}&speed=${Math.round(this.song.speed * 100)}` : "" );
       input.select();
       document.execCommand("copy");
@@ -844,8 +848,8 @@ AFRAME.registerComponent('song-controls', {
   },
   setupPlayersBoard: function () {
     const loader = this.el.sceneEl.components['replay-loader'];
+    const saberEls = this.el.sceneEl.querySelectorAll('[saber-controls]');
 
-    
     let usersContainer = document.getElementById('usersContainer');
     let table = document.createElement('table')
     table.className = 'usersTable'
@@ -855,7 +859,7 @@ AFRAME.registerComponent('song-controls', {
 
     loader.users.forEach((user, index) => {
       let tableBodyRow = document.createElement('tr')
-      tableBodyRow.className = 'tableBodyRow'
+      tableBodyRow.className = 'playerTableRow'
       tableBodyRow.style.height = '60px';
 
       const replay = loader.replays.find(el => el && el.info.playerID == user.id);
@@ -918,8 +922,36 @@ AFRAME.registerComponent('song-controls', {
       this.el.sceneEl.addEventListener('scoreChanged', (event) => {
         if (user.replay) {
           let note = user.replay.noteStructs[event.detail.index];
+          if (disabledRoyale) {
+            scoreLabel.innerHTML = "" + note.totalScore;
+          } else {
+            const leftSaberEl = saberEls[user.replay.index * 2];
+            const rightSaberEl = saberEls[user.replay.index * 2 + 1];
+            if (((event.detail.index > loader.noteCountForBattle * Math.max(loader.replays.length - 1 - tableBodyRow.rowIndex, 0.8)))) {
+              scoreLabel.innerHTML = "" + 0;
+              if (leftSaberEl.object3D.visible) {
+                tableBodyRow.style.opacity = 0
+                leftSaberEl.object3D.visible = false;
+                leftSaberEl.components.trail.data.enabled = false;
+                leftSaberEl.components.trail.mesh.visible = false;
+                rightSaberEl.object3D.visible = false;
+                rightSaberEl.components.trail.data.enabled = false;
+                rightSaberEl.components.trail.mesh.visible = false;
+              }
+            } else {
+              scoreLabel.innerHTML = "" + note.totalScore;
+              if (!leftSaberEl.object3D.visible) {
+                tableBodyRow.style.opacity = 1
+                leftSaberEl.object3D.visible = true;
+                leftSaberEl.components.trail.data.enabled = true;
+                leftSaberEl.components.trail.mesh.visible = true;
+                rightSaberEl.object3D.visible = true;
+                rightSaberEl.components.trail.data.enabled = true;
+                rightSaberEl.components.trail.mesh.visible = true;
+              }
+            }
+          }
 
-          scoreLabel.innerHTML = "" + note.totalScore;
           accLabel.innerHTML = "" + note.accuracy + "%";
           this.sortTable();
         }

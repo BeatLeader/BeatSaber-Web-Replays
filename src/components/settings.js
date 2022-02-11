@@ -5,18 +5,18 @@ AFRAME.registerComponent('settings', {
     init: function () {
       this.settings = {
         showHeadset: false,
-        reducedDebris: false,
+        reducedDebris: true,
         noEffects: false,
         showHitboxes: false,
         pixelRatio: 1.5,
-        saberWidth: 100,
+        saberWidth: 0,
         showFps: false,
         savedCameraDefault: false,
         highlightErrors: false,
         colorScores: true,
         realHitsounds: false,
-        trailType: 'bright',
-        trailLength: 20,
+        trailType: 'dim',
+        trailLength: 30,
 
         // Camera
         cameraZPosition: 1,

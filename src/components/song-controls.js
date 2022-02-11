@@ -23,7 +23,8 @@ AFRAME.registerComponent('song-controls', {
     songImage: {default: ''},
     songId: {default: ''},
     isPlaying: {default: false},
-    showControls: {default: true}
+    showControls: {default: true},
+    replaysCount: {default: 1}
   },
 
   init: function () {
@@ -75,6 +76,7 @@ AFRAME.registerComponent('song-controls', {
 
     this.songProgress = document.getElementById('songProgress');
     this.songSpeedPercent = document.getElementById('songSpeedPercent');
+    this.loadedUsersCount = 0;
   },
 
   update: function (oldData) {
@@ -157,14 +159,21 @@ AFRAME.registerComponent('song-controls', {
     });
 
     this.el.sceneEl.addEventListener('userloaded', evt => {
-      const player = evt.detail;
-      document.getElementById('playerAvatar').src = player.avatar;
-      document.getElementById('playerName').innerHTML = player.name;
-      document.getElementById('playerName').setAttribute('title', player.name);
-      document.getElementById('playerCountry').src = player.countryIcon;
-      document.getElementById('playerCountry').setAttribute('title', player.country);
-      document.getElementById('playerLink').setAttribute('href', "https://scoresaber.com/u/" + player.id);
-      document.getElementById('playerInfoOverlay').style.display = 'flex';
+      if (this.data.replaysCount == 1) {
+        const player = evt.detail;
+        document.getElementById('playerAvatar').src = player.avatar;
+        document.getElementById('playerName').innerHTML = player.name;
+        document.getElementById('playerName').setAttribute('title', player.name);
+        document.getElementById('playerCountry').src = player.countryIcon;
+        document.getElementById('playerCountry').setAttribute('title', player.country);
+        document.getElementById('playerLink').setAttribute('href', "https://scoresaber.com/u/" + player.id);
+        document.getElementById('playerInfoOverlay').style.display = 'flex';
+      } else {
+        this.loadedUsersCount++;
+        if (this.loadedUsersCount == this.data.replaysCount) {
+          this.setupPlayersBoard();
+        }
+      }
     });
 
     var timelineClicked = false, timelineHovered = false;
@@ -832,6 +841,125 @@ AFRAME.registerComponent('song-controls', {
         updateToggles();
       });
     });
+  },
+  setupPlayersBoard: function () {
+    const loader = this.el.sceneEl.components['replay-loader'];
+
+    
+    let usersContainer = document.getElementById('usersContainer');
+    let table = document.createElement('table')
+    table.className = 'usersTable'
+    table.style = "overflow: auto;"
+
+    usersContainer.append(table)
+
+    loader.users.forEach((user, index) => {
+      let tableBodyRow = document.createElement('tr')
+      tableBodyRow.className = 'tableBodyRow'
+      tableBodyRow.style.height = '60px';
+
+      const replay = loader.replays.find(el => el.info.playerID == user.id);
+      if (replay) {
+        tableBodyRow.style.backgroundColor = replay.color;
+        user.replay = replay;
+      } else {
+        this.el.sceneEl.addEventListener('replayfetched', (event) => {
+          if (event.detail.playerID == user.id) {
+            tableBodyRow.style.backgroundColor = event.detail.color;
+            user.replay = loader.replays.find(el => el.info.playerID == user.id);
+          }
+        });
+      }
+
+      let div = document.createElement('div');
+      div.style.display = 'flex';
+      div.style.alignItems = 'center';
+
+      let nameLabel = document.createElement('tb')
+      nameLabel.innerHTML = "<b>" + user.name + "</b>";
+      nameLabel.style.display = "inline";
+      nameLabel.style.color = "white";
+
+      let avatar = document.createElement('img')
+      avatar.src = user.avatar;
+      avatar.style.display = "inline";
+      avatar.style.width = "30px";
+      avatar.style.height = "30px";
+      avatar.style.margin = "5px";
+
+      let countryIcon = document.createElement('img')
+      countryIcon.src = user.countryIcon;
+      countryIcon.style.display = "inline";
+      countryIcon.style.margin = "5px";
+
+      div.append(avatar, nameLabel, countryIcon);
+
+      let div2 = document.createElement('div');
+      div2.style.display = 'flex';
+      div2.style.alignItems = 'center';
+      div2.style.justifyContent = 'space-between';
+
+      let scoreLabel = document.createElement('tb')
+      scoreLabel.innerHTML = "0";
+      scoreLabel.className = "scoreLabel";
+      scoreLabel.style.color = "white";
+      scoreLabel.style.margin = "5px";
+
+      let accLabel = document.createElement('tb')
+      accLabel.innerHTML = "100%";
+      accLabel.style.color = "white";
+      accLabel.style.margin = "5px";
+
+      div2.append(scoreLabel, accLabel);
+
+      tableBodyRow.append(div, div2);
+      table.append(tableBodyRow);
+
+      this.el.sceneEl.addEventListener('scoreChanged', (event) => {
+        if (user.replay) {
+          let note = user.replay.noteStructs[event.detail.index];
+
+          scoreLabel.innerHTML = "" + note.totalScore;
+          accLabel.innerHTML = "" + note.accuracy + "%";
+          this.sortTable();
+        }
+        
+      });
+    });
+  },
+  sortTable: function() {
+    var table, rows, switching, i, x, y, shouldSwitch;
+    table = document.querySelectorAll(".usersTable")[0];
+    switching = true;
+    /* Make a loop that will continue until
+    no switching has been done: */
+    while (switching) {
+      // Start by saying: no switching is done:
+      switching = false;
+      rows = table.rows;
+      /* Loop through all table rows (except the
+      first, which contains table headers): */
+      for (i = 1; i < (rows.length - 1); i++) {
+        // Start by saying there should be no switching:
+        shouldSwitch = false;
+        /* Get the two elements you want to compare,
+        one from current row and one from the next: */
+        x = rows[i].querySelectorAll(".scoreLabel")[0];
+        y = rows[i + 1].querySelectorAll(".scoreLabel")[0];
+        // Check if the two rows should switch place:
+        if (parseInt(x.innerHTML) < parseInt(y.innerHTML)) {
+          // If so, mark as a switch and break the loop:
+          shouldSwitch = true;
+          break;
+        }
+      }
+      if (shouldSwitch) {
+        /* If a switch has been marked, make the switch
+        and mark that a switch has been done: */
+        rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+        switching = true;
+      }
+    }
   }
 });
 

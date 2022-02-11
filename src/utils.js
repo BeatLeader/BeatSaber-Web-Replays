@@ -97,6 +97,15 @@ function signedAngle(from, to) {
   return angleBetween(from, to) * Math.sign((from.x * to.y - from.y * to.x));
 }
 
+function getRandomColor() {
+  var letters = '0123456789ABCDEF';
+  var color = '#';
+  for (var i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+}
+
 module.exports.beatsaverCdnCors = beatsaverCdnCors;
 module.exports.getHorizontalPosition = getHorizontalPosition;
 module.exports.getVerticalPosition = getVerticalPosition;
@@ -108,3 +117,4 @@ module.exports.mirrorDirection = mirrorDirection;
 module.exports.signedAngle = signedAngle;
 module.exports.clamp = clamp;
 module.exports.SWORD_OFFSET = SWORD_OFFSET;
+module.exports.getRandomColor = getRandomColor;

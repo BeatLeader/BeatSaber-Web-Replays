@@ -8,7 +8,8 @@ AFRAME.registerComponent('saber-controls', {
     hand: {default: 'right', oneOf: ['left', 'right']},
     isPaused: {default: false},
     strokeMinSpeed: {default: 0.002},
-    strokeMinDuration: {default: 40}
+    strokeMinDuration: {default: 40},
+    index: {default: 0}
   },
 
   init: function () {
@@ -57,6 +58,15 @@ AFRAME.registerComponent('saber-controls', {
     this.hitboxBladePreviousPosition = new THREE.Vector3();
     this.hitboxBladeTipPosition = new THREE.Vector3();
     this.hitboxBladePosition = new THREE.Vector3();
+
+    this.el.sceneEl.addEventListener('replayfetched', (e) => {
+      if (e.detail.index == this.data.index && e.detail.color) {
+        
+        this.el.querySelector('.saberHandle').setAttribute('material', 'color', e.detail.color);
+        this.el.querySelector('.saberglow').setAttribute('material', 'color', e.detail.color);
+      }
+    });
+    
 
     this.initBoxVars();
   },

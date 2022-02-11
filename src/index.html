@@ -74,7 +74,7 @@
       bind__beat-generator="difficulty: challenge.difficulty; mode: challenge.mode; isPlaying: isPlaying; beatSpeed: challenge.beatSpeed; noEffects: settings.noEffects"
       bind__pauser="enabled: isPlaying"
       bind__song="audio: challenge.audio; difficulty: challenge.difficulty; mode: challenge.mode; isPaused: isPaused; isFinished: isFinished; isPlaying: isPlaying; hasReceivedUserGesture: hasReceivedUserGesture; isBeatsPreloaded: challenge.isBeatsPreloaded"
-      bind__song-controls="difficulty: challenge.difficulty; mode: challenge.mode; isPlaying: isPlaying; songName: challenge.songName; songSubName: challenge.author; songImage: challenge.image; showControls: showControls; songId: challenge.id"
+      bind__song-controls="difficulty: challenge.difficulty; mode: challenge.mode; isPlaying: isPlaying; songName: challenge.songName; songSubName: challenge.author; songImage: challenge.image; showControls: showControls; songId: challenge.id; replaysCount: replaysCount"
       bind__zip-loader="difficulty: challenge.difficulty; id: challenge.id; isSafari: isSafari; mode: challenge.mode"
       bind__replay-loader="difficulty: challenge.difficulty; mode: challenge.mode"
       bind__intro-skip="difficulty: challenge.difficulty"
@@ -160,22 +160,24 @@
         id="sparkParticles"
         particleplayer="src: #sparksJSON; color: #fcc; pscale: 0.5; on: explode; scale: 0.12; loop: false; img: #spark2Img; dur: 700; count: 50%; animateScale: true; initialScale: 3 0.5 1; finalScale: 0.1 0.5 1"></a-entity>
 
+      {% for i in range(0, 9) %}
       <a-entity
         id="controllerRig"
         proxy-event="event: recentered; to: #headRig; captureBubbles: true; as: recenter">
-        {% macro saber (hand, otherHand, bladeColor, beamColor) %}
+        {% macro saber (hand, otherHand, bladeColor, beamColor, index) %}
           <a-entity id="{{ hand }}Hand"
             render-order="wall"
             class="saber"
+            bind__visible="replaysCount > {{ index }}"
             bind__pauser="enabled: isPlaying"
             bind__saber-controls="bladeEnabled: isPlaying; isPaused: isPaused; enabled: true"
-            bind__saber-particles="enabled: isPlaying"
+            bind__saber-particles="enabled: isPlaying && replaysCount > {{ index }}"
             bind__trail="enabled: isPlaying; trailType: settings.trailType; lifetime: settings.trailLength"
             bind__cut-plane="enabled: isPlaying"
-            bind__raycaster="enabled: isPlaying && !settings.noEffects"
+            bind__raycaster="enabled: isPlaying && !settings.noEffects && replaysCount > {{ index }}"
             raycaster="objects: [raycastable-game]; far: 1; interval: 50"
             saber-particles="hand: {{ hand }}"
-            saber-controls="hand: {{ hand }}"
+            saber-controls="hand: {{ hand }}; index: {{ index }}"
             trail="color: {{ bladeColor }}; hand: {{ hand }}"
             cut-plane="hand: {{ hand }}">
 
@@ -221,25 +223,12 @@
               </a-entity>
             </a-entity>
           </a-entity>
-
-          <!-- <a-entity
-            id="{{ hand }}CursorMesh"
-            mixin="cursorMesh"
-            bind__cursor-mesh="active: {{ hand }}RaycasterActive && !isPlaying"
-            cursor-mesh="cursorEl: #{{ hand }}Hand"
-            material="color: {{ beamColor }}"
-            scale="1.3 1.3 1.3"></a-entity> -->
         {% endmacro %}
 
-        {{ saber('left', 'right', '#ff0000', 'pink') }}
-        {{ saber('right', 'left', '#335aff', 'cyan') }}
+        {{ saber('left', 'right', '#ff0000', 'pink', i ) }}
+        {{ saber('right', 'left', '#335aff', 'cyan', i ) }}
       </a-entity>
-      <!-- <a-mixin
-        id="cursorMesh"
-        material="shader: flat; transparent: true; src: #cursorMeshImg; depthTest: false"
-        ></a-mixin> -->
-
-            <!-- Player. -->
+      {% endfor %}
       <a-entity id="defaultRig" class="floatingCamera">
         <a-entity id="mainCamera" class="mainCamera" position="0 1.75 2.0" camera="active: true" look-controls wasd-controls>
         </a-entity>

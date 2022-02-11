@@ -1,11 +1,12 @@
 const dragDrop = require('drag-drop');
 const DECODER_LINK = 'https://sspreviewdecode.azurewebsites.net'
 
-import {mirrorDirection} from '../utils';
+import {mirrorDirection, getRandomColor} from '../utils';
 
 AFRAME.registerComponent('replay-loader', {
     schema: {
       playerID: {default: (AFRAME.utils.getUrlParameter('playerID'))},
+      players: {default: (AFRAME.utils.getUrlParameter('players'))},
       link: {default: (AFRAME.utils.getUrlParameter('link'))},
       isSafari: {default: false},
       difficulty: {default: (AFRAME.utils.getUrlParameter('difficulty') || 'ExpertPlus' )},
@@ -13,19 +14,20 @@ AFRAME.registerComponent('replay-loader', {
     },
   
     init: function () {
-      this.replay = null;
-      this.user = null;
+      this.replays = [];
+      this.users = [];
     },
 
     update: function () {
       let captureThis = this;
       if (this.data.link.length) {
         setTimeout(() => this.fetchByFile(this.data.link, true), 300);
-      } else if (!this.data.playerID.length) {
+      } else if (!this.data.playerID.length && !this.data.players.length) {
         this.cleanup = dragDrop('#body', (files) => {
           this.fetchByFile(files[0]);
         });
       } else {
+        this.userIds = this.data.playerID.length ? [this.data.playerID] : this.data.players.split(",");
         document.addEventListener('songFetched', (e) => {
           captureThis.songFetched(e.detail.hash);
         });
@@ -63,32 +65,39 @@ AFRAME.registerComponent('replay-loader', {
       this.el.sceneEl.emit('replayloadstart', null);
       fetch(`/cors/score-saber/api/leaderboard/by-hash/${hash}/info?difficulty=${this.difficultyNumber(this.data.difficulty)}`, {referrer: "https://www.beatlooser.com"}).then(res => {
         res.json().then(leaderbord => {
-          fetch(`${DECODER_LINK}/?playerID=${this.data.playerID}&songID=${leaderbord.id}`).then(res => {
-            res.json().then(data => {
-              let replay = JSON.parse(data);
-              if (replay.frames) {
-                this.replay = replay;
-                this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: replay.info.difficulty }, null);
-                if (this.challenge) {
-                  this.processScores();
+          this.userIds.forEach((playerID, i) => {
+            fetch(`${DECODER_LINK}/?playerID=${playerID}&songID=${leaderbord.id}`).then(res => {
+              res.json().then(data => {
+                let replay = JSON.parse(data);
+                if (replay.frames) {
+                  replay.color = getRandomColor();
+                  replay.info.playerID = playerID;
+                  this.replays.push(replay);
+                  this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: replay.info.difficulty, index: i, color: replay.color, playerID }, null);
+                  if (this.challenge) {
+                    this.processScores(replay);
+                  }
+                } else {
+                  this.el.sceneEl.emit('replayloadfailed', { error: replay.errorMessage }, null);
                 }
-              } else {
-                this.el.sceneEl.emit('replayloadfailed', { error: replay.errorMessage }, null);
-              }
+              });
             });
           });
         });
       });
-      fetch(`/cors/score-saber/api/player/${this.data.playerID}/full`, {referrer: "https://www.beatlooser.com"}).then(res => {
-        res.json().then(data => {
-            this.user = data;
-            this.el.sceneEl.emit('userloaded', {
-              name: this.user.name, 
-              avatar: this.user.profilePicture.replace('https://cdn.scoresaber.com/', '/cors/score-saber-cdn/'),
-              country: this.user.country,
-              countryIcon: `/cors/score-saber/imports/images/flags/${this.user.country.toLowerCase()}.png`,
-              id: this.user.id
-            }, null);
+      this.userIds.forEach(playerID => {
+        fetch(`/cors/score-saber/api/player/${playerID}/full`, {referrer: "https://www.beatlooser.com"}).then(res => {
+          res.json().then(data => {
+              const user = {
+                name: data.name, 
+                avatar: data.profilePicture.replace('https://cdn.scoresaber.com/', '/cors/score-saber-cdn/'),
+                country: data.country,
+                countryIcon: `/cors/score-saber/imports/images/flags/${data.country.toLowerCase()}.png`,
+                id: data.id
+              };
+              this.users.push(user);
+              this.el.sceneEl.emit('userloaded', user, null);
+          });
         });
       });
     },
@@ -134,8 +143,7 @@ AFRAME.registerComponent('replay-loader', {
         });
       }
     },
-    processScores: function () {
-      const replay = this.replay;
+    processScores: function (replay) {
       var mapnotes = this.challenge.beatmaps[this.data.mode][this.data.difficulty]._notes;
       mapnotes = mapnotes.sort((a, b) => { return a._time - b._time; }).filter(a => a._type == 0 || a._type == 1);
 
@@ -261,17 +269,24 @@ AFRAME.registerComponent('replay-loader', {
           note.accuracy = i == 0 ? 0 : allStructs[i - 1].accuracy;
         }
       }
-      this.allStructs = allStructs;
-      this.notes = noteStructs;
-      this.bombs = bombStructs;
-      this.walls = wallStructs;
+      if (!this.allStructs) {
+        this.allStructs = allStructs;
+        this.notes = noteStructs;
+        this.bombs = bombStructs;
+        this.walls = wallStructs;
 
-      this.el.sceneEl.emit('replayloaded', { notes: allStructs}, null);
+        this.el.sceneEl.emit('replayloaded', { notes: allStructs}, null);
+      }
+
+      replay.noteStructs = allStructs;
     },
     challengeloadend: function(event) {
       this.challenge = event;
-      if (!this.notes && this.replay) {
-        this.processScores();
+      if (!this.notes && this.replays.length) {
+        this.replays.forEach(replay => {
+          this.processScores(replay);
+        });
+        
       }
     },
     maxScoreForNote(index) {

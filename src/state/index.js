@@ -171,10 +171,8 @@ AFRAME.registerState({
     },
 
     replayloaded: (state, payload) => {
-      if (state.notes == null) {
-        state.replay.isLoading = false;
-        state.notes = payload.notes;
-      }
+      state.replay.isLoading = !payload.allProcessed;
+      state.notes = payload.notes;
     },
 
     replayloadfailed: (state, payload) => {

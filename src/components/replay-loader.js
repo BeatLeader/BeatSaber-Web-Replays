@@ -277,13 +277,13 @@ AFRAME.registerComponent('replay-loader', {
         this.notes = noteStructs;
         this.bombs = bombStructs;
         this.walls = wallStructs;
-
-        this.el.sceneEl.emit('replayloaded', { notes: allStructs}, null);
       }
 
       replay.noteStructs = allStructs;
       this.processedScores++;
-      if (this.processedScores == this.replays.length) {
+
+      this.el.sceneEl.emit('replayloaded', { notes: allStructs, allProcessed: this.processedScores == this.userIds.length}, null);
+      if (this.processedScores == this.userIds.length) {
         this.noteCountForBattle = Math.round(this.allStructs.length / (this.replays.length - 1));
       }
     },

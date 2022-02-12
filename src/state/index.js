@@ -159,7 +159,7 @@ AFRAME.registerState({
       state.challenge.songSubName = payload.info._songSubName || payload.info._songAuthorName;
       state.challenge.songSubNameShort = truncate(state.challenge.songSubName, 21);
 
-      document.title = `Replay | ${state.player.name} | ${payload.info._songName}`;
+      document.title = `Replay | ${state.replaysCount > 1 ? 'Battle royale' : state.player.name} | ${payload.info._songName}`;
       state.challenge.isLoading = false;
     },
 

@@ -123,8 +123,8 @@ AFRAME.registerState({
 
       state.challenge.id = payload.id;
 
-      document.title = `Replay | ${state.player.name} | ${payload.metadata.songName}`;
-      document.querySelector('meta[name="description"]').setAttribute("content", `Replay | ${state.player.name} | ${payload.metadata.songName}`);
+      document.title = `Replay | ${state.replaysCount > 1 ? 'Battle royale' : state.player.name} | ${payload.metadata.songName}`;
+      document.querySelector('meta[name="description"]').setAttribute("content", `Replay | ${state.replaysCount > 1 ? 'Battle royale' : state.player.name} | ${payload.metadata.songName}`);
     },
 
     challengeloadstart: (state, payload) => {
@@ -185,8 +185,8 @@ AFRAME.registerState({
     userloaded: (state, payload) => {
       state.player = payload;
 
-      document.title = `Replay | ${state.player.name} | ${state.challenge.songName}`;
-      document.querySelector('meta[name="description"]').setAttribute("content", `Replay | ${state.player.name} | ${state.challenge.songName}`);
+      document.title = `Replay | ${state.replaysCount > 1 ? 'Battle royale' : state.player.name} | ${state.challenge.songName}`;
+      document.querySelector('meta[name="description"]').setAttribute("content", `Replay | ${state.replaysCount > 1 ? 'Battle royale' : state.player.name} | ${state.challenge.songName}`);
     },
 
     challengeloaderror: (state, payload) => {

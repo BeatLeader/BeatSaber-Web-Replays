@@ -933,9 +933,11 @@ AFRAME.registerComponent('song-controls', {
                 tableBodyRow.style.opacity = 0
                 leftSaberEl.object3D.visible = false;
                 leftSaberEl.components.trail.data.enabled = false;
+                leftSaberEl.components.trail.data.eliminated = true;
                 leftSaberEl.components.trail.mesh.visible = false;
                 rightSaberEl.object3D.visible = false;
                 rightSaberEl.components.trail.data.enabled = false;
+                rightSaberEl.components.trail.data.eliminated = true;
                 rightSaberEl.components.trail.mesh.visible = false;
               }
             } else {
@@ -943,9 +945,11 @@ AFRAME.registerComponent('song-controls', {
               if (!leftSaberEl.object3D.visible) {
                 tableBodyRow.style.opacity = 1
                 leftSaberEl.object3D.visible = true;
+                leftSaberEl.components.trail.data.eliminated = false;
                 leftSaberEl.components.trail.data.enabled = true;
                 leftSaberEl.components.trail.mesh.visible = true;
                 rightSaberEl.object3D.visible = true;
+                rightSaberEl.components.trail.data.eliminated = false;
                 rightSaberEl.components.trail.data.enabled = true;
                 rightSaberEl.components.trail.mesh.visible = true;
               }

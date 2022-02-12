@@ -172,6 +172,7 @@ AFRAME.registerComponent('trail', {
   schema: {
     color: {type: 'color'},
     enabled: {default: false},
+    eliminated: {default: false},
     hand: {type: 'string'},
     trailType: {default: 'bright'},
     index: {default: 0},
@@ -305,7 +306,7 @@ AFRAME.registerComponent('trail', {
     this.linearSegment = null;
     this.lastAddedNode = null;
 
-    if (!oldData.enabled && this.data.enabled) {
+    if (!oldData.enabled && this.data.enabled && !this.data.eliminated) {
       this.enabledTime = this.el.sceneEl.time;
       this.mesh.visible = false;
     }
@@ -316,7 +317,7 @@ AFRAME.registerComponent('trail', {
   },
 
   tick: function (time, delta) {
-    if (!this.data.enabled) {
+    if (!this.data.enabled || this.data.eliminated) {
       return;
     }
     // Delay before showing after enabled to prevent flash from old saber position.

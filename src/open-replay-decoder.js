@@ -1,7 +1,5 @@
-function isOpenReplay(file, isLink, completion) {
-
+function checkBSOR(file, isLink, completion) {
     var reader = new FileReader();
-
 	reader.onload = function(e) {
 		decode(e.target.result, completion);
 	};
@@ -10,6 +8,42 @@ function isOpenReplay(file, isLink, completion) {
 		completion('Error: ' + e.type);
 	};
 	reader.readAsArrayBuffer(file);
+}
+
+function ssReplayToBSOR(ssReplay) {
+    var result = {};
+    
+    result.info = ssReplay.info;
+    if (ssReplay.dynamicHeight) {
+        result.heights = ssReplay.dynamicHeight.map(el => ({time: el.a, height: el.h}));
+    }
+    
+    result.notes = [];
+    result.walls = [];
+    ssReplay.scores.forEach((score, i) => {
+        if (i < ssReplay.noteInfos.length) {
+            var note = {};
+            const info = ssReplay.noteInfos[i];
+            note.noteID = parseInt(info[0])*1000 + parseInt(info[1])*100 + parseInt(info[3])*10 + parseInt(info[2]);
+            note.eventTime = ssReplay.noteTime[i];
+            note.spawnTime = i;
+            note.eventType = score > 0 ? NoteEventType.good : score * -1 + 1;
+            note.score = score;
+            result.notes.push(note);
+        } else {
+            var wall = {};
+            wall.time = ssReplay.noteTime[i];
+            result.walls.push(wall);
+        }
+        
+    });
+    result.frames = ssReplay.frames;
+    result.frames.forEach(frame => {
+        frame.time = frame.a; 
+        frame.fps = frame.i;
+    });
+
+    return result;
 }
 
 const StructType = {
@@ -78,7 +112,10 @@ function DecodeInfo(dataView) {
     result.playerID = DecodeString(dataView);
     result.playerName = DecodeString(dataView);
     result.platform = DecodeString(dataView);
+
+    result.trackingSystem = DecodeString(dataView);
     result.hmd = DecodeString(dataView);
+    result.controller = DecodeString(dataView);
 
     result.hash = DecodeString(dataView);
     result.songName = DecodeString(dataView);
@@ -278,5 +315,6 @@ function DecodeBool(dataView)
 }
 
 
-module.exports.isOpenReplay = isOpenReplay;
+module.exports.checkBSOR = checkBSOR;
+module.exports.ssReplayToBSOR = ssReplayToBSOR;
 module.exports.NoteEventType = NoteEventType;

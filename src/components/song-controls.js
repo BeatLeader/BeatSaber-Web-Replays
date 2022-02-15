@@ -23,7 +23,8 @@ AFRAME.registerComponent('song-controls', {
     songImage: {default: ''},
     songId: {default: ''},
     isPlaying: {default: false},
-    showControls: {default: true}
+    showControls: {default: true},
+    isSafari: {default: false}
   },
 
   init: function () {
@@ -492,10 +493,19 @@ AFRAME.registerComponent('song-controls', {
 
     const toggleFullscreen = () => {
       if (fullscreen.classList.contains("inFullscreen")) {
-        document.exitFullscreen();
+        if (this.data.isSafari) {
+          document.webkitCancelFullScreen();
+        } else {
+          document.exitFullscreen();
+        }
         fullscreenHandler(false);
       } else {
-        document.body.requestFullscreen();
+        if (this.data.isSafari) {
+          document.body.webkitRequestFullScreen();
+        } else {
+          document.body.requestFullscreen();
+        }
+        
         fullscreenHandler(true);
       }
     }

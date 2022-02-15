@@ -7,7 +7,6 @@ AFRAME.registerComponent('zip-loader', {
   schema: {
     id: {default: AFRAME.utils.getUrlParameter('id')},
     hash: {default: AFRAME.utils.getUrlParameter('hash')},
-    isSafari: {default: false},
     difficulty: {default: (AFRAME.utils.getUrlParameter('difficulty') || 'ExpertPlus')},
     mode: {default: AFRAME.utils.getUrlParameter('mode') || 'Standard'}
   },

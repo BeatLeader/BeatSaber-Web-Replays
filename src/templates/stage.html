@@ -1,9 +1,3 @@
-<a-entity
-  id="audioAnalyser"
-  bind__audioanalyser="beatDetectionThrottle: menuActive && 5000 || 1000"
-  audioanalyser="src: #introSong; fftSize: 64; enableBeatDetection: true; enableLevels: false; enableWaveform: false; beatDetectionThrottle: 5000; unique: true; isSafari: isSafari"
-  proxy-event="event: audioanalyserbeat; to: #logolight"></a-entity>
-
 <a-entity id="stage">
   <a-entity
     id="audioColumns"

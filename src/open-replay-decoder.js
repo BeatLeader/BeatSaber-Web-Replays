@@ -14,7 +14,7 @@ function checkBSOR(file, isLink, completion) {
             completion(null);
         }
     } else {
-        checkBSORFile(file);
+        checkBSORFile(file, completion);
     }
 }
 

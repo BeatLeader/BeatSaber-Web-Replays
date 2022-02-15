@@ -85,7 +85,7 @@ AFRAME.registerComponent('replay-loader', {
     fetchByFile: function (file, itsLink) {
       this.el.sceneEl.emit('replayloadstart', null);
       checkBSOR(file, itsLink, (replay) => {
-        if (replay) {
+        if (replay && replay.frames) {
           this.replay = replay;
           this.fetchPlayer(replay.info.playerID);
           this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: this.difficultyNumber(replay.info.difficulty), mode: replay.info.mode }, null);

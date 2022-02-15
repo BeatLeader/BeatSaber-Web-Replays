@@ -1,4 +1,24 @@
 function checkBSOR(file, isLink, completion) {
+    if (isLink) {
+        if (file.split(".").pop() == "bsor") {
+            file = file.replace('https://cdn.discordapp.com/', '/cors/discord-cdn/');
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', file, true);
+            xhr.responseType = 'blob';
+
+            xhr.onload = function () {
+                checkBSORFile(xhr.response, completion);
+            };
+            xhr.send();
+        } else {
+            completion(null);
+        }
+    } else {
+        checkBSORFile(file);
+    }
+}
+
+function checkBSORFile(file, completion) {
     var reader = new FileReader();
 	reader.onload = function(e) {
 		decode(e.target.result, completion);

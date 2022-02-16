@@ -109,7 +109,7 @@ AFRAME.registerComponent('replay-loader', {
           if (replay.frames) {
             this.replay = replay;
             this.cleanup && this.cleanup();
-            this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: replay.info.difficulty }, null);
+            this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: replay.info.difficulty, mode: replay.info.mode  }, null);
             if (this.challenge) {
               this.processScores();
             }

@@ -16,9 +16,7 @@ AFRAME.registerComponent('replay-loader', {
     init: function () {
       this.replay = null;
       this.user = null;
-    },
 
-    update: function () {
       let captureThis = this;
       if (this.data.link.length) {
         setTimeout(() => this.fetchByFile(this.data.link, true), 300);

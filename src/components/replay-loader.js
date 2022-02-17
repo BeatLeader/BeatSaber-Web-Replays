@@ -95,7 +95,7 @@ AFRAME.registerComponent('replay-loader', {
                 name: data.name, 
                 avatar: data.profilePicture.replace('https://cdn.scoresaber.com/', '/cors/score-saber-cdn/'),
                 country: data.country,
-                countryIcon: `/cors/score-saber/imports/images/flags/${data.country.toLowerCase()}.png`,
+                countryIcon: `https://www.cdn.beatleader.xyz/flags/${data.country.toLowerCase()}.png`,
                 id: data.id
               };
               this.users.push(user);
@@ -139,7 +139,7 @@ AFRAME.registerComponent('replay-loader', {
                 name: this.user.name, 
                 avatar: this.user.profilePicture.replace('https://cdn.scoresaber.com/', '/cors/score-saber-cdn/'),
                 country: this.user.country,
-                countryIcon: `/cors/score-saber/imports/images/flags/${this.user.country.toLowerCase()}.png`,
+                countryIcon: `https://www.cdn.beatleader.xyz/flags/${this.user.country.toLowerCase()}.png`,
                 id: this.user.id
               }, null);
           });

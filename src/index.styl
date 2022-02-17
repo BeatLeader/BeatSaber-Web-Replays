@@ -418,9 +418,12 @@ html
   &:hover
     background-position 0 -25px
 
-.github-corner
-  opacity 1
-  transition .1s opacity
+.discord-link
+  transition: 0.6s top, 0.6s right;
+  -webkit-transition: 0.6s top, 0.6s right;
+  -moz-transition: 0.6s top, 0.6s right;
+  -ms-transition: 0.6s top, 0.6s right;
+  -o-transition: 0.6s top, 0.6s right;
 
 .playerTableRow
   -webkit-transition: opacity 0.5s;
@@ -478,8 +481,9 @@ html
         align-items center
 
 .isPlaying
-  .github-corner
-    opacity 0
+  .discord-link
+    top: -80px !important
+    right -80px !important 
   #controls,
   #controls #pause
     opacity 1

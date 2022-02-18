@@ -550,11 +550,15 @@ AFRAME.registerComponent('song-controls', {
     });
     this.el.sceneEl.addEventListener('jdCalculated', (e) => {
       const newJD = e.detail.jd;
-      const newJDString = "" + newJD.toFixed(2);
 
-      jd.value = newJD;
-      jdLabel.innerHTML = newJDString;
-      if (e.detail.defaultJd) {
+      if (newJD != null) {
+        const newJDString = "" + newJD.toFixed(2);
+
+        jd.value = newJD;
+        jdLabel.innerHTML = newJDString;
+      }
+      
+      if (e.detail.defaultJd != null) {
         const percent = ((e.detail.defaultJd - jd.min) / (jd.max - jd.min)) * 100;
         jdPoint.attributes.x.value = percent * 0.9 + (50 - percent) / 5 - 10 + "%";
         jdPoint.innerHTML = "" + e.detail.defaultJd.toFixed(2);

@@ -4,10 +4,14 @@ import {get2DNoteOffset, directionVector, NoteCutDirection, signedAngle, SWORD_O
 let skipDebug = AFRAME.utils.getUrlParameter('skip') || 0;
 skipDebug = parseInt(skipDebug, 10);
 
-let queryJD = AFRAME.utils.getUrlParameter('jd') || -1;
-queryJD = parseFloat(queryJD);
-if (queryJD < 5 || queryJD > 50) {
-  queryJD = -1;
+let queryJD = AFRAME.utils.getUrlParameter('jd');
+if (queryJD.length == 0) {
+  queryJD = null;
+} else {
+  queryJD = parseFloat(queryJD);
+  if (queryJD < 5 || queryJD > 50) {
+    queryJD = null;
+  }
 }
 
 const RIDICULOUS_MAP_EX_CONSTANT = 4001;
@@ -81,6 +85,11 @@ AFRAME.registerComponent('beat-generator', {
     this.el.addEventListener('songprocessingfinish', evt => {
       this.beatsTime = 0;
     });
+    this.el.addEventListener('replayfetched', evt => {
+      if (evt.detail.jd != null) {
+        this.updateJD(evt.detail.jd);
+      }
+    });
   },
 
   update: function (oldData) {
@@ -110,7 +119,8 @@ AFRAME.registerComponent('beat-generator', {
     this.beatOffset = this.beatOffsets[this.data.mode][this.data.difficulty];
     this.bpm = this.info._beatsPerMinute;
 
-    this.updateJD(queryJD, false);
+    this.updateJD(queryJD, true);
+    
     this.beatsPreloadTimeTotal =
       (this.beatAnticipationTime + this.data.beatWarmupTime) * 1000;
 
@@ -450,22 +460,27 @@ AFRAME.registerComponent('beat-generator', {
       return halfjump;
   },
 
-  updateJD: function (newJD, updateChildren = true) {
+  updateJD: function (newJD, itsDefault = false) {
     const defaultJT = this.calculateJumpTime(this.bpm, this.beatSpeed, this.beatOffset);
     const defaultJD = (60 / this.bpm) * defaultJT * this.beatSpeed * 2;
     
-    var jt;
-    if (newJD != -1) {
+    var jt, jd;
+    if (newJD != null) {
       jt = ((newJD / (60 / this.bpm)) / this.beatSpeed) / 2;
-      this.jd = newJD;
+      jd = newJD;
     } else {
       jt = defaultJT;
-      this.jd = defaultJD;
+      jd = defaultJD;
     }
-    this.el.sceneEl.emit('jdCalculated', {jd: this.jd, defaultJd: !updateChildren ? defaultJD : null}, false);
-    this.beatAnticipationTime = (60 / this.bpm) * jt;
 
-    if (updateChildren) {
+    if (!itsDefault || this.beatAnticipationTime == null) {
+      this.beatAnticipationTime = (60 / this.bpm) * jt;
+      this.el.sceneEl.emit('jdCalculated', {jd, defaultJd: itsDefault ? defaultJD : null}, false);
+    } else if (itsDefault) {
+      this.el.sceneEl.emit('jdCalculated', {defaultJd: defaultJD}, false);
+    }
+
+    if (!itsDefault) {
       for (let i = 0; i < this.beatContainer.children.length; i++) {
         let child = this.beatContainer.children[i];
         if (child.components.beat) {

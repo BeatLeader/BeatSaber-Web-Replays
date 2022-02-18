@@ -86,7 +86,7 @@ AFRAME.registerComponent('replay-loader', {
         if (replay && replay.frames) {
           this.replay = replay;
           this.fetchPlayer(replay.info.playerID);
-          this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: this.difficultyNumber(replay.info.difficulty), mode: replay.info.mode }, null);
+          this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: this.difficultyNumber(replay.info.difficulty), mode: replay.info.mode, jd: replay.info.jumpDistance }, null);
         } else {
           this.fetchSSFile(file, itsLink);
         }

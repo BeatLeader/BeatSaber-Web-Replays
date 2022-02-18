@@ -137,9 +137,7 @@ AFRAME.registerState({
       state.challenge.audio = payload.audio;
       state.challenge.author = payload.info._levelAuthorName;
 
-      const mode = state.challenge.mode = payload.beatmaps.Standard
-        ? 'Standard'
-        : Object.keys(payload.beatmaps)[0];
+      const mode = payload.mode;
       state.challenge.difficulties = difficulties[mode];
 
       if (!state.challenge.difficulty || !payload.beatmaps[mode][state.challenge.difficulty]) {

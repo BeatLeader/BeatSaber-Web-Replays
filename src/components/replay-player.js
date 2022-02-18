@@ -49,31 +49,31 @@ AFRAME.registerComponent('replay-player', {
           const currentTime = this.song.getCurrentTime();
           const frames = this.replayDecoder.replay.frames;
           var frameIndex = 0;
-          while (frameIndex < frames.length - 2 && frames[frameIndex + 1].a < currentTime) {
+          while (frameIndex < frames.length - 2 && frames[frameIndex + 1].time < currentTime) {
             frameIndex++;
           }
           const frame = frames[frameIndex];
           const nextFrame = frames[frameIndex + 1];
           
-          if (frame.a == 0 && nextFrame.a == 0) return;
+          if (frame.time == 0 && nextFrame.time == 0) return;
 
-          this.fpsCounter.replayFps = frame.i;
+          this.fpsCounter.replayFps = frame.fps;
           this.firstSaberControl.frameIndex = frameIndex;
           this.secondSaberControl.frameIndex = frameIndex;
 
           var replayHeight;
-          if (replay.dynamicHeight.length) {
+          if (replay.heights.length) {
             var heightFrameIndex = 0;
-            while (heightFrameIndex < replay.dynamicHeight.length - 2 && replay.dynamicHeight[heightFrameIndex + 1].a < currentTime) {
+            while (heightFrameIndex < replay.heights.length - 2 && replay.heights[heightFrameIndex + 1].time < currentTime) {
               heightFrameIndex++;
             }
-            replayHeight = replay.dynamicHeight[heightFrameIndex].h;
+            replayHeight = replay.dynamicHeight[heightFrameIndex].height;
           } else {
             replayHeight = replay.info.height;
           }
     
           let height = clamp((replayHeight - 1.8) * 0.5, -0.2, 0.6);
-          let slerpValue = (currentTime - frame.a) / Math.max(1E-06, nextFrame.a - frame.a);
+          let slerpValue = (currentTime - frame.time) / Math.max(1E-06, nextFrame.time - frame.time);
 
           if (replay.info.leftHanded) {
             this.leftHandedTock(frame, nextFrame, height, slerpValue, delta / 1000);
@@ -106,7 +106,7 @@ AFRAME.registerComponent('replay-player', {
           const euler = this.euler;
           const q1 = this.q1;
           const q2 = this.q2;
-
+          
           q1.set(frame.l.r.w, frame.l.r.z, frame.l.r.y, frame.l.r.x); q2.set(nextFrame.l.r.w, nextFrame.l.r.z, nextFrame.l.r.y, nextFrame.l.r.x);
           let lrotation = euler.setFromQuaternion(q1);
           leftHitboxSaber.rotation.set(lrotation.x, lrotation.y + Math.PI, -lrotation.z)

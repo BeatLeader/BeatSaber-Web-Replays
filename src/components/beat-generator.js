@@ -87,7 +87,11 @@ AFRAME.registerComponent('beat-generator', {
     });
     this.el.addEventListener('replayfetched', evt => {
       if (evt.detail.jd != null) {
-        this.updateJD(evt.detail.jd);
+        if (this.bpm) {
+          this.updateJD(evt.detail.jd);
+        } else {
+          this.jdToSet = evt.detail.jd;
+        }
       }
     });
   },
@@ -120,6 +124,9 @@ AFRAME.registerComponent('beat-generator', {
     this.bpm = this.info._beatsPerMinute;
 
     this.updateJD(queryJD, true);
+    if (this.jdToSet) {
+      this.updateJD(this.jdToSet);
+    }
     
     this.beatsPreloadTimeTotal =
       (this.beatAnticipationTime + this.data.beatWarmupTime) * 1000;

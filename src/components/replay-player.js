@@ -67,7 +67,7 @@ AFRAME.registerComponent('replay-player', {
             while (heightFrameIndex < replay.heights.length - 2 && replay.heights[heightFrameIndex + 1].time < currentTime) {
               heightFrameIndex++;
             }
-            replayHeight = replay.dynamicHeight[heightFrameIndex].height;
+            replayHeight = replay.heights[heightFrameIndex].height;
           } else {
             replayHeight = replay.info.height;
           }

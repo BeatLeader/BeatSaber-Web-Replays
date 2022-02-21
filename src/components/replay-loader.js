@@ -196,6 +196,10 @@ AFRAME.registerComponent('replay-loader', {
 
             if (replaynote.id == id) {
                 replaynote.index = group[j];
+                replaynote.colorType = colorType;
+                replaynote.lineIndex = lineIndex;
+                replaynote.cutDirection = cutDirection;
+                replaynote.lineLayer = lineLayer;
                 break;
             }
           }

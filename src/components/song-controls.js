@@ -387,14 +387,21 @@ AFRAME.registerComponent('song-controls', {
     const copyURL = (target, time) => {
       let input = document.createElement('input');
       target.appendChild(input);
-      let songParam = (AFRAME.utils.getUrlParameter('id') ? `?id=${AFRAME.utils.getUrlParameter('id')}` : `?hash=${AFRAME.utils.getUrlParameter('hash')}`);
+      
       let jdParam = "";
       if (this.jdChanged) {
         jdParam = "&jd=" + document.getElementById('jdLabel').innerHTML;
       } else if (AFRAME.utils.getUrlParameter('jd') ) {
         jdParam = "&jd=" + AFRAME.utils.getUrlParameter('jd');
       }
-      let base = location.protocol + "//" + location.host + "/" + `${songParam}&playerID=${AFRAME.utils.getUrlParameter('playerID')}&difficulty=${AFRAME.utils.getUrlParameter('difficulty')}${jdParam}`
+      let baseParams = "";
+      if (AFRAME.utils.getUrlParameter('link')) {
+        baseParams = `?link=${AFRAME.utils.getUrlParameter('link')}${jdParam}`
+      } else {
+        let songParam = (AFRAME.utils.getUrlParameter('id') ? `?id=${AFRAME.utils.getUrlParameter('id')}` : `?hash=${AFRAME.utils.getUrlParameter('hash')}`);
+        baseParams = `${songParam}&playerID=${AFRAME.utils.getUrlParameter('playerID')}&difficulty=${AFRAME.utils.getUrlParameter('difficulty')}${jdParam}`;
+      }
+      let base = location.protocol + "//" + location.host + "/" + baseParams;
       input.value = base + (time ? `&time=${Math.round(this.song.getCurrentTime()*1000)}&speed=${Math.round(this.song.speed * 100)}` : "" );
       input.select();
       document.execCommand("copy");

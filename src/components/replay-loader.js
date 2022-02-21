@@ -63,8 +63,9 @@ AFRAME.registerComponent('replay-loader', {
         res.json().then(leaderbord => {
           fetch(`${DECODER_LINK}/?playerID=${this.data.playerID}&songID=${leaderbord.id}`).then(res => {
             res.json().then(data => {
-              let replay = ssReplayToBSOR(JSON.parse(data));
+              let replay = JSON.parse(data);
               if (replay.frames) {
+                replay = ssReplayToBSOR(replay);
                 this.replay = replay;
                 this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: replay.info.difficulty, mode: replay.info.mode }, null);
                 if (this.challenge) {

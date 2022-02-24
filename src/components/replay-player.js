@@ -34,12 +34,16 @@ AFRAME.registerComponent('replay-player', {
 
         this.q1 = new THREE.Quaternion();
         this.q2 = new THREE.Quaternion();
+
+        this.el.sceneEl.addEventListener('replayfetched', (e) => {
+          if (e.detail.color) {
+            this.headsets[e.detail.index].setAttribute('material', 'color', e.detail.color);
+          }
+        });
     },
 
     play: function () {
-      this.headset = this.el.sceneEl.querySelectorAll('.headset')[0];
-      this.headset.object3D.position.y = 1.75;
-
+      this.headsets = this.el.sceneEl.querySelectorAll('.headset');
       this.povCameraRig = this.el.sceneEl.querySelectorAll('.headCamera')[0];
     },
 
@@ -93,7 +97,7 @@ AFRAME.registerComponent('replay-player', {
           const rightSaber = this.saberEls[index * 2 + 1].object3D;
           const leftHitboxSaber = this.firstSaberControl.hitboxSaber;
           const rightHitboxSaber = this.secondSaberControl.hitboxSaber;
-          const headset = this.headset.object3D;
+          const headset = this.headsets[index].object3D;
 
           const v1 = this.v1;
           const v2 = this.v2;
@@ -162,7 +166,7 @@ AFRAME.registerComponent('replay-player', {
           const rightSaber = this.saberEls[index * 2 + 1].object3D;
           const leftHitboxSaber = this.firstSaberControl.hitboxSaber;
           const rightHitboxSaber = this.secondSaberControl.hitboxSaber;
-          const headset = this.headset.object3D;
+          const headset = this.headsets[index].object3D;
           const povCamera = this.povCameraRig.object3D;
 
           const v1 = this.v1;

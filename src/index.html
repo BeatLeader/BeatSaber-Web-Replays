@@ -242,14 +242,17 @@
         proxy-event__wallhitend="event: hitend; to: a-scene; as: wallhitend">
         </a-entity>
       </a-entity>
+
+      {% for i in range(0, 10) %}
       <a-entity 
-        id="head" 
+        id="head{{ i }}" 
         class="headset"
         obj-model="obj: #questObj"
         bind__visible="isPlaying && settings.showHeadset && !pov"
+        material="shader: flat; color: #ff0000; opacity: 0.3"
         position="0 1.7 0.0">
-        </a-entity>
       </a-entity>
+      {% endfor %}
 
       <a-entity 
         id="orthographicBack" 

@@ -860,7 +860,7 @@ AFRAME.registerComponent('song-controls', {
     loader.users.forEach((user, index) => {
       let tableBodyRow = document.createElement('tr')
       tableBodyRow.className = 'playerTableRow'
-      tableBodyRow.style.height = '60px';
+      tableBodyRow.style.height = '40px';
 
       const replay = loader.replays.find(el => el && el.info.playerID == user.id);
       if (replay) {
@@ -887,14 +887,16 @@ AFRAME.registerComponent('song-controls', {
       let avatar = document.createElement('img')
       avatar.src = user.avatar;
       avatar.style.display = "inline";
-      avatar.style.width = "30px";
-      avatar.style.height = "30px";
-      avatar.style.margin = "5px";
+      avatar.style.width = "20px";
+      avatar.style.height = "20px";
+      avatar.style.margin = "3px";
 
       let countryIcon = document.createElement('img')
       countryIcon.src = user.countryIcon;
       countryIcon.style.display = "inline";
       countryIcon.style.margin = "5px";
+      countryIcon.style.width = "15px"
+      countryIcon.style.height = "11px"
 
       div.append(avatar, nameLabel, countryIcon);
 
@@ -907,12 +909,12 @@ AFRAME.registerComponent('song-controls', {
       scoreLabel.innerHTML = "0";
       scoreLabel.className = "scoreLabel";
       scoreLabel.style.color = "white";
-      scoreLabel.style.margin = "5px";
+      scoreLabel.style.margin = "2px";
 
       let accLabel = document.createElement('tb')
       accLabel.innerHTML = "100%";
       accLabel.style.color = "white";
-      accLabel.style.margin = "5px";
+      accLabel.style.margin = "2px";
 
       div2.append(scoreLabel, accLabel);
 

@@ -849,6 +849,7 @@ AFRAME.registerComponent('song-controls', {
   setupPlayersBoard: function () {
     const loader = this.el.sceneEl.components['replay-loader'];
     const saberEls = this.el.sceneEl.querySelectorAll('[saber-controls]');
+    const headsets = this.el.sceneEl.querySelectorAll('.headset');
 
     let usersContainer = document.getElementById('usersContainer');
     let table = document.createElement('table')
@@ -924,6 +925,7 @@ AFRAME.registerComponent('song-controls', {
       this.el.sceneEl.addEventListener('scoreChanged', (event) => {
         if (user.replay) {
           let note = user.replay.noteStructs[event.detail.index];
+          let headset = headsets[user.replay.index];
           if (disabledRoyale) {
             scoreLabel.innerHTML = "" + note.totalScore;
           } else {
@@ -941,6 +943,8 @@ AFRAME.registerComponent('song-controls', {
                 rightSaberEl.components.trail.data.enabled = false;
                 rightSaberEl.components.trail.data.eliminated = true;
                 rightSaberEl.components.trail.mesh.visible = false;
+                headset.object3D.visible = false;
+                
               }
             } else {
               scoreLabel.innerHTML = "" + note.totalScore;
@@ -954,6 +958,7 @@ AFRAME.registerComponent('song-controls', {
                 rightSaberEl.components.trail.data.eliminated = false;
                 rightSaberEl.components.trail.data.enabled = true;
                 rightSaberEl.components.trail.mesh.visible = true;
+                headset.object3D.visible = true;
               }
             }
           }

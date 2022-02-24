@@ -149,6 +149,7 @@ AFRAME.registerComponent('replay-loader', {
       for (var i = 0; i < replay.notes.length; i++) {
         const info = replay.notes[i];
         let note = {
+          eventType: info.eventType,
           cutInfo: info.noteCutInfo,
           spawnTime: info.spawnTime,
           time: info.eventTime,

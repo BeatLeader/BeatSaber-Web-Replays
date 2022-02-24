@@ -44,10 +44,14 @@ function ssReplayToBSOR(ssReplay) {
         if (i < ssReplay.noteInfos.length) {
             var note = {};
             const info = ssReplay.noteInfos[i];
-            note.noteID = parseInt(info[0])*1000 + parseInt(info[1])*100 + parseInt(info[3])*10 + parseInt(info[2]);
+            var noteType = parseInt(info[3]);
+            if (isNaN(noteType)) {
+                noteType = 3;
+            }
+            note.noteID = parseInt(info[0])*1000 + parseInt(info[1])*100 + noteType*10 + parseInt(info[2]);
             note.eventTime = ssReplay.noteTime[i];
             note.spawnTime = i;
-            note.eventType = score > 0 ? NoteEventType.good : score * -1 + 1;
+            note.eventType = score > 0 ? NoteEventType.good : (score + 1) * -1;
             note.score = score;
             result.notes.push(note);
         } else {
@@ -315,8 +319,8 @@ function DecodeString(dataView)
 {
     const length = dataView.getInt32(dataView.pointer, true);
     var enc = new TextDecoder("utf-8");
-    const string = enc.decode(new Int8Array(dataView.buffer.slice(dataView.pointer + 5, length + dataView.pointer + 5)));
-    dataView.pointer += length + 5;
+    const string = enc.decode(new Int8Array(dataView.buffer.slice(dataView.pointer + 4, length + dataView.pointer + 4)));
+    dataView.pointer += length + 4;
     return string;
 }
 

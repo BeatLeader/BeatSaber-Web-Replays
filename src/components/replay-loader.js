@@ -26,7 +26,7 @@ AFRAME.registerComponent('replay-loader', {
         });
       } else {
         document.addEventListener('songFetched', (e) => {
-          captureThis.downloadSSReplay(e.detail.hash);
+          captureThis.downloadReplay(e.detail.hash);
         });
       }
 
@@ -57,8 +57,36 @@ AFRAME.registerComponent('replay-loader', {
       }
     },
 
-    downloadSSReplay: function (hash) {
+    downloadReplay: function (hash) {
       this.el.sceneEl.emit('replayloadstart', null);
+      fetch(`https://api.beatleader.xyz/score/${this.data.playerID}/${hash}/${this.data.difficulty}/${this.data.mode}`).then(response => response.json()).then(data => {
+        if (data.playerId) {
+          checkBSOR(data.replay, true, (replay) => {
+            if (replay && replay.frames) {
+              this.replay = replay;
+              this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: this.difficultyNumber(replay.info.difficulty), mode: replay.info.mode, jd: replay.info.jumpDistance }, null);
+              if (this.challenge) {
+                this.processScores();
+              }
+            } else {
+              this.el.sceneEl.emit('replayloadfailed', { error: replay.errorMessage }, null);
+            }
+          });
+          this.user = data.player;
+            this.el.sceneEl.emit('userloaded', {
+              name: this.user.name, 
+              avatar: this.user.avatar,
+              country: this.user.country,
+              countryIcon: `https://cdn.beatleader.xyz/flags/${this.user.country.toLowerCase()}.png`,
+              id: this.user.id
+            }, null);
+        } else {
+          downloadSSReplay(hash);
+        }
+      })
+    },
+
+    downloadSSReplay: function (hash) {
       fetch(`/cors/score-saber/api/leaderboard/by-hash/${hash}/info?difficulty=${this.difficultyNumber(this.data.difficulty)}`, {referrer: "https://www.beatlooser.com"}).then(res => {
         res.json().then(leaderbord => {
           fetch(`${DECODER_LINK}/?playerID=${this.data.playerID}&songID=${leaderbord.id}`).then(res => {

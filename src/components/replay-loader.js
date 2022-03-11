@@ -63,10 +63,14 @@ AFRAME.registerComponent('replay-loader', {
         if (data.playerId) {
           checkBSOR(data.replay, true, (replay) => {
             if (replay && replay.frames) {
-              this.replay = replay;
-              this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: this.difficultyNumber(replay.info.difficulty), mode: replay.info.mode, jd: replay.info.jumpDistance }, null);
-              if (this.challenge) {
-                this.processScores();
+              if (replay.frames.length == 0) {
+                this.el.sceneEl.emit('replayloadfailed', { error: "Replay broken, redownload and reinstall mod, please" }, null);
+              } else {
+                this.replay = replay;
+                this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: this.difficultyNumber(replay.info.difficulty), mode: replay.info.mode, jd: replay.info.jumpDistance }, null);
+                if (this.challenge) {
+                  this.processScores();
+                }
               }
             } else {
               this.el.sceneEl.emit('replayloadfailed', { error: replay.errorMessage }, null);

@@ -59,9 +59,11 @@ AFRAME.registerComponent('replay-loader', {
 
     downloadReplay: function (hash) {
       this.el.sceneEl.emit('replayloadstart', null);
-      fetch(`https://api.beatleader.xyz/score/${this.data.playerID}/${hash}/${this.data.difficulty}/${this.data.mode}`).then(response => response.json()).then(data => {
-        if (data.playerId) {
-          checkBSOR(data.replay, true, (replay) => {
+      fetch(`https://api.beatleader.xyz/score/${this.data.playerID}/${hash}/${this.data.difficulty}/${this.data.mode}`)
+      .then(async response => {
+        let data = response.status == 200 ? await response.json() : null;
+        if (data && data.playerId) {
+          checkBSOR(data.replay.replace("cdn.beatleader.xyz", "beatleader3.azureedge.net"), true, (replay) => {
             if (replay && replay.frames) {
               if (replay.frames.length == 0) {
                 this.el.sceneEl.emit('replayloadfailed', { error: "Replay broken, redownload and reinstall mod, please" }, null);
@@ -79,13 +81,13 @@ AFRAME.registerComponent('replay-loader', {
           this.user = data.player;
             this.el.sceneEl.emit('userloaded', {
               name: this.user.name, 
-              avatar: this.user.avatar,
+              avatar: this.user.avatar.replace("cdn.beatleader.xyz", "beatleader3.azureedge.net"),
               country: this.user.country,
-              countryIcon: `https://cdn.beatleader.xyz/flags/${this.user.country.toLowerCase()}.png`,
+              countryIcon: `https://beatleader3.azureedge.net/flags/${this.user.country.toLowerCase()}.png`,
               id: this.user.id
             }, null);
         } else {
-          downloadSSReplay(hash);
+          this.downloadSSReplay(hash);
         }
       })
     },

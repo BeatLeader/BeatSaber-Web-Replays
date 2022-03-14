@@ -63,7 +63,7 @@ AFRAME.registerComponent('replay-loader', {
       .then(async response => {
         let data = response.status == 200 ? await response.json() : null;
         if (data && data.playerId) {
-          checkBSOR(data.replay.replace("cdn.beatleader.xyz", "beatleader3.azureedge.net"), true, (replay) => {
+          checkBSOR(data.replay, true, (replay) => {
             if (replay && replay.frames) {
               if (replay.frames.length == 0) {
                 this.el.sceneEl.emit('replayloadfailed', { error: "Replay broken, redownload and reinstall mod, please" }, null);
@@ -81,9 +81,10 @@ AFRAME.registerComponent('replay-loader', {
           this.user = data.player;
             this.el.sceneEl.emit('userloaded', {
               name: this.user.name, 
-              avatar: this.user.avatar.replace("cdn.beatleader.xyz", "beatleader3.azureedge.net"),
+              avatar: this.user.avatar,
               country: this.user.country,
-              countryIcon: `https://beatleader3.azureedge.net/flags/${this.user.country.toLowerCase()}.png`,
+              countryIcon: `https://cdn.beatleader.xyz/flags/${this.user.country.toLowerCase()}.png`,
+              profileLink: `https://beatleader.xyz/u/${this.user.id}`, 
               id: this.user.id
             }, null);
         } else {
@@ -168,6 +169,7 @@ AFRAME.registerComponent('replay-loader', {
               avatar: this.user.profilePicture.replace('https://cdn.scoresaber.com/', '/cors/score-saber-cdn/'),
               country: this.user.country,
               countryIcon: `https://cdn.beatleader.xyz/flags/${this.user.country.toLowerCase()}.png`,
+              profileLink: `https://scoresaber.com/u/${this.user.id}`, 
               id: this.user.id
             }, null);
         });

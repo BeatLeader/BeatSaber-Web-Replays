@@ -36,6 +36,7 @@ const emptyScore = {
   multiplier: 1,
   rank: '',
   score: 0,
+  scoreDescription: '',
   misses: 0
 };
 
@@ -407,6 +408,7 @@ function updateScore (state, payload) {
   let note = state.notes[payload.index];
 
   state.score.score = note.totalScore;
+  state.score.scoreDescription = (note.totalScore + "").replace(/(\d)(?=(\d{3})+$)/g, '$1 ');
   state.score.combo = note.combo;
   state.score.multiplier = note.multiplier;
   state.score.accuracy = note.accuracy;

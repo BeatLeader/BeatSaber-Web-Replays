@@ -164,7 +164,7 @@ AFRAME.registerComponent('song-controls', {
       document.getElementById('playerName').setAttribute('title', player.name);
       document.getElementById('playerCountry').src = player.countryIcon;
       document.getElementById('playerCountry').setAttribute('title', player.country);
-      document.getElementById('playerLink').setAttribute('href', "https://scoresaber.com/u/" + player.id);
+      document.getElementById('playerLink').setAttribute('href', player.profileLink);
       document.getElementById('playerInfoOverlay').style.display = 'flex';
     });
 

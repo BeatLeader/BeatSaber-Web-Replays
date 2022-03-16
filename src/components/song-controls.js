@@ -148,10 +148,14 @@ AFRAME.registerComponent('song-controls', {
       songDifficulty.style.backgroundColor = diffInfo.color;
       document.getElementById('songInfoOverlay').style.display = 'flex';
 
-      let customDiff = this.customDifficultyLabels[this.data.difficulty];
+      let customDiff = this.customDifficultyLabels[evt.detail.mode][evt.detail.difficulty];
       if (customDiff) {
         document.getElementById('songCustomDifficulty').innerHTML = customDiff;
         document.getElementById('songCustomDifficulty').setAttribute('title', customDiff);
+      }
+      if (evt.detail.mode != "Standard") {
+        document.getElementById('songMode').innerHTML = evt.detail.mode;
+        document.getElementById('songMode').style.display = "block";
       }
       
       // this.updateModeOptions();
@@ -394,12 +398,17 @@ AFRAME.registerComponent('song-controls', {
       } else if (AFRAME.utils.getUrlParameter('jd') ) {
         jdParam = "&jd=" + AFRAME.utils.getUrlParameter('jd');
       }
+      let modeParam = "";
+      if (AFRAME.utils.getUrlParameter('mode') != "Standard") {
+        modeParam = "&mode=" + AFRAME.utils.getUrlParameter('mode');
+      }
+
       let baseParams = "";
       if (AFRAME.utils.getUrlParameter('link')) {
-        baseParams = `?link=${AFRAME.utils.getUrlParameter('link')}${jdParam}`
+        baseParams = `?link=${AFRAME.utils.getUrlParameter('link')}${modeParam}${jdParam}`
       } else {
         let songParam = (AFRAME.utils.getUrlParameter('id') ? `?id=${AFRAME.utils.getUrlParameter('id')}` : `?hash=${AFRAME.utils.getUrlParameter('hash')}`);
-        baseParams = `${songParam}&playerID=${AFRAME.utils.getUrlParameter('playerID')}&difficulty=${AFRAME.utils.getUrlParameter('difficulty')}${jdParam}`;
+        baseParams = `${songParam}&playerID=${AFRAME.utils.getUrlParameter('playerID')}&difficulty=${AFRAME.utils.getUrlParameter('difficulty')}${modeParam}${jdParam}`;
       }
       let base = location.protocol + "//" + location.host + "/" + baseParams;
       input.value = base + (time ? `&time=${Math.round(this.song.getCurrentTime()*1000)}&speed=${Math.round(this.song.speed * 100)}` : "" );
@@ -667,12 +676,12 @@ AFRAME.registerComponent('song-controls', {
       // Custom difficulty labels.
       if (!this.info._difficultyBeatmapSets) { return; }
       this.info._difficultyBeatmapSets.forEach(set => {
-        if (set._beatmapCharacteristicName !== 'Standard') { return; }
+        this.customDifficultyLabels[set._beatmapCharacteristicName] = {};
         set._difficultyBeatmaps.forEach(diff => {
           const customLabel = diff._customData._difficultyLabel;
           if (!customLabel) { return; }
 
-          this.customDifficultyLabels[diff._difficulty] = customLabel;
+          this.customDifficultyLabels[set._beatmapCharacteristicName][diff._difficulty] = customLabel;
           // if (this.difficulty.innerHTML === diff._difficulty) {
           //   this.difficulty.innerHTML = customLabel;
           // }

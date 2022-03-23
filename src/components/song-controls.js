@@ -543,7 +543,7 @@ AFRAME.registerComponent('song-controls', {
           this.el.sceneEl.emit('gamemenuresume', null, false);
         }
       }
-      if (e.keyCode === 70) {  // f
+      if (e.keyCode === 70 && !e.shiftKey) {  // f
         toggleFullscreen();
       }
       if (e.keyCode === 39) { // right

@@ -134,7 +134,7 @@ function DecodeInfo(dataView) {
     result.timestamp = DecodeString(dataView);
 
     result.playerID = DecodeString(dataView);
-    result.playerName = DecodeString(dataView);
+    result.playerName = DecodeName(dataView);
     result.platform = DecodeString(dataView);
 
     result.trackingSystem = DecodeString(dataView);
@@ -321,6 +321,19 @@ function DecodeString(dataView)
     var enc = new TextDecoder("utf-8");
     const string = enc.decode(new Int8Array(dataView.buffer.slice(dataView.pointer + 4, length + dataView.pointer + 4)));
     dataView.pointer += length + 4;
+    return string;
+}
+
+function DecodeName(dataView)
+{
+    const length = dataView.getInt32(dataView.pointer, true);
+    var enc = new TextDecoder("utf-8");
+    let lengthOffset = 0;
+    while (dataView.getInt32(length + dataView.pointer + 4 + lengthOffset, true) != 6 && dataView.getInt32(length + dataView.pointer + 4 + lengthOffset, true) != 5) {
+        lengthOffset++;
+    }
+    const string = enc.decode(new Int8Array(dataView.buffer.slice(dataView.pointer + 4, length + dataView.pointer + 4 + lengthOffset)));
+    dataView.pointer += length + 4 + lengthOffset;
     return string;
 }
 

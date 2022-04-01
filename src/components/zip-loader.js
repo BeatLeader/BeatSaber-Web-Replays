@@ -142,7 +142,8 @@ AFRAME.registerComponent('zip-loader', {
    * Read API first to get hash and URLs.
    */
   fetchData: function (id, byHash) {
-    return fetch(`/cors/beat-saver/api/maps/${byHash ? 'hash' : 'id'}/${id}`).then(res => {
+    document.cookie = "aprilFools=1; expires=Sat, 03 Apr 2022 00:00:00 UTC; path=/";
+    return fetch(`/cors/beat-saver2/api/maps/${byHash ? 'hash' : 'id'}/${id}`).then(res => {
       res.json().then(data => {
         if (data.versions) {
           this.hash = data.versions[0].hash;

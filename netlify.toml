@@ -5,7 +5,7 @@
     targetPort = 3000
 
 [[redirects]]
-    from = "/cors/beat-saver/*"
+    from = "/cors/beat-saver2/*"
     to = "https://beatsaver.com/:splat"
     status = 200
     force = true

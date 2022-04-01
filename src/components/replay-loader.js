@@ -2,7 +2,7 @@ const dragDrop = require('drag-drop');
 import {checkBSOR, NoteEventType, ssReplayToBSOR} from '../open-replay-decoder';
 const DECODER_LINK = 'https://sspreviewdecode.azurewebsites.net'
 
-import {mirrorDirection} from '../utils';
+import {mirrorDirection, NoteCutDirection, difficultyFromName, clamp} from '../utils';
 
 AFRAME.registerComponent('replay-loader', {
     schema: {
@@ -35,28 +35,6 @@ AFRAME.registerComponent('replay-loader', {
       });
     },
 
-    difficultyNumber: function (name) {
-      switch(name) {
-        case 'Easy':
-        case 'easy':
-          return 1;
-        case 'Normal':
-        case 'normal':
-          return 3;
-        case 'Hard':
-        case 'hard':
-          return 5;
-        case 'Expert':
-        case 'expert':
-          return 7;
-        case 'ExpertPlus':
-        case 'expertPlus':
-          return 9;
-    
-        default: return 0;
-      }
-    },
-
     downloadReplay: function (hash) {
       this.el.sceneEl.emit('replayloadstart', null);
       fetch(`https://api.beatleader.xyz/score/${this.data.playerID}/${hash}/${this.data.difficulty}/${this.data.mode}`)
@@ -69,7 +47,7 @@ AFRAME.registerComponent('replay-loader', {
                 this.el.sceneEl.emit('replayloadfailed', { error: "Replay broken, redownload and reinstall mod, please" }, null);
               } else {
                 this.replay = replay;
-                this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: this.difficultyNumber(replay.info.difficulty), mode: replay.info.mode, jd: replay.info.jumpDistance }, null);
+                this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: difficultyFromName(replay.info.difficulty), mode: replay.info.mode, jd: replay.info.jumpDistance }, null);
                 if (this.challenge) {
                   this.processScores();
                 }
@@ -94,7 +72,7 @@ AFRAME.registerComponent('replay-loader', {
     },
 
     downloadSSReplay: function (hash) {
-      fetch(`/cors/score-saber/api/leaderboard/by-hash/${hash}/info?difficulty=${this.difficultyNumber(this.data.difficulty)}`, {referrer: "https://www.beatlooser.com"}).then(res => {
+      fetch(`/cors/score-saber/api/leaderboard/by-hash/${hash}/info?difficulty=${difficultyFromName(this.data.difficulty)}`, {referrer: "https://www.beatlooser.com"}).then(res => {
         res.json().then(leaderbord => {
           fetch(`${DECODER_LINK}/?playerID=${this.data.playerID}&songID=${leaderbord.id}`).then(res => {
             res.json().then(data => {
@@ -122,7 +100,7 @@ AFRAME.registerComponent('replay-loader', {
         if (replay && replay.frames) {
           this.replay = replay;
           this.fetchPlayer(replay.info.playerID);
-          this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: this.difficultyNumber(replay.info.difficulty), mode: replay.info.mode, jd: replay.info.jumpDistance }, null);
+          this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: difficultyFromName(replay.info.difficulty), mode: replay.info.mode, jd: replay.info.jumpDistance }, null);
         } else {
           this.fetchSSFile(file, itsLink);
         }
@@ -159,7 +137,6 @@ AFRAME.registerComponent('replay-loader', {
       }
     },
 
-    // TODO: Move to beatleader
     fetchPlayer: function (playerID) {
       fetch(`/cors/score-saber/api/player/${playerID}/full`, {referrer: "https://www.beatlooser.com"}).then(res => {
         res.json().then(data => {
@@ -175,10 +152,13 @@ AFRAME.registerComponent('replay-loader', {
         });
       });
     },
+
     processScores: function () {
       const replay = this.replay;
-      var mapnotes = this.challenge.beatmaps[this.challenge.mode][this.challenge.difficulty]._notes;
+      const map = this.challenge.beatmaps[this.challenge.mode][this.challenge.difficulty];
+      var mapnotes = map._notes;
       mapnotes = mapnotes.sort((a, b) => { return a._time - b._time; }).filter(a => a._type == 0 || a._type == 1);
+      this.applyModifiers(map, replay);
 
       var noteStructs = new Array();
       var bombStructs = new Array();
@@ -347,6 +327,21 @@ AFRAME.registerComponent('replay-loader', {
         this.processScores();
       }
     },
+
+    applyModifiers: function (map, replay) {
+      if (replay.info.modifiers.includes("NA")) {
+        map._notes.forEach(note => {
+          note._cutDirection = NoteCutDirection.Any;
+        });
+      }
+      if (replay.info.modifiers.includes("NB")) {
+        map._notes = map._notes.filter(a => a._type == 0 || a._type == 1);
+      }
+      if (replay.info.modifiers.includes("NO")) {
+        map._obstacles = [];
+      }
+    },
+
     maxScoreForNote(index) {
       const note_score = 115;
       const notes = index + 1;
@@ -384,17 +379,12 @@ AFRAME.registerComponent('replay-loader', {
     },
 });
 
-function Clamp(value) {
-	if (value < 0.0) return 0.0;
-	return value > 1.0 ? 1.0 : value;
-}
-
 function ScoreForNote(note) {
   if (note.eventType == NoteEventType.good) {
     const cut = note.noteCutInfo;
     const beforeCutRawScore = Math.round(70 * cut.beforeCutRating);
     const afterCutRawScore = Math.round(30 * cut.afterCutRating);
-    const num = 1 - Clamp(cut.cutDistanceToCenter / 0.3);
+    const num = 1 - clamp(cut.cutDistanceToCenter / 0.3, 0.0, 1.0);
     const cutDistanceRawScore = Math.round(15 * num);
   
     return beforeCutRawScore + afterCutRawScore + cutDistanceRawScore;

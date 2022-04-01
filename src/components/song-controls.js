@@ -10,8 +10,10 @@ if (!queryParamTime || isNaN(queryParamTime)) {
 }
 
 /**
- * Update the 2D UI. Handle pause and seek.
+ * Update the 2D UI. Should handle pause and seek.
  */
+
+// TODO: Divide this component
 AFRAME.registerComponent('song-controls', {
   dependencies: ['song'],
 

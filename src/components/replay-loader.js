@@ -192,6 +192,11 @@ AFRAME.registerComponent('replay-loader', {
           id: info.noteID,
           score: info.score ? info.score : ScoreForNote(info)
         }
+        if ( parseInt(("" + note.id).split("").pop()) == 9) {
+          note.eventType = NoteEventType.bomb;
+          note.id += 4;
+          note.score = -4;
+        }
         if (note.eventType == NoteEventType.bomb) {
           bombStructs.push(note);
         } else {

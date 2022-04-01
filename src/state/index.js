@@ -34,6 +34,7 @@ const emptyScore = {
   combo: 0,
   maxCombo: 0,
   multiplier: 1,
+  energy: 0.5,
   rank: '',
   score: 0,
   scoreDescription: '',
@@ -398,12 +399,6 @@ function truncate (str, length) {
   return str;
 }
 
-function takeDamage (state) {
-  if (!state.isPlaying) { return; }
-  state.damage++;
-  // checkGameOver(state);
-}
-
 function updateScore (state, payload) {
   let note = state.notes[payload.index];
 
@@ -413,6 +408,7 @@ function updateScore (state, payload) {
   state.score.multiplier = note.multiplier;
   state.score.accuracy = note.accuracy;
   state.score.misses = note.misses;
+  state.score.energy = note.energy;
   state.lastNoteTime = note.time;
 
   // console.log(note.totalScore + " - " + note.index + " - " + note.i + " - " + note.time + " - " + payload.index + " - " + note.score);

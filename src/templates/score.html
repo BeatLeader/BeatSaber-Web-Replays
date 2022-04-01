@@ -55,6 +55,14 @@
     scale="5 5 5">
   </a-entity>
 
+  <a-entity
+      id="energyBar"
+      render-order="hud"
+      bind__energy-bar="enabled: isPlaying && challenge.isBeatsPreloaded; energy: score.energy"
+      geometry="primitive: plane; width: 1.5; height: 0.05"
+      material="shader: energy; progress: 0; transparent: true; depthWrite: false; color: #ABABAB"
+      position="0 -0.2 -4"></a-entity>
+
   <a-entity 
     render-order="hud"
     position="1.8 1.2 -4">

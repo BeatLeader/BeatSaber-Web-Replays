@@ -192,7 +192,7 @@ AFRAME.registerComponent('replay-loader', {
           id: info.noteID,
           score: info.score ? info.score : ScoreForNote(info)
         }
-        if ( parseInt(("" + note.id).split("").pop()) == 9) {
+        if (parseInt(("" + note.id).split("").pop()) == 9) {
           note.eventType = NoteEventType.bomb;
           note.id += 4;
           note.score = -4;
@@ -286,6 +286,7 @@ AFRAME.registerComponent('replay-loader', {
       }
 
       var multiplier = 1, lastmultiplier = 1;
+      var energy = 0.5;
       var score = 0, noteIndex = 0;
       var combo = 0;
       var misses = 0;
@@ -298,8 +299,24 @@ AFRAME.registerComponent('replay-loader', {
           lastmultiplier = multiplier;
           combo = 0;
           misses++;
+          switch (note.score) {
+            case -2:
+              energy -= 0.1;
+              break;
+            case -4:
+            case -3:
+              energy -= 0.15;
+              break;
+          
+            default:
+              break;
+          }
         } else {
           score += multiplier * note.score;
+          energy += 0.01;
+          if (energy > 1) {
+            energy = 1;
+          }
           combo++;
           multiplier = this.multiplierForCombo(this.comboForMultiplier(lastmultiplier) + combo);
         }
@@ -308,6 +325,7 @@ AFRAME.registerComponent('replay-loader', {
         note.totalScore = score;
         note.combo = combo;
         note.misses = misses;
+        note.energy = energy;
 
         if (note.isBlock) {
           note.accuracy = (note.totalScore / this.maxScoreForNote(noteIndex) * 100).toFixed(2);

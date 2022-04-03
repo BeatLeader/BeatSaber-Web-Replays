@@ -329,9 +329,12 @@ function DecodeName(dataView)
     const length = dataView.getInt32(dataView.pointer, true);
     var enc = new TextDecoder("utf-8");
     let lengthOffset = 0;
-    while (dataView.getInt32(length + dataView.pointer + 4 + lengthOffset, true) != 6 && dataView.getInt32(length + dataView.pointer + 4 + lengthOffset, true) != 5) {
-        lengthOffset++;
+    if (length > 0) {
+        while (dataView.getInt32(length + dataView.pointer + 4 + lengthOffset, true) != 6 && dataView.getInt32(length + dataView.pointer + 4 + lengthOffset, true) != 5) {
+            lengthOffset++;
+        }
     }
+    
     const string = enc.decode(new Int8Array(dataView.buffer.slice(dataView.pointer + 4, length + dataView.pointer + 4 + lengthOffset)));
     dataView.pointer += length + 4 + lengthOffset;
     return string;

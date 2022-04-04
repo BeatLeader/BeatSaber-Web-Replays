@@ -162,7 +162,18 @@ AFRAME.registerComponent('replay-loader', {
     processScores: function () {
       const replay = this.replay;
       const map = this.challenge.beatmaps[this.challenge.mode][this.challenge.difficulty];
-      var mapnotes = map._notes;
+      var mapnotes = [].concat(map._notes)
+
+      map._burstSliders.forEach(slider => {
+        for (var i = 0; i < slider._sliceCount - 1; i++) {
+          let updateSlider = slider;
+          if (i > 0) {
+            updateSlider._cutDirection = 8;
+          }
+          mapnotes.push(updateSlider);
+        }
+      });
+
       mapnotes = mapnotes.sort((a, b) => { return a._time - b._time; }).filter(a => a._type == 0 || a._type == 1);
       this.applyLeftHanded(map, replay);
       this.applyModifiers(map, replay);
@@ -224,12 +235,13 @@ AFRAME.registerComponent('replay-loader', {
             const lineLayer = mapnote._lineLayer;
             const id = lineIndex * 1000 + lineLayer * 100 + colorType * 10 + cutDirection;
 
-            if (!replaynote.index && (replaynote.id == id || replaynote.id == id + 30000)) {
+            if (replaynote.index == undefined && (replaynote.id == id || replaynote.id == id + 30000)) {
                 replaynote.index = group[j];
                 replaynote.colorType = colorType;
                 replaynote.lineIndex = lineIndex;
                 replaynote.cutDirection = cutDirection;
                 replaynote.lineLayer = lineLayer;
+                replaynote.mapnote = mapnote;
                 break;
             }
           }
@@ -426,8 +438,10 @@ function ScoreForNote(note) {
     const afterCutRawScore = clamp(Math.round(30 * cut.afterCutRating), 0, 30);
     const num = 1 - clamp(cut.cutDistanceToCenter / 0.3, 0.0, 1.0);
     const cutDistanceRawScore = Math.round(15 * num);
+
+    const result = beforeCutRawScore + afterCutRawScore + cutDistanceRawScore;
   
-    return beforeCutRawScore + afterCutRawScore + cutDistanceRawScore;
+    return result > 115 ? -2 : result;
   } else {
     switch (note.eventType) {
       case NoteEventType.bad:

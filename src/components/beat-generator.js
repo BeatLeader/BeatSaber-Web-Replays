@@ -158,7 +158,18 @@ AFRAME.registerComponent('beat-generator', {
       this.processNotesByColorType(rightNotes);
     };
 
-    const notes = this.beatData._notes;
+    let notes = [].concat(this.beatData._notes);
+    this.beatData._burstSliders.forEach(slider => {
+      for (var i = 0; i < slider._sliceCount - 1; i++) {
+        
+        let updateSlider = slider;
+        if (i > 0) {
+          updateSlider._cutDirection = 8;
+        }
+        updateSlider.sliceIndex = i;
+        notes.push(updateSlider);
+      }
+    });
     var index = 0;
     for (var i = 0; i < notes.length; i++) {
       const note = notes[i];
@@ -223,6 +234,15 @@ AFRAME.registerComponent('beat-generator', {
       }
     }
 
+    const burstSliders = this.beatData._burstSliders;
+    for (let i = 0; i < burstSliders.length; ++i) {
+      let noteTime = burstSliders[i]._time * msPerBeat;
+      if (noteTime > prevBeatsTime && noteTime <= beatsTime) {
+        burstSliders[i].time = noteTime;
+        this.generateBeat(burstSliders[i]);
+      }
+    }
+
     // Walls.
     const obstacles = this.beatData._obstacles;
     for (let i = 0; i < obstacles.length; ++i) {
@@ -279,7 +299,13 @@ AFRAME.registerComponent('beat-generator', {
 
     // if (Math.random() < 0.8) { note._type = 3; } // To debug mines.
     let color;
-    let type = note._cutDirection === 8 ? 'dot' : 'arrow';
+    let type;
+    if (note._sliceCount) {
+      type = "spline";
+    } else {
+      type = note._cutDirection === 8 ? 'dot' : 'arrow';
+    }
+    
     if (note._type === 0) {
       color = 'red';
     } else if (note._type === 1) {
@@ -322,13 +348,20 @@ AFRAME.registerComponent('beat-generator', {
       beatObj.anticipationTime = this.beatAnticipationTime;
       beatObj.warmupTime = data.beatWarmupTime;
       beatObj.warmupSpeed = data.beatWarmupSpeed;
-
+      
       if (this.colors['right']) {
         beatObj.blue = this.colors['right'];
       }
 
       if (this.colors['left']) {
         beatObj.red = this.colors['left'];
+      }
+
+      if (type == "spline") {
+        beatObj.tileHorizontalPosition = note._tileLineIndex;
+        beatObj.tileVerticalPosition = note._tileLineLayer;
+        beatObj.sliceCount = note._sliceCount;
+        beatObj.sliceIndex = note.sliceIndex;
       }
 
       if (this.mappingExtensions) {
@@ -343,7 +376,7 @@ AFRAME.registerComponent('beat-generator', {
         }
       }
       beatObj.horizontalPosition = note._lineIndex;
-      beatObj.verticalPosition = note._lineLayer,
+      beatObj.verticalPosition = note._lineLayer;
 
       beatEl.setAttribute('beat', beatObj);
       beatEl.components.beat.onGenerate(this.mappingExtensions);

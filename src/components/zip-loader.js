@@ -91,7 +91,8 @@ AFRAME.registerComponent('zip-loader', {
 
       const diffBeatmaps = set._difficultyBeatmaps.sort(d => d._difficultyRank);
       diffBeatmaps.forEach(diff => {
-        event.beatmaps[mode][diff._difficulty] = loader.extractAsJSON(diff._beatmapFilename);
+        let map = this.upgrade(loader.extractAsJSON(diff._beatmapFilename));
+        event.beatmaps[mode][diff._difficulty] = map;
         event.beatSpeeds[mode][diff._difficulty] = diff._noteJumpMovementSpeed;
         event.beatOffsets[mode][diff._difficulty] = diff._noteJumpStartBeatOffset;
 
@@ -194,6 +195,99 @@ AFRAME.registerComponent('zip-loader', {
     });
 
     loader.load();
+  },
+
+  upgrade: function (map) {
+    if (map["version"] && parseInt(map["version"].split(".")[0]) == 3) {
+      let notes = [];
+      map["colorNotes"].forEach(note => {
+        notes.push({
+          _time: note["b"],
+          _lineIndex: note["x"],
+          _lineLayer: note["y"],
+          _type: note["c"],
+          _cutDirection: note["d"],
+          _angleOffset: note["a"],
+        });
+      });
+      map["bombNotes"].forEach(bomb => {
+        notes.push({
+          _time: bomb["b"],
+          _lineIndex: bomb["x"],
+          _lineLayer: bomb["y"],
+          _angleOffset: 0,
+          _type: 2,
+          _cutDirection: 9
+        });
+      });
+
+      map["_notes"] = notes;
+
+      let obstacles = [];
+      map["obstacles"].forEach(wall => {
+        obstacles.push({
+          _time: wall["b"],
+          _lineIndex: wall["x"],
+          _type: wall["y"] / 2,
+          _duration: wall["d"],
+          _width: wall["w"],
+          _height: wall["h"]
+        });
+      });
+
+      map["_obstacles"] = obstacles;
+
+      let events = [];
+      map["basicBeatmapEvents"].forEach(event => {
+        events.push({
+          _time: event["b"],
+          _type: event["et"],
+          _value: event["i"],
+          _floatValue: event["f"],
+        });
+      });
+
+      map["_events"] = events;
+
+      let sliders = [];
+      map["sliders"].forEach(slider => {
+        sliders.push({
+          _time: slider["b"],
+          _lineIndex: slider["x"],
+          _lineLayer: slider["y"],
+          _type: slider["c"],
+          _cutDirection: slider["d"],
+          _tailTime: slider["tb"],
+          _tailLineIndex: slider["tx"],
+          _tailLineLayer: slider["ty"],
+          _headControlPointLengthMultiplier: slider["mu"],
+          _tailControlPointLengthMultiplier: slider["tmu"],
+          _tailCutDirection: slider["tc"],
+          _arcMidAnchorMode: slider["m"]
+        });
+      });
+
+      map["_sliders"] = sliders;
+
+      let burstSliders = [];
+      map["burstSliders"].forEach(slider => {
+        burstSliders.push({
+          _time: slider["b"],
+          _lineIndex: slider["x"],
+          _lineLayer: slider["y"],
+          _type: slider["c"],
+          _cutDirection: slider["d"],
+          _tailTime: slider["tb"],
+          _tailLineIndex: slider["tx"],
+          _tailLineLayer: slider["ty"],
+          _sliceCount: slider["sc"],
+          _squishAmount: slider["s"]
+        });
+      });
+      map["_burstSliders"] = burstSliders;
+    }
+
+    return map;
   },
 
   difficultyFromId: function (diffId) {

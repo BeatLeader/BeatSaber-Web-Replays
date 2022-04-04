@@ -32,7 +32,7 @@ AFRAME.registerComponent('beat', {
     horizontalPosition: {default: 1},
     size: {default: 0.40},
     speed: {default: 8.0},
-    type: {default: 'arrow', oneOf: ['arrow', 'dot', 'mine']},
+    type: {default: 'arrow', oneOf: ['arrow', 'dot', 'mine', 'spline']},
     verticalPosition: {default: 1},
     warmupPosition: {default: 0},
     time: {default: 0},
@@ -41,6 +41,10 @@ AFRAME.registerComponent('beat', {
     warmupSpeed: {default: 0},
     blue: {default: COLORS.BEAT_BLUE},
     red: {default: COLORS.BEAT_RED},
+    tileHorizontalPosition: {default: 0},
+    tileVerticalPosition: {default: 0},
+    sliceCount: {default: 0},
+    sliceIndex: {default: 0},
     // Loading cubes
     loadingCube: {default: false},
     visible: {default: true},
@@ -55,7 +59,8 @@ AFRAME.registerComponent('beat', {
   models: {
     arrow: 'beatObjTemplate',
     dot: 'beatObjTemplate',
-    mine: 'mineObjTemplate'
+    mine: 'mineObjTemplate',
+    spline: 'splineObjTemplate'
   },
 
   signModels: {
@@ -294,12 +299,16 @@ AFRAME.registerComponent('beat', {
     const el = this.el;
 
     // Set position.
-    el.object3D.position.set(
-      getHorizontalPosition(data.horizontalPosition),
-      getVerticalPosition(data.verticalPosition),
-      data.anticipationPosition + data.warmupPosition
-    );
-    el.object3D.rotation.set(0, 0, THREE.Math.degToRad(this.rotations[data.cutDirection] + (this.data.rotationOffset ? this.data.rotationOffset : 0.0)));
+    if (data.type == "spline") {
+      Interpolate(data.sliceCount - 1, data.sliceIndex + 1, headTrans, headRot, tailNode, nodes[i]);
+    } else {
+      el.object3D.position.set(
+        getHorizontalPosition(data.horizontalPosition),
+        getVerticalPosition(data.verticalPosition),
+        data.anticipationPosition + data.warmupPosition
+      );
+      el.object3D.rotation.set(0, 0, THREE.Math.degToRad(this.rotations[data.cutDirection] + (this.data.rotationOffset ? this.data.rotationOffset : 0.0)));
+    }
 
     // Set up rotation warmup.
     this.startRotationZ = this.el.object3D.rotation.z;
@@ -572,6 +581,7 @@ AFRAME.registerComponent('beat', {
   },
 
   postScoreEvent: function () {
+    if (!this.replayNote.time) return;
     const timeToScore = this.replayNote.time - this.song.getCurrentTime();
 
     const payload = {index: this.replayNote.i};
@@ -1004,6 +1014,8 @@ AFRAME.registerComponent('beat', {
         }
       }
 
+      if (!judgment) return {color: "#fff", scale: 0};
+
       color.setRGB(judgment.color[0], judgment.color[1], judgment.color[2])
       fadeColor.setRGB(fadeJudgment.color[0], fadeJudgment.color[1], fadeJudgment.color[2]);
 
@@ -1106,6 +1118,84 @@ AFRAME.registerComponent('beat', {
     };
   })()
 });
+
+/// <summary>
+    /// Compute Circle center for interpolation(and by the way compute tail rotation & tail tangent)
+    /// The basic idea is giving a head point and its tangent vector and a tail point, compute the circle.
+    /// </summary>
+    /// <param name="headPos"></param>
+    /// <param name="headRot"></param>
+    /// <param name="headTangent"></param>
+    /// <param name="tailTrans"></param>
+    function ComputeCircleCenter(headPos, headRot, headTangent, tailTrans)
+    {
+        var tailPos = tailTrans.localPosition;
+        var headToTail = tailPos - headPos;
+        if (Math.abs((headTangent.x * headToTail.y - headTangent.y * headToTail.x) / headTangent.magnitude / headToTail.magnitude) < epsilon)
+        {
+            // cross product = 0, indicate in a line
+            headTailInALine = true;
+            tailTrans.localRotation = headRot;
+            return;
+        }
+        /// compute circle center
+        headTailInALine = false;
+        let circleNormal = Vector3.Cross(headTangent, headToTail); // normal vector perpendicular to circle plane
+        let headToCenter = Vector3.Cross(circleNormal, headTangent);
+        //Debug.Log("headTOcenter" + headToCenter);
+        let midPoint = (headPos + tailPos) / 2.0;
+        let midToCenter = Vector3.Cross(circleNormal, headToTail);
+        //Debug.Log("midtocenter" + midToCenter);
+
+        var headToMid = midPoint - headPos;
+        let crossVec1and2 = Vector3.Cross(headToCenter, midToCenter);
+        let crossVec3and2 = Vector3.Cross(headToMid, midToCenter);
+
+        let planarFactor = Vector3.Dot(headToMid, crossVec1and2);
+
+        let s = Vector3.Dot(crossVec3and2, crossVec1and2)
+                / crossVec1and2.sqrMagnitude;
+        circleCenter = headPos + (headToCenter * s);
+        //Debug.Log("circleCenter" + circleCenter);
+
+        /// compute tail angle and tail tangent;
+        var centerToTail = tailTrans.localPosition - circleCenter;
+        tailTangent = Vector3.Cross(circleNormal, centerToTail).normalized * centerToTail.magnitude;
+        var tailRot = Quaternion.FromToRotation(headTangent, tailTangent); // do not take u-turn, it will not be correct
+        tailTrans.localRotation = tailRot * headRot;
+
+        if (Mathf.Abs(Vector3.Dot(headToTail.normalized, tailTangent.normalized)) < epsilon)
+        {
+            tailTrans.localPosition -= tailTangent * epsilon; // move tail back a little bit to avoid head-tail-center in a line
+        }
+        //Debug.Log("tail tangent" + tailTangent);
+    }
+
+    /// <summary>
+    /// Interpolate between head and tail. The algorithm may not be correct.
+    /// </summary>
+    /// <param name="n"></param>
+    /// <param name="i"></param>
+    /// <param name="t0"></param>
+    /// <param name="t1"></param>
+    /// <param name="t"></param>
+    function Interpolate(n, i, trans0, rot0, t1, t)
+    {
+        let p0 = i / n;
+        if (headTailInALine)
+        {
+            t.transform.localPosition = Vector3.LerpUnclamped(trans0, t1.transform.localPosition, p0 * ChainData.SquishAmount);
+
+        }
+        else
+        {
+            t.transform.localPosition = Vector3.Slerp(trans0 - circleCenter, t1.transform.localPosition - circleCenter, p0 * ChainData.SquishAmount)
+                + circleCenter;
+            if (p0 * ChainData.SquishAmount > 1.0)
+                t.transform.localPosition += tailTangent * (p0 * ChainData.SquishAmount - 1.0);
+        }
+        t.transform.localRotation = Quaternion.Slerp(rot0, t1.transform.localRotation, p0 * ChainData.SquishAmount);
+    }
 
 /**
  * Get velocity given current velocity using gravity acceleration.

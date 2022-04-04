@@ -1,5 +1,5 @@
 import {BEAT_WARMUP_OFFSET, BEAT_WARMUP_SPEED, BEAT_WARMUP_TIME} from '../constants/beat';
-import {get2DNoteOffset, directionVector, NoteCutDirection, signedAngle, SWORD_OFFSET} from '../utils';
+import {NoteCutDirection, SWORD_OFFSET, clone} from '../utils';
 
 let skipDebug = AFRAME.utils.getUrlParameter('skip') || 0;
 skipDebug = parseInt(skipDebug, 10);
@@ -19,7 +19,6 @@ const WALL_HEIGHT_MIN = 0;
 const WALL_HEIGHT_MAX = 1000;
 const WALL_START_BASE = 100;
 const WALL_START_MAX = 400;
-const ANY_CUT_DIRECTION = NoteCutDirection.Any;
 
 /**
  * Load beat data (all the beats and such).
@@ -139,44 +138,6 @@ AFRAME.registerComponent('beat-generator', {
       }
     }
 
-    var group, groupTime;
-
-    const processGroup = () => {
-      var leftNotes = []
-      var rightNotes = []
-      group.forEach(note => {
-        (note._type ? leftNotes : rightNotes).push(note);
-      });
-
-      this.processNotesByColorType(leftNotes);
-      this.processNotesByColorType(rightNotes);
-    };
-
-    const notes = this.beatData._notes;
-    var index = 0;
-    for (var i = 0; i < notes.length; i++) {
-      const note = notes[i];
-      if (note._type == 0 || note._type == 1) {
-        note.index = index;
-        index++;
-
-        if (!group) {
-          group = [note];
-          groupTime = note._time;
-        } else {
-          if (Math.abs(groupTime - note._time) < 0.0001) {
-            group.push(note);
-          } else {
-            processGroup();
-            group = null;
-            i--;
-            index--;
-          }
-        }
-      }
-    }
-    processGroup();
-
     this.beatDataProcessed = true;
     console.log('[beat-generator] Finished processing beat data.');
   },
@@ -214,6 +175,24 @@ AFRAME.registerComponent('beat-generator', {
       if (noteTime > prevBeatsTime && noteTime <= beatsTime) {
         notes[i].time = noteTime;
         this.generateBeat(notes[i]);
+      }
+    }
+
+    const sliders = this.beatData._sliders;
+    for (let i = 0; i < sliders.length; ++i) {
+      let noteTime = sliders[i]._time * msPerBeat;
+      if (noteTime > prevBeatsTime && noteTime <= beatsTime) {
+        sliders[i].time = noteTime;
+        this.generateSlider(sliders[i]);
+      }
+    }
+
+    const chains = this.beatData._chains;
+    for (let i = 0; i < chains.length; ++i) {
+      let noteTime = chains[i]._time * msPerBeat;
+      if (noteTime > prevBeatsTime && noteTime <= beatsTime) {
+        chains[i].time = noteTime;
+        this.generateChain(chains[i]);
       }
     }
 
@@ -274,7 +253,14 @@ AFRAME.registerComponent('beat-generator', {
 
     // if (Math.random() < 0.8) { note._type = 3; } // To debug mines.
     let color;
-    let type = note._cutDirection === 8 ? 'dot' : 'arrow';
+    let type;
+    
+    if (note.sliderhead) {
+      type = 'sliderhead';
+    } else {
+      type = note._cutDirection === 8 ? 'dot' : 'arrow';
+    }
+    
     if (note._type === 0) {
       color = 'red';
     } else if (note._type === 1) {
@@ -311,12 +297,31 @@ AFRAME.registerComponent('beat-generator', {
       beatObj.size = 0.4;
       beatObj.type = type;
       beatObj.warmupPosition = -data.beatWarmupTime * data.beatWarmupSpeed;
-      beatObj.index = note.index;
+      beatObj.index = note._index;
 
       beatObj.time = note._time * (60 / this.bpm);
       beatObj.anticipationTime = this.beatAnticipationTime;
       beatObj.warmupTime = data.beatWarmupTime;
       beatObj.warmupSpeed = data.beatWarmupSpeed;
+
+      if (note._sliceCount || note.sliderhead) {
+        var slider = note;
+
+        if (note.sliderhead) {
+          slider = note.sliderhead;
+          beatObj.sliceIndex = 0;
+          beatObj.headCutDirection = beatObj.cutDirection;
+        } else {
+          beatObj.sliceIndex = slider._sliceIndex;
+          beatObj.headCutDirection = this.orientationsHumanized[slider._headCutDirection];
+        }
+
+        beatObj.tailHorizontalPosition = slider._tailLineIndex;
+        beatObj.tailVerticalPosition = slider._tailLineLayer;
+        beatObj.tailTime = slider._tailTime * (60 / this.bpm);
+        beatObj.sliceCount = slider._sliceCount;
+        beatObj.squishAmount = slider._squishAmount;
+      }
 
       if (this.mappingExtensions) {
         note._lineIndex = note._lineIndex < 0
@@ -330,13 +335,39 @@ AFRAME.registerComponent('beat-generator', {
         }
       }
       beatObj.horizontalPosition = note._lineIndex;
-      beatObj.verticalPosition = note._lineLayer,
+      beatObj.verticalPosition = note._lineLayer;
 
       beatEl.setAttribute('beat', beatObj);
       beatEl.components.beat.onGenerate(this.mappingExtensions);
       beatEl.play();
     };
   })(),
+
+  generateChain: function (note) {
+    let color;
+    
+    if (note._type === 0) {
+      color = 'red';
+    } else if (note._type === 1) {
+      color = 'blue';
+    } else {
+      type = 'mine';
+      color = undefined;
+    }
+
+    var type = 'sliderchain';
+
+    const beatEl = this.requestBeat(type, color);
+    if (!beatEl) { return; }
+
+    if (!beatEl.components.beat || !beatEl.components.beat.data) {
+      beatEl.addEventListener('loaded', () => {
+        this.doGenerateBeat(beatEl, note, type, color);
+      });
+    } else {
+      this.doGenerateBeat(beatEl, note, type, color);
+    }
+  },
 
   generateWall: (function () {
     const wallObj = {};
@@ -404,6 +435,80 @@ AFRAME.registerComponent('beat-generator', {
     };
   })(),
 
+  generateSlider: function (slider) {
+    let color;
+    
+    if (slider._type === 0) {
+      color = 'red';
+    } else if (slider._type === 1) {
+      color = 'blue';
+    }
+
+    const sliderEl = this.requestSlider(color);
+    if (!sliderEl) { return; }
+
+    if (!sliderEl.components.slider || !sliderEl.components.slider.data) {
+      sliderEl.addEventListener('loaded', () => {
+        this.doGenerateSlider(sliderEl, slider, color);
+      });
+    } else {
+      this.doGenerateSlider(sliderEl, slider, color);
+    }
+  },
+
+  doGenerateSlider: (function () {
+    const beatObj = {};
+
+    return function (beatEl, note, color) {
+      const data = this.data;
+
+      // Apply sword offset. Blocks arrive on beat in front of the user.
+      beatObj.anticipationPosition = -this.beatAnticipationTime * this.beatSpeed - this.swordOffset;
+      beatObj.color = color;
+      beatObj.cutDirection = this.orientationsHumanized[note._cutDirection];
+      beatObj.tailCutDirection = this.orientationsHumanized[note._tailCutDirection];
+      
+      beatObj.rotationOffset = note.cutDirectionAngleOffset ? note.cutDirectionAngleOffset : 0;
+      beatObj.speed = this.beatSpeed;
+      beatObj.warmupPosition = -data.beatWarmupTime * data.beatWarmupSpeed;
+
+      beatObj.time = note._time * (60 / this.bpm);
+      beatObj.tailTime = note._tailTime * (60 / this.bpm);
+      beatObj.anticipationTime = this.beatAnticipationTime;
+      beatObj.warmupTime = data.beatWarmupTime;
+      beatObj.warmupSpeed = data.beatWarmupSpeed;
+      
+      if (this.colors['right']) {
+        beatObj.blue = this.colors['right'];
+      }
+
+      if (this.colors['left']) {
+        beatObj.red = this.colors['left'];
+      }
+
+      if (this.mappingExtensions) {
+        note._lineIndex = note._lineIndex < 0
+          ? note._lineIndex / 1000 + 1
+          : note._lineIndex / 1000 - 1;
+        note._lineLayer = note._lineLayer < 0
+          ? note._lineLayer / 1000 + 1
+          : note._lineLayer / 1000 - 1;
+        if (this.mappingExtensions.colWidth) {
+          beatObj.size *= this.mappingExtensions.colWidth;
+        }
+      }
+      beatObj.horizontalPosition = note._lineIndex;
+      beatObj.verticalPosition = note._lineLayer;
+
+      beatObj.tailHorizontalPosition = note._tailLineIndex;
+      beatObj.tailVerticalPosition = note._tailLineLayer;
+
+      beatEl.setAttribute('slider', beatObj);
+      beatEl.components.slider.onGenerate(this.mappingExtensions);
+      beatEl.play();
+    };
+  })(),
+
   generateEvent: function (event) {
     switch(event._type) {
       case 0:
@@ -439,6 +544,18 @@ AFRAME.registerComponent('beat-generator', {
 
   requestBeat: function (type, color) {
     var beatPoolName = 'pool__beat-' + type;
+    var pool;
+    if (color) { beatPoolName += '-' + color; }
+    pool = this.el.sceneEl.components[beatPoolName];
+    if (!pool) {
+      console.warn('Pool ' + beatPoolName + ' unavailable');
+      return;
+    }
+    return pool.requestEntity();
+  },
+
+  requestSlider: function (color) {
+    var beatPoolName = 'pool__slider';
     var pool;
     if (color) { beatPoolName += '-' + color; }
     pool = this.el.sceneEl.components[beatPoolName];
@@ -500,43 +617,6 @@ AFRAME.registerComponent('beat-generator', {
         }
       }
     }
-  },
-
-  processNotesByColorType: function (notesWithTheSameColorTypeList) {
-    if (notesWithTheSameColorTypeList.length != 2) return;
-    const theSameColorType1 = notesWithTheSameColorTypeList[0];
-    const theSameColorType2 = notesWithTheSameColorTypeList[1];
-
-    if (theSameColorType1._cutDirection != theSameColorType2._cutDirection && theSameColorType1._cutDirection != ANY_CUT_DIRECTION && theSameColorType2._cutDirection != ANY_CUT_DIRECTION) return;
-    var noteData1;
-    var noteData2;
-    if (theSameColorType1._cutDirection != ANY_CUT_DIRECTION) {
-      noteData1 = theSameColorType1;
-      noteData2 = theSameColorType2;
-    } else {
-      noteData1 = theSameColorType2;
-      noteData2 = theSameColorType1;
-    }
-    var line1 = get2DNoteOffset(noteData2._lineIndex, noteData2._lineLayer).sub(get2DNoteOffset(noteData1._lineIndex, noteData1._lineLayer))
-    var line2 = this.signedAngleToLine((noteData1._cutDirection == ANY_CUT_DIRECTION ? new THREE.Vector2(0, 1) : directionVector(noteData1._cutDirection)), line1);
-    if (noteData2._cutDirection == ANY_CUT_DIRECTION && noteData1._cutDirection == ANY_CUT_DIRECTION) {
-      noteData1.cutDirectionAngleOffset = line2;
-      noteData2.cutDirectionAngleOffset = line2;
-    } else {
-      if (Math.abs(line2) > 40) return;
-      noteData1.cutDirectionAngleOffset = line2;
-      if (noteData2._cutDirection == ANY_CUT_DIRECTION && noteData1._cutDirection > NoteCutDirection.Right) {
-        noteData2.cutDirectionAngleOffset = line2 + 45;
-      } else {
-        noteData2.cutDirectionAngleOffset = line2;
-      }
-    }
-  },
-
-  signedAngleToLine: function(vec, line) {
-    const f1 = signedAngle(vec, line);
-    const f2 = signedAngle(vec, line.negate());
-    return Math.abs(f1) >= Math.abs(f2) ? f2 : f1;
   },
 
   /**

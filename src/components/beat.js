@@ -1,12 +1,9 @@
-import { toLong } from 'ip';
-import {BEAT_WARMUP_OFFSET, BEAT_WARMUP_SPEED, BEAT_WARMUP_TIME} from '../constants/beat';
-import {getHorizontalPosition, getVerticalPosition, NoteErrorType, SWORD_OFFSET} from '../utils';
+import {getHorizontalPosition, getVerticalPosition, NoteErrorType, SWORD_OFFSET, BezierCurve} from '../utils';
 const COLORS = require('../constants/colors.js');
 
 const auxObj3D = new THREE.Object3D();
 const collisionZThreshold = -2.6;
 const BEAT_WARMUP_ROTATION_CHANGE = Math.PI / 5;
-const BEAT_WARMUP_ROTATION_OFFSET = 0.4;
 const BEAT_WARMUP_ROTATION_TIME = 0.75;
 const DESTROYED_SPEED = 1.0;
 const ONCE = {once: true};
@@ -27,18 +24,25 @@ AFRAME.registerComponent('beat', {
     anticipationPosition: {default: 0},
     color: {default: 'red', oneOf: ['red', 'blue']},
     cutDirection: {default: 'down'},
+    headCutDirection: {default: 'down'},
     rotationOffset: {default: 0},
     debug: {default: false},
     horizontalPosition: {default: 1},
     size: {default: 0.40},
     speed: {default: 8.0},
-    type: {default: 'arrow', oneOf: ['arrow', 'dot', 'mine']},
+    type: {default: 'arrow', oneOf: ['arrow', 'dot', 'mine', 'spline']},
     verticalPosition: {default: 1},
     warmupPosition: {default: 0},
     time: {default: 0},
     anticipationTime: {default: 0},
     warmupTime: {default: 0},
     warmupSpeed: {default: 0},
+    tailHorizontalPosition: {default: 0},
+    tailVerticalPosition: {default: 0},
+    sliceCount: {default: 0},
+    sliceIndex: {default: 0},
+    tailTime: {default: 0},
+    squishAmount: {default: 0},
     // Loading cubes
     loadingCube: {default: false},
     visible: {default: true},
@@ -58,14 +62,20 @@ AFRAME.registerComponent('beat', {
   models: {
     arrow: 'beatObjTemplate',
     dot: 'beatObjTemplate',
-    mine: 'mineObjTemplate'
+    mine: 'mineObjTemplate',
+    sliderhead: 'sliderheadObjTemplate',
+    sliderchain: 'sliderchainObjTemplate'
   },
 
   signModels: {
     arrowred: 'arrowRedObjTemplate',
     arrowblue: 'arrowBlueObjTemplate',
+    sliderheadred: 'arrowRedObjTemplate',
+    sliderheadblue: 'arrowBlueObjTemplate',
     dotred: 'dotRedObjTemplate',
-    dotblue: 'dotBlueObjTemplate'
+    dotblue: 'dotBlueObjTemplate',
+    sliderchainred: 'dotRedObjTemplate',
+    sliderchainblue: 'dotBlueObjTemplate',
   },
 
   orientations: [180, 0, 270, 90, 225, 135, 315, 45, 0],
@@ -212,9 +222,12 @@ AFRAME.registerComponent('beat', {
     }
 
     newPosition += this.headset.object3D.position.z;
+    if (this.chainOffset) {
+      newPosition -= this.chainOffset
+    }
     position.z = newPosition;
 
-    if (currentRotationWarmupTime <= -data.warmupTime) {
+    if (data.type != "sliderchain" && data.type != "sliderhead" && currentRotationWarmupTime <= -data.warmupTime) {
       currentRotationWarmupTime += data.warmupTime;
 
       let warmupRotationTime = BEAT_WARMUP_ROTATION_TIME / (20 / data.anticipationPosition); // Closer anticipation - faster the rotation.
@@ -303,20 +316,50 @@ AFRAME.registerComponent('beat', {
     const el = this.el;
 
     // Set position.
-    el.object3D.position.set(
-      getHorizontalPosition(data.horizontalPosition),
-      getVerticalPosition(data.verticalPosition),
-      data.anticipationPosition + data.warmupPosition
-    );
-    el.object3D.rotation.set(0, 0, THREE.Math.degToRad(this.rotations[data.cutDirection] + (this.data.rotationOffset ? this.data.rotationOffset : 0.0)));
+    if (data.type == "sliderchain" || data.type == "sliderhead") {
+      var t = data.sliceIndex / data.sliceCount;
 
-    // Set up rotation warmup.
-    this.startRotationZ = this.el.object3D.rotation.z;
-    this.currentRotationWarmupTime = 0;
-    this.rotationZChange = BEAT_WARMUP_ROTATION_CHANGE;
-    if (Math.random > 0.5) { this.rotationZChange *= -1; }
-    this.el.object3D.rotation.z -= this.rotationZChange;
-    this.rotationZStart = this.el.object3D.rotation.z;
+      const headX = getHorizontalPosition(data.horizontalPosition);
+      const headY = getVerticalPosition(data.verticalPosition);
+
+      const tailX = getHorizontalPosition(data.tailHorizontalPosition);
+      const tailY = getVerticalPosition(data.tailVerticalPosition);
+
+      const p2 = new THREE.Vector2(tailX - headX, tailY - headY);
+      const magnitude = p2.length();
+
+      const f = THREE.Math.degToRad(this.rotations[data.headCutDirection] + (this.data.rotationOffset ? this.data.rotationOffset : 0.0));
+      const p1 = new THREE.Vector2(Math.sin(f), -Math.cos(f)).multiplyScalar(0.5 * magnitude);
+      
+      var curve = BezierCurve(new THREE.Vector2(0.0, 0.0), p1, p2, t * data.squishAmount);
+      const pos = curve[0];
+      // const tangent = curve[1];
+
+      const timeDiff = (data.tailTime - data.time) * t * data.speed;
+      this.chainOffset = timeDiff;
+
+      el.object3D.position.set(
+        pos.x + headX,
+        pos.y + headY,
+        data.anticipationPosition + data.warmupPosition - timeDiff 
+      );
+      el.object3D.rotation.set(0, 0, THREE.Math.degToRad(this.rotations[data.headCutDirection]  + (this.data.rotationOffset ? this.data.rotationOffset : 0.0))); // + signedAngle(new THREE.Vector2(0.0, -1), tangent)
+    } else {
+      el.object3D.position.set(
+        getHorizontalPosition(data.horizontalPosition),
+        getVerticalPosition(data.verticalPosition),
+        data.anticipationPosition + data.warmupPosition
+      );
+      el.object3D.rotation.set(0, 0, THREE.Math.degToRad(this.rotations[data.cutDirection] + (this.data.rotationOffset ? this.data.rotationOffset : 0.0)));
+
+      // Set up rotation warmup.
+      this.startRotationZ = this.el.object3D.rotation.z;
+      this.currentRotationWarmupTime = 0;
+      this.rotationZChange = BEAT_WARMUP_ROTATION_CHANGE;
+      if (Math.random > 0.5) { this.rotationZChange *= -1; }
+      this.el.object3D.rotation.z -= this.rotationZChange;
+      this.rotationZStart = this.el.object3D.rotation.z;
+    }
     
     // Reset the state properties.
     this.returnToPoolTimeStart = undefined;
@@ -436,14 +479,26 @@ AFRAME.registerComponent('beat', {
     }
     this.setObjModelFromTemplate(blockEl, this.models[this.data.type]);
 
-    // Model is 0.29 size. We make it 1.0 so we can easily scale based on 1m size.
-    blockEl.object3D.scale.set(1, 1, 1);
-    blockEl.object3D.scale.multiplyScalar(3.45).multiplyScalar(this.data.size);
-
     if (this.data.type !== 'mine') {
       // Uncomment in case of new Chrome version 
       // signEl.setAttribute('materials', "name: clearStageAdditive");
       this.setObjModelFromTemplate(signEl, this.signModels[this.data.type + this.data.color], this.el.sceneEl.systems.materials.clearStageAdditive);
+    }
+
+    if (this.data.type === 'sliderchain') {
+      const chainRatio = ((this.data.sliceCount - this.data.sliceIndex) / this.data.sliceCount) * 3.5;
+
+      blockEl.object3D.scale.set(1, chainRatio, 1);
+      signEl.object3D.scale.set(0.3, (1 / chainRatio) * 0.3, 1);
+    } else {
+      // Model is 0.29 size. We make it 1.0 so we can easily scale based on 1m size.
+      blockEl.object3D.scale.set(1, 1, 1);
+    }
+    
+    blockEl.object3D.scale.multiplyScalar(3.45).multiplyScalar(this.data.size);
+
+    if (this.data.type === 'sliderchain') {
+      
     }
   },
 
@@ -510,7 +565,7 @@ AFRAME.registerComponent('beat', {
       color: this.materialColor[this.data.color],
       side: 'double'
     });
-    this.setObjModelFromTemplate(partLeftEl, this.models.dot);
+    this.setObjModelFromTemplate(partLeftEl, this.models[this.data.type]);
     // Model is 0.29 size. We make it 1.0 so we can easily scale based on 1m size.
     partLeftEl.object3D.scale.set(1, 1, 1);
     partLeftEl.object3D.scale.multiplyScalar(3.45).multiplyScalar(this.data.size);
@@ -521,7 +576,7 @@ AFRAME.registerComponent('beat', {
       color: this.data.cutColor,
       side: 'double'
     });
-    this.setObjModelFromTemplate(cutLeftEl, this.models.dot);
+    this.setObjModelFromTemplate(cutLeftEl, this.models[this.data.type]);
 
     partRightEl.setAttribute('material', {
       metalness: 0.7,
@@ -532,7 +587,7 @@ AFRAME.registerComponent('beat', {
       color: this.materialColor[this.data.color],
       side: 'double'
     });
-    this.setObjModelFromTemplate(partRightEl, this.models.dot);
+    this.setObjModelFromTemplate(partRightEl, this.models[this.data.type]);
     // Model is 0.29 size. We make it 1.0 so we can easily scale based on 1m size.
     partRightEl.object3D.scale.set(1, 1, 1);
     partRightEl.object3D.scale.multiplyScalar(3.45).multiplyScalar(this.data.size);
@@ -543,7 +598,7 @@ AFRAME.registerComponent('beat', {
       color: this.data.cutColor,
       side: 'double'
     });
-    this.setObjModelFromTemplate(cutRightEl, this.models.dot);
+    this.setObjModelFromTemplate(cutRightEl, this.models[this.data.type]);
   },
 
   resetMineFragments: function () {
@@ -581,6 +636,7 @@ AFRAME.registerComponent('beat', {
   },
 
   postScoreEvent: function () {
+    if (!this.replayNote.time) return;
     const timeToScore = this.replayNote.time - this.song.getCurrentTime();
 
     const payload = {index: this.replayNote.i};
@@ -845,7 +901,7 @@ AFRAME.registerComponent('beat', {
       if ((saberControls.hitboxGood && saberBoundingBox.intersectsBox(beatSmallBoundingBox) && this.replayNote && this.replayNote.score != -3) || this.checkBigCollider(beatBigBoundingBox, hand, saberControls)) {
         // Sound.
 
-        if (this.settings.realHitsounds) {
+        if (this.data.type !== 'sliderchain' && this.settings.realHitsounds) {
           this.el.parentNode.components['beat-hit-sound'].playSound(this.el, this.data.cutDirection);
         }
 
@@ -962,7 +1018,7 @@ AFRAME.registerComponent('beat', {
       
     } else {
       const scoreEl = this.el.sceneEl.components["pool__beatscoreok"].requestEntity();
-      const colorAndScale = this.colorAndScaleForScore(score);
+      const colorAndScale = this.colorAndScaleForScore(this.replayNote);
       scoreEl.setAttribute('text', 'value', "" + score);
 
       let duration = 500 / this.song.speed;
@@ -1003,10 +1059,12 @@ AFRAME.registerComponent('beat', {
     var color = new THREE.Color();
     var fadeColor = new THREE.Color();
 
-    return function (score) {
+    return function (replayNote) {
       const judgments = HSVConfig["judgments"];
       let judgment;
       let fadeJudgment;
+      const score = (replayNote.score / replayNote.maxScore) * 115;
+
       for (var i = judgments.length - 1; i >= 0; i--) {
         if (judgments[i].threshold >= score) {
           judgment = judgments[i];
@@ -1014,6 +1072,8 @@ AFRAME.registerComponent('beat', {
           break;
         }
       }
+
+      if (!judgment) return {color: "#fff", scale: 0};
 
       color.setRGB(judgment.color[0], judgment.color[1], judgment.color[2])
       fadeColor.setRGB(fadeJudgment.color[0], fadeJudgment.color[1], fadeJudgment.color[2]);
@@ -1026,7 +1086,7 @@ AFRAME.registerComponent('beat', {
   })(),
 
   checkStaticHitsound: function () {
-    if (this.data.type === 'mine' || this.hitSoundState == SOUND_STATE.hitPlayed) return;
+    if (this.data.type === 'mine' || this.data.type === 'sliderchain' || this.hitSoundState == SOUND_STATE.hitPlayed) return;
 
     const currentTime = this.song.getCurrentTime();
     const noteTime = this.data.time - SWORD_OFFSET / this.data.speed;

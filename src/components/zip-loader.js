@@ -1,6 +1,7 @@
 const utils = require('../utils');
 import ZipLoader from 'zip-loader';
 import {Mirror_Inverse, Mirror_Horizontal, Mirror_Vertical} from '../chirality-support';
+import {postprocess} from '../utils/mapPostprocessor';
 
 const zipUrl = AFRAME.utils.getUrlParameter('zip');
 
@@ -91,7 +92,8 @@ AFRAME.registerComponent('zip-loader', {
 
       const diffBeatmaps = set._difficultyBeatmaps.sort(d => d._difficultyRank);
       diffBeatmaps.forEach(diff => {
-        event.beatmaps[mode][diff._difficulty] = loader.extractAsJSON(diff._beatmapFilename);
+        let map = postprocess(loader.extractAsJSON(diff._beatmapFilename));
+        event.beatmaps[mode][diff._difficulty] = map;
         event.beatSpeeds[mode][diff._difficulty] = diff._noteJumpMovementSpeed;
         event.beatOffsets[mode][diff._difficulty] = diff._noteJumpStartBeatOffset;
 

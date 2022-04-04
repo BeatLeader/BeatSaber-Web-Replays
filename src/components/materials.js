@@ -3,6 +3,7 @@ const flatShaders = require('../../assets/shaders/flat.js');
 const stageAdditiveShaders = require('../../assets/shaders/stageAdditive.js');
 const stageNormalShaders = require('../../assets/shaders/stageNormal.js');
 const energyShaders = require('../../assets/shaders/energy.js');
+const splineShaders = require('../../assets/shaders/spline.js');
 
 AFRAME.registerShader('energy', {
 	schema: {
@@ -65,6 +66,32 @@ AFRAME.registerSystem('materials', {
       },
       vertexShader: stageAdditiveShaders.vertexShader,
       fragmentShader: stageAdditiveShaders.fragmentShader,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      fog: false,
+      transparent: true
+    });
+
+    this.splinematerialred = new THREE.ShaderMaterial({
+      uniforms: {
+        mainColor: {value: new THREE.Color(COLORS.NEON_RED)},
+        start: {value: 100},
+        finish: {value: -100},
+      },
+      vertexShader: splineShaders.vertexShader,
+      fragmentShader: splineShaders.fragmentShader,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      fog: false,
+      transparent: true
+    });
+
+    this.splinematerialblue = new THREE.ShaderMaterial({
+      uniforms: {
+        mainColor: {value: new THREE.Color(COLORS.NEON_BLUE)},
+      },
+      vertexShader: splineShaders.vertexShader,
+      fragmentShader: splineShaders.fragmentShader,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       fog: false,

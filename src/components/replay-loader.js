@@ -1,8 +1,9 @@
 const dragDrop = require('drag-drop');
 import {checkBSOR, NoteEventType, ssReplayToBSOR} from '../open-replay-decoder';
+import {MultiplierCounter} from '../utils/MultiplierCounter'
 const DECODER_LINK = 'https://ssdecode.azurewebsites.net'
 
-import {mirrorDirection, NoteCutDirection, difficultyFromName, clamp, getRandomColor} from '../utils';
+import {NoteCutDirection, difficultyFromName, clamp, ScoringType} from '../utils';
 
 AFRAME.registerComponent('replay-loader', {
     schema: {
@@ -188,7 +189,8 @@ AFRAME.registerComponent('replay-loader', {
 
     processScores: function (replay) {
       const map = this.challenge.beatmaps[this.challenge.mode][this.challenge.difficulty];
-      var mapnotes = map._notes;
+      var mapnotes = [].concat(map._notes, map._chains)
+
       mapnotes = mapnotes.sort((a, b) => { return a._time - b._time; }).filter(a => a._type == 0 || a._type == 1);
       this.applyModifiers(map, replay);
 
@@ -202,7 +204,7 @@ AFRAME.registerComponent('replay-loader', {
           spawnTime: info.spawnTime,
           time: info.eventTime,
           id: info.noteID,
-          score: info.score ? info.score : ScoreForNote(info),
+          score: info.score,
           cutPoint: info.noteCutInfo ? info.noteCutInfo.cutPoint : null
         }
         
@@ -249,14 +251,17 @@ AFRAME.registerComponent('replay-loader', {
             const colorType = leftHanded ? 1 - mapnote._type : mapnote._type;
             const cutDirection = leftHanded ? mirrorDirection(mapnote._cutDirection) : mapnote._cutDirection;
             const lineLayer = mapnote._lineLayer;
-            const id = lineIndex * 1000 + lineLayer * 100 + colorType * 10 + cutDirection;
+            const scoringType = mapnote._scoringType ? mapnote._scoringType + 2 : 3;
+            const id = scoringType * 10000 + lineIndex * 1000 + lineLayer * 100 + colorType * 10 + cutDirection;
 
-            if (!replaynote.index && (replaynote.id == id || replaynote.id == id + 30000)) {
+            if (replaynote.index == undefined && replaynote.id == id) {
                 replaynote.index = group[j];
                 replaynote.colorType = colorType;
                 replaynote.lineIndex = lineIndex;
                 replaynote.cutDirection = cutDirection;
                 replaynote.lineLayer = lineLayer;
+                replaynote.mapnote = mapnote;
+                replaynote.scoringType = scoringType - 2;
                 break;
             }
           }
@@ -296,21 +301,34 @@ AFRAME.registerComponent('replay-loader', {
       });
 
       for (var i = 0; i < allStructs.length; i++) {
-        allStructs[i].i = i;
+        var note = allStructs[i];
+        note.i = i;
+        if (!note.score) {
+          note.score = ScoreForNote(note.eventType, note.cutInfo, note.scoringType);
+        }
       }
 
-      var multiplier = 1, lastmultiplier = 1;
       var energy = 0.5;
-      var score = 0, noteIndex = 0;
-      var combo = 0;
-      var misses = 0;
+      var score = 0, maxScore = 0, combo = 0, misses = 0;
+
+      const maxCounter = new MultiplierCounter();
+      const normalCounter = new MultiplierCounter();
 
       for (var i = 0; i < allStructs.length; i++) {
         let note = allStructs[i];
 
+        var scoreForMaxScore = 115;
+        if (note.scoringType == ScoringType.BurstSliderHead) {
+            scoreForMaxScore = 85;
+        } else if (note.scoringType == ScoringType.BurstSliderElement) {
+            scoreForMaxScore = 20;
+        }
+
+        maxCounter.Increase();
+        maxScore += maxCounter.Multiplier * scoreForMaxScore;
+
         if (note.score < 0) {
-          multiplier = multiplier > 1 ? Math.ceil(multiplier / 2) : 1;
-          lastmultiplier = multiplier;
+          normalCounter.Decrease();
           combo = 0;
           misses++;
           switch (note.score) {
@@ -326,24 +344,24 @@ AFRAME.registerComponent('replay-loader', {
               break;
           }
         } else {
-          score += multiplier * note.score;
+          normalCounter.Increase();
+          score += normalCounter.Multiplier * note.score;
           energy += 0.01;
           if (energy > 1) {
             energy = 1;
           }
           combo++;
-          multiplier = this.multiplierForCombo(this.comboForMultiplier(lastmultiplier) + combo);
         }
 
-        note.multiplier = multiplier;
+        note.multiplier = normalCounter.Multiplier;
         note.totalScore = score;
         note.combo = combo;
         note.misses = misses;
         note.energy = energy;
+        note.maxScore = scoreForMaxScore;
 
         if (note.isBlock) {
-          note.accuracy = (note.totalScore / this.maxScoreForNote(noteIndex) * 100).toFixed(2);
-          noteIndex++;
+          note.accuracy = ((note.totalScore / maxScore) * 100).toFixed(2);
         } else {
           note.accuracy = i == 0 ? 0 : allStructs[i - 1].accuracy;
         }
@@ -385,55 +403,46 @@ AFRAME.registerComponent('replay-loader', {
         map._obstacles = [];
       }
     },
-
-    maxScoreForNote(index) {
-      const note_score = 115;
-      const notes = index + 1;
-
-      if (notes <= 1) // x1 (+1 note)
-          return note_score * (0 + (notes - 0) * 1);
-      if (notes <= 5) // x2 (+4 notes)
-          return note_score * (1 + (notes - 1) * 2);
-      if (notes <= 13) // x4 (+8 notes)
-          return note_score * (9 + (notes - 5) * 4);
-      // x8
-      return note_score * (41 + (notes - 13) * 8);
-    }, 
-    multiplierForCombo(combo) {
-      if (combo < 1) {
-        return 1;
-      } if (combo < 5) {
-        return 2;
-      } if (combo < 13) {
-        return 4;
-      } else {
-        return 8;
-      }
-    },
-    comboForMultiplier(multiplier) {
-      if (multiplier == 1) {
-        return 0;
-      } if (multiplier == 2) {
-        return 1;
-      } if (multiplier == 4) {
-        return 6;
-      } else {
-        return 13;
-      }
-    },
 });
 
-function ScoreForNote(note) {
-  if (note.eventType == NoteEventType.good) {
-    const cut = note.noteCutInfo;
-    const beforeCutRawScore = clamp(Math.round(70 * cut.beforeCutRating), 0, 70);
-    const afterCutRawScore = clamp(Math.round(30 * cut.afterCutRating), 0, 30);
-    const num = 1 - clamp(cut.cutDistanceToCenter / 0.3, 0.0, 1.0);
-    const cutDistanceRawScore = Math.round(15 * num);
+function CutScoresForNote(cut, scoringType) {
+    var beforeCutRawScore = 0;
+    if (scoringType != ScoringType.BurstSliderElement) {
+      if (scoringType == ScoringType.SliderTail) {
+        beforeCutRawScore = 70;
+      } else {
+        beforeCutRawScore = clamp(Math.round(70 * cut.beforeCutRating), 0, 70);
+      }
+    }
+    var afterCutRawScore = 0;
+    if (scoringType != ScoringType.BurstSliderElement) {
+      if (scoringType == ScoringType.BurstSliderHead) {
+        afterCutRawScore = 0;
+      } else if (scoringType == ScoringType.SliderHead) {
+        afterCutRawScore = 30;
+      } else {
+        afterCutRawScore = clamp(Math.round(30 * cut.afterCutRating), 0, 30);
+      }
+    }
+    var cutDistanceRawScore = 0;
+    if (scoringType == ScoringType.BurstSliderElement) {
+      cutDistanceRawScore = 20;
+    } else {
+      var num = 1 - clamp(cut.cutDistanceToCenter / 0.3, 0, 1);
+      cutDistanceRawScore = Math.round(15 * num);
+    }
+
+    return [beforeCutRawScore, afterCutRawScore, cutDistanceRawScore];
+}
+
+function ScoreForNote(eventType, cutInfo, scoringType) {
+  if (eventType == NoteEventType.good) {
+    const scores = CutScoresForNote(cutInfo, scoringType);
+    const result = scores[0] + scores[1] + scores[2];
   
-    return beforeCutRawScore + afterCutRawScore + cutDistanceRawScore;
+    return result > 115 ? -2 : result;
   } else {
-    switch (note.eventType) {
+    switch (eventType) {
       case NoteEventType.bad:
         return -2;
       case NoteEventType.miss:

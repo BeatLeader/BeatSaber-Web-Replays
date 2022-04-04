@@ -96,11 +96,17 @@
       pool__beat-arrow-red="mixin: arrowRedBeat; size: 50; container: #beatContainer; dynamic: true"
       pool__beat-dot-blue="mixin: dotBlueBeat; size: 50; container: #beatContainer; dynamic: true"
       pool__beat-dot-red="mixin: dotRedBeat; size: 50; container: #beatContainer; dynamic: true"
+      pool__beat-sliderhead-blue="mixin: blueHead; size: 50; container: #beatContainer; dynamic: true"
+      pool__beat-sliderhead-red="mixin: redHead; size: 50; container: #beatContainer; dynamic: true"
+      pool__beat-sliderchain-blue="mixin: blueChain; size: 50; container: #beatContainer; dynamic: true"
+      pool__beat-sliderchain-red="mixin: redChain; size: 50; container: #beatContainer; dynamic: true"
       pool__beat-mine="mixin: mine; size: 50; container: #beatContainer; dynamic: true"
       pool__beat-glow="mixin: beatGlow; size: 20; container: #glowContainer; dynamic: true"
       pool__beatscoreok="mixin: beatScoreOk; size: 30; container: #beatContainer; dynamic: true"
       pool__beatscoresuper="mixin: beatScoreSuper; size: 10; container: #beatContainer; dynamic: true"
       pool__wall="mixin: wall; size: 30; container: #beatContainer"
+      pool__slider-blue="mixin: slider; size: 50; container: #beatContainer; dynamic: true"
+      pool__slider-red="mixin: slider; size: 50; container: #beatContainer; dynamic: true"
       proxy-event__cleargame="event: gamemenurestart; as: cleargame; to: a-scene"
       proxy-event__pausegame="event: pausegame; as: textglowoff; to: a-scene"
       proxy-event__resumegame="event: gamemenuresume; as: textglownormal; to: a-scene"
@@ -113,13 +119,15 @@
       camera-mover
       fps-counter
       intro-skip
-      render-order="background, additive, middle, hud, walls">
+      render-order="background, additive, middle, hud, walls, splines">
 
       <a-assets timeout="10000">
         {% include './assets.html' %}
       </a-assets>
 
       <a-entity id="beatObjTemplate" obj-model="obj: #beatObj" visible="false"></a-entity>
+      <a-entity id="sliderheadObjTemplate" obj-model="obj: #sliderheadObj" visible="false"></a-entity>
+      <a-entity id="sliderchainObjTemplate" obj-model="obj: #sliderchainObj" visible="false"></a-entity>
       <a-entity id="arrowRedObjTemplate" obj-model="obj: #arrowredObj" visible="false"></a-entity>
       <a-entity id="arrowBlueObjTemplate" obj-model="obj: #arrowblueObj" visible="false"></a-entity>
       <a-entity id="dotRedObjTemplate" obj-model="obj: #dotredObj" visible="false"></a-entity>

@@ -5,6 +5,8 @@
 <a-asset-item id="dotblueObj" src="assets/models/dotblue.obj"></a-asset-item>
 <a-asset-item id="backglowObj" src="assets/models/backglow.obj"></a-asset-item>
 <a-asset-item id="beatObj" src="assets/models/beat.obj"></a-asset-item>
+<a-asset-item id="sliderheadObj" src="assets/models/sliderhead.obj"></a-asset-item>
+<a-asset-item id="sliderchainObj" src="assets/models/sliderchain.obj"></a-asset-item>
 <a-asset-item id="missObj" src="assets/models/miss.obj"></a-asset-item>
 <a-asset-item id="wrongObj" src="assets/models/wrong.obj"></a-asset-item>
 <a-asset-item id="questObj" src="assets/models/quest.obj"></a-asset-item>
@@ -58,6 +60,10 @@
 <a-mixin id="arrowRedBeat" mixin="beat" beat="color: red; type: arrow"></a-mixin>
 <a-mixin id="dotBlueBeat" mixin="beat" beat="color: blue; type: dot"></a-mixin>
 <a-mixin id="dotRedBeat" mixin="beat" beat="color: red; type: dot"></a-mixin>
+<a-mixin id="redHead" mixin="beat" beat="color: red; type: sliderhead"></a-mixin>
+<a-mixin id="blueHead" mixin="beat" beat="color: blue; type: sliderhead"></a-mixin>
+<a-mixin id="redChain" mixin="beat" beat="color: red; type: sliderchain"></a-mixin>
+<a-mixin id="blueChain" mixin="beat" beat="color: blue; type: sliderchain"></a-mixin>
 <a-mixin id="mine" mixin="beat" beat="type: mine"></a-mixin>
 
 <a-mixin
@@ -127,6 +133,11 @@
   material="shader: wallShader; transparent: true; depthWrite: false; side: double;"
   position="0 0 1000"
   wall></a-mixin>
+
+<a-mixin
+  id="slider"
+  render-order="splines"
+  slider></a-mixin>
 
 <a-mixin
   id="bigMenuButton"

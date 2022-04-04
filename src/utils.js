@@ -38,6 +38,16 @@ const NoteErrorType = {
   Wall: -5
 }
 
+const ScoringType = {
+    Ignore: -1,
+    NoScore: 0,
+    Normal: 1,
+    SliderHead: 2,
+    SliderTail: 3,
+    BurstSliderHead: 4,
+    BurstSliderElement: 5
+}
+
 const SWORD_OFFSET = 0.8;
 
 function mirrorDirection(cutDirection) {
@@ -119,6 +129,29 @@ function signedAngle(from, to) {
   return angleBetween(from, to) * Math.sign((from.x * to.y - from.y * to.x));
 }
 
+function signedAngleToLine(vec, line) {
+  const f1 = signedAngle(vec, line);
+  const f2 = signedAngle(vec, line.negate());
+  return Math.abs(f1) >= Math.abs(f2) ? f2 : f1;
+}
+
+function clone(obj) {
+  if (null == obj || "object" != typeof obj) return obj;
+  var copy = obj.constructor();
+  for (var attr in obj) {
+      if (obj.hasOwnProperty(attr)) copy[attr] = obj[attr];
+  }
+  return copy;
+}
+
+function BezierCurve(p0, p1, p2, t) {
+  var num = 1 - t;
+  const pos = new THREE.Vector2().addScaledVector(p0, num * num).addScaledVector(p1, 2 * num * t).addScaledVector(p2, t * t);
+  const tangent = new THREE.Vector2().subVectors(p1, p0).multiplyScalar(2.0 * (1.0 - t)).multiply(new THREE.Vector2().subVectors(p2, p1).multiplyScalar(2.0 * t));
+
+  return [pos, tangent];
+}
+
 module.exports.beatsaverCdnCors = beatsaverCdnCors;
 module.exports.getHorizontalPosition = getHorizontalPosition;
 module.exports.getVerticalPosition = getVerticalPosition;
@@ -128,6 +161,10 @@ module.exports.NoteCutDirection = NoteCutDirection;
 module.exports.NoteErrorType = NoteErrorType;
 module.exports.mirrorDirection = mirrorDirection;
 module.exports.signedAngle = signedAngle;
+module.exports.signedAngleToLine = signedAngleToLine;
 module.exports.clamp = clamp;
+module.exports.clone = clone;
 module.exports.SWORD_OFFSET = SWORD_OFFSET;
 module.exports.difficultyFromName = difficultyFromName;
+module.exports.ScoringType = ScoringType;
+module.exports.BezierCurve = BezierCurve;

@@ -269,43 +269,51 @@ AFRAME.registerComponent('song-controls', {
     pauseButton.addEventListener('click', (e) => {
       e.preventDefault();
       if (pauseButton.classList.contains('play')) {
-        this.el.sceneEl.emit('usergesturereceive', null, false);
-        this.el.sceneEl.emit('gamemenuresume', null, false);
+        if (!this.finished) {
+          this.el.sceneEl.emit('usergesturereceive', null, false);
+          this.el.sceneEl.emit('gamemenuresume', null, false);
+        } else {
+          this.el.sceneEl.emit('gamemenurestart', null, false);
+        }
       } else {
         this.el.sceneEl.emit('pausegame', null, false);
       }
     });
 
-    this.el.sceneEl.addEventListener('pausegame', (e) => {
-      if (pauseButton.classList.contains('pause')) {
-        pauseButton.classList.remove('pause');
-        pauseButton.classList.add('play');
-        noSleep.disable();
-      }
-    });
-
-    let showPause = () => {
-      if (pauseButton.classList.contains('play')) {
-        pauseButton.classList.remove('play');
-        pauseButton.classList.add('pause');
-        noSleep.enable();
+    let togglePause = (value) => {
+      if (value) {
+        if (pauseButton.classList.contains('play')) {
+          pauseButton.classList.remove('play');
+          pauseButton.classList.add('pause');
+          noSleep.enable();
+        }
+      } else {
+        if (pauseButton.classList.contains('pause')) {
+          pauseButton.classList.remove('pause');
+          pauseButton.classList.add('play');
+          noSleep.disable();
+        }
       }
     };
 
-    this.el.sceneEl.addEventListener('gamemenuresume', (e) => { showPause() });
+    this.el.sceneEl.addEventListener('pausegame', (e) => {
+      togglePause(false);
+    });
+
+    this.el.sceneEl.addEventListener('gamemenuresume', (e) => { togglePause(true) });
     this.el.sceneEl.addEventListener('usergesturereceive', (e) => {
       if (!this.song.data.isPaused) {
-        showPause() 
+        togglePause(true);
       }
     });
 
     this.el.sceneEl.addEventListener('finishgame', (e) => {
-      pauseButton.style.display = "none";
-      noSleep.disable();
+      this.finished = true;
+      togglePause(false);
     });
 
-    this.el.sceneEl.addEventListener('gamemenurestart', (e) => {
-      pauseButton.style.display = "inline-block";
+    this.el.sceneEl.addEventListener('timechanged', () => {
+      this.finished = false;
     });
 
     // Difficulty dropdown.

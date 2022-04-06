@@ -1,11 +1,11 @@
-# BeatSaber Web Replays
+# Beat Saber Web Replays
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/08ead0d0-ade4-4f38-8af4-9b6c3c679234/deploy-status)](https://app.netlify.com/sites/musing-aryabhata-6ae6ea/deploys)
 
-[A-Frame]: https://github.com/radulov/ngoframe
+[A-Frame]: https://github.com/nsgolova/ngoframe
 [visit]: https://www.replay.beatleader.xyz/?id=c32d&difficulty=ExpertPlus&playerID=76561198333869741
 
-Web-based viewer for BeatSaber replays, built with [A-Frame] and JavaScript.
+Web-based viewer for Beat Saber replays, built with [A-Frame] and JavaScript.
 
 **[CLICK TO VIEW][visit]**
 
@@ -15,12 +15,12 @@ Web-based viewer for BeatSaber replays, built with [A-Frame] and JavaScript.
 
 - [BeatLeader Discord](https://discord.gg/2RG5YVqtG6)
 
-*The BeatSaber Web Replays is an unofficial community project and not officially
+*The Beat Saber Web Replays is an unofficial community project and not officially
 affiliated with Beat Saber.*
 
 ## Usage
 
-Go to the [BeatLeader](https://beatleader.xyz) and click on any ranked play higher than top 500 on the leaderboard.
+Go to the [BeatLeader](https://beatleader.xyz) and click on dancing pepe icon in the leaderboard.
 
 Or if you have a site, you can I-Frame the viewer and pass a query parameter
 containing the song ID, difficulty and playerID:
@@ -29,7 +29,7 @@ containing the song ID, difficulty and playerID:
 
 id - BeatSaver song ID. ("Ov Sacrament" in this case)
 difficulty - Easy, Normal, Hard, Expert, ExpertPlus
-playerID - player's Steam or Oculus ID (cerret in this case)
+playerID - player's ScoreSaber or BeatLeader id (cerret in this case)
 
 To directly link to a sought time, use the `?time` parameter in the URL (milliseconds, int, 0 to song duration):
 
@@ -85,7 +85,7 @@ Website will reload automatically after you save your changes.
 
 ### A-Frame build (optional)
 
-This project uses a custom A-Frame fork: https://github.com/radulov/ngoframe
+This project uses a custom A-Frame fork: https://github.com/nsgolova/ngoframe
 It's prebuilt and can be found in the \vendor folder.
 
 To build it
@@ -98,7 +98,7 @@ Copy files from \dist folder of A-Frame to \vendor folder here.
 
 ### Replay Format
 
-Uses [Open Replay Format](https://github.com/radulov/BS-Open-Replay)
+Uses [Open Replay Format](https://github.com/BeatLeader/BS-Open-Replay)
 
 ### Building and running in production mode
 

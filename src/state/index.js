@@ -276,6 +276,7 @@ AFRAME.registerState({
     },
 
     timechanged: (state, payload) => {
+      state.isFinished = false;
       let notes = state.notes;
       for (var i = notes.length; --i > 0;) {
         if (notes[i].time < payload.newTime) {

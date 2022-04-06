@@ -162,6 +162,7 @@ AFRAME.registerComponent('replay-loader', {
 
       var noteStructs = new Array();
       var bombStructs = new Array();
+      var noteRegistry = {};
       for (var i = 0; i < replay.notes.length; i++) {
         const info = replay.notes[i];
         let note = {
@@ -172,17 +173,23 @@ AFRAME.registerComponent('replay-loader', {
           id: info.noteID,
           score: info.score ? info.score : ScoreForNote(info)
         }
+        
         if (note.id == -1 || parseInt(("" + note.id).split("").pop()) == 9) {
           note.eventType = NoteEventType.bomb;
           note.id += 4;
           note.score = -4;
         }
-        if (note.eventType == NoteEventType.bomb) {
-          bombStructs.push(note);
-        } else {
-          note.isBlock = true;
-          noteStructs.push(note);
+        const key = "" + info.spawnTime + info.noteID;
+        if (!noteRegistry[key]) {
+          if (note.eventType == NoteEventType.bomb) {
+            bombStructs.push(note);
+          } else {
+            note.isBlock = true;
+            noteStructs.push(note);
+          }
+          noteRegistry[key] = true;
         }
+        
       }
 
       noteStructs.sort(function(a, b) {

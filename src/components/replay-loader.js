@@ -179,7 +179,7 @@ AFRAME.registerComponent('replay-loader', {
           note.id += 4;
           note.score = -4;
         }
-        const key = "" + info.spawnTime + info.noteID;
+        const key = info.noteID + " " + info.spawnTime;
         if (!noteRegistry[key]) {
           if (note.eventType == NoteEventType.bomb) {
             bombStructs.push(note);

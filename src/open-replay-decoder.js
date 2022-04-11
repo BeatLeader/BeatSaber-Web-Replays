@@ -318,6 +318,10 @@ function DecodeUint8(dataView)
 function DecodeString(dataView)
 {
     const length = dataView.getInt32(dataView.pointer, true);
+    if (length > 1000) { 
+        dataView.pointer += 1;
+        return DecodeString(dataView);
+     }
     var enc = new TextDecoder("utf-8");
     const string = enc.decode(new Int8Array(dataView.buffer.slice(dataView.pointer + 4, length + dataView.pointer + 4)));
     dataView.pointer += length + 4;

@@ -140,6 +140,7 @@ AFRAME.registerState({
       state.challenge.author = payload.info._levelAuthorName;
 
       const mode = payload.mode;
+      state.challenge.mode = mode;
       state.challenge.difficulties = difficulties[mode];
 
       if (!state.challenge.difficulty || !payload.beatmaps[mode][state.challenge.difficulty]) {

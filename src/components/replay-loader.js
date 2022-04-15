@@ -389,8 +389,8 @@ AFRAME.registerComponent('replay-loader', {
 function ScoreForNote(note) {
   if (note.eventType == NoteEventType.good) {
     const cut = note.noteCutInfo;
-    const beforeCutRawScore = Math.round(70 * cut.beforeCutRating);
-    const afterCutRawScore = Math.round(30 * cut.afterCutRating);
+    const beforeCutRawScore = clamp(Math.round(70 * cut.beforeCutRating), 0, 70);
+    const afterCutRawScore = clamp(Math.round(30 * cut.afterCutRating), 0, 30);
     const num = 1 - clamp(cut.cutDistanceToCenter / 0.3, 0.0, 1.0);
     const cutDistanceRawScore = Math.round(15 * num);
   

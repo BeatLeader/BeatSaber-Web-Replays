@@ -150,11 +150,14 @@ AFRAME.registerComponent('song-controls', {
       songDifficulty.style.backgroundColor = diffInfo.color;
       document.getElementById('songInfoOverlay').style.display = 'flex';
 
-      let customDiff = this.customDifficultyLabels[evt.detail.mode][evt.detail.difficulty];
-      if (customDiff) {
-        document.getElementById('songCustomDifficulty').innerHTML = customDiff;
-        document.getElementById('songCustomDifficulty').setAttribute('title', customDiff);
+      if (this.customDifficultyLabels[evt.detail.mode]) {
+        let customDiff = this.customDifficultyLabels[evt.detail.mode][evt.detail.difficulty];
+        if (customDiff) {
+          document.getElementById('songCustomDifficulty').innerHTML = customDiff;
+          document.getElementById('songCustomDifficulty').setAttribute('title', customDiff);
+        }
       }
+      
       if (evt.detail.mode != "Standard") {
         document.getElementById('songMode').innerHTML = evt.detail.mode;
         document.getElementById('songMode').style.display = "block";
@@ -679,6 +682,7 @@ AFRAME.registerComponent('song-controls', {
     //   option.style.display = 'none';
     //   option.innerHTML = option.dataset.difficulty;
     // }
+    if (!this.difficulties) return;
     this.difficulties[this.data.mode].forEach(difficulty => {
       // const option = this.difficultyOptions.querySelector(`[data-difficulty="${difficulty._difficulty}"]`);
       // option.style.display = 'inline-block';

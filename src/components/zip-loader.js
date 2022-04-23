@@ -1,5 +1,6 @@
 const utils = require('../utils');
 import ZipLoader from 'zip-loader';
+import {Mirror_Inverse, Mirror_Horizontal, Mirror_Vertical} from '../chirality-support';
 
 const zipUrl = AFRAME.utils.getUrlParameter('zip');
 
@@ -105,6 +106,10 @@ AFRAME.registerComponent('zip-loader', {
       // Get difficulties.
       event.difficulties[mode] = diffBeatmaps;
     });
+
+    if (!event.beatmaps[this.data.mode]) {
+      generateMode(event, this.data.difficulty, this.data.mode);
+    }
 
     // Default to hardest of first beatmap.
     if (!event.difficulty) {
@@ -254,4 +259,35 @@ function removeIdQueryParam () {
   let url = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
   url += search;
   window.history.pushState({path: url},'', url);
+}
+
+function generateMode(event, difficulty, mode) {
+  if (mode.includes("Standard")) {
+    event.beatmaps[mode] = {};
+      event.beatSpeeds[mode] = {};
+      event.beatOffsets[mode] = {};
+
+    event.beatmaps[mode][difficulty] = event.beatmaps["Standard"][difficulty];
+    event.beatSpeeds[mode][difficulty] = event.beatSpeeds["Standard"][difficulty];
+    event.beatOffsets[mode][difficulty] = event.beatOffsets["Standard"][difficulty];
+    event.difficulties[mode] = event.difficulties["Standard"];
+
+    switch (mode) {
+      case "VerticalStandard":
+        Mirror_Vertical(event.beatmaps[mode][difficulty], false, false);
+        break;
+      case "HorizontalStandard":
+        Mirror_Horizontal(event.beatmaps[mode][difficulty], 4, false, false);
+        break;
+      case "InverseStandard":
+        Mirror_Inverse(event.beatmaps[mode][difficulty], 4, true, true, false);
+        break;
+      case "InvertedStandard":
+        Mirror_Inverse(event.beatmaps[mode][difficulty], 4, false, false, false);
+        break;
+    
+      default:
+        break;
+    }
+  }
 }

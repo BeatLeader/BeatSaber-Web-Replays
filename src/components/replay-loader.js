@@ -224,7 +224,7 @@ AFRAME.registerComponent('replay-loader', {
             const lineLayer = mapnote._lineLayer;
             const id = lineIndex * 1000 + lineLayer * 100 + colorType * 10 + cutDirection;
 
-            if (replaynote.id == id) {
+            if (replaynote.id == id || replaynote.id == id + 30000) {
                 replaynote.index = group[j];
                 replaynote.colorType = colorType;
                 replaynote.lineIndex = lineIndex;

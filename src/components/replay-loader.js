@@ -162,7 +162,6 @@ AFRAME.registerComponent('replay-loader', {
 
       var noteStructs = new Array();
       var bombStructs = new Array();
-      var noteRegistry = {};
       for (var i = 0; i < replay.notes.length; i++) {
         const info = replay.notes[i];
         let note = {
@@ -179,17 +178,12 @@ AFRAME.registerComponent('replay-loader', {
           note.id += 4;
           note.score = -4;
         }
-        const key = info.noteID + " " + info.spawnTime;
-        if (!noteRegistry[key]) {
           if (note.eventType == NoteEventType.bomb) {
             bombStructs.push(note);
           } else {
             note.isBlock = true;
             noteStructs.push(note);
           }
-          noteRegistry[key] = true;
-        }
-        
       }
 
       noteStructs.sort(function(a, b) {
@@ -224,7 +218,7 @@ AFRAME.registerComponent('replay-loader', {
             const lineLayer = mapnote._lineLayer;
             const id = lineIndex * 1000 + lineLayer * 100 + colorType * 10 + cutDirection;
 
-            if (replaynote.id == id || replaynote.id == id + 30000) {
+            if (!replaynote.index && (replaynote.id == id || replaynote.id == id + 30000)) {
                 replaynote.index = group[j];
                 replaynote.colorType = colorType;
                 replaynote.lineIndex = lineIndex;

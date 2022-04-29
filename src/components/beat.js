@@ -1199,7 +1199,7 @@ const HSVConfig = {
       "fade": false
     },
     {
-      "threshold": 0,
+      "threshold": -1,
       "text": "<size=115%>%s</size>%n%n%B %C %A",
       "color": [
         0.3,

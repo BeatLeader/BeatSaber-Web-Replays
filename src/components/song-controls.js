@@ -692,7 +692,7 @@ AFRAME.registerComponent('song-controls', {
       this.info._difficultyBeatmapSets.forEach(set => {
         this.customDifficultyLabels[set._beatmapCharacteristicName] = {};
         set._difficultyBeatmaps.forEach(diff => {
-          const customLabel = diff._customData._difficultyLabel;
+          const customLabel = diff._customData ? diff._customData._difficultyLabel : null;
           if (!customLabel) { return; }
 
           this.customDifficultyLabels[set._beatmapCharacteristicName][diff._difficulty] = customLabel;

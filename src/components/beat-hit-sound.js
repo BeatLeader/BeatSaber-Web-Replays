@@ -5,6 +5,9 @@ const LAYER_MIDDLE = 'middle';
 const LAYER_TOP = 'top';
 const VOLUME = 0.0;
 
+const isSafari = navigator.userAgent.toLowerCase().indexOf('safari') !== -1 &&
+                 navigator.userAgent.toLowerCase().indexOf('chrome') === -1;
+
 // Allows for modifying detune. PR has been sent to three.js.
 THREE.Audio.prototype.play = function () {
   if (this.isPlaying === true) {
@@ -115,7 +118,9 @@ AFRAME.registerComponent('beat-hit-sound', {
   processSound: function (audio) {
     audio.detune = 0;
     audio.setVolume(this.volume);
-    this.currentBeatEl.object3D.getWorldPosition(audio.position);
+    if (this.currentBeatEl) {
+      this.currentBeatEl.object3D.getWorldPosition(audio.position);
+    }
   },
 
   /**
@@ -124,6 +129,7 @@ AFRAME.registerComponent('beat-hit-sound', {
    */
   sourceCreatedCallback: function (source) {
     // Pitch based on layer.
+    if (!this.currentBeatEl) return;
     const layer = this.getLayer(this.currentBeatEl.object3D.position.y);
     if (layer === LAYER_BOTTOM) {
       source.detune.setValueAtTime(-400, 0);

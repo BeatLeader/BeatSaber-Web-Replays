@@ -20,9 +20,7 @@ AFRAME.registerComponent('camera-mover', {
     },
 
     play: function () {
-
-        document.getElementById('povswitch').addEventListener('click', (e) => {
-            e.preventDefault();
+        let powHandler = () => {
             if (this.pov) {
                 this.povCamera.setAttribute('camera', 'active', false);
                 this.defaultCamera.setAttribute('camera', 'active', true);
@@ -33,9 +31,13 @@ AFRAME.registerComponent('camera-mover', {
             this.pov = !this.pov;
             this.updateSaveButtons();
             this.el.sceneEl.emit('povchanged', {newPov: this.pov}, false);
+        }
+        document.getElementById('povswitch').addEventListener('click', (e) => {
+            e.preventDefault();
+            powHandler();
         });
 
-        document.getElementById('cameraToLeft').addEventListener('click', (e) => {
+        let toLeftHandler = () => {
             this.defaultCamera.object3D.position.y = 1.75;
             this.defaultCamera.object3D.position.x = -2.0;
             this.defaultCamera.object3D.position.z = 0.0;
@@ -44,9 +46,11 @@ AFRAME.registerComponent('camera-mover', {
             this.lookControls.yawObject.rotation.y = -Math.PI / 2;
 
             this.disablePovIfNeeded();
-        });
+        }
 
-        document.getElementById('cameraToCenter').addEventListener('click', (e) => {
+        document.getElementById('cameraToLeft').addEventListener('click', toLeftHandler);
+
+        let toCenterHandler = () => {
             this.defaultCamera.object3D.position.y = 1.75;
             this.defaultCamera.object3D.position.x = 0.0;
             this.defaultCamera.object3D.position.z = 2.0;
@@ -55,9 +59,11 @@ AFRAME.registerComponent('camera-mover', {
             this.lookControls.yawObject.rotation.y = 0;
 
             this.disablePovIfNeeded();
-        });
+        }
 
-        document.getElementById('cameraToRight').addEventListener('click', (e) => {
+        document.getElementById('cameraToCenter').addEventListener('click', toCenterHandler);
+
+        let toRightHandler = () => {
             this.defaultCamera.object3D.position.y = 1.75;
             this.defaultCamera.object3D.position.x = 2.0;
             this.defaultCamera.object3D.position.z = 0.0;
@@ -66,6 +72,23 @@ AFRAME.registerComponent('camera-mover', {
             this.lookControls.yawObject.rotation.y = Math.PI / 2;
 
             this.disablePovIfNeeded();
+        }
+
+        document.getElementById('cameraToRight').addEventListener('click', toRightHandler);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.keyCode === 70 && e.shiftKey) { // f + Shift
+                powHandler();
+            }
+            if (e.keyCode === 81 && e.shiftKey) { // q + Shift
+                toLeftHandler();
+            }
+            if (e.keyCode === 82 && e.shiftKey) { // r + Shift
+                toCenterHandler();
+            }
+            if (e.keyCode === 69 && e.shiftKey) { // e + Shift
+                toRightHandler();
+            }
         });
 
         let restoreButton = document.getElementById('cameraRestore');

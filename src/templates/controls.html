@@ -103,9 +103,9 @@
       </div>
       <div class="settingHeader">Main camera</div>
       <div id="cameraPositionContainer">
-        <button id="cameraToLeft" title='Select left camera'>< left</button>
-        <button id="cameraToCenter" title='Select center(default) camera'>center</button>
-        <button id="cameraToRight" title='Select right camera'>right ></button>
+        <button id="cameraToLeft" title='Select left camera (shift+q)'>< left</button>
+        <button id="cameraToCenter" title='Select center camera (shift+r)'>center</button>
+        <button id="cameraToRight" title='Select right camera (shift+e)'>right ></button>
       </div>
       <div id="cameraSaveContainer">
         <button id="cameraSave" title='Save current camera position and rotation'>Save</button>
@@ -381,9 +381,10 @@
       <p id="songSubName"></p>
       <span id="difficultyLabel">
         <p id="songDifficulty"></p>
+        <p id="songMode"></p>
         <p id="songCustomDifficulty"></p>
       </span>
-
+      <p id="modifiers"></p>
     </span>
   </span>
 </a>
@@ -400,7 +401,7 @@
 
 <div id="usersContainer" style="position: absolute; display: flex; align-items: center; height: 100%; left: 5px; bottom: -60px;"></div>
 
-<button id="povswitch" onmousedown="event.preventDefault();" title="First person view"></button>
+<button id="povswitch" onmousedown="event.preventDefault();" title="First person view (shift+f)"></button>
 
 <a id="orthographicBackFullscreen" class="orthographicFullscreen" style="right: 23%; bottom: 0.5%; display: none;" title="Show fullscreen this camera">
   <svg class="enterFullscreen" width="100%" height="100%" version="1.1" viewBox="0 0 20 20" x="0px" y="0px">

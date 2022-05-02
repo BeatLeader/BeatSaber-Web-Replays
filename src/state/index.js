@@ -34,8 +34,10 @@ const emptyScore = {
   combo: 0,
   maxCombo: 0,
   multiplier: 1,
+  energy: 0.5,
   rank: '',
   score: 0,
+  scoreDescription: '',
   misses: 0
 };
 
@@ -138,9 +140,8 @@ AFRAME.registerState({
       state.challenge.audio = payload.audio;
       state.challenge.author = payload.info._levelAuthorName;
 
-      const mode = state.challenge.mode = payload.beatmaps.Standard
-        ? 'Standard'
-        : Object.keys(payload.beatmaps)[0];
+      const mode = payload.mode;
+      state.challenge.mode = mode;
       state.challenge.difficulties = difficulties[mode];
 
       if (!state.challenge.difficulty || !payload.beatmaps[mode][state.challenge.difficulty]) {
@@ -277,6 +278,7 @@ AFRAME.registerState({
     },
 
     timechanged: (state, payload) => {
+      state.isFinished = false;
       let notes = state.notes;
       for (var i = notes.length; --i > 0;) {
         if (notes[i].time < payload.newTime) {
@@ -400,20 +402,16 @@ function truncate (str, length) {
   return str;
 }
 
-function takeDamage (state) {
-  if (!state.isPlaying) { return; }
-  state.damage++;
-  // checkGameOver(state);
-}
-
 function updateScore (state, payload) {
   let note = state.notes[payload.index];
 
   state.score.score = note.totalScore;
+  state.score.scoreDescription = (note.totalScore + "").replace(/(\d)(?=(\d{3})+$)/g, '$1 ');
   state.score.combo = note.combo;
   state.score.multiplier = note.multiplier;
   state.score.accuracy = note.accuracy;
   state.score.misses = note.misses;
+  state.score.energy = note.energy;
   state.lastNoteTime = note.time;
 
   // console.log(note.totalScore + " - " + note.index + " - " + note.i + " - " + note.time + " - " + payload.index + " - " + note.score);

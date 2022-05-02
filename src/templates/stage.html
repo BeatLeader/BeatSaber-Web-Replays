@@ -1,9 +1,3 @@
-<a-entity
-  id="audioAnalyser"
-  bind__audioanalyser="beatDetectionThrottle: menuActive && 5000 || 1000"
-  audioanalyser="src: #introSong; fftSize: 64; enableBeatDetection: true; enableLevels: false; enableWaveform: false; beatDetectionThrottle: 5000; unique: true; isSafari: isSafari"
-  proxy-event="event: audioanalyserbeat; to: #logolight"></a-entity>
-
 <a-entity id="stage">
   <a-entity
     id="audioColumns"
@@ -63,15 +57,4 @@
     rotation="-90 0 0"
     material="shader: floorShader; normalMap: #floorNormalsImg; envMap: #floorEnvImg; hitLeft: -999 0 0; hitRight: -999 0 0"
     raycastable-game></a-entity>
-
-  <a-entity
-    id="songProgressRing"
-    render-order="additive"
-    bind__song-progress-ring="enabled: isPlaying && challenge.isBeatsPreloaded"
-    bind__visible="isPlaying && challenge.isBeatsPreloaded"
-    geometry="primitive: plane; width: 0.1; height: 0.1"
-    material="shader: ring; progress: 0; transparent: true; depthWrite: false; radiusInner: 0.5; color: #ABABAB"
-    position="0 0.1 -1.5"
-    rotation="-45 0 0">
-  </a-entity>
 </a-entity>

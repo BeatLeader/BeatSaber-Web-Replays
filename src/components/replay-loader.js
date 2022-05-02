@@ -1,7 +1,8 @@
 const dragDrop = require('drag-drop');
+import {checkBSOR, NoteEventType, ssReplayToBSOR} from '../open-replay-decoder';
 const DECODER_LINK = 'https://sspreviewdecode.azurewebsites.net'
 
-import {mirrorDirection, getRandomColor} from '../utils';
+import {mirrorDirection, NoteCutDirection, difficultyFromName, clamp, getRandomColor} from '../utils';
 
 AFRAME.registerComponent('replay-loader', {
     schema: {
@@ -14,12 +15,14 @@ AFRAME.registerComponent('replay-loader', {
     },
   
     init: function () {
+
       this.replays = [];
       this.users = [];
       this.processedScores = 0;
     },
 
     update: function () {
+
       let captureThis = this;
       if (this.data.link.length) {
         setTimeout(() => this.fetchByFile(this.data.link, true), 300);
@@ -30,7 +33,7 @@ AFRAME.registerComponent('replay-loader', {
       } else {
         this.userIds = this.data.playerID.length ? [this.data.playerID] : this.data.players.split(",");
         document.addEventListener('songFetched', (e) => {
-          captureThis.songFetched(e.detail.hash);
+          captureThis.downloadReplay(e.detail.hash);
         });
       }
 
@@ -39,44 +42,63 @@ AFRAME.registerComponent('replay-loader', {
       });
     },
 
-    difficultyNumber: function (name) {
-      switch(name) {
-        case 'Easy':
-        case 'easy':
-          return 1;
-        case 'Normal':
-        case 'normal':
-          return 3;
-        case 'Hard':
-        case 'hard':
-          return 5;
-        case 'Expert':
-        case 'expert':
-          return 7;
-        case 'ExpertPlus':
-        case 'expertPlus':
-          return 9;
-    
-        default: return 0;
-      }
-    },
-
-    songFetched: function (hash) {
-      console.log("fetched");
+    downloadReplay: function (hash) {
       this.el.sceneEl.emit('replayloadstart', null);
-      fetch(`/cors/score-saber/api/leaderboard/by-hash/${hash}/info?difficulty=${this.difficultyNumber(this.data.difficulty)}`, {referrer: "https://www.beatlooser.com"}).then(res => {
-        res.json().then(leaderbord => {
-          this.userIds.forEach((playerID, i) => {
-            const index = i;
-            fetch(`${DECODER_LINK}/?playerID=${playerID}&songID=${leaderbord.id}`).then(res => {
-              res.json().then(data => {
-                let replay = JSON.parse(data);
-                if (replay.frames) {
+      this.userIds.forEach((playerID, index) => {
+        fetch(`https://api.beatleader.xyz/score/${playerID}/${hash}/${this.data.difficulty}/${this.data.mode}`)
+        .then(async response => {
+          let data = response.status == 200 ? await response.json() : null;
+          if (data && data.playerId) {
+            checkBSOR(data.replay, true, (replay) => {
+              if (replay && replay.frames) {
+                if (replay.frames.length == 0) {
+                  this.el.sceneEl.emit('replayloadfailed', { error: "Replay broken, redownload and reinstall mod, please" }, null);
+                } else {
                   replay.index = index;
                   replay.color = getRandomColor();
                   replay.info.playerID = playerID;
                   this.replays[index] = replay;
-                  this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: replay.info.difficulty, index, color: replay.color, playerID }, null);
+                  this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: difficultyFromName(replay.info.difficulty), index, color: replay.color, playerID, mode: replay.info.mode, jd: replay.info.jumpDistance }, null);
+                  if (this.challenge) {
+                    this.processScores(replay);
+                  }
+                }
+              } else {
+                this.el.sceneEl.emit('replayloadfailed', { error: replay.errorMessage }, null);
+              }
+            });
+            const user = {
+              name: data.player.name, 
+              avatar: data.player.avatar,
+              country: data.player.country,
+              countryIcon: `https://cdn.beatleader.xyz/flags/${data.player.country.toLowerCase()}.png`,
+              profileLink: `https://beatleader.xyz/u/${data.player.id}`, 
+              id: data.player.id
+            };
+            this.users.push(user);
+            this.el.sceneEl.emit('userloaded', user, null);
+          } else {
+            this.downloadSSReplay(hash, playerID, index);
+          }
+        })
+      });
+    },
+
+    downloadSSReplay: function (hash, playerID, index) {
+      fetch(`/cors/score-saber/api/leaderboard/by-hash/${hash}/info?difficulty=${difficultyFromName(this.data.difficulty)}`, {referrer: "https://www.beatlooser.com"}).then(res => {
+        res.json().then(leaderbord => {
+          // this.userIds.forEach((playerID, i) => {
+          //   const index = i;
+            fetch(`${DECODER_LINK}/?playerID=${playerID}&songID=${leaderbord.id}`).then(res => {
+              res.json().then(data => {
+                let replay = JSON.parse(data);
+                if (replay.frames) {
+                  replay = ssReplayToBSOR(replay);
+                  replay.index = index;
+                  replay.color = getRandomColor();
+                  replay.info.playerID = playerID;
+                  this.replays[index] = replay;
+                  this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: replay.info.difficulty, index, color: replay.color, playerID, mode: replay.info.mode }, null);
                   if (this.challenge) {
                     this.processScores(replay);
                   }
@@ -85,11 +107,10 @@ AFRAME.registerComponent('replay-loader', {
                 }
               });
             });
-          });
+          //});
         });
       });
-      this.userIds.forEach(playerID => {
-        fetch(`/cors/score-saber/api/player/${playerID}/full`, {referrer: "https://www.beatlooser.com"}).then(res => {
+      fetch(`/cors/score-saber/api/player/${playerID}/full`, {referrer: "https://www.beatlooser.com"}).then(res => {
           res.json().then(data => {
               const user = {
                 name: data.name, 
@@ -102,25 +123,36 @@ AFRAME.registerComponent('replay-loader', {
               this.el.sceneEl.emit('userloaded', user, null);
           });
         });
-      });
     },
 
     fetchByFile: function (file, itsLink) {
+      this.el.sceneEl.emit('replayloadstart', null);
+      checkBSOR(file, itsLink, (replay) => {
+        if (replay && replay.frames) {
+          this.replay = replay;
+          this.fetchPlayer(replay.info.playerID);
+          this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: difficultyFromName(replay.info.difficulty), mode: replay.info.mode, jd: replay.info.jumpDistance }, null);
+        } else {
+          this.fetchSSFile(file, itsLink);
+        }
+      });
+    },
+
+    fetchSSFile: function (file, itsLink) {
       if (!itsLink && file.size > 40000000) { // 40 MB cap
         this.el.sceneEl.emit('replayloadfailed', { error: "File is too big" }, null);
         return;
       }
-      this.el.sceneEl.emit('replayloadstart', null);
       (!itsLink
       ? fetch(DECODER_LINK, { method: 'POST', body: file })
       : fetch(`${DECODER_LINK}/?link=${file}`))
       .then(response => response.json()).then(
         data => {
-          let replay = JSON.parse(data);
+          let replay = ssReplayToBSOR(JSON.parse(data));
           if (replay.frames) {
             this.replay = replay;
             this.cleanup && this.cleanup();
-            this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: replay.info.difficulty }, null);
+            this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: replay.info.difficulty, mode: replay.info.mode  }, null);
             if (this.challenge) {
               this.processScores();
             }
@@ -132,53 +164,73 @@ AFRAME.registerComponent('replay-loader', {
       );
       let playerId = (itsLink ? file : file.name).split(/\.|-|\//).find(el => (el.length == 16 || el.length == 17) && parseInt(el, 10));
       if (playerId) {
-        fetch(`/cors/score-saber/api/player/${playerId}/full`).then(res => {
-          res.json().then(data => {
-              this.user = data;
-              this.el.sceneEl.emit('userloaded', {
-                name: this.user.name, 
-                avatar: this.user.profilePicture.replace('https://cdn.scoresaber.com/', '/cors/score-saber-cdn/'),
-                country: this.user.country,
-                countryIcon: `https://www.beatleader.xyz/flags/${this.user.country.toLowerCase()}.png`,
-                id: this.user.id
-              }, null);
-          });
-        });
+        this.fetchPlayer(playerId);
       }
     },
+
+    fetchPlayer: function (playerID) {
+      fetch(`/cors/score-saber/api/player/${playerID}/full`, {referrer: "https://www.beatlooser.com"}).then(res => {
+        res.json().then(data => {
+            this.user = data;
+            this.el.sceneEl.emit('userloaded', {
+              name: this.user.name, 
+              avatar: this.user.profilePicture.replace('https://cdn.scoresaber.com/', '/cors/score-saber-cdn/'),
+              country: this.user.country,
+              countryIcon: `https://cdn.beatleader.xyz/flags/${this.user.country.toLowerCase()}.png`,
+              profileLink: `https://scoresaber.com/u/${this.user.id}`, 
+              id: this.user.id
+            }, null);
+        });
+      });
+    },
+
     processScores: function (replay) {
-      var mapnotes = this.challenge.beatmaps[this.data.mode][this.data.difficulty]._notes;
+      const map = this.challenge.beatmaps[this.challenge.mode][this.challenge.difficulty];
+      var mapnotes = map._notes;
       mapnotes = mapnotes.sort((a, b) => { return a._time - b._time; }).filter(a => a._type == 0 || a._type == 1);
+      this.applyModifiers(map, replay);
 
       var noteStructs = new Array();
       var bombStructs = new Array();
-      var wallStructs = new Array();
-      for (var i = 0; i < replay.scores.length; i++) {
-        if (replay.scores[i] == -4) {
-          let bomb = {
-            score: -4,
-            time: replay.noteTime[i]
-          }
-          bombStructs.push(bomb);
-        } else if (replay.scores[i] == -5) {
-          let wall = {
-            score: -5,
-            time: replay.noteTime[i]
-          }
-          wallStructs.push(wall);
-        } else {
-          const info = replay.noteInfos[i];
-          let note = {
-            score: replay.scores[i],
-            time: replay.noteTime[i],
-            lineIndex: parseInt(info[0]),
-            noteLineLayer: parseInt(info[1]),
-            cutDirection: parseInt(info[2]),
-            colorType: parseInt(info[3]),
-            isBlock: true
-          }
-          noteStructs.push(note);
+      for (var i = 0; i < replay.notes.length; i++) {
+        const info = replay.notes[i];
+        let note = {
+          eventType: info.eventType,
+          cutInfo: info.noteCutInfo,
+          spawnTime: info.spawnTime,
+          time: info.eventTime,
+          id: info.noteID,
+          score: info.score ? info.score : ScoreForNote(info)
         }
+        
+        if (note.id == -1 || parseInt(("" + note.id).split("").pop()) == 9) {
+          note.eventType = NoteEventType.bomb;
+          note.id += 4;
+          note.score = -4;
+        }
+          if (note.eventType == NoteEventType.bomb) {
+            bombStructs.push(note);
+          } else {
+            note.isBlock = true;
+            noteStructs.push(note);
+          }
+      }
+
+      noteStructs.sort(function(a, b) {
+        if (a.spawnTime < b.spawnTime) return -1;
+        if (a.spawnTime > b.spawnTime) return 1;
+        return 0;
+      });
+
+      var wallStructs = new Array();
+      for (var i = 0; i < replay.walls.length; i++) {
+        const info = replay.walls[i];
+        let note = {
+          time: info.time,
+          id: info.wallID,
+          score: -5
+        }
+        wallStructs.push(note);
       }
 
       var group, groupIndex, groupTime;
@@ -190,15 +242,18 @@ AFRAME.registerComponent('replay-loader', {
           for (var m = 0; m < group.length; m++) {
             const replaynote = noteStructs[groupIndex + m];
 
-            const lineIndex = leftHanded ? 3 - replaynote.lineIndex : replaynote.lineIndex;
-            const colorType = leftHanded ? 1 - replaynote.colorType : replaynote.colorType;
-            const cutDirection = leftHanded ? mirrorDirection(replaynote.cutDirection) : replaynote.cutDirection;
+            const lineIndex = leftHanded ? 3 - mapnote._lineIndex : mapnote._lineIndex;
+            const colorType = leftHanded ? 1 - mapnote._type : mapnote._type;
+            const cutDirection = leftHanded ? mirrorDirection(mapnote._cutDirection) : mapnote._cutDirection;
+            const lineLayer = mapnote._lineLayer;
+            const id = lineIndex * 1000 + lineLayer * 100 + colorType * 10 + cutDirection;
 
-            if (lineIndex == mapnote._lineIndex &&
-              replaynote.noteLineLayer == mapnote._lineLayer &&
-              cutDirection == mapnote._cutDirection &&
-              colorType == mapnote._type) {
+            if (!replaynote.index && (replaynote.id == id || replaynote.id == id + 30000)) {
                 replaynote.index = group[j];
+                replaynote.colorType = colorType;
+                replaynote.lineIndex = lineIndex;
+                replaynote.cutDirection = cutDirection;
+                replaynote.lineLayer = lineLayer;
                 break;
             }
           }
@@ -236,12 +291,13 @@ AFRAME.registerComponent('replay-loader', {
         if (a.index > b.index) return 1;
         return 0;
       });
-      
+
       for (var i = 0; i < allStructs.length; i++) {
         allStructs[i].i = i;
       }
 
       var multiplier = 1, lastmultiplier = 1;
+      var energy = 0.5;
       var score = 0, noteIndex = 0;
       var combo = 0;
       var misses = 0;
@@ -254,8 +310,24 @@ AFRAME.registerComponent('replay-loader', {
           lastmultiplier = multiplier;
           combo = 0;
           misses++;
+          switch (note.score) {
+            case -2:
+              energy -= 0.1;
+              break;
+            case -4:
+            case -3:
+              energy -= 0.15;
+              break;
+          
+            default:
+              break;
+          }
         } else {
           score += multiplier * note.score;
+          energy += 0.01;
+          if (energy > 1) {
+            energy = 1;
+          }
           combo++;
           multiplier = this.multiplierForCombo(this.comboForMultiplier(lastmultiplier) + combo);
         }
@@ -264,6 +336,7 @@ AFRAME.registerComponent('replay-loader', {
         note.totalScore = score;
         note.combo = combo;
         note.misses = misses;
+        note.energy = energy;
 
         if (note.isBlock) {
           note.accuracy = (note.totalScore / this.maxScoreForNote(noteIndex) * 100).toFixed(2);
@@ -295,6 +368,21 @@ AFRAME.registerComponent('replay-loader', {
         });
       }
     },
+
+    applyModifiers: function (map, replay) {
+      if (replay.info.modifiers.includes("NA")) {
+        map._notes.forEach(note => {
+          note._cutDirection = NoteCutDirection.Any;
+        });
+      }
+      if (replay.info.modifiers.includes("NB")) {
+        map._notes = map._notes.filter(a => a._type == 0 || a._type == 1);
+      }
+      if (replay.info.modifiers.includes("NO")) {
+        map._obstacles = [];
+      }
+    },
+
     maxScoreForNote(index) {
       const note_score = 115;
       const notes = index + 1;
@@ -331,3 +419,24 @@ AFRAME.registerComponent('replay-loader', {
       }
     },
 });
+
+function ScoreForNote(note) {
+  if (note.eventType == NoteEventType.good) {
+    const cut = note.noteCutInfo;
+    const beforeCutRawScore = clamp(Math.round(70 * cut.beforeCutRating), 0, 70);
+    const afterCutRawScore = clamp(Math.round(30 * cut.afterCutRating), 0, 30);
+    const num = 1 - clamp(cut.cutDistanceToCenter / 0.3, 0.0, 1.0);
+    const cutDistanceRawScore = Math.round(15 * num);
+  
+    return beforeCutRawScore + afterCutRawScore + cutDistanceRawScore;
+  } else {
+    switch (note.eventType) {
+      case NoteEventType.bad:
+        return -2;
+      case NoteEventType.miss:
+        return -3;
+      case NoteEventType.bomb:
+        return -4;
+    }
+  } 
+}

@@ -12,8 +12,10 @@ if (!queryParamTime || isNaN(queryParamTime)) {
 let disabledRoyale = AFRAME.utils.getUrlParameter('noRoyale');
 
 /**
- * Update the 2D UI. Handle pause and seek.
+ * Update the 2D UI. Should handle pause and seek.
  */
+
+// TODO: Divide this component
 AFRAME.registerComponent('song-controls', {
   dependencies: ['song'],
 
@@ -26,7 +28,8 @@ AFRAME.registerComponent('song-controls', {
     songId: {default: ''},
     isPlaying: {default: false},
     showControls: {default: true},
-    replaysCount: {default: 1}
+    replaysCount: {default: 1},
+    isSafari: {default: false}
   },
 
   init: function () {
@@ -151,10 +154,17 @@ AFRAME.registerComponent('song-controls', {
       songDifficulty.style.backgroundColor = diffInfo.color;
       document.getElementById('songInfoOverlay').style.display = 'flex';
 
-      let customDiff = this.customDifficultyLabels[this.data.difficulty];
-      if (customDiff) {
-        document.getElementById('songCustomDifficulty').innerHTML = customDiff;
-        document.getElementById('songCustomDifficulty').setAttribute('title', customDiff);
+      if (this.customDifficultyLabels[evt.detail.mode]) {
+        let customDiff = this.customDifficultyLabels[evt.detail.mode][evt.detail.difficulty];
+        if (customDiff) {
+          document.getElementById('songCustomDifficulty').innerHTML = customDiff;
+          document.getElementById('songCustomDifficulty').setAttribute('title', customDiff);
+        }
+      }
+      
+      if (evt.detail.mode != "Standard") {
+        document.getElementById('songMode').innerHTML = evt.detail.mode;
+        document.getElementById('songMode').style.display = "block";
       }
       
       // this.updateModeOptions();
@@ -168,7 +178,7 @@ AFRAME.registerComponent('song-controls', {
         document.getElementById('playerName').setAttribute('title', player.name);
         document.getElementById('playerCountry').src = player.countryIcon;
         document.getElementById('playerCountry').setAttribute('title', player.country);
-        document.getElementById('playerLink').setAttribute('href', "https://scoresaber.com/u/" + player.id);
+        document.getElementById('playerLink').setAttribute('href', player.profileLink);
         document.getElementById('playerInfoOverlay').style.display = 'flex';
       } else {
         this.loadedUsersCount++;
@@ -273,43 +283,51 @@ AFRAME.registerComponent('song-controls', {
     pauseButton.addEventListener('click', (e) => {
       e.preventDefault();
       if (pauseButton.classList.contains('play')) {
-        this.el.sceneEl.emit('usergesturereceive', null, false);
-        this.el.sceneEl.emit('gamemenuresume', null, false);
+        if (!this.finished) {
+          this.el.sceneEl.emit('usergesturereceive', null, false);
+          this.el.sceneEl.emit('gamemenuresume', null, false);
+        } else {
+          this.el.sceneEl.emit('gamemenurestart', null, false);
+        }
       } else {
         this.el.sceneEl.emit('pausegame', null, false);
       }
     });
 
-    this.el.sceneEl.addEventListener('pausegame', (e) => {
-      if (pauseButton.classList.contains('pause')) {
-        pauseButton.classList.remove('pause');
-        pauseButton.classList.add('play');
-        noSleep.disable();
-      }
-    });
-
-    let showPause = () => {
-      if (pauseButton.classList.contains('play')) {
-        pauseButton.classList.remove('play');
-        pauseButton.classList.add('pause');
-        noSleep.enable();
+    let togglePause = (value) => {
+      if (value) {
+        if (pauseButton.classList.contains('play')) {
+          pauseButton.classList.remove('play');
+          pauseButton.classList.add('pause');
+          noSleep.enable();
+        }
+      } else {
+        if (pauseButton.classList.contains('pause')) {
+          pauseButton.classList.remove('pause');
+          pauseButton.classList.add('play');
+          noSleep.disable();
+        }
       }
     };
 
-    this.el.sceneEl.addEventListener('gamemenuresume', (e) => { showPause() });
+    this.el.sceneEl.addEventListener('pausegame', (e) => {
+      togglePause(false);
+    });
+
+    this.el.sceneEl.addEventListener('gamemenuresume', (e) => { togglePause(true) });
     this.el.sceneEl.addEventListener('usergesturereceive', (e) => {
       if (!this.song.data.isPaused) {
-        showPause() 
+        togglePause(true);
       }
     });
 
     this.el.sceneEl.addEventListener('finishgame', (e) => {
-      pauseButton.style.display = "none";
-      noSleep.disable();
+      this.finished = true;
+      togglePause(false);
     });
 
-    this.el.sceneEl.addEventListener('gamemenurestart', (e) => {
-      pauseButton.style.display = "inline-block";
+    this.el.sceneEl.addEventListener('timechanged', () => {
+      this.finished = false;
     });
 
     // Difficulty dropdown.
@@ -397,16 +415,27 @@ AFRAME.registerComponent('song-controls', {
     const copyURL = (target, time) => {
       let input = document.createElement('input');
       target.appendChild(input);
-      let songParam = (AFRAME.utils.getUrlParameter('id') ? `?id=${AFRAME.utils.getUrlParameter('id')}` : `?hash=${AFRAME.utils.getUrlParameter('hash')}`);
+      
       let jdParam = "";
       if (this.jdChanged) {
         jdParam = "&jd=" + document.getElementById('jdLabel').innerHTML;
       } else if (AFRAME.utils.getUrlParameter('jd') ) {
         jdParam = "&jd=" + AFRAME.utils.getUrlParameter('jd');
       }
-      let playerParam = (AFRAME.utils.getUrlParameter('playerID') ? `&playerID=${AFRAME.utils.getUrlParameter('playerID')}` : `&players=${AFRAME.utils.getUrlParameter('players')}`);
+      let modeParam = "";
+      if (AFRAME.utils.getUrlParameter('mode') != "Standard") {
+        modeParam = "&mode=" + AFRAME.utils.getUrlParameter('mode');
+      }
 
-      let base = location.protocol + "//" + location.host + "/" + `${songParam}${playerParam}&difficulty=${AFRAME.utils.getUrlParameter('difficulty')}${jdParam}`
+      let baseParams = "";
+      if (AFRAME.utils.getUrlParameter('link')) {
+        baseParams = `?link=${AFRAME.utils.getUrlParameter('link')}${modeParam}${jdParam}`
+      } else {
+        let playerParam = (AFRAME.utils.getUrlParameter('playerID') ? `&playerID=${AFRAME.utils.getUrlParameter('playerID')}` : `&players=${AFRAME.utils.getUrlParameter('players')}`);
+        let songParam = (AFRAME.utils.getUrlParameter('id') ? `?id=${AFRAME.utils.getUrlParameter('id')}` : `?hash=${AFRAME.utils.getUrlParameter('hash')}`);
+        baseParams = `${songParam}${playerParam}&difficulty=${AFRAME.utils.getUrlParameter('difficulty')}${modeParam}${jdParam}`;
+      }
+      let base = location.protocol + "//" + location.host + "/" + baseParams;
       input.value = base + (time ? `&time=${Math.round(this.song.getCurrentTime()*1000)}&speed=${Math.round(this.song.speed * 100)}` : "" );
       input.select();
       document.execCommand("copy");
@@ -505,10 +534,19 @@ AFRAME.registerComponent('song-controls', {
 
     const toggleFullscreen = () => {
       if (fullscreen.classList.contains("inFullscreen")) {
-        document.exitFullscreen();
+        if (this.data.isSafari) {
+          document.webkitCancelFullScreen();
+        } else {
+          document.exitFullscreen();
+        }
         fullscreenHandler(false);
       } else {
-        document.body.requestFullscreen();
+        if (this.data.isSafari) {
+          document.body.webkitRequestFullScreen();
+        } else {
+          document.body.requestFullscreen();
+        }
+        
         fullscreenHandler(true);
       }
     }
@@ -530,7 +568,7 @@ AFRAME.registerComponent('song-controls', {
           this.el.sceneEl.emit('gamemenuresume', null, false);
         }
       }
-      if (e.keyCode === 70) {  // f
+      if (e.keyCode === 70 && !e.shiftKey) {  // f
         toggleFullscreen();
       }
       if (e.keyCode === 39) { // right
@@ -553,11 +591,15 @@ AFRAME.registerComponent('song-controls', {
     });
     this.el.sceneEl.addEventListener('jdCalculated', (e) => {
       const newJD = e.detail.jd;
-      const newJDString = "" + newJD.toFixed(2);
 
-      jd.value = newJD;
-      jdLabel.innerHTML = newJDString;
-      if (e.detail.defaultJd) {
+      if (newJD != null) {
+        const newJDString = "" + newJD.toFixed(2);
+
+        jd.value = newJD;
+        jdLabel.innerHTML = newJDString;
+      }
+      
+      if (e.detail.defaultJd != null) {
         const percent = ((e.detail.defaultJd - jd.min) / (jd.max - jd.min)) * 100;
         jdPoint.attributes.x.value = percent * 0.9 + (50 - percent) / 5 - 10 + "%";
         jdPoint.innerHTML = "" + e.detail.defaultJd.toFixed(2);
@@ -652,6 +694,7 @@ AFRAME.registerComponent('song-controls', {
     //   option.style.display = 'none';
     //   option.innerHTML = option.dataset.difficulty;
     // }
+    if (!this.difficulties) return;
     this.difficulties[this.data.mode].forEach(difficulty => {
       // const option = this.difficultyOptions.querySelector(`[data-difficulty="${difficulty._difficulty}"]`);
       // option.style.display = 'inline-block';
@@ -659,12 +702,12 @@ AFRAME.registerComponent('song-controls', {
       // Custom difficulty labels.
       if (!this.info._difficultyBeatmapSets) { return; }
       this.info._difficultyBeatmapSets.forEach(set => {
-        if (set._beatmapCharacteristicName !== 'Standard') { return; }
+        this.customDifficultyLabels[set._beatmapCharacteristicName] = {};
         set._difficultyBeatmaps.forEach(diff => {
-          const customLabel = diff._customData._difficultyLabel;
+          const customLabel = diff._customData ? diff._customData._difficultyLabel : null;
           if (!customLabel) { return; }
 
-          this.customDifficultyLabels[diff._difficulty] = customLabel;
+          this.customDifficultyLabels[set._beatmapCharacteristicName][diff._difficulty] = customLabel;
           // if (this.difficulty.innerHTML === diff._difficulty) {
           //   this.difficulty.innerHTML = customLabel;
           // }

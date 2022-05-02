@@ -1,5 +1,6 @@
 const utils = require('../utils');
 import ZipLoader from 'zip-loader';
+import {Mirror_Inverse, Mirror_Horizontal, Mirror_Vertical} from '../chirality-support';
 
 const zipUrl = AFRAME.utils.getUrlParameter('zip');
 
@@ -7,7 +8,6 @@ AFRAME.registerComponent('zip-loader', {
   schema: {
     id: {default: AFRAME.utils.getUrlParameter('id')},
     hash: {default: AFRAME.utils.getUrlParameter('hash')},
-    isSafari: {default: false},
     difficulty: {default: (AFRAME.utils.getUrlParameter('difficulty') || 'ExpertPlus')},
     mode: {default: AFRAME.utils.getUrlParameter('mode') || 'Standard'}
   },
@@ -24,6 +24,7 @@ AFRAME.registerComponent('zip-loader', {
     if (!this.data.id && !this.data.hash) {
       this.el.sceneEl.addEventListener('replayfetched', (e) => {
         this.data.difficulty = this.difficultyFromId(e.detail.difficulty);
+        this.data.mode = e.detail.mode;
         this.fetchData(e.detail.hash.replace("custom_level_", ""), true);
       });
     }
@@ -106,10 +107,15 @@ AFRAME.registerComponent('zip-loader', {
       event.difficulties[mode] = diffBeatmaps;
     });
 
+    if (!event.beatmaps[this.data.mode]) {
+      generateMode(event, this.data.difficulty, this.data.mode);
+    }
+
     // Default to hardest of first beatmap.
     if (!event.difficulty) {
-      event.difficulty = this.data.difficulty || event.difficulties.Standard[0]._difficulty;
+      event.difficulty = this.data.difficulty || event.difficulties[this.data.mode][0]._difficulty;
     }
+    event.mode = this.data.mode;
 
     Object.keys(loader.files).forEach(filename => {
       // Only needed if loading ZIP directly and not from API.
@@ -141,7 +147,8 @@ AFRAME.registerComponent('zip-loader', {
    * Read API first to get hash and URLs.
    */
   fetchData: function (id, byHash) {
-    return fetch(`/cors/beat-saver/api/maps/${byHash ? 'hash' : 'id'}/${id}`).then(res => {
+    document.cookie = "aprilFools=1; expires=Sat, 03 Apr 2022 00:00:00 UTC; path=/";
+    return fetch(`/cors/beat-saver2/api/maps/${byHash ? 'hash' : 'id'}/${id}`).then(res => {
       res.json().then(data => {
         if (data.versions) {
           this.hash = data.versions[0].hash;
@@ -252,4 +259,35 @@ function removeIdQueryParam () {
   let url = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
   url += search;
   window.history.pushState({path: url},'', url);
+}
+
+function generateMode(event, difficulty, mode) {
+  if (mode.includes("Standard")) {
+    event.beatmaps[mode] = {};
+      event.beatSpeeds[mode] = {};
+      event.beatOffsets[mode] = {};
+
+    event.beatmaps[mode][difficulty] = event.beatmaps["Standard"][difficulty];
+    event.beatSpeeds[mode][difficulty] = event.beatSpeeds["Standard"][difficulty];
+    event.beatOffsets[mode][difficulty] = event.beatOffsets["Standard"][difficulty];
+    event.difficulties[mode] = event.difficulties["Standard"];
+
+    switch (mode) {
+      case "VerticalStandard":
+        Mirror_Vertical(event.beatmaps[mode][difficulty], false, false);
+        break;
+      case "HorizontalStandard":
+        Mirror_Horizontal(event.beatmaps[mode][difficulty], 4, false, false);
+        break;
+      case "InverseStandard":
+        Mirror_Inverse(event.beatmaps[mode][difficulty], 4, true, true, false);
+        break;
+      case "InvertedStandard":
+        Mirror_Inverse(event.beatmaps[mode][difficulty], 4, false, false, false);
+        break;
+    
+      default:
+        break;
+    }
+  }
 }

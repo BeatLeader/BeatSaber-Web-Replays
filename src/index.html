@@ -74,8 +74,8 @@
       bind__beat-generator="difficulty: challenge.difficulty; mode: challenge.mode; isPlaying: isPlaying; beatSpeed: challenge.beatSpeed; noEffects: settings.noEffects"
       bind__pauser="enabled: isPlaying"
       bind__song="audio: challenge.audio; difficulty: challenge.difficulty; mode: challenge.mode; isPaused: isPaused; isFinished: isFinished; isPlaying: isPlaying; hasReceivedUserGesture: hasReceivedUserGesture; isBeatsPreloaded: challenge.isBeatsPreloaded"
-      bind__song-controls="difficulty: challenge.difficulty; mode: challenge.mode; isPlaying: isPlaying; songName: challenge.songName; songSubName: challenge.author; songImage: challenge.image; showControls: showControls; songId: challenge.id; replaysCount: replaysCount"
-      bind__zip-loader="difficulty: challenge.difficulty; id: challenge.id; isSafari: isSafari; mode: challenge.mode"
+      bind__song-controls="difficulty: challenge.difficulty; mode: challenge.mode; isSafari: isSafari; isPlaying: isPlaying; songName: challenge.songName; songSubName: challenge.author; songImage: challenge.image; showControls: showControls; songId: challenge.id; replaysCount: replaysCount"
+      bind__zip-loader="difficulty: challenge.difficulty; id: challenge.id; mode: challenge.mode"
       bind__replay-loader="difficulty: challenge.difficulty; mode: challenge.mode"
       bind__intro-skip="difficulty: challenge.difficulty"
       bind__fps-counter="enabled: settings.showFps"
@@ -109,6 +109,7 @@
       user-gesture
       replay-loader
       replay-player
+      replay-info-ui
       camera-mover
       fps-counter
       intro-skip
@@ -125,7 +126,16 @@
       <a-entity id="dotBlueObjTemplate" obj-model="obj: #dotblueObj" visible="false"></a-entity>
       <a-entity id="mineObjTemplate" obj-model="obj: #mineObj" visible="false"></a-entity>
 
-      <a-entity id="beatContainer" bind__pause="isPaused: !isPlaying" beat-hit-sound></a-entity>
+      <a-entity 
+        id="beatContainer" 
+        bind__pause="isPaused: !isPlaying" 
+        beat-hit-sound></a-entity>
+
+      <a-entity
+        id="audioAnalyser"
+        audioanalyser="src: #introSong; fftSize: 64; enableBeatDetection: true; enableLevels: false; enableWaveform: false; beatDetectionThrottle: 5000; unique: true"
+        bind__audioanalyser="beatDetectionThrottle: menuActive && 5000 || 1000; isSafari: isSafari"
+        proxy-event="event: audioanalyserbeat; to: #logolight"></a-entity>
 
       {% include './templates/stage.html' %}
       {% include './templates/gameMenu.html' %}

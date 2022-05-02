@@ -86,6 +86,28 @@ function directionVector(cutDirection) {
   }
 }
 
+function difficultyFromName(name) {
+  switch(name) {
+    case 'Easy':
+    case 'easy':
+      return 1;
+    case 'Normal':
+    case 'normal':
+      return 3;
+    case 'Hard':
+    case 'hard':
+      return 5;
+    case 'Expert':
+    case 'expert':
+      return 7;
+    case 'ExpertPlus':
+    case 'expertPlus':
+      return 9;
+
+    default: return 0;
+  }
+}
+
 const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
 
 function angleBetween(from, to) {
@@ -118,3 +140,4 @@ module.exports.signedAngle = signedAngle;
 module.exports.clamp = clamp;
 module.exports.SWORD_OFFSET = SWORD_OFFSET;
 module.exports.getRandomColor = getRandomColor;
+module.exports.difficultyFromName = difficultyFromName;

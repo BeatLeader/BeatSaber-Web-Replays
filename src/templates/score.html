@@ -13,7 +13,7 @@
     <a-entity
       id="score"
       mixin="scoreText"
-      bind__text="value: score.score"
+      bind__text="value: score.scoreDescription"
       text="width: 4; color: #FAFAFA">
     </a-entity>
   </a-entity>
@@ -54,6 +54,14 @@
     position="-1.8 0.3 -4"
     scale="5 5 5">
   </a-entity>
+
+  <a-entity
+      id="energyBar"
+      render-order="hud"
+      bind__energy-bar="enabled: isPlaying && challenge.isBeatsPreloaded; energy: score.energy"
+      geometry="primitive: plane; width: 1.5; height: 0.05"
+      material="shader: energy; progress: 0; transparent: true; depthWrite: false; color: #ABABAB"
+      position="0 -0.2 -4"></a-entity>
 
   <a-entity 
     render-order="hud"

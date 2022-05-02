@@ -2,6 +2,16 @@ const COLORS = require('../constants/colors.js');
 const flatShaders = require('../../assets/shaders/flat.js');
 const stageAdditiveShaders = require('../../assets/shaders/stageAdditive.js');
 const stageNormalShaders = require('../../assets/shaders/stageNormal.js');
+const energyShaders = require('../../assets/shaders/energy.js');
+
+AFRAME.registerShader('energy', {
+	schema: {
+		progress: {default: 0, is: 'uniform'},
+	},
+
+	vertexShader: energyShaders.vertexShader,
+	fragmentShader: energyShaders.fragmentShader
+});
 
 AFRAME.registerSystem('materials', {
   init: function () {

@@ -47,7 +47,8 @@ AFRAME.registerComponent('replay-loader', {
                 this.el.sceneEl.emit('replayloadfailed', { error: "Replay broken, redownload and reinstall mod, please" }, null);
               } else {
                 this.replay = replay;
-                this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: difficultyFromName(replay.info.difficulty), mode: replay.info.mode, jd: replay.info.jumpDistance }, null);
+                const jd = replay.info.jumpDistance > 5 ? replay.info.jumpDistance : undefined;
+                this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: difficultyFromName(replay.info.difficulty), mode: replay.info.mode, jd }, null);
                 if (this.challenge) {
                   this.processScores();
                 }

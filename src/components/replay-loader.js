@@ -58,7 +58,8 @@ AFRAME.registerComponent('replay-loader', {
                   replay.color = getRandomColor();
                   replay.info.playerID = playerID;
                   this.replays[index] = replay;
-                  this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: difficultyFromName(replay.info.difficulty), index, color: replay.color, playerID, mode: replay.info.mode, jd: replay.info.jumpDistance }, null);
+                  const jd = replay.info.jumpDistance > 5 ? replay.info.jumpDistance : undefined;
+                  this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: difficultyFromName(replay.info.difficulty), index, color: replay.color, playerID, mode: replay.info.mode, jd }, null);
                   if (this.challenge) {
                     this.processScores(replay);
                   }

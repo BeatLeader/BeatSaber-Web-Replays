@@ -29,7 +29,9 @@ AFRAME.registerComponent('song-controls', {
     isPlaying: {default: false},
     showControls: {default: true},
     replaysCount: {default: 1},
-    isSafari: {default: false}
+    isSafari: {default: false},
+    disabledRoyale: {default: !disabledRoyale},
+    showColorInputs: {default: false}
   },
 
   init: function () {
@@ -37,6 +39,7 @@ AFRAME.registerComponent('song-controls', {
     this.song = this.el.components.song;
     this.settings = this.el.components.settings;
     this.tick = AFRAME.utils.throttleTick(this.tick.bind(this), 100);
+    this.headsetStates = [];
 
     // Seek to ?time if specified.
     if (queryParamTime !== undefined) {
@@ -91,6 +94,14 @@ AFRAME.registerComponent('song-controls', {
 
     if (data.isPlaying) {
       document.body.classList.add('isPlaying');
+
+      if (!oldData.isPlaying) {
+        const headsets = this.el.sceneEl.querySelectorAll('.headset');
+        headsets.forEach((element, index) => {
+          element.object3D.visible = element.object3D.visible && this.headsetStates[index];
+        });
+      }
+      
     } else {
       document.body.classList.remove('isPlaying');
     }
@@ -118,6 +129,13 @@ AFRAME.registerComponent('song-controls', {
 
     if (oldData.mode && oldData.mode !== data.mode) {
       this.updateDifficultyOptions();
+    }
+
+    if (oldData.showColorInputs != data.showColorInputs) {
+      const colorInputs = document.querySelectorAll('.colorInput');
+      colorInputs.forEach(element => {
+        element.style.display = data.showColorInputs ? "block" : "none";
+      });
     }
   },
 
@@ -905,14 +923,20 @@ AFRAME.registerComponent('song-controls', {
       let tableBodyRow = document.createElement('tr')
       tableBodyRow.className = 'playerTableRow'
       tableBodyRow.style.height = '40px';
+      let colorInput = document.createElement('input')
+      colorInput.type = "color";
+      colorInput.className = "colorInput";
+      colorInput.style.display = this.data.showColorInputs ? "block" : "none";
 
       const replay = loader.replays.find(el => el && el.info.playerID == user.id);
       if (replay) {
         tableBodyRow.style.backgroundColor = replay.color;
+        colorInput.value = replay.color;
         user.replay = replay;
       } else {
         this.el.sceneEl.addEventListener('replayfetched', (event) => {
           if (event.detail.playerID == user.id) {
+            colorInput.value = event.detail.color;
             tableBodyRow.style.backgroundColor = event.detail.color;
             user.replay = loader.replays.find(el => el && el.info.playerID == user.id);
           }
@@ -960,7 +984,12 @@ AFRAME.registerComponent('song-controls', {
       accLabel.style.color = "white";
       accLabel.style.margin = "2px";
 
-      div2.append(scoreLabel, accLabel);
+      colorInput.addEventListener('input', evt => {
+        tableBodyRow.style.backgroundColor = evt.target.value;
+        this.el.sceneEl.emit('colorChanged', {  index: user.replay.index, color: evt.target.value }, null);
+      });
+
+      div2.append(scoreLabel, accLabel, colorInput);
 
       tableBodyRow.append(div, div2);
       table.append(tableBodyRow);
@@ -969,11 +998,24 @@ AFRAME.registerComponent('song-controls', {
         if (user.replay) {
           let note = user.replay.noteStructs[event.detail.index];
           let headset = headsets[user.replay.index];
-          if (disabledRoyale) {
+          const leftSaberEl = saberEls[user.replay.index * 2];
+          const rightSaberEl = saberEls[user.replay.index * 2 + 1];
+          if (this.data.disabledRoyale) {
             scoreLabel.innerHTML = "" + note.totalScore;
+            if (!leftSaberEl.object3D.visible) {
+              tableBodyRow.style.opacity = 1
+              leftSaberEl.object3D.visible = true;
+              leftSaberEl.components.trail.data.eliminated = false;
+              leftSaberEl.components.trail.data.enabled = true;
+              leftSaberEl.components.trail.mesh.visible = true;
+              rightSaberEl.object3D.visible = true;
+              rightSaberEl.components.trail.data.eliminated = false;
+              rightSaberEl.components.trail.data.enabled = true;
+              rightSaberEl.components.trail.mesh.visible = true;
+              headset.object3D.visible = true;
+              this.headsetStates[user.replay.index] = true;
+            }
           } else {
-            const leftSaberEl = saberEls[user.replay.index * 2];
-            const rightSaberEl = saberEls[user.replay.index * 2 + 1];
             if (((event.detail.index > loader.noteCountForBattle * Math.max(loader.replays.length - 1 - tableBodyRow.rowIndex, 0.8)))) {
               scoreLabel.innerHTML = "" + 0;
               if (leftSaberEl.object3D.visible) {
@@ -987,7 +1029,7 @@ AFRAME.registerComponent('song-controls', {
                 rightSaberEl.components.trail.data.eliminated = true;
                 rightSaberEl.components.trail.mesh.visible = false;
                 headset.object3D.visible = false;
-                
+                this.headsetStates[user.replay.index] = false;
               }
             } else {
               scoreLabel.innerHTML = "" + note.totalScore;
@@ -1002,6 +1044,7 @@ AFRAME.registerComponent('song-controls', {
                 rightSaberEl.components.trail.data.enabled = true;
                 rightSaberEl.components.trail.mesh.visible = true;
                 headset.object3D.visible = true;
+                this.headsetStates[user.replay.index] = true;
               }
             }
           }

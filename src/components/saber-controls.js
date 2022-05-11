@@ -59,9 +59,10 @@ AFRAME.registerComponent('saber-controls', {
     this.hitboxBladeTipPosition = new THREE.Vector3();
     this.hitboxBladePosition = new THREE.Vector3();
 
-    this.el.sceneEl.addEventListener('replayfetched', (e) => {
+    this.el.sceneEl.addEventListener('colorChanged', (e) => {
       if (e.detail.index == this.data.index && e.detail.color) {
         this.el.components.trail.data.color = e.detail.color;
+        this.el.components.trail.updateColor();
         this.el.querySelector('.saberHandle').setAttribute('material', 'color', e.detail.color);
         this.el.querySelector('.saberglow').setAttribute('material', 'color', e.detail.color);
       }

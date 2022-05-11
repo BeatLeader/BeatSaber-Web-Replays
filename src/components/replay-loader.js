@@ -60,6 +60,7 @@ AFRAME.registerComponent('replay-loader', {
                   this.replays[index] = replay;
                   const jd = replay.info.jumpDistance > 5 ? replay.info.jumpDistance : undefined;
                   this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: difficultyFromName(replay.info.difficulty), index, color: replay.color, playerID, mode: replay.info.mode, jd }, null);
+                  this.el.sceneEl.emit('colorChanged', {  index, color: replay.color, playerID }, null);
                   if (this.challenge) {
                     this.processScores(replay);
                   }
@@ -100,6 +101,7 @@ AFRAME.registerComponent('replay-loader', {
                   replay.info.playerID = playerID;
                   this.replays[index] = replay;
                   this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: replay.info.difficulty, index, color: replay.color, playerID, mode: replay.info.mode }, null);
+                  this.el.sceneEl.emit('colorChanged', {  index, color: replay.color, playerID }, null);
                   if (this.challenge) {
                     this.processScores(replay);
                   }

@@ -35,7 +35,7 @@ AFRAME.registerComponent('replay-player', {
         this.q1 = new THREE.Quaternion();
         this.q2 = new THREE.Quaternion();
 
-        this.el.sceneEl.addEventListener('replayfetched', (e) => {
+        this.el.sceneEl.addEventListener('colorChanged', (e) => {
           if (e.detail.color) {
             this.headsets[e.detail.index].setAttribute('material', 'color', e.detail.color);
           }

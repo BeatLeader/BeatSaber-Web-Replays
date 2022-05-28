@@ -39,15 +39,12 @@ AFRAME.registerComponent('beat', {
     anticipationTime: {default: 0},
     warmupTime: {default: 0},
     warmupSpeed: {default: 0},
+    blue: {default: COLORS.BEAT_BLUE},
+    red: {default: COLORS.BEAT_RED},
     // Loading cubes
     loadingCube: {default: false},
     visible: {default: true},
     animating: {default: true},
-  },
-
-  materialColor: {
-    blue: COLORS.BEAT_BLUE,
-    red: COLORS.BEAT_RED
   },
 
   cutColor: {
@@ -423,9 +420,9 @@ AFRAME.registerComponent('beat', {
         metalness: 0.7,
         roughness: 0.1,
         sphericalEnvMap: '#envmapTexture',
-        emissive: this.materialColor[this.data.color],
+        emissive: this.data[this.data.color],
         emissiveIntensity: 0.05,
-        color: this.materialColor[this.data.color]
+        color: this.data[this.data.color]
       });
     }
     this.setObjModelFromTemplate(blockEl, this.models[this.data.type]);
@@ -499,9 +496,9 @@ AFRAME.registerComponent('beat', {
       metalness: 0.7,
       roughness: 0.1,
       sphericalEnvMap: '#envmapTexture',
-      emissive: this.materialColor[this.data.color],
+      emissive: this.data[this.data.color],
       emissiveIntensity: 0.05,
-      color: this.materialColor[this.data.color],
+      color: this.data[this.data.color],
       side: 'double'
     });
     this.setObjModelFromTemplate(partLeftEl, this.models.dot);
@@ -521,9 +518,9 @@ AFRAME.registerComponent('beat', {
       metalness: 0.7,
       roughness: 0.1,
       sphericalEnvMap: '#envmapTexture',
-      emissive: this.materialColor[this.data.color],
+      emissive: this.data[this.data.color],
       emissiveIntensity: 0.05,
-      color: this.materialColor[this.data.color],
+      color: this.data[this.data.color],
       side: 'double'
     });
     this.setObjModelFromTemplate(partRightEl, this.models.dot);

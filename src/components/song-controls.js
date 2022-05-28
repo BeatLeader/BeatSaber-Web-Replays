@@ -603,13 +603,13 @@ AFRAME.registerComponent('song-controls', {
     let leftSaberColorInput = document.getElementById('leftSaberColor');
     leftSaberColorInput.addEventListener('input', (e) => {
       this.el.sceneEl.emit('colorChanged', {  hand: 'left', color: e.target.value }, null);
-      this.changeColor('rightSaberColor', e.target.value);
+      this.changeColor('leftSaberColor', e.target.value);
     });
 
     let rightSaberColorInput = document.getElementById('rightSaberColor');
     rightSaberColorInput.addEventListener('input', (e) => {
       this.el.sceneEl.emit('colorChanged', {  hand: 'right', color: e.target.value }, null);
-      this.changeColor('leftSaberColor', e.target.value);
+      this.changeColor('rightSaberColor', e.target.value);
     });
 
     this.el.sceneEl.addEventListener('colorsFetched', (e) => {
@@ -620,7 +620,7 @@ AFRAME.registerComponent('song-controls', {
       }
 
       if (patreonFeatures.rightSaberColor) {
-        leftSaberColorInput.value = patreonFeatures.rightSaberColor;
+        rightSaberColorInput.value = patreonFeatures.rightSaberColor;
         this.el.sceneEl.emit('colorChanged', {  hand: 'right', color: patreonFeatures.rightSaberColor }, null);
       }
 
@@ -628,18 +628,11 @@ AFRAME.registerComponent('song-controls', {
     });
 
     this.getColors((data) => {
-      let canChange = false;
       if (data.player) {
         let roles = data.player.role;
         if (roles.includes('tipper') || roles.includes('supporter') || roles.includes('supporter')) {
-          canChange = true;
+          this.currentPlayer = data.player.id;
         }
-        this.currentPlayer = data.player.id;
-      }
-
-      if (!canChange) {
-        leftSaberColorInput.parentElement.style.display = "none";
-        rightSaberColorInput.parentElement.style.display = "none";
       }
     });
 
@@ -662,10 +655,15 @@ AFRAME.registerComponent('song-controls', {
 
   changeColor: (hand, color) => {
     if (this.playerId == this.replayPlayerId) {
-      fetch(`https://api.beatleader.xyz/user/patreon?${hand}=${encodeURIComponent(color)}`, { 
-        method: 'PATCH', 
-        credentials: 'include'
-      });
+      this.start = new Date().getTime();
+      setTimeout(() => {
+        if ((new Date().getTime() - this.start) > 999) {
+          fetch(`https://api.beatleader.xyz/user/patreon?${hand}=${encodeURIComponent(color)}`, { 
+            method: 'PATCH', 
+            credentials: 'include'
+          });
+        }
+      }, 1000);
     }
   },
 

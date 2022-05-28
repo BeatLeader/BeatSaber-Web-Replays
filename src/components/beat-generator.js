@@ -63,6 +63,7 @@ AFRAME.registerComponent('beat-generator', {
     this.twister = document.getElementById('twister');
     this.leftStageLasers = document.getElementById('leftStageLasers');
     this.rightStageLasers = document.getElementById('rightStageLasers');
+    this.colors = {};
 
     this.el.addEventListener('cleargame', this.clearBeats.bind(this));
     this.el.addEventListener('challengeloadend', evt => {
@@ -92,6 +93,11 @@ AFRAME.registerComponent('beat-generator', {
         } else {
           this.jdToSet = evt.detail.jd;
         }
+      }
+    });
+    this.el.sceneEl.addEventListener('colorChanged', (e) => {
+      if (e.detail.color) {
+        this.colors[e.detail.hand] = e.detail.color;
       }
     });
   },
@@ -317,6 +323,14 @@ AFRAME.registerComponent('beat-generator', {
       beatObj.anticipationTime = this.beatAnticipationTime;
       beatObj.warmupTime = data.beatWarmupTime;
       beatObj.warmupSpeed = data.beatWarmupSpeed;
+
+      if (this.colors['right']) {
+        beatObj.blue = this.colors['right'];
+      }
+
+      if (this.colors['left']) {
+        beatObj.red = this.colors['left'];
+      }
 
       if (this.mappingExtensions) {
         note._lineIndex = note._lineIndex < 0

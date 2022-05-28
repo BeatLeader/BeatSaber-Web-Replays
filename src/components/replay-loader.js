@@ -66,6 +66,10 @@ AFRAME.registerComponent('replay-loader', {
               profileLink: `https://beatleader.xyz/u/${this.user.id}`, 
               id: this.user.id
             }, null);
+            let patreonFeatures = data.player.patreonFeatures;
+            if (patreonFeatures) {
+              this.el.sceneEl.emit('colorsFetched', { playerId: data.player.id, features: patreonFeatures }, null);
+            }
         } else {
           this.downloadSSReplay(hash);
         }

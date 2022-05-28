@@ -638,8 +638,8 @@ AFRAME.registerComponent('song-controls', {
       }
 
       if (!canChange) {
-        leftSaberColorInput.style.display = "none";
-        rightSaberColorInput.style.display = "none";
+        leftSaberColorInput.parentElement.style.display = "none";
+        rightSaberColorInput.parentElement.style.display = "none";
       }
     });
 

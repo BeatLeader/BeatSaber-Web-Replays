@@ -143,3 +143,4 @@ function Mirror_Vertical_Obstacle(obstacle, flip_rows) {
 module.exports.Mirror_Inverse = Mirror_Inverse;
 module.exports.Mirror_Horizontal = Mirror_Horizontal;
 module.exports.Mirror_Vertical = Mirror_Vertical;
+module.exports.horizontal_cut_transform = horizontal_cut_transform;

@@ -102,8 +102,8 @@ AFRAME.registerComponent('saber-controls', {
     var directionChange;
 
     // Tip of the blade position in world coordinates.
-    this.bladeTipPosition.set(0, 0, -0.85);
-    this.bladePosition.set(0, 0, 0.1);
+    this.bladeTipPosition.set(0, 0, -1);
+    this.bladePosition.set(0, 0, 0.0);
 
     const saberObj = this.el.object3D;
     saberObj.parent.updateMatrixWorld();
@@ -111,8 +111,8 @@ AFRAME.registerComponent('saber-controls', {
     saberObj.localToWorld(this.bladePosition);
 
     if (this.frameIndex != this.previousFrameIndex) {
-      this.hitboxBladeTipPosition.set(0, 0, -0.85);
-      this.hitboxBladePosition.set(0, 0, 0.1);
+      this.hitboxBladeTipPosition.set(0, 0, -1);
+      this.hitboxBladePosition.set(0, 0, 0);
 
       const hitboxSaber = this.hitboxSaber;
       hitboxSaber.parent.updateMatrixWorld();

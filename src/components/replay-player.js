@@ -75,10 +75,10 @@ AFRAME.registerComponent('replay-player', {
           let height = clamp((replayHeight - 1.8) * 0.5, -0.2, 0.6);
           let slerpValue = (currentTime - frame.time) / Math.max(1E-06, nextFrame.time - frame.time);
 
-          this.rightHandedTock(frame, nextFrame, height, slerpValue, delta / 1000);
+          this.movementsTock(frame, nextFrame, height, slerpValue, delta / 1000);
         }
       },
-    rightHandedTock: function(frame, nextFrame, height, slerpValue, delta) {
+    movementsTock: function(frame, nextFrame, height, slerpValue, delta) {
           const leftSaber = this.saberEls[0].object3D;
           const rightSaber = this.saberEls[1].object3D;
           const leftHitboxSaber = this.firstSaberControl.hitboxSaber;

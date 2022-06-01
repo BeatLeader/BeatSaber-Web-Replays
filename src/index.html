@@ -201,7 +201,7 @@
                   material="shader: flat; color: #fff"
                   scale="1 1 1"
                   bind__scale="saberScale"
-                  position="0 -0.35 0"></a-entity>
+                  position="0 -0.5 0"></a-entity>
                 <a-entity
                   render-order="wall"
                   class="saberglow"
@@ -209,7 +209,7 @@
                   material="shader: flat; color: {{ bladeColor }}; blending: additive; opacity: 0.08; depthWrite: false"
                   scale="1 1 1"
                   bind__scale="saberGlowScale"
-                  position="0 -0.38 0"></a-entity>
+                  position="0 -0.5 0"></a-entity>
               </a-entity>
               <a-entity
                 class="saberHandle"
@@ -217,7 +217,7 @@
                 scale="1 1 1"
                 bind__scale="saberScale"
                 material="shader: flat; color: {{ bladeColor }}"
-                position="0 0.17 0">
+                position="0 0.08 0">
                 <a-entity
                 class="highlightTop"
                 geometry="primitive: cylinder; radius: 0.02; height: 0.01;"

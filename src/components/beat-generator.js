@@ -1,6 +1,5 @@
 import {BEAT_WARMUP_OFFSET, BEAT_WARMUP_SPEED, BEAT_WARMUP_TIME} from '../constants/beat';
 import {get2DNoteOffset, directionVector, NoteCutDirection, signedAngle, SWORD_OFFSET} from '../utils';
-import {mirrorNote} from '../chirality-support';
 
 let skipDebug = AFRAME.utils.getUrlParameter('skip') || 0;
 skipDebug = parseInt(skipDebug, 10);
@@ -65,11 +64,7 @@ AFRAME.registerComponent('beat-generator', {
     this.leftStageLasers = document.getElementById('leftStageLasers');
     this.rightStageLasers = document.getElementById('rightStageLasers');
     this.colors = {};
-    this.leftHanded = false;
 
-    this.el.addEventListener('leftHandedSet', evt => {
-        this.leftHanded = evt.detail.leftHanded;
-    });
     this.el.addEventListener('cleargame', this.clearBeats.bind(this));
     this.el.addEventListener('challengeloadend', evt => {
       this.beatmaps = evt.detail.beatmaps;
@@ -282,11 +277,6 @@ AFRAME.registerComponent('beat-generator', {
 
   generateBeat: function (note) {
 
-    if (this.leftHanded && !note.mirrored) {
-      mirrorNote(note, note);
-      note.mirrored = true;
-    }
-
     // if (Math.random() < 0.8) { note._type = 3; } // To debug mines.
     let color;
     let type = note._cutDirection === 8 ? 'dot' : 'arrow';
@@ -372,12 +362,6 @@ AFRAME.registerComponent('beat-generator', {
 
       const data = this.data;
       const speed = this.beatSpeed;
-
-      let lineCount = 4;
-      if (this.leftHanded && !wall.mirrored) {
-        wall._lineIndex = lineCount - wall._width - wall._lineIndex;
-        wall.mirrored = true;
-      }
 
       const durationSeconds = 60 * (wall._duration / this.bpm);
       wallObj.anticipationPosition =

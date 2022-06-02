@@ -1,6 +1,6 @@
 const dragDrop = require('drag-drop');
 import {checkBSOR, NoteEventType, ssReplayToBSOR} from '../open-replay-decoder';
-import {mirrorNote} from '../chirality-support';
+import {Mirror_Horizontal, mirrorNote} from '../chirality-support';
 const DECODER_LINK = 'https://sspreviewdecode.azurewebsites.net'
 
 import {mirrorDirection, NoteCutDirection, difficultyFromName, clamp} from '../utils';
@@ -49,7 +49,7 @@ AFRAME.registerComponent('replay-loader', {
               } else {
                 this.replay = replay;
                 const jd = replay.info.jumpDistance > 5 ? replay.info.jumpDistance : undefined;
-                this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: difficultyFromName(replay.info.difficulty), mode: replay.info.mode, jd, leftHanded: replay.info.leftHanded }, null);
+                this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: difficultyFromName(replay.info.difficulty), mode: replay.info.mode, jd }, null);
                 if (this.challenge) {
                   this.processScores();
                 }
@@ -86,7 +86,7 @@ AFRAME.registerComponent('replay-loader', {
               if (replay.frames) {
                 replay = ssReplayToBSOR(replay);
                 this.replay = replay;
-                this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: replay.info.difficulty, mode: replay.info.mode, leftHanded: replay.info.leftHanded }, null);
+                this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: replay.info.difficulty, mode: replay.info.mode }, null);
                 if (this.challenge) {
                   this.processScores();
                 }
@@ -106,7 +106,7 @@ AFRAME.registerComponent('replay-loader', {
         if (replay && replay.frames) {
           this.replay = replay;
           this.fetchPlayer(replay.info.playerID);
-          this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: difficultyFromName(replay.info.difficulty), mode: replay.info.mode, jd: replay.info.jumpDistance, leftHanded: replay.info.leftHanded }, null);
+          this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: difficultyFromName(replay.info.difficulty), mode: replay.info.mode, jd: replay.info.jumpDistance }, null);
         } else {
           this.fetchSSFile(file, itsLink);
         }
@@ -164,8 +164,8 @@ AFRAME.registerComponent('replay-loader', {
       const map = this.challenge.beatmaps[this.challenge.mode][this.challenge.difficulty];
       var mapnotes = map._notes;
       mapnotes = mapnotes.sort((a, b) => { return a._time - b._time; }).filter(a => a._type == 0 || a._type == 1);
+      this.checkLeftHanded(map, replay);
       this.applyModifiers(map, replay);
-      this.checkLeftHanded(replay, mapnotes);
 
       var noteStructs = new Array();
       var bombStructs = new Array();
@@ -211,7 +211,6 @@ AFRAME.registerComponent('replay-loader', {
       }
 
       var group, groupIndex, groupTime;
-      const leftHanded = replay.info.leftHanded;
 
       const processGroup = () => {
         for (var j = 0; j < group.length; j++) {
@@ -219,9 +218,9 @@ AFRAME.registerComponent('replay-loader', {
           for (var m = 0; m < group.length; m++) {
             const replaynote = noteStructs[groupIndex + m];
 
-            const lineIndex = leftHanded ? 3 - mapnote._lineIndex : mapnote._lineIndex;
-            const colorType = leftHanded ? 1 - mapnote._type : mapnote._type;
-            const cutDirection = leftHanded ? mirrorDirection(mapnote._cutDirection) : mapnote._cutDirection;
+            const lineIndex = mapnote._lineIndex;
+            const colorType = mapnote._type;
+            const cutDirection = mapnote._cutDirection;
             const lineLayer = mapnote._lineLayer;
             const id = lineIndex * 1000 + lineLayer * 100 + colorType * 10 + cutDirection;
 
@@ -330,44 +329,41 @@ AFRAME.registerComponent('replay-loader', {
       this.el.sceneEl.emit('replayloaded', { notes: allStructs}, null);
     },
 
-    checkLeftHanded: function (replay, mapnotes) {
-      if (mapnotes && replay) {
-        if (replay.info.leftHanded) {
+    checkLeftHanded: function (map, replay) {
+      if (map && replay) {
 
-          let unIndex = -1;
-          for (let i = 1; i < mapnotes.length - 1; i++) {
-            if (mapnotes[i - 1]._time != mapnotes[i]._time && mapnotes[i]._time != mapnotes[i + 1]._time) {
-                unIndex = i;
-              break;
-            }
+        let unIndex = 0;
+          for (let i = 1; i < map._notes.length - 1; i++) {
+          if (map._notes[i - 1]._time != map._notes[i]._time && map._notes[i]._time != map._notes[i + 1]._time) {
+              unIndex = i;
+            break;
           }
+        }
 
-          let replayNote = replay.notes ? replay.notes[unIndex] : null;
-          let mapNote = mapnotes ? mapnotes[unIndex] : null;
+        let replayNote = replay.notes ? replay.notes[unIndex] : null;
+        let mapNote = map._notes ? map._notes[unIndex] : null;
 
-          if (mapNote && replayNote) {
-            let mirroredNote = Object.assign({}, mapNote);
-            mirrorNote(mapNote, mirroredNote);
+        if (mapNote && replayNote) {
+          let mirroredNote = Object.assign({}, mapNote);
+          mirrorNote(mapNote, mirroredNote);
 
-            let id = replayNote.noteID;
-            const cutDir = id % 10;
-            id = parseInt(id / 10);
-            const colorType = id % 10;
-            id = parseInt(id / 10);
-            const lineLayer = id % 10;
-            id = parseInt(id / 10);
-            const lineIndex = id % 10;
+          let id = replayNote.noteID;
+          const cutDir = id % 10;
+          id = parseInt(id / 10);
+          const colorType = id % 10;
+          id = parseInt(id / 10);
+          const lineLayer = id % 10;
+          id = parseInt(id / 10);
+          const lineIndex = id % 10;
 
-            if (mirroredNote._type == colorType
-                    && mirroredNote._cutDirection == cutDir
-                    && mirroredNote._lineIndex == lineIndex
-                    && mirroredNote._lineLayer == lineLayer) {
-              this.el.sceneEl.emit('leftHandedSet', { leftHanded: true }, null);
-            } else {
-              replay.info.leftHanded = false;
-              this.el.sceneEl.emit('leftHandedSet', { leftHanded: false }, null);
-              console.log('Left handed mode is ignored due to a difference in notes between map and replay');
-            }
+          if (mirroredNote._type == colorType
+                  && mirroredNote._cutDirection == cutDir
+                  && mirroredNote._lineIndex == lineIndex
+                  && mirroredNote._lineLayer == lineLayer) {
+
+              console.log('note prev', map._notes[0]);
+              Mirror_Horizontal(map, 4, true, false);
+              console.log('note afte', map._notes[0]);
           }
         }
       }

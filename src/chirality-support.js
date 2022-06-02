@@ -19,11 +19,11 @@ function Mirror_Inverse(event, numberOfLines, flip_lines, flip_rows, remove_wall
 function Mirror_Horizontal(beatmap, numberOfLines, flip_lines, remove_walls) {
     beatmap._notes.forEach(note => {
         if (note._type != 0 && note._type != 1) {
-        if (flip_lines) {
-            note._lineIndex = numberOfLines - 1 - note._lineIndex;
-        }
+            if (flip_lines) {
+                note._lineIndex = numberOfLines - 1 - note._lineIndex;
+            }
         } else {
-        Mirror_Horizontal_Note(note, numberOfLines, flip_lines);
+            Mirror_Horizontal_Note(note, numberOfLines, flip_lines);
         }
     });
 

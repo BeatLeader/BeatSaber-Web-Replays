@@ -1,5 +1,6 @@
 const dragDrop = require('drag-drop');
 import {checkBSOR, NoteEventType, ssReplayToBSOR} from '../open-replay-decoder';
+import {mirrorNote} from '../chirality-support';
 const DECODER_LINK = 'https://sspreviewdecode.azurewebsites.net'
 
 import {mirrorDirection, NoteCutDirection, difficultyFromName, clamp} from '../utils';
@@ -164,6 +165,7 @@ AFRAME.registerComponent('replay-loader', {
       var mapnotes = map._notes;
       mapnotes = mapnotes.sort((a, b) => { return a._time - b._time; }).filter(a => a._type == 0 || a._type == 1);
       this.applyModifiers(map, replay);
+      this.checkLeftHanded(replay, mapnotes);
 
       var noteStructs = new Array();
       var bombStructs = new Array();
@@ -327,6 +329,50 @@ AFRAME.registerComponent('replay-loader', {
 
       this.el.sceneEl.emit('replayloaded', { notes: allStructs}, null);
     },
+
+    checkLeftHanded: function (replay, mapnotes) {
+      if (mapnotes && replay) {
+        if (replay.info.leftHanded) {
+
+          let unIndex = -1;
+          for (let i = 1; i < mapnotes.length - 1; i++) {
+            if (mapnotes[i - 1]._time != mapnotes[i]._time && mapnotes[i]._time != mapnotes[i + 1]._time) {
+                unIndex = i;
+              break;
+            }
+          }
+
+          let replayNote = replay.notes ? replay.notes[unIndex] : null;
+          let mapNote = mapnotes ? mapnotes[unIndex] : null;
+
+          if (mapNote && replayNote) {
+            let mirroredNote = Object.assign({}, mapNote);
+            mirrorNote(mapNote, mirroredNote);
+
+            let id = replayNote.noteID;
+            const cutDir = id % 10;
+            id = parseInt(id / 10);
+            const colorType = id % 10;
+            id = parseInt(id / 10);
+            const lineLayer = id % 10;
+            id = parseInt(id / 10);
+            const lineIndex = id % 10;
+
+            if (mirroredNote._type == colorType
+                    && mirroredNote._cutDirection == cutDir
+                    && mirroredNote._lineIndex == lineIndex
+                    && mirroredNote._lineLayer == lineLayer) {
+              this.el.sceneEl.emit('leftHandedSet', { leftHanded: true }, null);
+            } else {
+              replay.info.leftHanded = false;
+              this.el.sceneEl.emit('leftHandedSet', { leftHanded: false }, null);
+              console.log('listHanded mode ignored due difference in notes between map and replay');
+            }
+          }
+        }
+      }
+    },
+
     challengeloadend: function(event) {
       this.challenge = event;
       if (!this.notes && this.replay) {

@@ -1,6 +1,6 @@
 import {BEAT_WARMUP_OFFSET, BEAT_WARMUP_SPEED, BEAT_WARMUP_TIME} from '../constants/beat';
 import {get2DNoteOffset, directionVector, NoteCutDirection, signedAngle, SWORD_OFFSET} from '../utils';
-import {horizontal_cut_transform} from '../chirality-support';
+import {mirrorNote} from '../chirality-support';
 
 let skipDebug = AFRAME.utils.getUrlParameter('skip') || 0;
 skipDebug = parseInt(skipDebug, 10);
@@ -65,7 +65,11 @@ AFRAME.registerComponent('beat-generator', {
     this.leftStageLasers = document.getElementById('leftStageLasers');
     this.rightStageLasers = document.getElementById('rightStageLasers');
     this.colors = {};
+    this.leftHanded = false;
 
+    this.el.addEventListener('leftHandedSet', evt => {
+        this.leftHanded = evt.detail.leftHanded;
+    });
     this.el.addEventListener('cleargame', this.clearBeats.bind(this));
     this.el.addEventListener('challengeloadend', evt => {
       this.beatmaps = evt.detail.beatmaps;
@@ -83,7 +87,6 @@ AFRAME.registerComponent('beat-generator', {
       } else {
         this.mappingExtensions = null;
       }
-      this.checkLeftHanded();
     });
     this.el.addEventListener('songprocessingfinish', evt => {
       this.beatsTime = 0;
@@ -96,66 +99,12 @@ AFRAME.registerComponent('beat-generator', {
           this.jdToSet = evt.detail.jd;
         }
       }
-      if (!!evt.detail.leftHanded) {
-        this.checkLeftHanded();
-      }
     });
     this.el.sceneEl.addEventListener('colorChanged', (e) => {
       if (e.detail.color) {
         this.colors[e.detail.hand] = e.detail.color;
       }
     });
-  },
-
-  mirrorNote: function (note, mirrored) {
-    if (note._type === 0) {
-      mirrored._type = 1;
-    } else {
-      if (note._type === 1) {
-        mirrored._type = 0;
-      }
-    }
-
-    mirrored._cutDirection = horizontal_cut_transform(note._cutDirection);
-    let lineCount = 4;
-    mirrored._lineIndex = lineCount - 1 - note._lineIndex;
-    if (note.cutDirectionAngleOffset) {
-      mirrored.cutDirectionAngleOffset = - note.cutDirectionAngleOffset;
-    }
-  },
-
-  checkLeftHanded: function () {
-    let replay = this.el.sceneEl.components['replay-loader'].replay;
-    if (this.beatData && replay) {
-      if (replay.info.leftHanded) {
-        let firstReplayNote = replay.notes ? replay.notes[0] : null;
-        let firstMapNote = this.beatData._notes ? this.beatData._notes[0] : null;
-        if (firstMapNote && firstReplayNote) {
-          let mirroredNote = Object.assign({}, firstMapNote);
-          this.mirrorNote(firstMapNote, mirroredNote);
-
-          let id = firstReplayNote.noteID;
-          const cutDir = id % 10;
-          id = parseInt(id / 10);
-          const colorType = id % 10;
-          id = parseInt(id / 10);
-          const lineLayer = id % 10;
-          id = parseInt(id / 10);
-          const lineIndex = id % 10;
-
-          if (mirroredNote._type == colorType
-               && mirroredNote._cutDirection == cutDir
-               && mirroredNote._lineIndex == lineIndex
-               && mirroredNote._lineLayer == lineLayer) {
-
-            this.leftHanded = true;
-          } else {
-            replay.info.leftHanded = false;
-            console.log('listHanded mode ignored due difference in notes between map and replay');
-          }
-        }
-      }
-    }
   },
 
   update: function (oldData) {
@@ -334,7 +283,7 @@ AFRAME.registerComponent('beat-generator', {
   generateBeat: function (note) {
 
     if (this.leftHanded && !note.mirrored) {
-      this.mirrorNote(note, note);
+      mirrorNote(note, note);
       note.mirrored = true;
     }
 

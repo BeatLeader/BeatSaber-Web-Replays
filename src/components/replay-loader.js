@@ -366,7 +366,7 @@ AFRAME.registerComponent('replay-loader', {
             } else {
               replay.info.leftHanded = false;
               this.el.sceneEl.emit('leftHandedSet', { leftHanded: false }, null);
-              console.log('listHanded mode ignored due difference in notes between map and replay');
+              console.log('Left handed mode is ignored due to a difference in notes between map and replay');
             }
           }
         }

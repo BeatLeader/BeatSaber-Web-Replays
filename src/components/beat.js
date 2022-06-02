@@ -553,7 +553,7 @@ AFRAME.registerComponent('beat', {
 
   missHit: function (hand) {
     if (this.data.type === 'mine') {
-      if (this.replayNote) {
+      if (this.replayNote && this.replayNote.totalScore != -1) {
         this.postScoreEvent();
       }
       return; 

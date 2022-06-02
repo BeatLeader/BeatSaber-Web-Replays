@@ -1,5 +1,6 @@
 import {BEAT_WARMUP_OFFSET, BEAT_WARMUP_SPEED, BEAT_WARMUP_TIME} from '../constants/beat';
 import {get2DNoteOffset, directionVector, NoteCutDirection, signedAngle, SWORD_OFFSET} from '../utils';
+import {horizontal_cut_transform} from '../chirality-support';
 
 let skipDebug = AFRAME.utils.getUrlParameter('skip') || 0;
 skipDebug = parseInt(skipDebug, 10);
@@ -93,6 +94,9 @@ AFRAME.registerComponent('beat-generator', {
         } else {
           this.jdToSet = evt.detail.jd;
         }
+      }
+      if (!!evt.detail.leftHanded) {
+        this.leftHanded = true;
       }
     });
     this.el.sceneEl.addEventListener('colorChanged', (e) => {
@@ -276,7 +280,25 @@ AFRAME.registerComponent('beat-generator', {
   },
 
   generateBeat: function (note) {
-    const data = this.data;
+
+    if (this.leftHanded && !note.mirrored) {
+      if (note._type === 0) {
+        note._type = 1;
+      } else {
+        if (note._type === 1) {
+          note._type = 0;
+        }
+      }
+
+      note._cutDirection = horizontal_cut_transform(note._cutDirection);
+      let lineCount = 4;
+      note._lineIndex = lineCount - 1 - note._lineIndex;
+      if (note.cutDirectionAngleOffset) {
+        note.cutDirectionAngleOffset = - note.cutDirectionAngleOffset;
+      }
+
+      note.mirrored = true;
+    }
 
     // if (Math.random() < 0.8) { note._type = 3; } // To debug mines.
     let color;
@@ -363,6 +385,12 @@ AFRAME.registerComponent('beat-generator', {
 
       const data = this.data;
       const speed = this.beatSpeed;
+
+      let lineCount = 4;
+      if (this.leftHanded && !wall.mirrored) {
+        wall._lineIndex = lineCount - wall._width - wall._lineIndex;
+        wall.mirrored = true;
+      }
 
       const durationSeconds = 60 * (wall._duration / this.bpm);
       wallObj.anticipationPosition =

@@ -48,7 +48,7 @@ AFRAME.registerComponent('replay-loader', {
               } else {
                 this.replay = replay;
                 const jd = replay.info.jumpDistance > 5 ? replay.info.jumpDistance : undefined;
-                this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: difficultyFromName(replay.info.difficulty), mode: replay.info.mode, jd }, null);
+                this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: difficultyFromName(replay.info.difficulty), mode: replay.info.mode, jd, leftHanded: replay.info.leftHanded }, null);
                 if (this.challenge) {
                   this.processScores();
                 }
@@ -85,7 +85,7 @@ AFRAME.registerComponent('replay-loader', {
               if (replay.frames) {
                 replay = ssReplayToBSOR(replay);
                 this.replay = replay;
-                this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: replay.info.difficulty, mode: replay.info.mode }, null);
+                this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: replay.info.difficulty, mode: replay.info.mode, leftHanded: replay.info.leftHanded }, null);
                 if (this.challenge) {
                   this.processScores();
                 }
@@ -105,7 +105,7 @@ AFRAME.registerComponent('replay-loader', {
         if (replay && replay.frames) {
           this.replay = replay;
           this.fetchPlayer(replay.info.playerID);
-          this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: difficultyFromName(replay.info.difficulty), mode: replay.info.mode, jd: replay.info.jumpDistance }, null);
+          this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: difficultyFromName(replay.info.difficulty), mode: replay.info.mode, jd: replay.info.jumpDistance, leftHanded: replay.info.leftHanded }, null);
         } else {
           this.fetchSSFile(file, itsLink);
         }

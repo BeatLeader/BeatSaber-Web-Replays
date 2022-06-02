@@ -164,7 +164,7 @@ AFRAME.registerComponent('replay-loader', {
       const map = this.challenge.beatmaps[this.challenge.mode][this.challenge.difficulty];
       var mapnotes = map._notes;
       mapnotes = mapnotes.sort((a, b) => { return a._time - b._time; }).filter(a => a._type == 0 || a._type == 1);
-      this.checkLeftHanded(map, replay);
+      this.applyLeftHanded(map, replay);
       this.applyModifiers(map, replay);
 
       var noteStructs = new Array();
@@ -329,7 +329,7 @@ AFRAME.registerComponent('replay-loader', {
       this.el.sceneEl.emit('replayloaded', { notes: allStructs}, null);
     },
 
-    checkLeftHanded: function (map, replay) {
+    applyLeftHanded: function (map, replay) {
       if (map && replay) {
 
         let unIndex = 0;
@@ -347,23 +347,15 @@ AFRAME.registerComponent('replay-loader', {
           let mirroredNote = Object.assign({}, mapNote);
           mirrorNote(mapNote, mirroredNote);
 
-          let id = replayNote.noteID;
-          const cutDir = id % 10;
-          id = parseInt(id / 10);
-          const colorType = id % 10;
-          id = parseInt(id / 10);
-          const lineLayer = id % 10;
-          id = parseInt(id / 10);
-          const lineIndex = id % 10;
+          const replayNoteId = replayNote.noteID;
+          const mirroredNoteId = 
+            mirroredNote._lineIndex * 1000 + 
+            mirroredNote._lineLayer * 100 + 
+            mirroredNote._type * 10 + 
+            mirroredNote._cutDirection;
 
-          if (mirroredNote._type == colorType
-                  && mirroredNote._cutDirection == cutDir
-                  && mirroredNote._lineIndex == lineIndex
-                  && mirroredNote._lineLayer == lineLayer) {
-
-              console.log('note prev', map._notes[0]);
-              Mirror_Horizontal(map, 4, true, false);
-              console.log('note afte', map._notes[0]);
+          if (replayNoteId == mirroredNoteId || replayNoteId == mirroredNoteId + 30000) {
+            Mirror_Horizontal(map, 4, true, false);
           }
         }
       }

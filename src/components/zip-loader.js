@@ -32,7 +32,7 @@ AFRAME.registerComponent('zip-loader', {
 
   update: function (oldData) {
     this.el.sceneEl.emit('cleargame', null, false);
-
+    if (this.fetched) return;
     if (this.data.id && !this.data.hash) { 
       if ((oldData.id !== this.data.id)) {
         this.fetchData(this.data.id);
@@ -147,6 +147,7 @@ AFRAME.registerComponent('zip-loader', {
    * Read API first to get hash and URLs.
    */
   fetchData: function (id, byHash) {
+    this.fetched = true;
     document.cookie = "aprilFools=1; expires=Sat, 03 Apr 2022 00:00:00 UTC; path=/";
     return fetch(`/cors/beat-saver2/api/maps/${byHash ? 'hash' : 'id'}/${id}`).then(res => {
       res.json().then(data => {

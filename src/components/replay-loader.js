@@ -97,7 +97,7 @@ AFRAME.registerComponent('replay-loader', {
           });
         });
       });
-      this.fetchPlayer(this.data.playerID);
+      this.fetchSSPlayer(this.data.playerID);
     },
 
     fetchByFile: function (file, itsLink) {
@@ -139,11 +139,27 @@ AFRAME.registerComponent('replay-loader', {
       );
       let playerId = (itsLink ? file : file.name).split(/\.|-|\//).find(el => (el.length == 16 || el.length == 17) && parseInt(el, 10));
       if (playerId) {
-        this.fetchPlayer(playerId);
+        this.fetchSSPlayer(playerId);
       }
     },
 
     fetchPlayer: function (playerID) {
+      fetch(`https://api.beatleader.xyz/player/${playerID}`).then(res => {
+        res.json().then(data => {
+            this.user = data;
+            this.el.sceneEl.emit('userloaded', {
+              name: this.user.name, 
+              avatar: this.user.avatar,
+              country: this.user.country,
+              countryIcon: `https://cdn.beatleader.xyz/flags/${this.user.country.toLowerCase()}.png`,
+              profileLink: `https://beatleader.xyz/u/${this.user.id}`, 
+              id: this.user.id
+            }, null);
+        });
+      });
+    },
+
+    fetchSSPlayer: function (playerID) {
       fetch(`/cors/score-saber/api/player/${playerID}/full`, {referrer: "https://www.beatlooser.com"}).then(res => {
         res.json().then(data => {
             this.user = data;

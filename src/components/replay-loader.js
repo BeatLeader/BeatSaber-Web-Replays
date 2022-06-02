@@ -1,5 +1,6 @@
 const dragDrop = require('drag-drop');
 import {checkBSOR, NoteEventType, ssReplayToBSOR} from '../open-replay-decoder';
+import {Mirror_Horizontal, mirrorNote} from '../chirality-support';
 const DECODER_LINK = 'https://sspreviewdecode.azurewebsites.net'
 
 import {mirrorDirection, NoteCutDirection, difficultyFromName, clamp} from '../utils';
@@ -48,7 +49,7 @@ AFRAME.registerComponent('replay-loader', {
               } else {
                 this.replay = replay;
                 const jd = replay.info.jumpDistance > 5 ? replay.info.jumpDistance : undefined;
-                this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: difficultyFromName(replay.info.difficulty), mode: replay.info.mode, jd, leftHanded: replay.info.leftHanded }, null);
+                this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: difficultyFromName(replay.info.difficulty), mode: replay.info.mode, jd }, null);
                 if (this.challenge) {
                   this.processScores();
                 }
@@ -85,7 +86,7 @@ AFRAME.registerComponent('replay-loader', {
               if (replay.frames) {
                 replay = ssReplayToBSOR(replay);
                 this.replay = replay;
-                this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: replay.info.difficulty, mode: replay.info.mode, leftHanded: replay.info.leftHanded }, null);
+                this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: replay.info.difficulty, mode: replay.info.mode }, null);
                 if (this.challenge) {
                   this.processScores();
                 }
@@ -105,7 +106,7 @@ AFRAME.registerComponent('replay-loader', {
         if (replay && replay.frames) {
           this.replay = replay;
           this.fetchPlayer(replay.info.playerID);
-          this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: difficultyFromName(replay.info.difficulty), mode: replay.info.mode, jd: replay.info.jumpDistance, leftHanded: replay.info.leftHanded }, null);
+          this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: difficultyFromName(replay.info.difficulty), mode: replay.info.mode, jd: replay.info.jumpDistance }, null);
         } else {
           this.fetchSSFile(file, itsLink);
         }
@@ -163,6 +164,7 @@ AFRAME.registerComponent('replay-loader', {
       const map = this.challenge.beatmaps[this.challenge.mode][this.challenge.difficulty];
       var mapnotes = map._notes;
       mapnotes = mapnotes.sort((a, b) => { return a._time - b._time; }).filter(a => a._type == 0 || a._type == 1);
+      this.applyLeftHanded(map, replay);
       this.applyModifiers(map, replay);
 
       var noteStructs = new Array();
@@ -209,7 +211,6 @@ AFRAME.registerComponent('replay-loader', {
       }
 
       var group, groupIndex, groupTime;
-      const leftHanded = replay.info.leftHanded;
 
       const processGroup = () => {
         for (var j = 0; j < group.length; j++) {
@@ -217,9 +218,9 @@ AFRAME.registerComponent('replay-loader', {
           for (var m = 0; m < group.length; m++) {
             const replaynote = noteStructs[groupIndex + m];
 
-            const lineIndex = leftHanded ? 3 - mapnote._lineIndex : mapnote._lineIndex;
-            const colorType = leftHanded ? 1 - mapnote._type : mapnote._type;
-            const cutDirection = leftHanded ? mirrorDirection(mapnote._cutDirection) : mapnote._cutDirection;
+            const lineIndex = mapnote._lineIndex;
+            const colorType = mapnote._type;
+            const cutDirection = mapnote._cutDirection;
             const lineLayer = mapnote._lineLayer;
             const id = lineIndex * 1000 + lineLayer * 100 + colorType * 10 + cutDirection;
 
@@ -327,6 +328,39 @@ AFRAME.registerComponent('replay-loader', {
 
       this.el.sceneEl.emit('replayloaded', { notes: allStructs}, null);
     },
+
+    applyLeftHanded: function (map, replay) {
+      if (map && replay) {
+
+        let unIndex = 0;
+          for (let i = 1; i < map._notes.length - 1; i++) {
+          if (map._notes[i - 1]._time != map._notes[i]._time && map._notes[i]._time != map._notes[i + 1]._time) {
+              unIndex = i;
+            break;
+          }
+        }
+
+        let replayNote = replay.notes ? replay.notes[unIndex] : null;
+        let mapNote = map._notes ? map._notes[unIndex] : null;
+
+        if (mapNote && replayNote) {
+          let mirroredNote = Object.assign({}, mapNote);
+          mirrorNote(mapNote, mirroredNote);
+
+          const replayNoteId = replayNote.noteID;
+          const mirroredNoteId = 
+            mirroredNote._lineIndex * 1000 + 
+            mirroredNote._lineLayer * 100 + 
+            mirroredNote._type * 10 + 
+            mirroredNote._cutDirection;
+
+          if (replayNoteId == mirroredNoteId || replayNoteId == mirroredNoteId + 30000) {
+            Mirror_Horizontal(map, 4, true, false);
+          }
+        }
+      }
+    },
+
     challengeloadend: function(event) {
       this.challenge = event;
       if (!this.notes && this.replay) {

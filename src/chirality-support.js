@@ -19,11 +19,11 @@ function Mirror_Inverse(event, numberOfLines, flip_lines, flip_rows, remove_wall
 function Mirror_Horizontal(beatmap, numberOfLines, flip_lines, remove_walls) {
     beatmap._notes.forEach(note => {
         if (note._type != 0 && note._type != 1) {
-        if (flip_lines) {
-            note._lineIndex = numberOfLines - 1 - note._lineIndex;
-        }
+            if (flip_lines) {
+                note._lineIndex = numberOfLines - 1 - note._lineIndex;
+            }
         } else {
-        Mirror_Horizontal_Note(note, numberOfLines, flip_lines);
+            Mirror_Horizontal_Note(note, numberOfLines, flip_lines);
         }
     });
 
@@ -140,7 +140,25 @@ function Mirror_Vertical_Obstacle(obstacle, flip_rows) {
     }
 }
 
+function mirrorNote(note, mirrored) {
+    if (note._type === 0) {
+        mirrored._type = 1;
+    } else {
+        if (note._type === 1) {
+            mirrored._type = 0;
+        }
+    }
+
+    mirrored._cutDirection = horizontal_cut_transform(note._cutDirection);
+    let lineCount = 4;
+    mirrored._lineIndex = lineCount - 1 - note._lineIndex;
+    if (note.cutDirectionAngleOffset) {
+        mirrored.cutDirectionAngleOffset = - note.cutDirectionAngleOffset;
+    }
+}
+
 module.exports.Mirror_Inverse = Mirror_Inverse;
 module.exports.Mirror_Horizontal = Mirror_Horizontal;
 module.exports.Mirror_Vertical = Mirror_Vertical;
 module.exports.horizontal_cut_transform = horizontal_cut_transform;
+module.exports.mirrorNote = mirrorNote;

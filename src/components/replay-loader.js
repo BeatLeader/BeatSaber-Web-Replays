@@ -348,16 +348,20 @@ AFRAME.registerComponent('replay-loader', {
     applyLeftHanded: function (map, replay) {
       if (map && replay) {
 
+        var mapnotes = map._notes;
+        mapnotes = mapnotes.sort((a, b) => { return a._time - b._time; }).filter(a => a._type == 0 || a._type == 1);
+
         let unIndex = 0;
-          for (let i = 1; i < map._notes.length - 1; i++) {
-          if (map._notes[i - 1]._time != map._notes[i]._time && map._notes[i]._time != map._notes[i + 1]._time) {
+          for (let i = 1; i < mapnotes.length - 1; i++) {
+          if (mapnotes[i - 1]._time != mapnotes[i]._time 
+            && mapnotes[i]._time != mapnotes[i + 1]._time) {
               unIndex = i;
             break;
           }
         }
 
         let replayNote = replay.notes ? replay.notes[unIndex] : null;
-        let mapNote = map._notes ? map._notes[unIndex] : null;
+        let mapNote = mapnotes ? mapnotes[unIndex] : null;
 
         if (mapNote && replayNote) {
           let mirroredNote = Object.assign({}, mapNote);

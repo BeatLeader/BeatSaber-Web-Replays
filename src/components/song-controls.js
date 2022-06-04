@@ -393,13 +393,44 @@ AFRAME.registerComponent('song-controls', {
       }
     });
 
-    this.el.sceneEl.addEventListener("contextmenu",function(event){
-      event.preventDefault();
+    let contextHandler = (event, touch) => {
       var ctxMenu = document.getElementById("ctxMenu");
       ctxMenu.style.display = "block";
-      ctxMenu.style.left = (event.pageX - 10)+"px";
-      ctxMenu.style.top = (event.pageY - 10)+"px";
+      ctxMenu.style.left = (event.pageX - (touch ? 100 : 10))+"px";
+      ctxMenu.style.top = (event.pageY - (touch ? 100 : 10))+"px";
+    };
+
+    this.el.sceneEl.addEventListener("contextmenu",function(event){
+      event.preventDefault();
+      contextHandler(event);
     },false);
+
+    var timer;
+    var taphold;
+
+    this.el.sceneEl.addEventListener("touchstart", function(e) {
+      taphold = false;
+      timer = setTimeout(function() {
+        taphold = true;
+        contextHandler(e, true);
+      }, 1100);
+    });
+
+    this.el.sceneEl.addEventListener("touchend", function(e) {
+      if (taphold) {
+        e.preventDefault();
+      } else {
+        clearTimeout(timer);
+      }
+    });
+
+    this.el.sceneEl.addEventListener("touchmove", function(e) {
+      if (taphold) {
+        e.preventDefault();
+      } else {
+        clearTimeout(timer);
+      }
+    });
 
     const copyURL = (target, time) => {
       let input = document.createElement('input');

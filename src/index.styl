@@ -161,11 +161,6 @@ html
       fill: white
       height 26px
       width 26px
-  
-  @media not all and (min-resolution:.001dpcm)
-    @supports(-webkit-appearance:none)
-      #controlsFullscreen, #controlsCamera, #controlsSettings
-        margin 2px 0px 0 0px !important
 
   #controlsCamera
     cursor pointer
@@ -747,10 +742,11 @@ input:checked + .slider:before {
   -webkit-transition: opacity .1s cubic-bezier(0,0,0.2,1);
   transition: opacity .1s cubic-bezier(0,0,0.2,1);
   z-index: 9999;
+  font-size: 0.8em;
 }
 
 .panel-menu {
-    padding: 8px 0;
+    padding: 4px 0;
     display: table;
     width: 100%;
     color: #eee;
@@ -762,7 +758,7 @@ input:checked + .slider:before {
     display: table-row;
     cursor: default;
     outline: none;
-    height: 40px;
+    height: 20px;
 }
 
 .menuitem:hover {
@@ -772,24 +768,22 @@ input:checked + .slider:before {
 .menuitem-icon {
     display: table-cell;
     vertical-align: middle;
-    padding: 0 10px;
+    padding: 0 5px;
 }
 
 .menuitem-content {
-    font-size: 109%;
     text-align: right;
     display: table-cell;
     vertical-align: middle;
-    padding: 0 15px;
+    padding: 0 10px;
 }
 
 .menuitem-label {
-    font-size: 118%;
     font-weight: 500;
     padding-left: 0;
     display: table-cell;
     vertical-align: middle;
-    padding: 0 15px;
+    padding: 0 10px;
 }
 
 .btn {

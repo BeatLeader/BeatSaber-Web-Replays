@@ -350,9 +350,10 @@ AFRAME.registerComponent('replay-loader', {
 
         var mapnotes = map._notes;
         mapnotes = mapnotes.sort((a, b) => { return a._time - b._time; }).filter(a => a._type == 0 || a._type == 1);
+        var replayNotes = replay.notes.filter(a => a.eventType != NoteEventType.bomb);
 
         let unIndex = 0;
-          for (let i = 1; i < mapnotes.length - 1; i++) {
+        for (let i = 1; i < mapnotes.length - 1; i++) {
           if (mapnotes[i - 1]._time != mapnotes[i]._time 
             && mapnotes[i]._time != mapnotes[i + 1]._time) {
               unIndex = i;
@@ -360,7 +361,7 @@ AFRAME.registerComponent('replay-loader', {
           }
         }
 
-        let replayNote = replay.notes ? replay.notes[unIndex] : null;
+        let replayNote = replayNotes ? replayNotes[unIndex] : null;
         let mapNote = mapnotes ? mapnotes[unIndex] : null;
 
         if (mapNote && replayNote) {

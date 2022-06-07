@@ -346,11 +346,13 @@ AFRAME.registerComponent('replay-loader', {
     },
 
     applyLeftHanded: function (map, replay) {
-      if (map && replay) {
+      if (map && replay && replay.notes) {
 
         var mapnotes = map._notes;
         mapnotes = mapnotes.sort((a, b) => { return a._time - b._time; }).filter(a => a._type == 0 || a._type == 1);
-        var replayNotes = replay.notes.filter(a => a.eventType != NoteEventType.bomb);
+
+        var replayNotes = replay.notes;
+        replayNotes = replayNotes.sort((a, b) => { return a.spawnTime - b.spawnTime; }).filter(a => a.eventType != NoteEventType.bomb);
 
         let unIndex = 0;
         for (let i = 1; i < mapnotes.length - 1; i++) {

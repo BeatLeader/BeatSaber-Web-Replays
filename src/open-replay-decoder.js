@@ -227,7 +227,7 @@ function DecodePauses(dataView) {
     for (var i = 0; i < length; i++)
     {
         var pause = {};
-        pause.duration = DecodeFloat(dataView);
+        pause.duration = DecodeLong(dataView);
         pause.time = DecodeFloat(dataView);
         result.push(pause);
     }
@@ -302,7 +302,15 @@ function DecodeQuaternion(dataView)
     return result;
 }
 
-function DecodeInt(dataView) {
+function DecodeLong(dataView)
+{
+    const result = dataView.getBigInt64(dataView.pointer, true);
+    dataView.pointer += 8;
+    return result;
+}
+
+function DecodeInt(dataView)
+{
     const result = dataView.getInt32(dataView.pointer, true);
     dataView.pointer += 4;
     return result;

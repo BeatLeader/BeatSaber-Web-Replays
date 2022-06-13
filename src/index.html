@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>BeatSaber Replays</title>
+    <title>Beat Saber web replays</title>
     <link rel="apple-touch-icon-precomposed" sizes="57x57" href="assets/img/apple-touch-icon-57x57.png" />
     <link rel="apple-touch-icon-precomposed" sizes="114x114" href="assets/img/apple-touch-icon-114x114.png" />
     <link rel="apple-touch-icon-precomposed" sizes="72x72" href="assets/img/apple-touch-icon-72x72.png" />
@@ -15,7 +15,7 @@
     <link rel="icon" type="image/png" href="assets/img/favicon-32x32.png" sizes="32x32" />
     <link rel="icon" type="image/png" href="assets/img/favicon-16x16.png" sizes="16x16" />
     <link rel="icon" type="image/png" href="assets/img/favicon-128.png" sizes="128x128" />
-    <meta name="application-name" content="BeatSaber replays"/>
+    <meta name="application-name" content="Beat Saber web replays"/>
     <meta name="msapplication-TileColor" content="#FFFFFF" />
     <meta name="msapplication-TileImage" content="assets/img/mstile-144x144.png" />
     <meta name="msapplication-square70x70logo" content="assets/img/mstile-70x70.png" />
@@ -23,30 +23,30 @@
     <meta name="msapplication-wide310x150logo" content="assets/img/mstile-310x150.png" />
     <meta name="msapplication-square310x310logo" content="assets/img/mstile-310x310.png" />
 
-    <meta name="description" content="BeatSaber battle royale.">
-    <meta property="og:description" content="BeatSaber battle royale.">
-    <meta property="og:image" content="https://www.royale.beatleader.xyz/assets/img/preview.png">
-    <meta property="og:title" content="BeatSaber replays">
-    <meta name="twitter:title" content="BeatSaber replays">
-    <meta name="twitter:description" content="BeatSaber battle royale.">
+    <meta property="og:title" content="Beat Saber battle royale">
+    <meta name="twitter:title" content="Beat Saber battle royale">
     <meta name="twitter:site" content="royale.beatleader.xyz">
-    <meta name="twitter:image" content="https://www.royale.beatleader.xyz/assets/img/preview.png">
-    <meta name="twitter:image:alt" content="BeatSaber replays">
+    <meta name="twitter:image:alt" content="Beat Saber battle royale">
 
     <meta name="twitter:player:width" content="700" />
     <meta name="twitter:player:height" content="400" />
-    <meta name="twitter:card" content="player">
+    <meta name="twitter:card" content="summary_large_image">
 
-    <meta property="og:type" content="video.other">
-    <meta property="og:video:type" content="text/html">
-    <meta property="og:video:width" content="1280">
-    <meta property="og:video:height" content="720">
+    <meta property="og:type" content="object">
+    <meta property="og:image:width" content="700">
+    <meta property="og:image:height" content="400">
 
     <script>
       ["og:url", "og:video:url", "og:video:secure_url", "twitter:player"].forEach(attribute => {
         var link = document.createElement('meta');  
         link.setAttribute('property', attribute);   
         link.content = document.location;  
+        document.getElementsByTagName('head')[0].appendChild(link);
+      });
+      ["twitter:image", "og:image"].forEach(attribute => {
+        var link = document.createElement('meta');  
+        link.setAttribute('property', attribute);   
+        link.content = document.location.protocol + "//" + document.location.host + "/preview.png" + window.location.search;  
         document.getElementsByTagName('head')[0].appendChild(link);
       });
     </script>

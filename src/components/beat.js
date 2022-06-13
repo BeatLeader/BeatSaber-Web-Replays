@@ -267,13 +267,19 @@ AFRAME.registerComponent('beat', {
       this.tockDestroyed(timeDelta);
       // Check to remove score entity from pool.
     } else {
-      if (position.z > collisionZThreshold) { this.checkCollisions(); }
+      if (!this.replayNote.cutPoint && position.z > collisionZThreshold) { this.checkCollisions(); }
 
       this.updatePosition();
 
-      if (this.data.type != 'mine' && position.z > 0 && this.replayNote.score != NoteErrorType.Miss && this.song.getCurrentTime() > this.replayNote.time) {
+      if (this.data.type != 'mine' 
+      && this.replayNote.score != NoteErrorType.Miss 
+      && ((this.replayNote.cutPoint
+        && (position.z - (-1 * this.replayNote.cutPoint.z)) > -0.05
+        && (this.settings.settings.reducedDebris || !this.checkCollisions()))
+        || this.song.getCurrentTime() > this.replayNote.time)) {
         this.showScore();
         this.destroyBeat(this.saberEls[this.replayNote.colorType]);
+        this.postScoreEvent();
       } else {
         this.backToPool = position.z >= 2;
         if (this.backToPool) { this.missHit(); }
@@ -832,7 +838,7 @@ AFRAME.registerComponent('beat', {
       let saberBoundingBox = saberControls.boundingBox;
       // let maxAngle;
 
-      if (!saberBoundingBox) { break; }
+      if (!saberBoundingBox) { return false; }
 
       const hand = saberControls.data.hand;
 
@@ -850,7 +856,7 @@ AFRAME.registerComponent('beat', {
           
           this.destroyMine();
           
-          break;
+          return true;
         }
 
         this.postScoreEvent();
@@ -884,7 +890,7 @@ AFRAME.registerComponent('beat', {
         //                       saberControls.maxAnglePlaneXY);
         // }
         // this.angleBeforeHit = maxAngle;
-        break;
+        return true;
       }
     }
   },

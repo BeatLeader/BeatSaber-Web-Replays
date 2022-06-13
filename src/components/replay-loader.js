@@ -202,7 +202,8 @@ AFRAME.registerComponent('replay-loader', {
           spawnTime: info.spawnTime,
           time: info.eventTime,
           id: info.noteID,
-          score: info.score ? info.score : ScoreForNote(info)
+          score: info.score ? info.score : ScoreForNote(info),
+          cutPoint: info.noteCutInfo ? info.noteCutInfo.cutPoint : null
         }
         
         if (note.id == -1 || parseInt(("" + note.id).split("").pop()) == 9) {

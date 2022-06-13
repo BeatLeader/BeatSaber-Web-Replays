@@ -75,7 +75,7 @@ AFRAME.registerComponent('twister', {
   },
 
   tick: function (time, delta) {
-    if (!this.animate) { return; }
+    if (!this.animate || !this.data.enabled) { return; }
 
     var posArray = this.geometry.attributes.position.array;
     var rotation;

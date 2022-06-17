@@ -1,7 +1,7 @@
 const dragDrop = require('drag-drop');
 import {checkBSOR, NoteEventType, ssReplayToBSOR} from '../open-replay-decoder';
 import {Mirror_Horizontal, mirrorNote} from '../chirality-support';
-const DECODER_LINK = 'https://sspreviewdecode.azurewebsites.net'
+const DECODER_LINK = 'https://ssdecode.azurewebsites.net'
 
 import {mirrorDirection, NoteCutDirection, difficultyFromName, clamp} from '../utils';
 
@@ -80,20 +80,19 @@ AFRAME.registerComponent('replay-loader', {
     downloadSSReplay: function (hash) {
       fetch(`/cors/score-saber/api/leaderboard/by-hash/${hash}/info?difficulty=${difficultyFromName(this.data.difficulty)}`, {referrer: "https://www.beatlooser.com"}).then(res => {
         res.json().then(leaderbord => {
-          fetch(`${DECODER_LINK}/?playerID=${this.data.playerID}&songID=${leaderbord.id}`).then(res => {
-            res.json().then(data => {
-              let replay = JSON.parse(data);
-              if (replay.frames) {
-                replay = ssReplayToBSOR(replay);
-                this.replay = replay;
-                this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: replay.info.difficulty, mode: replay.info.mode }, null);
-                if (this.challenge) {
-                  this.processScores();
-                }
-              } else {
-                this.el.sceneEl.emit('replayloadfailed', { error: replay.errorMessage }, null);
+          fetch(`${DECODER_LINK}/?playerID=${this.data.playerID}&songID=${leaderbord.id}`)
+          .then(res => res.json())
+          .then(replay => {
+            if (replay.frames) {
+              replay = ssReplayToBSOR(replay);
+              this.replay = replay;
+              this.el.sceneEl.emit('replayfetched', { hash: replay.info.hash, difficulty: replay.info.difficulty, mode: replay.info.mode }, null);
+              if (this.challenge) {
+                this.processScores();
               }
-            });
+            } else {
+              this.el.sceneEl.emit('replayloadfailed', { error: replay.errorMessage }, null);
+            }
           });
         });
       });

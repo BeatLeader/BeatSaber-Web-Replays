@@ -1,6 +1,6 @@
 const dragDrop = require('drag-drop');
 import {checkBSOR, NoteEventType, ssReplayToBSOR} from '../open-replay-decoder';
-const DECODER_LINK = 'https://sspreviewdecode.azurewebsites.net'
+const DECODER_LINK = 'https://ssdecode.azurewebsites.net'
 
 import {mirrorDirection, NoteCutDirection, difficultyFromName, clamp, getRandomColor} from '../utils';
 
@@ -92,8 +92,7 @@ AFRAME.registerComponent('replay-loader', {
           // this.userIds.forEach((playerID, i) => {
           //   const index = i;
             fetch(`${DECODER_LINK}/?playerID=${playerID}&songID=${leaderbord.id}`).then(res => {
-              res.json().then(data => {
-                let replay = JSON.parse(data);
+              res.json().then(replay => {
                 if (replay.frames) {
                   replay = ssReplayToBSOR(replay);
                   replay.index = index;
@@ -151,7 +150,7 @@ AFRAME.registerComponent('replay-loader', {
       : fetch(`${DECODER_LINK}/?link=${file}`))
       .then(response => response.json()).then(
         data => {
-          let replay = ssReplayToBSOR(JSON.parse(data));
+          let replay = ssReplayToBSOR(data);
           if (replay.frames) {
             this.replay = replay;
             this.cleanup && this.cleanup();

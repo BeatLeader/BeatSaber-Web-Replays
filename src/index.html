@@ -180,13 +180,9 @@
             bind__pauser="enabled: isPlaying"
             bind__saber-controls="bladeEnabled: isPlaying; isPaused: isPaused; enabled: true"
             bind__saber-particles="enabled: isPlaying"
-            bind__trail="enabled: isPlaying; trailType: settings.trailType; lifetime: settings.trailLength"
             bind__cut-plane="enabled: isPlaying"
-            bind__raycaster="enabled: isPlaying && !settings.noEffects"
-            raycaster="objects: [raycastable-game]; far: 1; interval: 50"
             saber-particles="hand: {{ hand }}"
             saber-controls="hand: {{ hand }}"
-            trail="color: {{ bladeColor }}; hand: {{ hand }}"
             cut-plane="hand: {{ hand }}">
 
             <a-entity class="saberContainer" rotation="90 0 0">
@@ -297,11 +293,7 @@
       </a-entity>
 
       <a-entity
-        id="mouseCursor"
-        bind__raycaster="enabled: !inVR"
-        mixin="raycaster"
-        cursor="rayOrigin: mouse"
-        raycaster="objects: [raycastable]"></a-entity>
+        id="mouseCursor"></a-entity>
       <a-entity
         id="mouseCursorMesh"
         mixin="cursorMesh"

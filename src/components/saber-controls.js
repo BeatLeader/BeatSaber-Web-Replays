@@ -60,8 +60,8 @@ AFRAME.registerComponent('saber-controls', {
 
     this.el.sceneEl.addEventListener('colorChanged', (e) => {
       if (e.detail.hand == this.data.hand && e.detail.color) {
-        this.el.components.trail.data.color = e.detail.color;
-        this.el.components.trail.updateColor();
+        // this.el.components.trail.data.color = e.detail.color;
+        // this.el.components.trail.updateColor();
         this.el.querySelector('.saberHandle').setAttribute('material', 'color', e.detail.color);
         this.el.querySelector('.saberglow').setAttribute('material', 'color', e.detail.color);
       }

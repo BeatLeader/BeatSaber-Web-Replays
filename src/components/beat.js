@@ -145,7 +145,10 @@ AFRAME.registerComponent('beat', {
 
   update: function (oldData) {
     this.updateBlock();
-    this.updateFragments();
+    if (this.settings && !this.settings.settings.reducedDebris) {
+      this.updateFragments();
+    }
+    
 
     if (this.data.type === 'mine') {
       this.poolName = `pool__beat-mine`;

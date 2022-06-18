@@ -84,15 +84,15 @@ AFRAME.registerComponent('saber-controls', {
     if (!this.data.bladeEnabled) { return; }
     
     // if (!this.data.enabled) { return; }
-    this.detectStroke(delta);
+    // this.detectStroke(delta);
 
-    if (this.line) {
-      this.line.visible = this.settings.settings.showHitboxes;
-      if (this.hitboxGood) {
-        this.line.geometry.computeBoundingBox();
-        this.boundingBox.copy(this.line.geometry.boundingBox).applyMatrix4(this.line.matrixWorld);
-      }
-    }
+    // if (this.line) {
+    //   this.line.visible = this.settings.settings.showHitboxes;
+    //   if (this.hitboxGood) {
+    //     this.line.geometry.computeBoundingBox();
+    //     this.boundingBox.copy(this.line.geometry.boundingBox).applyMatrix4(this.line.matrixWorld);
+    //   }
+    // }
   },
 
   detectStroke: function (delta) {

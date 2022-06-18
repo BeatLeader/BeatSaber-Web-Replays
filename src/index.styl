@@ -429,6 +429,16 @@ html
   -o-transition: opacity 0.5s;
   transition: opacity 0.5s;
 
+.patreon-link
+  transition: 0.6s top, 0.6s right;
+  -webkit-transition: 0.6s top, 0.6s right;
+  -moz-transition: 0.6s top, 0.6s right;
+  -ms-transition: 0.6s top, 0.6s right;
+  -o-transition: 0.6s top, 0.6s right;
+
+.patreon-logo
+  transform: translateX(658.5px) translateY(-458px) rotate(45deg);
+
 #controls
   bottom -60px
   -webkit-transition: bottom 0.5s;
@@ -479,6 +489,9 @@ html
 
 .isPlaying
   .discord-link
+    top: -80px !important
+    right -80px !important 
+  .patreon-link
     top: -80px !important
     right -80px !important 
   #controls,

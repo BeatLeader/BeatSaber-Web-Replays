@@ -660,6 +660,14 @@ AFRAME.registerComponent('song-controls', {
       this.el.components['beat-generator'].updateJD(parseFloat(jdPoint.innerHTML));
       this.jdChanged = false;
     });
+
+    let pcorner = document.getElementById('patreon-corner');
+    let dcorner = document.getElementById('discord-corner');
+    if (Math.random() > 0.5) {
+      pcorner.style.display = 'block';
+    } else {
+      dcorner.style.display = 'block';
+    }
   },
 
   showMisses: (notes, buffer, target) => {

@@ -278,6 +278,16 @@
         </label>
       </div>
 
+      <div class="toggleButton" title="Left saber color, will show for everyone.">
+        <input type="color" id="leftSaberColor" value="#ff0000">
+        <label class="toggleButtonLabel"><td><nobr>Left</nobr></td></label>
+      </div>
+
+      <div class="toggleButton" title="Different note score color based on score value.">
+        <input type="color" id="rightSaberColor" value="#335aff">
+        <label class="toggleButtonLabel"><td><nobr>Right</nobr></td></label>
+      </div>
+
     </div>
 
     <div class="sliders" style="display: flex; flex-direction: column; justify-content: space-between;">
@@ -447,7 +457,7 @@
   </svg>
 </a>
 
-<a href="https://discord.gg/2RG5YVqtG6" class="discord-corner" title="Join our discord!">
+<a href="https://discord.gg/2RG5YVqtG6" style="display: none;" id="discord-corner" title="Join our discord!">
   <svg color="#151513" fill="transparent" width="80" height="80" viewBox="0 0 250 250" class="discord-link" style="transform: rotate(0deg); position: absolute; top: 0; border: 0; right: 0;"><g>
     <path d="M0,0 L250,250 L250,0 Z" fill="#7289da" ></path></g> <g class="discord-corner">
       <svg color="#151513" width="120" height="120" viewBox="0 0 48 48" class="discord-logo-container">
@@ -456,6 +466,20 @@
             <a href="https://awesome.discord.io/join"></rect> <circle r="32%" cx="50%" cy="50%" fill="#F2F2E9"></circle></mask></g></defs> <g class="discord-logo softshake-animation"><use class="discord-original" xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#discordFaceID66"></use></g>
             </svg></g>
           </svg>
+
+</a>
+<a href="https://patreon.com/beatleader" style="display: none;" id="patreon-corner" title="Support us on patreon!">
+  <svg color="#151513" fill="transparent" width="80" height="80" viewBox="0 0 250 250" class="patreon-link" style="transform: rotate(0deg); position: absolute; top: 0; border: 0; right: 0;"><g>
+    <path d="M0,0 L250,250 L250,0 Z" fill="#FF424D" ></path></g> 
+    <g class="patreon-logo">
+    <g xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" inkscape:groupmode="layer" inkscape:label="ink_ext_XXXXXX" transform="matrix(1.3333333,0,0,-1.3333333,0,767.70667)">
+      <g xmlns="http://www.w3.org/2000/svg" id="g12" transform="scale(0.012)">
+        <path d="m 3844.89,5757.79 c -1190.76,0 -2159.54,-969.65 -2159.54,-2161.59 0,-1188.33 968.78,-2155.12 2159.54,-2155.12 1187.08,0 2152.82,966.79 2152.82,2155.12 0,1191.94 -965.74,2161.59 -2152.82,2161.59" style="fill:#141518;fill-opacity:1;fill-rule:evenodd;stroke:none" id="path14"/>
+        <path d="M 0,0 H 1054.41 V 5757.81 H 0 V 0" style="fill:#141518;fill-opacity:1;fill-rule:evenodd;stroke:none" id="path16"/>
+      </g>
+    </g>
+  </g>
+  </svg>
 
 </a>
 <style type='text/css'>* { font-family: 'Avenir', Helvetica, Arial, sans-serif; } .discord-logo { transform: scale(0.7); transform-origin: 24px 24px; } .discord-corner { transform: rotate(45deg); transform-origin: 90px 200px; }.discord-logo.softshake-animation .discord-original { transform-origin: 24px 24px; } .discord-logo-container:hover .softshake-animation .discord-original, .animated .softshake-animation .discord-original { animation: softshake 2000ms linear forwards; } @keyframes softshake { 0%,66%,100% {transform:rotate( 0deg)} 3% {transform:rotate(-18.0deg)} 6% {transform:rotate( 14.4deg)} 9% {transform:rotate(-11.5deg)} 12% {transform:rotate( 9.21deg)} 15% {transform:rotate(-7.37deg)} 18% {transform:rotate( 5.89deg)} 21% {transform:rotate(-4.71deg)} 24% {transform:rotate( 3.77deg)} 27% {transform:rotate(-3.02deg)} 30% {transform:rotate( 2.41deg)} 33% {transform:rotate(-1.93deg)} 36% {transform:rotate( 1.54deg)} 39% {transform:rotate(-1.23deg)} 42% {transform:rotate( 0.99deg)} 45% {transform:rotate(-0.79deg)} 48% {transform:rotate( 0.63deg)} 51% {transform:rotate(-0.50deg)} 54% {transform:rotate( 0.40deg)} 57% {transform:rotate(-0.32deg)} 60% {transform:rotate( 0.25deg)} 63% {transform:rotate(-0.20deg)} }</style>

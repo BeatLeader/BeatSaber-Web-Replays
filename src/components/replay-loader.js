@@ -122,7 +122,7 @@ AFRAME.registerComponent('replay-loader', {
       : fetch(`${DECODER_LINK}/?link=${file}`))
       .then(response => response.json()).then(
         data => {
-          let replay = ssReplayToBSOR(JSON.parse(data));
+          let replay = ssReplayToBSOR(data);
           if (replay.frames) {
             this.replay = replay;
             this.cleanup && this.cleanup();

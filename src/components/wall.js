@@ -23,6 +23,7 @@ AFRAME.registerComponent('wall', {
     durationSeconds: {default: 0},
     height: {default: 1.3},
     horizontalPosition: {default: 1},
+    verticalPosition: {default: 0},
     isCeiling: {default: false},
     speed: {default: 1.0},
     warmupPosition: {default: 0},
@@ -133,17 +134,19 @@ AFRAME.registerComponent('wall', {
     const data = this.data;
     const el = this.el;
 
+    console.log(startHeight + "  " + height);
+
     const halfDepth = data.durationSeconds * (data.speed * this.song.speed) / 2;
 
     el.object3D.position.set(
       getHorizontalPosition(data.horizontalPosition) + (data.width - _noteLinesDistance) / 2,
-      startHeight + RAISE_Y_OFFSET,
+      startHeight * 0.25 + RAISE_Y_OFFSET,
       data.anticipationPosition + data.warmupPosition - halfDepth
     );
 
     el.object3D.scale.set(
       data.width * 0.98,
-      height,
+      height * 0.3,
       data.durationSeconds * (data.speed * this.song.speed)
     );
   },

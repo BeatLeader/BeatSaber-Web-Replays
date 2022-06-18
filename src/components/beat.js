@@ -264,11 +264,14 @@ AFRAME.registerComponent('beat', {
       this.tockDestroyed(timeDelta);
       // Check to remove score entity from pool.
     } else {
-      if (position.z > collisionZThreshold) { this.checkCollisions(); }
+      if (!this.replayNote.cutPoint && position.z > collisionZThreshold) { this.checkCollisions(); }
 
       this.updatePosition();
 
-      if (this.data.type != 'mine' && position.z > 0 && this.replayNote.score != NoteErrorType.Miss && this.song.getCurrentTime() > this.replayNote.time) {
+      if (this.data.type != 'mine' 
+      && position.z > 0 && this.replayNote.score != NoteErrorType.Miss 
+      && (this.song.getCurrentTime() > this.replayNote.time 
+          || (this.replayNote.cutPoint && (position.z * -1) >= this.replayNote.cutPoint.z) )) {
         this.showScore();
         this.destroyBeat(this.saberEls[this.replayNote.colorType]);
       } else {
@@ -812,6 +815,8 @@ AFRAME.registerComponent('beat', {
   checkCollisions: function () {
     // const cutDirection = this.data.cutDirection;
     const saberEls = this.saberEls;
+
+    const position = this.el.object3D.position;
     
     this.beatBigBoundingBox.copy(this.hitboxObject.geometry.boundingBox).applyMatrix4(this.hitboxObject.matrixWorld);
     const beatBigBoundingBox = this.beatBigBoundingBox;
@@ -822,7 +827,7 @@ AFRAME.registerComponent('beat', {
     
     const beatSmallBoundingBox = this.smallHitObject ? this.beatBoundingBox : this.beatBigBoundingBox;
     
-    // const position = this.el.object3D.position;
+    
 
     for (let i = 0; i < saberEls.length; i++) {
       let saberControls = saberEls[i].components['saber-controls'];
@@ -930,6 +935,8 @@ AFRAME.registerComponent('beat', {
 
   showScore: function (hand) {
     let score = this.replayNote.score;
+
+    console.log(this.song.getCurrentTime() - this.replayNote.time + "   " + (this.replayNote.cutPoint ? this.replayNote.cutPoint.z : 0));
     if (score < 0) {
       if (score == -3) {
         var missEl = hand === 'left' ? this.missElLeft : this.missElRight;
@@ -1018,7 +1025,7 @@ AFRAME.registerComponent('beat', {
     if (this.data.type === 'mine' || this.hitSoundState == SOUND_STATE.hitPlayed) return;
 
     const currentTime = this.song.getCurrentTime();
-    const noteTime = this.data.time - SWORD_OFFSET / this.data.speed;
+    const noteTime = this.data.time - this.settings.settings.magicConstant / this.data.speed;
 
     if (currentTime > noteTime) {
       this.el.parentNode.components['beat-hit-sound'].playSound(this.el, this.data.cutDirection);

@@ -28,6 +28,7 @@ AFRAME.registerComponent('settings', {
         orthographicRightFrustum: 2,
         orthographicTopEnabled: false,
         orthographicTopFrustum: 2.4,
+        magicConstant: 0.65,
 
 
         // Volume

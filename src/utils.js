@@ -38,7 +38,7 @@ const NoteErrorType = {
   Wall: -5
 }
 
-const SWORD_OFFSET = 0.65;
+const SWORD_OFFSET = 0.5;
 
 function mirrorDirection(cutDirection) {
   switch (cutDirection) {

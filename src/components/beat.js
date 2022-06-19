@@ -269,9 +269,8 @@ AFRAME.registerComponent('beat', {
       this.updatePosition();
 
       if (this.data.type != 'mine' 
-      && position.z > 0 && this.replayNote.score != NoteErrorType.Miss 
-      && (this.song.getCurrentTime() > this.replayNote.time 
-          || (this.replayNote.cutPoint && (position.z * -1) >= this.replayNote.cutPoint.z) )) {
+      && this.replayNote.score != NoteErrorType.Miss 
+      && (this.replayNote.cutPoint && position.z >= (-1 * this.replayNote.cutPoint.z) )) {
         this.showScore();
         this.destroyBeat(this.saberEls[this.replayNote.colorType]);
       } else {
@@ -936,7 +935,7 @@ AFRAME.registerComponent('beat', {
   showScore: function (hand) {
     let score = this.replayNote.score;
 
-    console.log(this.song.getCurrentTime() - this.replayNote.time + "   " + (this.replayNote.cutPoint ? this.replayNote.cutPoint.z : 0));
+    console.log((this.song.getCurrentTime() - this.replayNote.time) * 1000 + "   " + (this.replayNote.cutPoint ? ((this.el.object3D.position.z - (-1 * this.replayNote.cutPoint.z)) * 100) : 0));
     if (score < 0) {
       if (score == -3) {
         var missEl = hand === 'left' ? this.missElLeft : this.missElRight;

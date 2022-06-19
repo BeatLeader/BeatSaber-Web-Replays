@@ -25,12 +25,10 @@
 
     <meta name="description" content="BeatSaber web replay viewer.">
     <meta property="og:description" content="BeatSaber web replay viewer.">
-    <meta property="og:image" content="https://www.replay.beatleader.xyz/assets/img/preview.png">
     <meta property="og:title" content="BeatSaber replays">
     <meta name="twitter:title" content="BeatSaber replays">
     <meta name="twitter:description" content="BeatSaber web replay viewer.">
     <meta name="twitter:site" content="replay.beatleader.xyz">
-    <meta name="twitter:image" content="https://www.replay.beatleader.xyz/assets/img/preview.png">
     <meta name="twitter:image:alt" content="BeatSaber replays">
 
     <meta name="twitter:player:width" content="700" />
@@ -47,6 +45,12 @@
         var link = document.createElement('meta');  
         link.setAttribute('property', attribute);   
         link.content = document.location;  
+        document.getElementsByTagName('head')[0].appendChild(link);
+      });
+      ["twitter:image", "og:image"].forEach(attribute => {
+        var link = document.createElement('meta');  
+        link.setAttribute('property', attribute);   
+        link.content = "https://api.beatleader.xyz/preview/replay/" + window.location.search;  
         document.getElementsByTagName('head')[0].appendChild(link);
       });
     </script>

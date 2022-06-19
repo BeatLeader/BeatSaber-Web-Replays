@@ -50,7 +50,7 @@
       ["twitter:image", "og:image"].forEach(attribute => {
         var link = document.createElement('meta');  
         link.setAttribute('property', attribute);   
-        link.content = "https://api.beatleader.xyz/preview/replay/" + window.location.search;  
+        link.content = document.location.protocol + "//" + document.location.host + "/preview.png" + window.location.search;  
         document.getElementsByTagName('head')[0].appendChild(link);
       });
     </script>

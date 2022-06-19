@@ -125,7 +125,7 @@ AFRAME.registerState({
       state.challenge.id = payload.id;
 
       document.title = `Replay | ${state.player.name} | ${payload.metadata.songName}`;
-      document.querySelector('meta[name="description"]').setAttribute("content", `Replay | ${state.player.name} | ${payload.metadata.songName}`);
+      document.querySelector('meta[property="og:title"]').setAttribute("content", `Replay | ${state.player.name} | ${payload.metadata.songName}`);
     },
 
     challengeloadstart: (state, payload) => {
@@ -186,7 +186,7 @@ AFRAME.registerState({
       state.player = payload;
 
       document.title = `Replay | ${state.player.name} | ${state.challenge.songName}`;
-      document.querySelector('meta[name="description"]').setAttribute("content", `Replay | ${state.player.name} | ${state.challenge.songName}`);
+      document.querySelector('meta[property="og:title"]').setAttribute("content", `Replay | ${state.player.name} | ${state.challenge.songName}`);
     },
 
     challengeloaderror: (state, payload) => {

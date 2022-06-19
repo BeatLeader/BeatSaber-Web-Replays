@@ -83,7 +83,7 @@ AFRAME.registerComponent('saber-controls', {
   tick: function (time, delta) {
     if (!this.data.bladeEnabled) { return; }
     
-    // if (!this.data.enabled) { return; }
+    if (!this.settings.settings.showHitboxes && this.settings.settings.reducedDebris) { return; }
     this.detectStroke(delta);
 
     if (this.line) {

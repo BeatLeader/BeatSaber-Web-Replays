@@ -4,8 +4,8 @@ AFRAME.registerComponent('settings', {
   
     init: function () {
       this.settings = {
-        showHeadset: false,
-        reducedDebris: false,
+        showHeadset: true,
+        reducedDebris: true,
         noEffects: false,
         showHitboxes: false,
         pixelRatio: 1.5,

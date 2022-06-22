@@ -443,13 +443,15 @@ AFRAME.registerComponent('song-controls', {
         jdParam = "&jd=" + AFRAME.utils.getUrlParameter('jd');
       }
       let modeParam = "";
-      if (AFRAME.utils.getUrlParameter('mode') != "Standard") {
+      if (AFRAME.utils.getUrlParameter('mode') && AFRAME.utils.getUrlParameter('mode') != "Standard") {
         modeParam = "&mode=" + AFRAME.utils.getUrlParameter('mode');
       }
 
       let baseParams = "";
       if (AFRAME.utils.getUrlParameter('link')) {
         baseParams = `?link=${AFRAME.utils.getUrlParameter('link')}${modeParam}${jdParam}`
+      } else if (AFRAME.utils.getUrlParameter('scoreId')) {
+        baseParams = `?scoreId=${AFRAME.utils.getUrlParameter('scoreId')}${modeParam}${jdParam}`
       } else {
         let songParam = (AFRAME.utils.getUrlParameter('id') ? `?id=${AFRAME.utils.getUrlParameter('id')}` : `?hash=${AFRAME.utils.getUrlParameter('hash')}`);
         baseParams = `${songParam}&playerID=${AFRAME.utils.getUrlParameter('playerID')}&difficulty=${AFRAME.utils.getUrlParameter('difficulty')}${modeParam}${jdParam}`;

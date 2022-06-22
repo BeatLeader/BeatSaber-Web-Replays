@@ -11,7 +11,8 @@ AFRAME.registerComponent('replay-loader', {
       link: {default: (AFRAME.utils.getUrlParameter('link'))},
       isSafari: {default: false},
       difficulty: {default: (AFRAME.utils.getUrlParameter('difficulty') || 'ExpertPlus' )},
-      mode: {default: AFRAME.utils.getUrlParameter('mode') || 'Standard'}
+      mode: {default: AFRAME.utils.getUrlParameter('mode') || 'Standard'},
+      scoreId: {default: (AFRAME.utils.getUrlParameter('scoreId'))},
     },
   
     init: function () {
@@ -21,13 +22,16 @@ AFRAME.registerComponent('replay-loader', {
       let captureThis = this;
       if (this.data.link.length) {
         setTimeout(() => this.fetchByFile(this.data.link, true), 300);
+      
+      } else if (this.data.scoreId.length) {
+        captureThis.downloadReplay(null, this.data.scoreId);
       } else if (!this.data.playerID.length) {
         this.cleanup = dragDrop('#body', (files) => {
           this.fetchByFile(files[0]);
         });
       } else {
         document.addEventListener('songFetched', (e) => {
-          captureThis.downloadReplay(e.detail.hash);
+          captureThis.downloadSSReplay(e.detail.hash);
         });
       }
 
@@ -36,12 +40,17 @@ AFRAME.registerComponent('replay-loader', {
       });
     },
 
-    downloadReplay: function (hash) {
+    downloadReplay: function (hash, scoreId, error) {
       this.el.sceneEl.emit('replayloadstart', null);
-      fetch(`https://api.beatleader.xyz/score/${this.data.playerID}/${hash}/${this.data.difficulty}/${this.data.mode}`)
+      fetch("https://api.beatleader.xyz/score/" + (scoreId ? `${scoreId}` : `${this.data.playerID}/${hash}/${this.data.difficulty}/${this.data.mode}`))
       .then(async response => {
         let data = response.status == 200 ? await response.json() : null;
         if (data && data.playerId) {
+          let splittedName = data.replay.split(/\.|-|\//)
+          if (splittedName.length > 4) {
+            this.el.sceneEl.emit('replayInfofetched', { hash: splittedName[splittedName.length - 2], difficulty: difficultyFromName(splittedName[splittedName.length - 4]), mode: splittedName[splittedName.length - 3]}, null);
+          }
+          
           checkBSOR(data.replay, true, (replay) => {
             if (replay && replay.frames) {
               if (replay.frames.length == 0) {
@@ -72,7 +81,7 @@ AFRAME.registerComponent('replay-loader', {
               this.el.sceneEl.emit('colorsFetched', { playerId: data.player.id, features: patreonFeatures }, null);
             }
         } else {
-          this.downloadSSReplay(hash);
+          this.el.sceneEl.emit('replayloadfailed', { error: replay.errorMessage || error }, null);
         }
       })
     },
@@ -91,7 +100,7 @@ AFRAME.registerComponent('replay-loader', {
                 this.processScores();
               }
             } else {
-              this.el.sceneEl.emit('replayloadfailed', { error: replay.errorMessage }, null);
+              this.downloadReplay(hash);
             }
           });
         });

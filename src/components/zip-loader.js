@@ -16,17 +16,24 @@ AFRAME.registerComponent('zip-loader', {
     this.fetchedZip = ''
     this.hash = '';
     this.id = '';
+    this.fetched = false;
+
+    let fetchCallback = e => {
+      if (!this.fetched) {
+        this.fetched = true;
+        this.data.difficulty = this.difficultyFromId(e.detail.difficulty);
+        this.data.mode = e.detail.mode;
+        this.fetchData(e.detail.hash.replace("custom_level_", ""), true);
+      }
+    }
 
     if (zipUrl) {
       this.fetchZip(zipUrl);
     }
 
     if (!this.data.id && !this.data.hash) {
-      this.el.sceneEl.addEventListener('replayfetched', (e) => {
-        this.data.difficulty = this.difficultyFromId(e.detail.difficulty);
-        this.data.mode = e.detail.mode;
-        this.fetchData(e.detail.hash.replace("custom_level_", ""), true);
-      });
+      this.el.sceneEl.addEventListener('replayInfofetched', fetchCallback);
+      this.el.sceneEl.addEventListener('replayfetched', fetchCallback);
     }
   },
 

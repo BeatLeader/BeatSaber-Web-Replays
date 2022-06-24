@@ -87,6 +87,7 @@ AFRAME.registerComponent('replay-loader', {
     },
 
     downloadSSReplay: function (hash) {
+      this.el.sceneEl.emit('replayloadstart', null);
       fetch(`/cors/score-saber/api/leaderboard/by-hash/${hash}/info?difficulty=${difficultyFromName(this.data.difficulty)}`, {referrer: "https://www.beatlooser.com"}).then(res => {
         res.json().then(leaderbord => {
           fetch(`${DECODER_LINK}/?playerID=${this.data.playerID}&songID=${leaderbord.id}`)

@@ -2,7 +2,7 @@
     command = "npm run start"
     publish = ".publish"
     port = 9999
-    targetPort = 3000
+    targetPort = 3003
 
 [[redirects]]
     from = "/cors/beat-saver2/*"

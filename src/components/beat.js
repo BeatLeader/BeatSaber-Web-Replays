@@ -493,10 +493,6 @@ AFRAME.registerComponent('beat', {
     }
     
     blockEl.object3D.scale.multiplyScalar(3.45).multiplyScalar(this.data.size);
-
-    if (this.data.type === 'sliderchain') {
-      
-    }
   },
 
   initFragments: function () {
@@ -1081,13 +1077,17 @@ AFRAME.registerComponent('beat', {
   })(),
 
   checkStaticHitsound: function () {
-    if (this.data.type === 'mine' || this.data.type === 'sliderchain' || this.hitSoundState == SOUND_STATE.hitPlayed) return;
+    if (this.data.type === 'mine' || this.hitSoundState == SOUND_STATE.hitPlayed) return;
 
     const currentTime = this.song.getCurrentTime();
     const noteTime = this.data.time - SWORD_OFFSET / this.data.speed;
 
     if (currentTime > noteTime) {
-      this.el.parentNode.components['beat-hit-sound'].playSound(this.el, this.data.cutDirection);
+
+      if (this.data.type !== 'sliderchain') {
+        this.el.parentNode.components['beat-hit-sound'].playSound(this.el, this.data.cutDirection);
+      }
+      
       if (this.hitSoundState == SOUND_STATE.waitingForHitSound) {
         this.returnToPool(true);
       }

@@ -16,7 +16,7 @@ AFRAME.registerComponent('replay-info-ui', {
 
         fetch("https://api.beatleader.xyz/modifiers").then(response => response.json()).then(
             data => {
-                modifiersLabel.title = this.describeModifiersAndMultipliers(modifiers.split(","), data);
+                modifiersLabel.title = this.describeModifiersAndMultipliers(Array.isArray(modifiers) ? modifiers : modifiers.split(","), data);
             });
     },
 

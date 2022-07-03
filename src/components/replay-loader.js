@@ -251,9 +251,9 @@ AFRAME.registerComponent('replay-loader', {
             const cutDirection = mapnote._cutDirection;
             const lineLayer = mapnote._lineLayer;
             const scoringType = mapnote._scoringType ? mapnote._scoringType + 2 : 3;
-            const id = scoringType * 10000 + lineIndex * 1000 + lineLayer * 100 + colorType * 10 + cutDirection;
+            const id = lineIndex * 1000 + lineLayer * 100 + colorType * 10 + cutDirection;
 
-            if (replaynote.index == undefined && replaynote.id == id) {
+            if (replaynote.index == undefined && (replaynote.id == id || replaynote.id == (id + scoringType * 10000))) {
                 replaynote.index = group[j];
                 replaynote.colorType = colorType;
                 replaynote.lineIndex = lineIndex;

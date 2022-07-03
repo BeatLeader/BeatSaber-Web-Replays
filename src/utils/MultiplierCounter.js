@@ -1,6 +1,7 @@
 class MultiplierCounter {
     constructor() {
         this.Multiplier = 1;
+        this._multiplierIncreaseProgress = 0;
         this._multiplierIncreaseMaxProgress = 2;
     }
 
@@ -15,14 +16,14 @@ class MultiplierCounter {
 
         if (this._multiplierIncreaseProgress < this._multiplierIncreaseMaxProgress)
         {
-            ++this._multiplierIncreaseProgress;
+            this._multiplierIncreaseProgress += 1;
         }
 
         if (this._multiplierIncreaseProgress >= this._multiplierIncreaseMaxProgress)
         {
             this.Multiplier *= 2;
             this._multiplierIncreaseProgress = 0;
-            this._multiplierIncreaseMaxProgress = Multiplier * 2;
+            this._multiplierIncreaseMaxProgress = this.Multiplier * 2;
         }
     }
 
@@ -36,7 +37,7 @@ class MultiplierCounter {
         if (this.Multiplier > 1)
         {
             this.Multiplier /= 2;
-            this._multiplierIncreaseMaxProgress = Multiplier * 2;
+            this._multiplierIncreaseMaxProgress = this.Multiplier * 2;
         }
     }
 }

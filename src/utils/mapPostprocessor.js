@@ -137,12 +137,14 @@ function calculateRotationOffsets(map) {
     const processGroup = () => {
       var leftNotes = []
       var rightNotes = []
-      group.forEach(note => {
-        (note._type ? leftNotes : rightNotes).push(note);
-      });
-
-      processNotesByColorType(leftNotes);
-      processNotesByColorType(rightNotes);
+      if (group) {
+        group.forEach(note => {
+            (note._type ? leftNotes : rightNotes).push(note);
+          });
+    
+          processNotesByColorType(leftNotes);
+          processNotesByColorType(rightNotes);
+      }
     };
 
     let notes = map._notes;

@@ -13,7 +13,7 @@ AFRAME.registerComponent('replay-info-ui', {
         // const modifiers = this.replayLoader.replay.info.modifiers;
         // let modifiersLabel = document.getElementById('modifiers');
         // modifiersLabel.innerHTML = modifiers;
-
+        
         // fetch("https://api.beatleader.xyz/modifiers").then(response => response.json()).then(
         //     data => {
         //         modifiersLabel.title = this.describeModifiersAndMultipliers(modifiers.split(","), data);

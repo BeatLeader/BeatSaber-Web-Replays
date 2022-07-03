@@ -3,13 +3,14 @@ import {checkBSOR, NoteEventType, ssReplayToBSOR} from '../open-replay-decoder';
 import {MultiplierCounter} from '../utils/MultiplierCounter'
 const DECODER_LINK = 'https://ssdecode.azurewebsites.net'
 
-import {NoteCutDirection, difficultyFromName, clamp, ScoringType} from '../utils';
+import {NoteCutDirection, difficultyFromName, clamp, ScoringType, getRandomColor} from '../utils';
 
 AFRAME.registerComponent('replay-loader', {
     schema: {
       playerID: {default: (AFRAME.utils.getUrlParameter('playerID'))},
       players: {default: (AFRAME.utils.getUrlParameter('players'))},
       link: {default: (AFRAME.utils.getUrlParameter('link'))},
+      hash: {default: (AFRAME.utils.getUrlParameter('hash'))},
       isSafari: {default: false},
       difficulty: {default: (AFRAME.utils.getUrlParameter('difficulty') || 'ExpertPlus' )},
       mode: {default: AFRAME.utils.getUrlParameter('mode') || 'Standard'}
@@ -34,7 +35,7 @@ AFRAME.registerComponent('replay-loader', {
       } else {
         this.userIds = this.data.playerID.length ? [this.data.playerID] : this.data.players.split(",");
         document.addEventListener('songFetched', (e) => {
-          captureThis.downloadReplay(e.detail.hash);
+          captureThis.downloadReplay(this.data.hash ? this.data.hash : e.detail.hash);
         });
       }
 
@@ -252,9 +253,9 @@ AFRAME.registerComponent('replay-loader', {
             const cutDirection = leftHanded ? mirrorDirection(mapnote._cutDirection) : mapnote._cutDirection;
             const lineLayer = mapnote._lineLayer;
             const scoringType = mapnote._scoringType ? mapnote._scoringType + 2 : 3;
-            const id = scoringType * 10000 + lineIndex * 1000 + lineLayer * 100 + colorType * 10 + cutDirection;
+            const id = lineIndex * 1000 + lineLayer * 100 + colorType * 10 + cutDirection;
 
-            if (replaynote.index == undefined && replaynote.id == id) {
+            if (replaynote.index == undefined && (replaynote.id == id || replaynote.id == (id + scoringType * 10000))) {
                 replaynote.index = group[j];
                 replaynote.colorType = colorType;
                 replaynote.lineIndex = lineIndex;

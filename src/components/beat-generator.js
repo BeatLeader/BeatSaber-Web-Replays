@@ -478,14 +478,6 @@ AFRAME.registerComponent('beat-generator', {
       beatObj.warmupTime = data.beatWarmupTime;
       beatObj.warmupSpeed = data.beatWarmupSpeed;
       
-      if (this.colors['right']) {
-        beatObj.blue = this.colors['right'];
-      }
-
-      if (this.colors['left']) {
-        beatObj.red = this.colors['left'];
-      }
-
       if (this.mappingExtensions) {
         note._lineIndex = note._lineIndex < 0
           ? note._lineIndex / 1000 + 1

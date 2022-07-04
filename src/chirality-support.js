@@ -24,7 +24,19 @@ function Mirror_Horizontal(beatmap, numberOfLines, flip_lines, remove_walls) {
             }
         } else {
             Mirror_Horizontal_Note(note, numberOfLines, flip_lines);
+            if (note.sliderhead) {
+                Mirror_Horizontal_Slider(note.sliderhead, numberOfLines, flip_lines);
+            }
         }
+    });
+    
+    beatmap._sliders.forEach(note => {
+        Mirror_Horizontal_Note(note, numberOfLines, flip_lines);
+        Mirror_Horizontal_Slider(note, numberOfLines, flip_lines);
+    });
+    beatmap._chains.forEach(note => {
+        Mirror_Horizontal_Note(note, numberOfLines, flip_lines);
+        Mirror_Horizontal_Slider(note, numberOfLines, flip_lines);
     });
 
     if (!remove_walls) {
@@ -93,6 +105,26 @@ function Mirror_Horizontal_Note(note, numberOfLines, flip_lines) {
     note._type = color;
     note._lineIndex = h_line;
     note._cutDirection = horizontal_cut_transform(note._cutDirection);
+}
+
+function Mirror_Horizontal_Slider(note, numberOfLines, flip_lines) {
+    let h_line;
+    if (flip_lines)
+    {
+        h_line = numberOfLines - 1 - note._tailLineIndex;
+    }
+    else
+    {
+        h_line = note._tailLineIndex;
+    }
+
+    note._tailLineIndex = h_line;
+    if (note._tailCutDirection) {
+        note._tailCutDirection = horizontal_cut_transform(note._tailCutDirection);
+    }
+    if (note._headCutDirection) {
+        note._headCutDirection = horizontal_cut_transform(note._headCutDirection);
+    }
 }
 
 

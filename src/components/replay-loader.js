@@ -405,7 +405,8 @@ AFRAME.registerComponent('replay-loader', {
             mirroredNote._type * 10 + 
             mirroredNote._cutDirection;
 
-          if (replayNoteId == mirroredNoteId || replayNoteId == mirroredNoteId + 30000) {
+          const scoringType = mirroredNote._scoringType ? mirroredNote._scoringType + 2 : 3;
+          if (replayNoteId == mirroredNoteId || replayNoteId == (mirroredNoteId + scoringType * 10000)) {
             Mirror_Horizontal(map, 4, true, false);
           }
         }

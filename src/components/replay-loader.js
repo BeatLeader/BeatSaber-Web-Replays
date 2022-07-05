@@ -102,7 +102,11 @@ AFRAME.registerComponent('replay-loader', {
                 this.processScores();
               }
             } else {
-              this.downloadReplay(hash);
+              if (replay.errorMessage && replay.errorMessage != "Replay not found. Try better ranked play.") {
+                this.el.sceneEl.emit('replayloadfailed', { error: replay.errorMessage}, null);
+              } else {
+                this.downloadReplay(hash);
+              }
             }
           });
         });

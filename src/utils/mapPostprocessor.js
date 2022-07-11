@@ -223,8 +223,8 @@ function postprocess(map) {
 
     calculateRotationOffsets(result);
     addScoringTypeAndChains(result);
-    indexNotes(result);
     filterFakeNotes(result);
+    indexNotes(result);
 
     return result;
 }

@@ -51,6 +51,7 @@ AFRAME.registerComponent('beat-generator', {
   init: function () {
     this.audioAnalyserEl = document.getElementById('audioanalyser');
     this.beatData = null;
+    this.customData = null;
     this.beatDataProcessed = false;
     this.beatContainer = document.getElementById('beatContainer');
     this.beatsTime = undefined;
@@ -68,6 +69,7 @@ AFRAME.registerComponent('beat-generator', {
     this.el.addEventListener('challengeloadend', evt => {
       this.beatmaps = evt.detail.beatmaps;
       this.beatData = this.beatmaps[evt.detail.mode][this.data.difficulty || evt.detail.difficulty];
+      this.customData = evt.detail.customData[evt.detail.mode][this.data.difficulty || evt.detail.difficulty];
       this.beatSpeeds = evt.detail.beatSpeeds;
       this.beatOffsets = evt.detail.beatOffsets;
       this.info = evt.detail.info;
@@ -337,12 +339,19 @@ AFRAME.registerComponent('beat-generator', {
       }
 
       if (this.mappingExtensions) {
-        note._lineIndex = note._lineIndex < 0
+        
+        if (note._lineIndex <= -1000 || note._lineIndex >= 1000) {
+          note._lineIndex = note._lineIndex < 0
           ? note._lineIndex / 1000 + 1
           : note._lineIndex / 1000 - 1;
-        note._lineLayer = note._lineLayer < 0
+        } 
+        
+        if (note._lineLayer <= -1000 || note._lineLayer >= 1000) {
+          note._lineLayer = note._lineLayer < 0
           ? note._lineLayer / 1000 + 1
           : note._lineLayer / 1000 - 1;
+        }
+        
         if (this.mappingExtensions.colWidth) {
           beatObj.size *= this.mappingExtensions.colWidth;
         }
@@ -410,10 +419,17 @@ AFRAME.registerComponent('beat-generator', {
       wallObj.warmupTime = data.beatWarmupTime;
       wallObj.warmupSpeed = data.beatWarmupSpeed;
 
+      if (this.customData && this.customData._obstacleColor) {
+        wallObj.color = this.customData._obstacleColor;
+      }
+
       if (this.mappingExtensions) {
-        wallObj.horizontalPosition = wall._lineIndex < 0
+        if (wall._lineIndex <= -1000 || wall._lineIndex >= 1000) {
+          wallObj.horizontalPosition = wall._lineIndex < 0
           ? wall._lineIndex / 1000 + 1
           : wall._lineIndex / 1000 - 1;
+        }
+        
         wallObj.width = ((wall._width - 1000) / 1000) * WALL_THICKNESS
       }
 
@@ -421,26 +437,38 @@ AFRAME.registerComponent('beat-generator', {
 
       // Handle mapping extensions wall format.
       if (this.mappingExtensions) {
-        const typeValue = wall._type - RIDICULOUS_MAP_EX_CONSTANT;
-        let height = Math.round(typeValue / 1000);
-        let startHeight = typeValue % 1000;
+        const obstacleType = wall._type;
 
-				height = roundToNearest(
-					normalize(
-						height,
-						WALL_HEIGHT_MIN,
-						WALL_HEIGHT_MAX,
-						0,
-						5
-					),
-					0.001
-				);
-				startHeight = roundToNearest(
-					normalize(startHeight, WALL_START_BASE, WALL_START_MAX, 0, 1.3),
-					0.01
-				);
+        if (obstacleType >= 1000 && obstacleType <= 4000 || obstacleType >= 4001 && obstacleType <= 4005000) {
+            let obsHeight;
+            var value = obstacleType;
+            if (obstacleType >= 4001 && obstacleType <= 4100000)
+            {
+                value -= 4001;
+                obsHeight = value / 1000;
+            }
+            else
+            {
+                obsHeight = value - 1000;
+            }
+            var height = obsHeight / 1000 * 5;
+            height = height * 1000 + 1000;
 
-        el.components.wall.setMappingExtensionsHeight(startHeight, height);
+            var startHeight = 0;
+            var value1 = obstacleType;
+            if (obstacleType >= 4001 && obstacleType <= 4100000)
+            {
+              value1 -= 4001;
+                startHeight = value1 % 1000;
+            }
+            
+            var layer = startHeight / 750 * 5;
+            layer = layer * 1000 + 1334;
+
+            el.components.wall.setMappingExtensionsHeight(layer / 1000 - 2, (height - 1000) / 1000);
+        }
+
+        
       }
 
       el.components.wall.onGenerate(this.mappingExtensions);

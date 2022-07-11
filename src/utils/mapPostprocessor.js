@@ -214,12 +214,17 @@ function indexNotes(map) {
     });
 }
 
+function filterFakeNotes(map) {
+  map._notes = map._notes.filter(a => a._customData == null || !a._customData._fake);
+}
+
 function postprocess(map) {
     var result = upgrade(map);
 
     calculateRotationOffsets(result);
     addScoringTypeAndChains(result);
     indexNotes(result);
+    filterFakeNotes(result);
 
     return result;
 }

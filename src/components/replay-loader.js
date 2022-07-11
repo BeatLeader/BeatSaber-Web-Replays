@@ -212,7 +212,7 @@ AFRAME.registerComponent('replay-loader', {
           cutPoint: info.noteCutInfo ? info.noteCutInfo.cutPoint : null
         }
         
-        if (note.id == -1 || parseInt(("" + note.id).split("").pop()) == 9) {
+        if (note.id == -1 || (note.id > 0 && note.id < 100000 && note.id % 10 == 9)) {
           note.eventType = NoteEventType.bomb;
           note.id += 4;
           note.score = -4;

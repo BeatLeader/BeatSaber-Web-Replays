@@ -92,6 +92,16 @@ function upgrade(map) {
         });
       });
       map["_burstSliders"] = burstSliders;
+
+      let bpmevents = [];
+      map["bpmEvents"].forEach(event => {
+        bpmevents.push({
+          _time: event["b"],
+          _bpm: event["m"],
+        });
+      });
+
+      map["_bpmEvents"] = bpmevents;
     } else {
         map["_sliders"] = [];
         map["_burstSliders"] = [];
@@ -218,13 +228,63 @@ function filterFakeNotes(map) {
   map._notes = map._notes.filter(a => a._customData == null || !a._customData._fake);
 }
 
-function postprocess(map) {
+function convertBeatToSongTime(beatTime, bpm, bpmChangeDataList) {
+  if (bpmChangeDataList.length == 0) return beatTime * (60 / bpm);
+
+  var i = 0;
+  while (i < bpmChangeDataList.length - 1 && bpmChangeDataList[i + 1].bpmChangeStartBpmTime < beatTime) {
+    i++;
+  }
+  const bpmChangeData = bpmChangeDataList[i];
+  return bpmChangeData.bpmChangeStartTime + ((beatTime - bpmChangeData.bpmChangeStartBpmTime) / bpmChangeData.bpm * 60.0);
+}
+
+function calculateSongTimes(map, info) {
+  var startBpm = info._beatsPerMinute;
+  var bpmChangeDataList = [];
+
+  const bpmEvents = map._bpmEvents;
+  if (bpmEvents && bpmEvents.length != 0 && bpmEvents[0]._time == 0) {
+    startBpm = bpmEvents[0]._bpm;
+    bpmChangeDataList = [{bpmChangeStartTime: 0.0, bpmChangeStartBpmTime: 0.0, bpm: startBpm}];
+    for (var index = 1; index < bpmEvents.length; ++index)
+    {
+      const bpmChangeData = bpmChangeDataList[bpmChangeDataList.length - 1];
+      const beat = bpmEvents[index]._time;
+      const bpm = bpmEvents[index]._bpm;
+
+      bpmChangeDataList.push({
+        bpmChangeStartTime: bpmChangeData.bpmChangeStartTime + ((beat - bpmChangeData.bpmChangeStartBpmTime) / bpmChangeData.bpm * 60.0), 
+        bpmChangeStartBpmTime: beat, 
+        bpm
+      });
+    }
+  }
+  
+  [map["_notes"], map["_obstacles"], map["_events"]].forEach(collection => {
+    collection.forEach(o => {
+      o._songTime = convertBeatToSongTime(o._time, startBpm, bpmChangeDataList);
+      if (o._duration) {
+        o._songDuration = convertBeatToSongTime(o._duration, startBpm, bpmChangeDataList);
+      }
+    });
+  });
+  [map["_sliders"], map["_burstSliders"], map["_chains"]].forEach(collection => {
+    collection.forEach(o => {
+      o._songTime = convertBeatToSongTime(o._time, startBpm, bpmChangeDataList);
+      o._songTailTime = convertBeatToSongTime(o._tailTime, startBpm, bpmChangeDataList);
+    });
+  });
+}
+
+function postprocess(map, info) {
     var result = upgrade(map);
 
     calculateRotationOffsets(result);
     addScoringTypeAndChains(result);
     filterFakeNotes(result);
     indexNotes(result);
+    calculateSongTimes(result, info);
 
     return result;
 }

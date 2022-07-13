@@ -27,7 +27,7 @@ AFRAME.registerComponent('beat-generator', {
   dependencies: ['stage-colors'],
 
   schema: {
-    beatWarmupTime: {default: BEAT_WARMUP_TIME / 1000},
+    beatWarmupTime: {default: BEAT_WARMUP_TIME},
     beatWarmupSpeed: {default: BEAT_WARMUP_SPEED},
     difficulty: {type: 'string'},
     isPlaying: {default: false},
@@ -130,7 +130,7 @@ AFRAME.registerComponent('beat-generator', {
     }
     
     this.beatsPreloadTimeTotal =
-      (this.beatAnticipationTime + this.data.beatWarmupTime) * 1000;
+      (this.beatAnticipationTime + this.data.beatWarmupTime);
 
     // Some events have negative time stamp to initialize the stage.
     const events = this.beatData._events;
@@ -158,22 +158,21 @@ AFRAME.registerComponent('beat-generator', {
       // Get current song time.
       if (!song.isPlaying) { return; }
       this.beatsTime = (song.getCurrentTime() + this.beatAnticipationTime +
-                        this.data.beatWarmupTime) * 1000;
-      this.eventsTime = song.getCurrentTime() * 1000;
+                        this.data.beatWarmupTime);
+      this.eventsTime = song.getCurrentTime();
     } else {
       // Song is not playing and is preloading beats, use maintained beat time.
       this.beatsTime = this.beatsPreloadTime;
-      this.eventsTime = song.getCurrentTime() * 1000;
+      this.eventsTime = song.getCurrentTime();
     }
 
     // Load in stuff scheduled between the last timestamp and current timestamp.
     // Beats.
     const beatsTime = this.beatsTime + skipDebug;
 
-    const msPerBeat = 1000 * 60 / this.bpm;
     const notes = this.beatData._notes;
     for (let i = 0; i < notes.length; ++i) {
-      let noteTime = notes[i]._time * msPerBeat;
+      let noteTime = notes[i]._songTime;
       if (noteTime > prevBeatsTime && noteTime <= beatsTime) {
         notes[i].time = noteTime;
         this.generateBeat(notes[i]);
@@ -182,7 +181,7 @@ AFRAME.registerComponent('beat-generator', {
 
     const sliders = this.beatData._sliders;
     for (let i = 0; i < sliders.length; ++i) {
-      let noteTime = sliders[i]._time * msPerBeat;
+      let noteTime = sliders[i]._songTime;
       if (noteTime > prevBeatsTime && noteTime <= beatsTime) {
         sliders[i].time = noteTime;
         this.generateSlider(sliders[i]);
@@ -191,7 +190,7 @@ AFRAME.registerComponent('beat-generator', {
 
     const chains = this.beatData._chains;
     for (let i = 0; i < chains.length; ++i) {
-      let noteTime = chains[i]._time * msPerBeat;
+      let noteTime = chains[i]._songTime;
       if (noteTime > prevBeatsTime && noteTime <= beatsTime) {
         chains[i].time = noteTime;
         this.generateChain(chains[i]);
@@ -201,8 +200,8 @@ AFRAME.registerComponent('beat-generator', {
     // Walls.
     const obstacles = this.beatData._obstacles;
     for (let i = 0; i < obstacles.length; ++i) {
-      let noteTime = obstacles[i]._time * msPerBeat;
-      let noteDuration = obstacles[i]._duration * msPerBeat;
+      let noteTime = obstacles[i]._songTime;
+      let noteDuration = obstacles[i]._songDuration;
       if (this.isSeeking) {
         if ((noteTime + noteDuration / 2) > prevBeatsTime && (noteTime - noteDuration / 2) <= beatsTime) {
           this.generateWall(obstacles[i]);
@@ -219,7 +218,7 @@ AFRAME.registerComponent('beat-generator', {
       const eventsTime = this.eventsTime + skipDebug;
       const events = this.beatData._events;
       for (let i = 0; i < events.length; ++i) {
-        let noteTime = events[i]._time * msPerBeat;
+        let noteTime = events[i]._songTime;
         if (noteTime > prevEventsTime && noteTime <= eventsTime) {
           this.generateEvent(events[i]);
         }
@@ -246,7 +245,7 @@ AFRAME.registerComponent('beat-generator', {
     this.clearBeats(true);
     this.beatsTime = (
       time
-    ) * 1000;
+    );
     this.isSeeking = true;
   },
 
@@ -301,7 +300,7 @@ AFRAME.registerComponent('beat-generator', {
       beatObj.warmupPosition = -data.beatWarmupTime * data.beatWarmupSpeed;
       beatObj.index = note._index;
 
-      beatObj.time = note._time * (60 / this.bpm);
+      beatObj.time = note._songTime;
       beatObj.anticipationTime = this.beatAnticipationTime;
       beatObj.warmupTime = data.beatWarmupTime;
       beatObj.warmupSpeed = data.beatWarmupSpeed;
@@ -320,7 +319,7 @@ AFRAME.registerComponent('beat-generator', {
 
         beatObj.tailHorizontalPosition = slider._tailLineIndex;
         beatObj.tailVerticalPosition = slider._tailLineLayer;
-        beatObj.tailTime = slider._tailTime * (60 / this.bpm);
+        beatObj.tailTime = slider._songTailTime;
         beatObj.sliceCount = slider._sliceCount;
         beatObj.squishAmount = slider._squishAmount;
       }
@@ -390,7 +389,7 @@ AFRAME.registerComponent('beat-generator', {
       const data = this.data;
       const speed = this.beatSpeed;
 
-      const durationSeconds = 60 * (wall._duration / this.bpm);
+      const durationSeconds = wall._songDuration;
       wallObj.anticipationPosition =
         -this.beatAnticipationTime * this.beatSpeed - this.swordOffset;
       wallObj.durationSeconds = durationSeconds;
@@ -401,7 +400,7 @@ AFRAME.registerComponent('beat-generator', {
       // wall._width can be like 1 or 2. Map that to 0.6 thickness.
       wallObj.width = wall._width * WALL_THICKNESS;
 
-      wallObj.time = wall._time * (60 / this.bpm);
+      wallObj.time = wall._songTime;
       wallObj.anticipationTime = this.beatAnticipationTime;
       wallObj.warmupTime = data.beatWarmupTime;
       wallObj.warmupSpeed = data.beatWarmupSpeed;
@@ -500,8 +499,8 @@ AFRAME.registerComponent('beat-generator', {
       beatObj.speed = this.beatSpeed;
       beatObj.warmupPosition = -data.beatWarmupTime * data.beatWarmupSpeed;
 
-      beatObj.time = note._time * (60 / this.bpm);
-      beatObj.tailTime = note._tailTime * (60 / this.bpm);
+      beatObj.time = note._songTime;
+      beatObj.tailTime = note._songTailTime;
       beatObj.anticipationTime = this.beatAnticipationTime;
       beatObj.warmupTime = data.beatWarmupTime;
       beatObj.warmupSpeed = data.beatWarmupSpeed;

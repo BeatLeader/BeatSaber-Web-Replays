@@ -47,11 +47,9 @@ AFRAME.registerComponent('intro-skip', {
         var firstObjectTime = songDuration;
         var lastObjectTime = -1.0;
 
-        const sPerBeat = 60 / this.bpm;
-
         const notes = this.beatData._notes;
         for (let i = 0; i < notes.length; ++i) {
-            const noteTime = notes[i]._time * sPerBeat;
+            const noteTime = notes[i]._songTime;
             if (noteTime < firstObjectTime)
                 firstObjectTime = noteTime;
             if (noteTime > lastObjectTime)
@@ -62,7 +60,7 @@ AFRAME.registerComponent('intro-skip', {
         const obstacles = this.beatData._obstacles;
         for (let i = 0; i < obstacles.length; ++i) {
             const obstacle = obstacles[i];
-            const noteTime = obstacle._time * sPerBeat;
+            const noteTime = obstacle._songTime;
             
             if(!(obstacle._lineIndex == 0 && obstacle._width == 1) && !(obstacle._lineIndex == 3 && obstacle._width == 1)) {
                 if (noteTime < firstObjectTime)

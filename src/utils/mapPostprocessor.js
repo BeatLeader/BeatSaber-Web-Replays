@@ -265,7 +265,7 @@ function calculateSongTimes(map, info) {
     collection.forEach(o => {
       o._songTime = convertBeatToSongTime(o._time, startBpm, bpmChangeDataList);
       if (o._duration) {
-        o._songDuration = convertBeatToSongTime(o._duration, startBpm, bpmChangeDataList);
+        o._songDuration = convertBeatToSongTime(o._time + o._duration, startBpm, bpmChangeDataList) - o._songTime;
       }
     });
   });

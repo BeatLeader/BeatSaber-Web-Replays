@@ -47,6 +47,10 @@ To specify replay download link use the `?link` parameter in the URL. Make sure 
 
 `https://www.replay.beatleader.xyz/?link=https://cdn.discordapp.com/attachments/921820046345523314/934953493624660058/76561198059961776-Cheshires_dance-ExpertPlus-Standard-A2B943FE75E48394352B4FD912CEE8306788D0B1.dat`
 
+It can also use BeatLeader's scoreId:
+
+`https://www.replay.beatleader.xyz/?scoreId=442819`
+
 ## Development
 
 Download repository.

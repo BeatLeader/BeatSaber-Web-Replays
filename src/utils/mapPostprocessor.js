@@ -244,10 +244,12 @@ function calculateSongTimes(map, info) {
   var bpmChangeDataList = [];
 
   const bpmEvents = map._bpmEvents;
-  if (bpmEvents && bpmEvents.length != 0 && bpmEvents[0]._time == 0) {
-    startBpm = bpmEvents[0]._bpm;
-    bpmChangeDataList = [{bpmChangeStartTime: 0.0, bpmChangeStartBpmTime: 0.0, bpm: startBpm}];
-    for (var index = 1; index < bpmEvents.length; ++index)
+  if (bpmEvents && bpmEvents.length != 0) {
+    if (bpmEvents[0]._time == 0) {
+      startBpm = bpmEvents[0]._bpm;
+      bpmChangeDataList = [{bpmChangeStartTime: 0.0, bpmChangeStartBpmTime: 0.0, bpm: startBpm}];
+    }
+    for (var index = (bpmEvents[0]._time == 0 ? 1 : 0); index < bpmEvents.length; ++index)
     {
       const bpmChangeData = bpmChangeDataList[bpmChangeDataList.length - 1];
       const beat = bpmEvents[index]._time;

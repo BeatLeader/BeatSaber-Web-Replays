@@ -237,7 +237,7 @@ AFRAME.registerComponent('beat-generator', {
       this.beatsPreloadTime = undefined;
     } else {
       // Continue preload.
-      this.beatsPreloadTime += delta;
+      this.beatsPreloadTime += delta / 1000;
     }
   },
 

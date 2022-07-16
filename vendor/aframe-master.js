@@ -69231,7 +69231,7 @@ module.exports.Component = registerComponent('screenshot', {
     this.resize(size.width, size.height);
     // Render scene to render target.
     renderer.autoClear = true;
-    renderer.render(el.object3D, camera, output, true);
+    // renderer.render(el.object3D, camera, output, true);
     renderer.autoClear = autoClear;
     // Read image pizels back.
     renderer.readRenderTargetPixels(output, 0, 0, size.width, size.height, pixels);
@@ -73731,6 +73731,7 @@ module.exports.AScene = registerElement('a-scene', {
         }
 
         this.addEventListener('loaded', function () {
+
           AEntity.prototype.play.call(this);  // .play() *before* render.
 
           if (sceneEl.renderStarted) { return; }
@@ -73743,9 +73744,11 @@ module.exports.AScene = registerElement('a-scene', {
             sceneEl.clock = new THREE.Clock();
             loadingScreen.remove();
             //sceneEl.calculate();
-            sceneEl.render();
-            //sceneEl.calculate();
             sceneEl.renderStarted = true;
+            sceneEl.render();
+            console.log("renderstart");
+            //sceneEl.calculate();
+            
             sceneEl.emit('renderstart');
           }
         });
@@ -73843,7 +73846,9 @@ module.exports.AScene = registerElement('a-scene', {
         } else {
           mainRenderer.render(this.object3D, this.camera, this.renderTarget, false, this.camera.el.components.camera.data);
           if (this.additiveCameras) {
+            
             this.additiveCameras.forEach(element => {
+              console.log(element);
               mainRenderer.render(this.object3D, element.getObject3D('camera'), this.renderTarget, false, element.components["orthographic-camera"].data);
             });
           }
@@ -73851,7 +73856,7 @@ module.exports.AScene = registerElement('a-scene', {
 
         if (this.isPlaying) { this.tock(this.time, this.delta, this.camera); }
 
-        this.components.overlay && this.components.overlay.render();
+        // this.components.overlay && this.components.overlay.render();
       },
       writable: true
     },
@@ -75798,7 +75803,7 @@ _dereq_('./core/a-mixin');
 _dereq_('./extras/components/');
 _dereq_('./extras/primitives/');
 
-console.log('A-Frame Version: 0.8.2 (Date 2022-06-18, Commit #50eae056)');
+console.log('A-Frame Version: 0.8.2 (Date 2022-07-16, Commit #50eae056)');
 console.log('three Version:', pkg.dependencies['three']);
 console.log('WebVR Polyfill Version:', pkg.dependencies['webvr-polyfill']);
 
@@ -78946,6 +78951,7 @@ Object.assign( THREE.EffectComposer.prototype, {
   },
 
   render: function ( delta ) {
+    console.log("Composer");
 
     var maskActive = false;
 

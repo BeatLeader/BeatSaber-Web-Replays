@@ -277,6 +277,7 @@ function generateMode(event, difficulty, mode) {
     event.beatSpeeds[mode][difficulty] = event.beatSpeeds["Standard"][difficulty];
     event.beatOffsets[mode][difficulty] = event.beatOffsets["Standard"][difficulty];
     event.difficulties[mode] = event.difficulties["Standard"];
+    event.customData[mode] = event.customData["Standard"];
 
     switch (mode) {
       case "VerticalStandard":

@@ -166,7 +166,10 @@ function DecodeFrames(dataView) {
     var result = [];
     for (var i = 0; i < length; i++)
     {
-        result.push(DecodeFrame(dataView));
+        var frame = DecodeFrame(dataView);
+        if (frame.time != 0) {
+            result.push(frame);
+        }
     }
     if (result.length > 2) {
         var sameFramesCount = 0;

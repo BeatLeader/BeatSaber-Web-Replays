@@ -162,12 +162,28 @@ function DecodeInfo(dataView) {
 }
 
 function DecodeFrames(dataView) {
-    console.log("frames");
     const length = DecodeInt(dataView);
     var result = [];
     for (var i = 0; i < length; i++)
     {
         result.push(DecodeFrame(dataView));
+    }
+    if (result.length > 2) {
+        var sameFramesCount = 0;
+        while (result[sameFramesCount].time == result[sameFramesCount + 1].time) {
+            sameFramesCount++;
+        }
+
+        if (sameFramesCount > 0) {
+            sameFramesCount++;
+
+            var newResult = [];
+            for (let index = 0; index < result.length; index += sameFramesCount) {
+                newResult.push(result[index]);
+            }
+            result = newResult;
+        }
+
     }
     return result;
 }

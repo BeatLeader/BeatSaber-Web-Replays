@@ -133,8 +133,16 @@ AFRAME.registerComponent('zip-loader', {
           event.image = loader.extractAsBlobUrl(filename, 'image/png');
         }
       }
-      if (filename.endsWith('egg') || filename.endsWith('ogg')) {
-        event.audio = loader.extractAsBlobUrl(filename, 'audio/ogg');
+      if (!event.audio) {
+        if (filename.endsWith('egg') || filename.endsWith('ogg')) {
+          event.audio = loader.extractAsBlobUrl(filename, 'audio/ogg');
+        }
+        if (filename.endsWith('wav')) {
+          event.audio = loader.extractAsBlobUrl(filename, 'audio/wav');
+        }
+        if (filename.endsWith('mp3')) {
+          event.audio = loader.extractAsBlobUrl(filename, 'audio/mp3');
+        }
       }
     });
 

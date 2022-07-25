@@ -73848,7 +73848,6 @@ module.exports.AScene = registerElement('a-scene', {
           if (this.additiveCameras) {
             
             this.additiveCameras.forEach(element => {
-              console.log(element);
               mainRenderer.render(this.object3D, element.getObject3D('camera'), this.renderTarget, false, element.components["orthographic-camera"].data);
             });
           }
@@ -75803,7 +75802,7 @@ _dereq_('./core/a-mixin');
 _dereq_('./extras/components/');
 _dereq_('./extras/primitives/');
 
-console.log('A-Frame Version: 0.8.2 (Date 2022-07-16, Commit #50eae056)');
+console.log('A-Frame Version: 0.8.2 (Date 2022-07-25, Commit #50eae056)');
 console.log('three Version:', pkg.dependencies['three']);
 console.log('WebVR Polyfill Version:', pkg.dependencies['webvr-polyfill']);
 
@@ -78951,7 +78950,6 @@ Object.assign( THREE.EffectComposer.prototype, {
   },
 
   render: function ( delta ) {
-    console.log("Composer");
 
     var maskActive = false;
 

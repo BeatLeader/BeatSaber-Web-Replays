@@ -109,6 +109,35 @@ AFRAME.registerComponent('beat-generator', {
     }
   },
 
+  beatSpeedOrDefault: function() {
+    const result = this.beatSpeeds[this.data.mode][this.data.difficulty];
+    if (result <= 0) {
+      switch (this.data.difficulty) {
+      case "Easy":
+      case "Normal":
+      case "Hard":
+        return 10;
+      case "Expert":
+        return 12;
+      case "ExpertPlus":
+        return 16;
+      default:
+        return 5;
+    }
+    } else {
+      return result;
+    }
+  },
+
+  beatOffsetOrDefault: function() {
+    const result = this.beatOffsets[this.data.mode][this.data.difficulty];
+    if (result <= 0) {
+      return 0.5;
+    } else {
+      return result;
+    }
+  },
+
   /**
    * Load the beat data into the game.
    */
@@ -120,8 +149,8 @@ AFRAME.registerComponent('beat-generator', {
     this.beatData._events.sort(lessThan);
     this.beatData._obstacles.sort(lessThan);
     this.beatData._notes.sort(lessThan);
-    this.beatSpeed = this.beatSpeeds[this.data.mode][this.data.difficulty];
-    this.beatOffset = this.beatOffsets[this.data.mode][this.data.difficulty];
+    this.beatSpeed = this.beatSpeedOrDefault();
+    this.beatOffset = this.beatOffsetOrDefault();
     this.bpm = this.info._beatsPerMinute;
 
     this.updateJD(queryJD, true);

@@ -3,8 +3,6 @@ import ZipLoader from 'zip-loader';
 import {Mirror_Inverse, Mirror_Horizontal, Mirror_Vertical} from '../chirality-support';
 import {postprocess} from '../utils/mapPostprocessor';
 
-const zipUrl = AFRAME.utils.getUrlParameter('zip');
-
 AFRAME.registerComponent('zip-loader', {
   schema: {
     id: {default: AFRAME.utils.getUrlParameter('id')},
@@ -17,10 +15,6 @@ AFRAME.registerComponent('zip-loader', {
     this.fetchedZip = ''
     this.hash = '';
     this.id = '';
-
-    if (zipUrl) {
-      this.fetchZip(zipUrl);
-    }
 
     if (!this.data.id && !this.data.hash) {
       this.el.sceneEl.addEventListener('replayfetched', (e) => {
@@ -150,8 +144,6 @@ AFRAME.registerComponent('zip-loader', {
       event.image = 'assets/img/favicon-196x196.png';
     }
 
-    event.id = this.id;
-
     this.isFetching = '';
     console.log(event);
     this.el.emit('challengeloadend', event, false);
@@ -165,21 +157,32 @@ AFRAME.registerComponent('zip-loader', {
     return fetch(`/cors/beat-saver2/api/maps/${byHash ? 'hash' : 'id'}/${id}`).then(res => {
       res.json().then(data => {
         if (data.versions) {
-          this.hash = data.versions[0].hash;
-          this.id = data.id;
-          data.image = utils.beatsaverCdnCors(data.versions[0].coverURL);
-          data.hash = data.versions[0].hash;
-          this.el.sceneEl.emit('songFetched', data);
-          this.fetchZip(zipUrl || `${data.versions[0].downloadURL}`);
+          const currentVersion = data.versions[0];
+          const desiredHash = byHash ? id : currentVersion.hash; 
+
+          let callback = (hash, cover, zipUrl, fallbackUrl) => {
+            data.image = utils.beatsaverCdnCors(cover);
+            data.hash = hash;
+
+            this.el.sceneEl.emit('songFetched', data);
+
+            this.fetchZip(zipUrl, fallbackUrl);
+          }
+          if (desiredHash.toLowerCase() == currentVersion.hash.toLowerCase()) {
+            callback(currentVersion.hash, currentVersion.coverURL, currentVersion.downloadURL)
+          } else {
+            let urls = ["r2cdn", "cdn"].map(prefix => "https://" + prefix + ".beatsaver.com/" + desiredHash.toLowerCase() + ".zip");
+            callback(desiredHash, currentVersion.coverURL, urls[0], urls[1])
+          }
         } else {
-          this.el.emit('challengeloaderror', null);
+          this.el.emit('challengeloaderror', {hash: id});
         }
         
       });
     });
   },
 
-  fetchZip: function (zipUrl) {
+  fetchZip: function (zipUrl, fallbackUrl) {
 
     // Already fetching.
     if (this.isFetching === zipUrl ||
@@ -192,8 +195,12 @@ AFRAME.registerComponent('zip-loader', {
     const loader = new ZipLoader(zipUrl);
 
     loader.on('error', err => {
-      this.el.emit('challengeloaderror', null);
-      this.isFetching = '';
+      if (fallbackUrl) {
+        this.fetchZip(fallbackUrl)
+      } else {
+        this.el.emit('challengeloaderror', {hash: this.data.hash});
+        this.isFetching = '';
+      }
     });
 
     loader.on('progress', evt => {
@@ -259,10 +266,6 @@ function jsonParseLoop (str, i) {
     str = str.replace(str[errorPos + 2], 'x');
     return jsonParseLoop(str, i + 1);
   }
-}
-
-function getZipUrl (key, hash) {
-  return `https://beatsaver.com/cdn/${key}/${hash}.zip`;
 }
 
 // Push state URL in browser.

@@ -30,6 +30,23 @@ AFRAME.registerComponent('replay-loader', {
         this.cleanup = dragDrop('#body', (files) => {
           this.fetchByFile(files[0]);
         });
+        this.el.sceneEl.addEventListener('usergesturereceive', (e) => {
+          if (this.replay || this.fetching) { return; }
+          var input = document.createElement('input');
+          input.type = 'file';
+          input.accept=".bsor, .bsortemp, .dat";
+
+          input.onchange = e => {
+            this.fetching = true;
+            this.fetchByFile(e.target.files[0]);
+          }
+
+          input.click();
+        });
+
+        this.el.sceneEl.addEventListener('replayloadfailed', (e) => {
+          this.fetching = false;
+        });
       } else {
         document.addEventListener('songFetched', (e) => {
           captureThis.downloadSSReplay(e.detail.hash);

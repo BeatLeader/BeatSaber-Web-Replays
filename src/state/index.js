@@ -83,10 +83,6 @@ AFRAME.registerState({
       hasError: false,
       errorText: ''
     },
-    player: {
-      name: '',
-      avatar: ''
-    },
     controllerType: '',
     damage: 0,
     hasReceivedUserGesture: false,
@@ -125,8 +121,8 @@ AFRAME.registerState({
 
       state.challenge.id = payload.id;
 
-      document.title = `${state.replaysCount > 1 ? 'Battle royale' : state.player.name} | ${payload.metadata.songName}`;
-      document.querySelector('meta[property="og:title"]').setAttribute("content", `${state.replaysCount > 1 ? 'Battle royale' : state.player.name} | ${payload.metadata.songName}`);
+      document.title = `Battle royale | ${payload.metadata.songName}`;
+      document.querySelector('meta[property="og:title"]').setAttribute("content", `Battle royale | ${payload.metadata.songName}`);
     },
 
     challengeloadstart: (state, payload) => {
@@ -160,7 +156,7 @@ AFRAME.registerState({
       state.challenge.songSubName = payload.info._songSubName || payload.info._songAuthorName;
       state.challenge.songSubNameShort = truncate(state.challenge.songSubName, 21);
 
-      document.title = `Replay | ${state.replaysCount > 1 ? 'Battle royale' : state.player.name} | ${payload.info._songName}`;
+      document.title = `Battle royale | ${payload.info._songName}`;
       state.challenge.isLoading = false;
     },
 
@@ -184,10 +180,8 @@ AFRAME.registerState({
     },
 
     userloaded: (state, payload) => {
-      state.player = payload;
-
-      document.title = `${state.replaysCount > 1 ? 'Battle royale' : state.player.name} | ${state.challenge.songName}`;
-      document.querySelector('meta[property="og:title"]').setAttribute("content", `${state.replaysCount > 1 ? 'Battle royale' : state.player.name} | ${state.challenge.songName}`);
+      document.title = `Battle royale | ${state.challenge.songName}`;
+      document.querySelector('meta[property="og:title"]').setAttribute("content", `Battle royale | ${state.challenge.songName}`);
     },
 
     challengeloaderror: (state, payload) => {

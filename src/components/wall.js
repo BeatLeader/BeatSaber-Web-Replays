@@ -65,7 +65,7 @@ AFRAME.registerComponent('wall', {
       newPosition = data.anticipationPosition - halfDepth + data.warmupPosition + data.warmupSpeed * -timeOffset;
     }
     
-    newPosition -= this.headset.object3D.position.z;
+    newPosition += this.headset.object3D.position.z;
     position.z = newPosition;
 
     if (this.hit && currentTime > this.hitWall.time) {

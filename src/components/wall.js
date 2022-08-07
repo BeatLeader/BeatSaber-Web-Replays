@@ -17,6 +17,7 @@ AFRAME.registerComponent('wall', {
     height: {default: 1.3},
     horizontalPosition: {default: 1},
     verticalPosition: {default: 0},
+    isV3: {default: false},
     isCeiling: {default: false},
     speed: {default: 1.0},
     warmupPosition: {default: 0},
@@ -95,7 +96,7 @@ AFRAME.registerComponent('wall', {
 
     const halfDepth = data.durationSeconds * (data.speed) / 2;
 
-    if (data.verticalPosition != undefined) {
+    if (data.isV3) {
       let y = Math.max(getVerticalPosition(data.verticalPosition) + RAISE_Y_OFFSET, 0.1);
 
       el.object3D.position.set(

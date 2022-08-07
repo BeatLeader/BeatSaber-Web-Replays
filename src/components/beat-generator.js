@@ -439,6 +439,9 @@ AFRAME.registerComponent('beat-generator', {
       if (wall._lineLayer != undefined) {
         wallObj.verticaltalPosition = wall._lineLayer;
         wallObj.height = wall._height;
+        wallObj.isV3 = true;
+      } else {
+        wallObj.isV3 = false;
       }
       wallObj.isCeiling = wall._type === 1;
       wallObj.speed = speed;

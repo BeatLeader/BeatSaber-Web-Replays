@@ -99,7 +99,7 @@ AFRAME.registerComponent('replay-loader', {
               this.el.sceneEl.emit('colorsFetched', { playerId: data.player.id, features: patreonFeatures }, null);
             }
         } else {
-          this.el.sceneEl.emit('replayloadfailed', { error: replay.errorMessage || error }, null);
+          this.el.sceneEl.emit('replayloadfailed', { error: data == null ? "This score was improved." : data.errorMessage || error }, null);
         }
       })
     },

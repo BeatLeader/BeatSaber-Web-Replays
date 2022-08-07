@@ -1,18 +1,11 @@
-import {BEAT_WARMUP_OFFSET, BEAT_WARMUP_SPEED, BEAT_WARMUP_TIME} from '../constants/beat';
+import {getHorizontalPosition, getVerticalPosition} from '../utils';
 
 // So wall does not clip the stage ground.
 const RAISE_Y_OFFSET = 0.15;
 
 const CEILING_THICKNESS = 1.5;
 const CEILING_HEIGHT = 1.4 + CEILING_THICKNESS / 2;
-const CEILING_WIDTH = 4;
-
-const _noteLinesCount = 4;
 const _noteLinesDistance = 0.6;
-
-function getHorizontalPosition (lineIndex) {
-  return (-(_noteLinesCount - 1) * 0.5 + lineIndex) * _noteLinesDistance;
-}
 
 /**
  * Wall to dodge.
@@ -102,32 +95,47 @@ AFRAME.registerComponent('wall', {
 
     const halfDepth = data.durationSeconds * (data.speed) / 2;
 
-    if (data.isCeiling) {
+    if (data.verticalPosition != undefined) {
+      let y = Math.max(getVerticalPosition(data.verticalPosition) + RAISE_Y_OFFSET, 0.1);
+
       el.object3D.position.set(
-        getHorizontalPosition(data.horizontalPosition) + width / 2  - 0.25,
-        CEILING_HEIGHT,
+        getHorizontalPosition(data.horizontalPosition) + width / 2 - 0.25,
+        y,
         data.anticipationPosition + data.warmupPosition - halfDepth
       );
       el.object3D.scale.set(
         width,
-        CEILING_THICKNESS,
+        Math.min(data.height * _noteLinesDistance, 3.1 - y),
         data.durationSeconds * data.speed
       );
-      return;
-    }
+    } else {
+      if (data.isCeiling) {
+        el.object3D.position.set(
+          getHorizontalPosition(data.horizontalPosition) + width / 2  - 0.25,
+          CEILING_HEIGHT,
+          data.anticipationPosition + data.warmupPosition - halfDepth
+        );
+        el.object3D.scale.set(
+          width,
+          CEILING_THICKNESS,
+          data.durationSeconds * data.speed
+        );
+        return;
+      }
 
-    // Box geometry is constructed from the local 0,0,0 growing in the positive and negative
-    // x and z axis. We have to shift by half width and depth to be positioned correctly.
-    el.object3D.position.set(
-      getHorizontalPosition(data.horizontalPosition) + width / 2  - 0.25,
-      data.height + RAISE_Y_OFFSET,
-      data.anticipationPosition + data.warmupPosition - halfDepth
-    );
-    el.object3D.scale.set(
-      width,
-      2.5,
-      data.durationSeconds * data.speed
-    );
+      // Box geometry is constructed from the local 0,0,0 growing in the positive and negative
+      // x and z axis. We have to shift by half width and depth to be positioned correctly.
+      el.object3D.position.set(
+        getHorizontalPosition(data.horizontalPosition) + width / 2  - 0.25,
+        data.height + RAISE_Y_OFFSET,
+        data.anticipationPosition + data.warmupPosition - halfDepth
+      );
+      el.object3D.scale.set(
+        width,
+        2.5,
+        data.durationSeconds * data.speed
+      );
+    }
   },
 
   setMappingExtensionsHeight: function (startHeight, height) {

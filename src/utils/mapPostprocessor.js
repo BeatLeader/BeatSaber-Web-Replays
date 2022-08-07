@@ -35,6 +35,7 @@ function upgrade(map) {
         obstacles.push({
           _time: wall["b"],
           _lineIndex: wall["x"],
+          _lineLayer: wall["y"],
           _type: wall["y"] / 2,
           _duration: wall["d"],
           _width: wall["w"],

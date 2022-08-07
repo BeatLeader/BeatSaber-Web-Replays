@@ -436,6 +436,10 @@ AFRAME.registerComponent('beat-generator', {
         -this.beatAnticipationTime * this.beatSpeed - this.swordOffset;
       wallObj.durationSeconds = durationSeconds;
       wallObj.horizontalPosition = wall._lineIndex;
+      if (wall._lineLayer != undefined) {
+        wallObj.verticaltalPosition = wall._lineLayer;
+        wallObj.height = wall._height;
+      }
       wallObj.isCeiling = wall._type === 1;
       wallObj.speed = speed;
       wallObj.warmupPosition = -data.beatWarmupTime * data.beatWarmupSpeed;

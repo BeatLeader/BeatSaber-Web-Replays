@@ -25,7 +25,7 @@ AFRAME.registerSystem('materials', {
         skyColor: {value: new THREE.Color(COLORS.SKY_BLUE)},
         backglowColor: {value: new THREE.Color(COLORS.BG_BLUE)},
         src: {
-          value: new THREE.TextureLoader().load(document.getElementById('atlasImg').src)
+          value: new THREE.TextureLoader().load('assets/img/atlas.png')
         },
       },
       vertexShader: stageNormalShaders.vertexShader,
@@ -42,7 +42,7 @@ AFRAME.registerSystem('materials', {
         rightLaser: {value: new THREE.Color(COLORS.NEON_BLUE)},
         textGlow: {value: new THREE.Color(COLORS.TEXT_OFF)},
         src: {
-          value: new THREE.TextureLoader().load(document.getElementById('atlasImg').src)
+          value: new THREE.TextureLoader().load('assets/img/atlas.png')
         },
       },
       vertexShader: stageAdditiveShaders.vertexShader,
@@ -61,7 +61,7 @@ AFRAME.registerSystem('materials', {
         rightLaser: {value: new THREE.Color(COLORS.NEON_BLUE)},
         textGlow: {value: new THREE.Color(COLORS.TEXT_OFF)},
         src: {
-          value: new THREE.TextureLoader().load(document.getElementById('atlasImg').src)
+          value: new THREE.TextureLoader().load('assets/img/atlas.png')
         },
       },
       vertexShader: stageAdditiveShaders.vertexShader,

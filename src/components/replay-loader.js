@@ -1,6 +1,7 @@
 const dragDrop = require('drag-drop');
 import {checkBSOR, NoteEventType, ssReplayToBSOR} from '../open-replay-decoder';
 import {MultiplierCounter} from '../utils/MultiplierCounter'
+import { mirrorDirection } from '../utils'
 const DECODER_LINK = 'https://ssdecode.azurewebsites.net'
 
 import {NoteCutDirection, difficultyFromName, clamp, ScoringType, getRandomColor} from '../utils';

@@ -66,7 +66,7 @@ AFRAME.registerComponent('replay-loader', {
         if (data && data.playerId) {
           let splittedName = data.replay.split(/\.|-|\//)
           if (splittedName.length > 4) {
-            this.el.sceneEl.emit('replayInfofetched', { hash: splittedName[splittedName.length - 2], difficulty: difficultyFromName(splittedName[splittedName.length - 4]), mode: splittedName[splittedName.length - 3]}, null);
+            this.el.sceneEl.emit('replayInfofetched', { hash: splittedName[splittedName.length - 2], leaderboardId: data.leaderboardId, difficulty: difficultyFromName(splittedName[splittedName.length - 4]), mode: splittedName[splittedName.length - 3]}, null);
           }
           
           checkBSOR(data.replay, true, (replay) => {

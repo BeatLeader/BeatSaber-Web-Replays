@@ -18,6 +18,7 @@ AFRAME.registerComponent('zip-loader', {
     let fetchCallback = e => {
       if (!this.fetched) {
         this.fetched = true;
+        this.leaderboardId = e.detail.leaderboardId;
         this.data.difficulty = this.difficultyFromId(e.detail.difficulty);
         this.data.mode = e.detail.mode;
         this.fetchData(e.detail.hash.replace("custom_level_", ""), true);
@@ -169,6 +170,7 @@ AFRAME.registerComponent('zip-loader', {
           let callback = (hash, cover, zipUrl, fallbackUrl) => {
             data.image = utils.beatsaverCdnCors(cover);
             data.hash = hash;
+            data.leaderboardId = this.leaderboardId;
 
             this.el.sceneEl.emit('songFetched', data);
 
@@ -272,16 +274,6 @@ function jsonParseLoop (str, i) {
     str = str.replace(str[errorPos + 2], 'x');
     return jsonParseLoop(str, i + 1);
   }
-}
-
-// Push state URL in browser.
-const idRe = /&?id=[\d\w-]+/
-function removeIdQueryParam () {
-  let search = window.location.search.toString();
-  search = search.replace(idRe, '');
-  let url = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
-  url += search;
-  window.history.pushState({path: url},'', url);
 }
 
 function generateMode(event, difficulty, mode) {

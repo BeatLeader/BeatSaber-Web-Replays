@@ -117,7 +117,11 @@ AFRAME.registerComponent('song-controls', {
     document.getElementById('songName').setAttribute('title', data.songName);
     document.getElementById('songSubName').innerHTML = data.songSubName;
     document.getElementById('songSubName').setAttribute('title', data.songSubName);
-    document.getElementById('songLink').setAttribute('href', "https://beatsaver.com/maps/" + data.songId)
+    if (data.leaderboardId) {
+      document.getElementById('songLink').setAttribute('href', "https://beatleader.xyz/leaderboard/global/" + data.leaderboardId)
+    } else {
+      document.getElementById('songLink').setAttribute('href', "https://beatsaver.com/maps/" + data.songId)
+    }
 
     
     // document.getElementById('controlsMode').innerHTML = data.mode;

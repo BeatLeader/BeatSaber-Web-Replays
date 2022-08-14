@@ -119,7 +119,11 @@ AFRAME.registerState({
       state.challenge.songSubName = payload.metadata.songSubName || payload.metadata.songAuthorName;
       state.challenge.songSubNameShort = truncate(state.challenge.songSubName, 21);
 
-      state.challenge.id = payload.id;
+      if (payload.leaderboardId) {
+        state.challenge.leaderboardId = payload.leaderboardId;
+      } else {
+        state.challenge.id = payload.id;
+      }
 
       document.title = `Battle royale | ${payload.metadata.songName}`;
       document.querySelector('meta[property="og:title"]').setAttribute("content", `Battle royale | ${payload.metadata.songName}`);

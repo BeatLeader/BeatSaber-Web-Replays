@@ -24,7 +24,7 @@ AFRAME.registerComponent('song-controls', {
 		songSubName: {default: ''},
 		songImage: {default: ''},
 		songId: {default: ''},
-		leaderboardId: {default: 0},
+		leaderboardId: {default: ''},
 		isPlaying: {default: false},
 		showControls: {default: true},
 		isSafari: {default: false},
@@ -103,7 +103,7 @@ AFRAME.registerComponent('song-controls', {
 		document.getElementById('songName').setAttribute('title', data.songName);
 		document.getElementById('songSubName').innerHTML = data.songSubName;
 		document.getElementById('songSubName').setAttribute('title', data.songSubName);
-		if (data.leaderboardId) {
+		if (data.leaderboardId.length) {
 			document.getElementById('songLink').setAttribute('href', 'https://beatleader.xyz/leaderboard/global/' + data.leaderboardId);
 		} else {
 			document.getElementById('songLink').setAttribute('href', 'https://beatsaver.com/maps/' + data.songId);

@@ -1,17 +1,16 @@
-
 const COLORS = require('../constants/colors.js');
 const HIT_COLOR = new THREE.Color(COLORS.NEON_RED);
 const BORDER_COLOR = new THREE.Color(COLORS.NEON_BLUE);
 
 AFRAME.registerShader('floorShader', {
-  schema: {
-    normalMap: {type: 'map', is: 'uniform'},
-    envMap: {type: 'map', is: 'uniform'},
-    hitRight: {type: 'vec3', is: 'uniform', default: {x: 0, y: 1, z: 0}},
-    hitLeft: {type: 'vec3', is: 'uniform', default: {x: 0, y: 0, z: 0}}
-  },
+	schema: {
+		normalMap: {type: 'map', is: 'uniform'},
+		envMap: {type: 'map', is: 'uniform'},
+		hitRight: {type: 'vec3', is: 'uniform', default: {x: 0, y: 1, z: 0}},
+		hitLeft: {type: 'vec3', is: 'uniform', default: {x: 0, y: 0, z: 0}},
+	},
 
-  vertexShader: `
+	vertexShader: `
     varying vec2 uvs;
     varying vec3 worldPos;
     void main() {
@@ -22,7 +21,7 @@ AFRAME.registerShader('floorShader', {
     }
   `,
 
-  fragmentShader: `
+	fragmentShader: `
     varying vec2 uvs;
     varying vec3 worldPos;
     uniform vec3 color;
@@ -62,5 +61,5 @@ AFRAME.registerShader('floorShader', {
 
       gl_FragColor = vec4(ref + border + hit, 1.0);
     }
-  `
+  `,
 });

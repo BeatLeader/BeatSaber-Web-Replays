@@ -1,4 +1,6 @@
-function requireAll (req) { req.keys().forEach(req); }
+function requireAll(req) {
+	req.keys().forEach(req);
+}
 
 console.time = () => {};
 console.timeEnd = () => {};

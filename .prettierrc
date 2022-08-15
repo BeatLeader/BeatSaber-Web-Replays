@@ -1,0 +1,12 @@
+trailingComma: "es5"
+useTabs: true
+semi: true
+singleQuote: true
+bracketSpacing: false
+bracketSameLine: true
+arrowParens: "avoid"
+printWidth: 140
+overrides:
+- files: "**/*.svelte"
+  options:
+    parser: "svelte"

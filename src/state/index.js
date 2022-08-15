@@ -5,53 +5,51 @@ const DAMAGE_DECAY = 0.25;
 const DAMAGE_MAX = 10;
 
 const DEBUG_CHALLENGE = {
-  author: 'Superman',
-  difficulty: 'Expert',
-  id: '31',
-  image: 'assets/img/molerat.jpg',
-  songName: 'Friday',
-  songSubName: 'Rebecca Black'
+	author: 'Superman',
+	difficulty: 'Expert',
+	id: '31',
+	image: 'assets/img/molerat.jpg',
+	songName: 'Friday',
+	songSubName: 'Rebecca Black',
 };
 
 const emptyChallenge = {
-  audio: '',
-  author: '',
-  difficulty: '',
-  id: '',
-  image: '',
-  songName: '',
-  songNameMedium: '',
-  songNameShort: '',
-  songSubName: '',
-  songSubNameShort: ''
+	audio: '',
+	author: '',
+	difficulty: '',
+	id: '',
+	image: '',
+	songName: '',
+	songNameMedium: '',
+	songNameShort: '',
+	songSubName: '',
+	songSubNameShort: '',
 };
 
 const emptyScore = {
-  accuracy: 0,
-  beatsHit: 0,
-  beatsMissed: 0,
-  beatsText: '',
-  combo: 0,
-  maxCombo: 0,
-  multiplier: 1,
-  energy: 0.5,
-  rank: '',
-  score: 0,
-  scoreDescription: '',
-  misses: 0
+	accuracy: 0,
+	beatsHit: 0,
+	beatsMissed: 0,
+	beatsText: '',
+	combo: 0,
+	maxCombo: 0,
+	multiplier: 1,
+	energy: 0.5,
+	rank: '',
+	score: 0,
+	scoreDescription: '',
+	misses: 0,
 };
 
-const isSafari = navigator.userAgent.toLowerCase().indexOf('safari') !== -1 &&
-                 navigator.userAgent.toLowerCase().indexOf('chrome') === -1;
-                 
-if (isSafari) 
-{
-  var module = require("../lib/oggdec");
-  const decodeOggData = module().decodeOggData;
-  const decodeAudioData = (data, completion) => {
-    decodeOggData(data).then(completion);
-  }
-  ( window.AudioContext || window.webkitAudioContext ).prototype.decodeOggData = decodeAudioData;
+const isSafari = navigator.userAgent.toLowerCase().indexOf('safari') !== -1 && navigator.userAgent.toLowerCase().indexOf('chrome') === -1;
+
+if (isSafari) {
+	var module = require('../lib/oggdec');
+	const decodeOggData = module().decodeOggData;
+	const decodeAudioData = (data, completion) => {
+		decodeOggData(data).then(completion);
+	};
+	(window.AudioContext || window.webkitAudioContext).prototype.decodeOggData = decodeAudioData;
 }
 
 let beatmaps;
@@ -68,355 +66,374 @@ let difficulties;
  *    `bind__<componentName>="<propertyName>: some.item.in.state"`
  */
 AFRAME.registerState({
-  initialState: {
-    activeHand: localStorage.getItem('hand') || 'right',
-    challenge: Object.assign({  // Actively playing challenge.
-      hasLoadError: false,
-      isLoading: false,
-      isBeatsPreloaded: false,  // Whether we have passed the negative time.
-      loadErrorText: '',
-    }, emptyChallenge),
-    score: emptyScore,
-    notes: null,
-    replay: {
-      isLoading: false,
-      hasError: false,
-      errorText: ''
-    },
-    player: {
-      name: '',
-      avatar: ''
-    },
-    controllerType: '',
-    damage: 0,
-    hasReceivedUserGesture: false,
-    inVR: false,
-    pov: false,
-    isPaused: false,  // Playing, but paused.
-    isPlaying: false,  // Actively playing.
-    isFinished: false,
-    isSafari: isSafari,
-    isSongBufferProcessing: false,
-    useractive: false,
-    showControls: true,
-    wrongMisses: 0,
-    saberScale: new THREE.Vector3(1, 1, 1),
-    saberGlowScale: new THREE.Vector3(1, 1.1, 1),
-    settings: {showHeadset: false, volume: 0.0},
-    localReplay: !AFRAME.utils.getUrlParameter('id') && !AFRAME.utils.getUrlParameter('hash')
-  },
+	initialState: {
+		activeHand: localStorage.getItem('hand') || 'right',
+		challenge: Object.assign(
+			{
+				// Actively playing challenge.
+				hasLoadError: false,
+				isLoading: false,
+				isBeatsPreloaded: false, // Whether we have passed the negative time.
+				loadErrorText: '',
+			},
+			emptyChallenge
+		),
+		score: emptyScore,
+		notes: null,
+		replay: {
+			isLoading: false,
+			hasError: false,
+			errorText: '',
+		},
+		player: {
+			name: '',
+			avatar: '',
+		},
+		controllerType: '',
+		damage: 0,
+		hasReceivedUserGesture: false,
+		inVR: false,
+		pov: false,
+		isPaused: false, // Playing, but paused.
+		isPlaying: false, // Actively playing.
+		isFinished: false,
+		isSafari: isSafari,
+		isSongBufferProcessing: false,
+		useractive: false,
+		showControls: true,
+		wrongMisses: 0,
+		saberScale: new THREE.Vector3(1, 1, 1),
+		saberGlowScale: new THREE.Vector3(1, 1.1, 1),
+		settings: {showHeadset: false, volume: 0.0},
+		localReplay: !AFRAME.utils.getUrlParameter('id') && !AFRAME.utils.getUrlParameter('hash'),
+	},
 
-  handlers: {
-    beatloaderpreloadfinish: state => {
-      state.challenge.isBeatsPreloaded = true;
-    },
+	handlers: {
+		beatloaderpreloadfinish: state => {
+			state.challenge.isBeatsPreloaded = true;
+		},
 
-    songFetched: (state, payload) => {
-      state.challenge.image = payload.image;
-      state.challenge.author = payload.metadata.levelAuthorName;
+		songFetched: (state, payload) => {
+			state.challenge.image = payload.image;
+			state.challenge.author = payload.metadata.levelAuthorName;
 
-      state.challenge.songName = payload.metadata.songName;
-      state.challenge.songNameShort = truncate(payload.metadata.songName, 18);
-      state.challenge.songNameMedium = truncate(payload.metadata.songName, 30);
+			state.challenge.songName = payload.metadata.songName;
+			state.challenge.songNameShort = truncate(payload.metadata.songName, 18);
+			state.challenge.songNameMedium = truncate(payload.metadata.songName, 30);
 
-      state.challenge.songSubName = payload.metadata.songSubName || payload.metadata.songAuthorName;
-      state.challenge.songSubNameShort = truncate(state.challenge.songSubName, 21);
+			state.challenge.songSubName = payload.metadata.songSubName || payload.metadata.songAuthorName;
+			state.challenge.songSubNameShort = truncate(state.challenge.songSubName, 21);
 
-      if (payload.leaderboardId) {
-        state.challenge.leaderboardId = payload.leaderboardId;
-      } else {
-        state.challenge.id = payload.id;
-      }
+			if (payload.leaderboardId) {
+				state.challenge.leaderboardId = payload.leaderboardId;
+			} else {
+				state.challenge.id = payload.id;
+			}
 
-      document.title = `Replay | ${state.player.name} | ${payload.metadata.songName}`;
-      document.querySelector('meta[property="og:title"]').setAttribute("content", `Replay | ${state.player.name} | ${payload.metadata.songName}`);
-    },
+			document.title = `Replay | ${state.player.name} | ${payload.metadata.songName}`;
+			document
+				.querySelector('meta[property="og:title"]')
+				.setAttribute('content', `Replay | ${state.player.name} | ${payload.metadata.songName}`);
+		},
 
-    challengeloadstart: (state, payload) => {
-      state.challenge.isLoading = true;
-    },
+		challengeloadstart: (state, payload) => {
+			state.challenge.isLoading = true;
+		},
 
-    challengeloadend: (state, payload) => {
-      beatmaps = payload.beatmaps;
-      difficulties = payload.difficulties;
+		challengeloadend: (state, payload) => {
+			beatmaps = payload.beatmaps;
+			difficulties = payload.difficulties;
 
-      state.challenge.audio = payload.audio;
-      state.challenge.author = payload.info._levelAuthorName;
+			state.challenge.audio = payload.audio;
+			state.challenge.author = payload.info._levelAuthorName;
 
-      const mode = payload.mode;
-      state.challenge.mode = mode;
-      state.challenge.difficulties = difficulties[mode];
+			const mode = payload.mode;
+			state.challenge.mode = mode;
+			state.challenge.difficulties = difficulties[mode];
 
-      if (!state.challenge.difficulty || !payload.beatmaps[mode][state.challenge.difficulty]) {
-        state.challenge.difficulty = payload.difficulty;
-      }
+			if (!state.challenge.difficulty || !payload.beatmaps[mode][state.challenge.difficulty]) {
+				state.challenge.difficulty = payload.difficulty;
+			}
 
-      state.challenge.id = payload.isDragDrop ? '' : payload.id;
-      if (payload.image) {
-        state.challenge.image = payload.image;
-      }
-      
-      state.challenge.songName = payload.info._songName;
-      state.challenge.songNameShort = truncate(payload.info._songName, 18);
-      state.challenge.songNameMedium = truncate(payload.info._songName, 30);
+			state.challenge.id = payload.isDragDrop ? '' : payload.id;
+			if (payload.image) {
+				state.challenge.image = payload.image;
+			}
 
-      state.challenge.songSubName = payload.info._songSubName || payload.info._songAuthorName;
-      state.challenge.songSubNameShort = truncate(state.challenge.songSubName, 21);
+			state.challenge.songName = payload.info._songName;
+			state.challenge.songNameShort = truncate(payload.info._songName, 18);
+			state.challenge.songNameMedium = truncate(payload.info._songName, 30);
 
-      document.title = `Replay | ${state.player.name} | ${payload.info._songName}`;
-      state.challenge.isLoading = false;
-    },
+			state.challenge.songSubName = payload.info._songSubName || payload.info._songAuthorName;
+			state.challenge.songSubNameShort = truncate(state.challenge.songSubName, 21);
 
-    replayloadstart: (state, payload) => {
-      state.localReplay = false;
-      state.replay.isLoading = true;
-      state.replay.hasError = false;
-      state.replay.errorText = null;
-    },
+			document.title = `Replay | ${state.player.name} | ${payload.info._songName}`;
+			state.challenge.isLoading = false;
+		},
 
-    replayloaded: (state, payload) => {
-      state.replay.isLoading = false;
-      state.notes = payload.notes;
-    },
+		replayloadstart: (state, payload) => {
+			state.localReplay = false;
+			state.replay.isLoading = true;
+			state.replay.hasError = false;
+			state.replay.errorText = null;
+		},
 
-    replayloadfailed: (state, payload) => {
-      state.replay.isLoading = false;
-      state.replay.hasError = true;
-      state.replay.errorText = payload.error;
-      state.localReplay = !AFRAME.utils.getUrlParameter('id') && !AFRAME.utils.getUrlParameter('hash')
-    },
+		replayloaded: (state, payload) => {
+			state.replay.isLoading = false;
+			state.notes = payload.notes;
+		},
 
-    userloaded: (state, payload) => {
-      state.player = payload;
+		replayloadfailed: (state, payload) => {
+			state.replay.isLoading = false;
+			state.replay.hasError = true;
+			state.replay.errorText = payload.error;
+			state.localReplay = !AFRAME.utils.getUrlParameter('id') && !AFRAME.utils.getUrlParameter('hash');
+		},
 
-      document.title = `Replay | ${state.player.name} | ${state.challenge.songName}`;
-      document.querySelector('meta[property="og:title"]').setAttribute("content", `Replay | ${state.player.name} | ${state.challenge.songName}`);
-    },
+		userloaded: (state, payload) => {
+			state.player = payload;
 
-    challengeloaderror: (state, payload) => {
-      state.challenge.hasLoadError = true;
-      state.challenge.isLoading = false;
-      state.challenge.loadErrorText = `Sorry, song ${payload.hash} was not found.`;
-    },
+			document.title = `Replay | ${state.player.name} | ${state.challenge.songName}`;
+			document
+				.querySelector('meta[property="og:title"]')
+				.setAttribute('content', `Replay | ${state.player.name} | ${state.challenge.songName}`);
+		},
 
-    controllerconnected: (state, payload) => {
-      state.controllerType = payload.name;
-    },
+		challengeloaderror: (state, payload) => {
+			state.challenge.hasLoadError = true;
+			state.challenge.isLoading = false;
+			state.challenge.loadErrorText = `Sorry, song ${payload.hash} was not found.`;
+		},
 
-    scoreChanged: (state, payload) => {
-      updateScore(state, {index: payload.index});
-    },
+		controllerconnected: (state, payload) => {
+			state.controllerType = payload.name;
+		},
 
-    victory: function (state) {
-      state.isVictory = true;
+		scoreChanged: (state, payload) => {
+			updateScore(state, {index: payload.index});
+		},
 
-      // Percentage is score divided by total possible score.
-      const accuracy = (state.score.score / (state.challenge.numBeats * 110)) * 100;
-      state.score.accuracy = isNaN(accuracy) ? 0 : accuracy;
-      state.score.score = isNaN(state.score.score) ? 0 : state.score.score;
+		victory: function (state) {
+			state.isVictory = true;
 
-      if (accuracy >= 95) {
-        state.score.rank = 'S';
-      } else if (accuracy >= 93) {
-        state.score.rank = 'A';
-      } else if (accuracy >= 90) {
-        state.score.rank = 'A-';
-      } else if (accuracy >= 88) {
-        state.score.rank = 'B+';
-      } else if (accuracy >= 83) {
-        state.score.rank = 'B';
-      } else if (accuracy >= 80) {
-        state.score.rank = 'B-';
-      } else if (accuracy >= 78) {
-        state.score.rank = 'C+';
-      } else if (accuracy >= 73) {
-        state.score.rank = 'C';
-      } else if (accuracy >= 70) {
-        state.score.rank = 'C-';
-      } else if (accuracy >= 60) {
-        state.score.rank = 'D';
-      } else {
-        state.score.rank = 'F';
-      }
+			// Percentage is score divided by total possible score.
+			const accuracy = (state.score.score / (state.challenge.numBeats * 110)) * 100;
+			state.score.accuracy = isNaN(accuracy) ? 0 : accuracy;
+			state.score.score = isNaN(state.score.score) ? 0 : state.score.score;
 
-      computeBeatsText(state);
-    },
+			if (accuracy >= 95) {
+				state.score.rank = 'S';
+			} else if (accuracy >= 93) {
+				state.score.rank = 'A';
+			} else if (accuracy >= 90) {
+				state.score.rank = 'A-';
+			} else if (accuracy >= 88) {
+				state.score.rank = 'B+';
+			} else if (accuracy >= 83) {
+				state.score.rank = 'B';
+			} else if (accuracy >= 80) {
+				state.score.rank = 'B-';
+			} else if (accuracy >= 78) {
+				state.score.rank = 'C+';
+			} else if (accuracy >= 73) {
+				state.score.rank = 'C';
+			} else if (accuracy >= 70) {
+				state.score.rank = 'C-';
+			} else if (accuracy >= 60) {
+				state.score.rank = 'D';
+			} else {
+				state.score.rank = 'F';
+			}
 
-    victoryfake: function (state) {
-      state.score.accuracy = '74.99';
-      state.score.rank = 'C';
-    },
+			computeBeatsText(state);
+		},
 
-    wallhitstart: function (state) {
-      takeDamage(state);
-    },
+		victoryfake: function (state) {
+			state.score.accuracy = '74.99';
+			state.score.rank = 'C';
+		},
 
-    /**
-     * ?debugstate=loading
-     */
-    debugloading: state => {
-      DEBUG_CHALLENGE.id = '-1';
-      Object.assign(state.challenge, DEBUG_CHALLENGE);
-      state.challenge.isLoading = true;
-    },
+		wallhitstart: function (state) {
+			takeDamage(state);
+		},
 
-    difficultyselect: (state, payload) => {
-      state.challenge.difficulty = payload;
-      state.challenge.isBeatsPreloaded = false;
-      state.isPaused = false;
-      state.isFinished = false;
-    },
+		/**
+		 * ?debugstate=loading
+		 */
+		debugloading: state => {
+			DEBUG_CHALLENGE.id = '-1';
+			Object.assign(state.challenge, DEBUG_CHALLENGE);
+			state.challenge.isLoading = true;
+		},
 
-    gamemenuresume: state => {
-      state.isPaused = false;
-    },
+		difficultyselect: (state, payload) => {
+			state.challenge.difficulty = payload;
+			state.challenge.isBeatsPreloaded = false;
+			state.isPaused = false;
+			state.isFinished = false;
+		},
 
-    gamemenurestart: state => {
-      state.challenge.isBeatsPreloaded = false;
-      state.isPaused = false;
-      state.isFinished = false;
-      state.isSongBufferProcessing = true;
-      state.score = emptyScore;
-      state.lastNoteTime = 0;
-    },
+		gamemenuresume: state => {
+			state.isPaused = false;
+		},
 
-    timechanged: (state, payload) => {
-      state.isFinished = false;
-      let notes = state.notes;
-      for (var i = notes.length; --i > 0;) {
-        if (notes[i].time < payload.newTime) {
-          updateScore(state, {index: i});
-          return;
-        }
-      }
+		gamemenurestart: state => {
+			state.challenge.isBeatsPreloaded = false;
+			state.isPaused = false;
+			state.isFinished = false;
+			state.isSongBufferProcessing = true;
+			state.score = emptyScore;
+			state.lastNoteTime = 0;
+		},
 
-      state.score = {
-        accuracy: 0,
-        combo: 0,
-        maxCombo: 0,
-        multiplier: 1,
-        score: 0
-      }
-    },
+		timechanged: (state, payload) => {
+			state.isFinished = false;
+			let notes = state.notes;
+			for (var i = notes.length; --i > 0; ) {
+				if (notes[i].time < payload.newTime) {
+					updateScore(state, {index: i});
+					return;
+				}
+			}
 
-    modeselect: (state, payload) => {
-      state.challenge.mode = payload;
-      state.challenge.isBeatsPreloaded = false;
-      state.isPaused = false;
-      state.isFinished = false;
+			state.score = {
+				accuracy: 0,
+				combo: 0,
+				maxCombo: 0,
+				multiplier: 1,
+				score: 0,
+			};
+		},
 
-      state.challenge.difficulties = difficulties[payload];
-      state.challenge.difficulty = state.challenge.difficulties[0]._difficulty;
-    },
+		modeselect: (state, payload) => {
+			state.challenge.mode = payload;
+			state.challenge.isBeatsPreloaded = false;
+			state.isPaused = false;
+			state.isFinished = false;
 
-    pausegame: state => {
-      if (!state.isPlaying) { return; }
-      state.isPaused = true;
-    },
+			state.challenge.difficulties = difficulties[payload];
+			state.challenge.difficulty = state.challenge.difficulties[0]._difficulty;
+		},
 
-    finishgame: state => {
-      if (!state.isPlaying) { return; }
-      state.isPaused = true;
-      state.isFinished = true;
-    },
+		pausegame: state => {
+			if (!state.isPlaying) {
+				return;
+			}
+			state.isPaused = true;
+		},
 
-    songprocessingfinish: state => {
-      state.isSongBufferProcessing = false;
-    },
+		finishgame: state => {
+			if (!state.isPlaying) {
+				return;
+			}
+			state.isPaused = true;
+			state.isFinished = true;
+		},
 
-    songprocessingstart: state => {
-      state.isSongBufferProcessing = true;
-    },
+		songprocessingfinish: state => {
+			state.isSongBufferProcessing = false;
+		},
 
-    /**
-     * From search.
-     */
-    songselect: (state, payload) => {
-      state.challenge = Object.assign(state.challenge, emptyChallenge);
-      state.challenge.id = payload.id;
-      state.challenge.author = payload.metadata.levelAuthorName;
-      state.challenge.image = utils.beatsaverCdnCors(payload.versions[0].coverURL);
-      state.challenge.songName = payload.metadata.songName;
-      state.challenge.songNameShort = truncate(payload.metadata.songName, 18);
-      state.challenge.songNameMedium = truncate(payload.metadata.songName, 30);
-      state.challenge.songSubName = payload.metadata.songSubName;
-      state.challenge.songSubNameShort = truncate(payload.metadata.songSubName, 21);
-      state.challenge.isBeatsPreloaded = false;
-      state.challenge.isLoading = true;
+		songprocessingstart: state => {
+			state.isSongBufferProcessing = true;
+		},
 
-      state.hasReceivedUserGesture = false;
-      state.isPaused = false;
-      state.isFinished = false;
-      state.isSongBufferProcessing = false;
-    },
+		/**
+		 * From search.
+		 */
+		songselect: (state, payload) => {
+			state.challenge = Object.assign(state.challenge, emptyChallenge);
+			state.challenge.id = payload.id;
+			state.challenge.author = payload.metadata.levelAuthorName;
+			state.challenge.image = utils.beatsaverCdnCors(payload.versions[0].coverURL);
+			state.challenge.songName = payload.metadata.songName;
+			state.challenge.songNameShort = truncate(payload.metadata.songName, 18);
+			state.challenge.songNameMedium = truncate(payload.metadata.songName, 30);
+			state.challenge.songSubName = payload.metadata.songSubName;
+			state.challenge.songSubNameShort = truncate(payload.metadata.songSubName, 21);
+			state.challenge.isBeatsPreloaded = false;
+			state.challenge.isLoading = true;
 
-    usergesturereceive: state => {
-      state.hasReceivedUserGesture = true;
-    },
+			state.hasReceivedUserGesture = false;
+			state.isPaused = false;
+			state.isFinished = false;
+			state.isSongBufferProcessing = false;
+		},
 
-    settingsChanged: (state, payload) => {
-      state.settings = payload.settings;
+		usergesturereceive: state => {
+			state.hasReceivedUserGesture = true;
+		},
 
-      const saberScale = payload.settings.saberWidth / 100;
-      
-      state.saberScale = new THREE.Vector3(saberScale, 1, saberScale);
-      state.saberGlowScale = new THREE.Vector3(saberScale, 1.1, saberScale);
-    },
+		settingsChanged: (state, payload) => {
+			state.settings = payload.settings;
 
-    povchanged: (state, payload) => {
-      state.pov = payload.newPov;
-    },
+			const saberScale = payload.settings.saberWidth / 100;
 
-    useractive: (state, payload) => {
-      state.useractive = payload.isActive;
-    },
+			state.saberScale = new THREE.Vector3(saberScale, 1, saberScale);
+			state.saberGlowScale = new THREE.Vector3(saberScale, 1.1, saberScale);
+		},
 
-    wrongMiss: (state, payload) => {
-      state.wrongMisses++;
-      console.log("Wrong miss #" + state.wrongMisses);
-    },
+		povchanged: (state, payload) => {
+			state.pov = payload.newPov;
+		},
 
-    'enter-vr': state => {
-      state.inVR = true;
-    },
+		useractive: (state, payload) => {
+			state.useractive = payload.isActive;
+		},
 
-    'exit-vr': state => {
-      state.inVR = false;
-    }
-  },
+		wrongMiss: (state, payload) => {
+			state.wrongMisses++;
+			console.log('Wrong miss #' + state.wrongMisses);
+		},
 
-  /**
-   * Post-process the state after each action.
-   */
-  computeState: state => {
-    state.isPlaying =
-      !state.isPaused && !state.isSongBufferProcessing &&
-      !state.challenge.isLoading && !state.replay.isLoading && !state.challenge.hasLoadError && !state.replay.hasError && state.hasReceivedUserGesture && !state.localReplay;
+		'enter-vr': state => {
+			state.inVR = true;
+		},
 
-    state.showControls = state.useractive || !state.isPlaying;
-  }
+		'exit-vr': state => {
+			state.inVR = false;
+		},
+	},
+
+	/**
+	 * Post-process the state after each action.
+	 */
+	computeState: state => {
+		state.isPlaying =
+			!state.isPaused &&
+			!state.isSongBufferProcessing &&
+			!state.challenge.isLoading &&
+			!state.replay.isLoading &&
+			!state.challenge.hasLoadError &&
+			!state.replay.hasError &&
+			state.hasReceivedUserGesture &&
+			!state.localReplay;
+
+		state.showControls = state.useractive || !state.isPlaying;
+	},
 });
 
-function truncate (str, length) {
-  if (!str) { return ''; }
-  if (str.length >= length) {
-    return str.substring(0, length - 2) + '..';
-  }
-  return str;
+function truncate(str, length) {
+	if (!str) {
+		return '';
+	}
+	if (str.length >= length) {
+		return str.substring(0, length - 2) + '..';
+	}
+	return str;
 }
 
-function updateScore (state, payload) {
-  let note = state.notes[payload.index];
+function updateScore(state, payload) {
+	let note = state.notes[payload.index];
 
-  state.score.score = note.totalScore;
-  state.score.scoreDescription = (note.totalScore + "").replace(/(\d)(?=(\d{3})+$)/g, '$1 ');
-  state.score.combo = note.combo;
-  state.score.multiplier = note.multiplier;
-  state.score.accuracy = note.accuracy;
-  state.score.misses = note.misses;
-  state.score.energy = note.energy;
-  state.lastNoteTime = note.time;
+	state.score.score = note.totalScore;
+	state.score.scoreDescription = (note.totalScore + '').replace(/(\d)(?=(\d{3})+$)/g, '$1 ');
+	state.score.combo = note.combo;
+	state.score.multiplier = note.multiplier;
+	state.score.accuracy = note.accuracy;
+	state.score.misses = note.misses;
+	state.score.energy = note.energy;
+	state.lastNoteTime = note.time;
 
-  // console.log(note.totalScore + " - " + note.index + " - " + note.i + " - " + note.time + " - " + payload.index + " - " + note.score);
+	// console.log(note.totalScore + " - " + note.index + " - " + note.i + " - " + note.time + " - " + payload.index + " - " + note.score);
 }
-

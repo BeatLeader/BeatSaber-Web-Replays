@@ -1,4 +1,3 @@
 AFRAME.registerSystem('iframe', {
-  init: function () {
-  }
+	init: function () {},
 });

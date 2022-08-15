@@ -1,10 +1,10 @@
 AFRAME.registerShader('superCutFxShader', {
-  schema: {
-    startTime: {type: 'float', is: 'uniform'},
-    timems: {type: 'time', is: 'uniform'}
-  },
+	schema: {
+		startTime: {type: 'float', is: 'uniform'},
+		timems: {type: 'time', is: 'uniform'},
+	},
 
-  vertexShader: `
+	vertexShader: `
     varying vec2 uvs;
     varying vec3 worldPos;
     void main() {
@@ -13,7 +13,7 @@ AFRAME.registerShader('superCutFxShader', {
     }
   `,
 
-  fragmentShader: `
+	fragmentShader: `
     uniform float startTime;
     uniform float timems;
     varying vec2 uvs;
@@ -30,5 +30,5 @@ AFRAME.registerShader('superCutFxShader', {
       alpha *= 1.0 - time * 5.5;
       gl_FragColor = vec4(COLOR, alpha);
     }
-  `
+  `,
 });

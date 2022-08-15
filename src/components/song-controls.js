@@ -26,6 +26,7 @@ AFRAME.registerComponent('song-controls', {
 		songSubName: {default: ''},
 		songImage: {default: ''},
 		songId: {default: ''},
+		leaderboardId: {default: 0},
 		isPlaying: {default: false},
 		showControls: {default: true},
 		replaysCount: {default: 1},

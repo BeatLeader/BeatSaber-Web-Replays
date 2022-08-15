@@ -104,6 +104,14 @@ function Mirror_Horizontal_Note(note, numberOfLines, flip_lines) {
 	note._type = color;
 	note._lineIndex = h_line;
 	note._cutDirection = horizontal_cut_transform(note._cutDirection);
+
+	if (note.cutDirectionAngleOffset) {
+		note.cutDirectionAngleOffset = -note.cutDirectionAngleOffset;
+	}
+
+	if (note._angleOffset) {
+		note._angleOffset = -note._angleOffset;
+	}
 }
 
 function Mirror_Horizontal_Slider(note, numberOfLines, flip_lines) {

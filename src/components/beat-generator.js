@@ -318,7 +318,13 @@ AFRAME.registerComponent('beat-generator', {
 			beatObj.anticipationPosition = -this.beatAnticipationTime * this.beatSpeed - this.swordOffset;
 			beatObj.color = color;
 			beatObj.cutDirection = this.orientationsHumanized[note._cutDirection];
-			beatObj.rotationOffset = note.cutDirectionAngleOffset ? note.cutDirectionAngleOffset : 0;
+
+			if (note._angleOffset) {
+				beatObj.rotationOffset = note._angleOffset;
+			} else {
+				beatObj.rotationOffset = note.cutDirectionAngleOffset ? note.cutDirectionAngleOffset : 0;
+			}
+
 			beatObj.speed = this.beatSpeed;
 			beatObj.size = 0.4;
 			beatObj.type = type;
@@ -512,12 +518,17 @@ AFRAME.registerComponent('beat-generator', {
 			beatObj.cutDirection = this.orientationsHumanized[note._cutDirection];
 			beatObj.tailCutDirection = this.orientationsHumanized[note._tailCutDirection];
 
-			beatObj.rotationOffset = note.cutDirectionAngleOffset ? note.cutDirectionAngleOffset : 0;
+			if (note._angleOffset) {
+				beatObj.rotationOffset = note._angleOffset;
+			} else {
+				beatObj.rotationOffset = note.cutDirectionAngleOffset ? note.cutDirectionAngleOffset : 0;
+			}
 			beatObj.speed = this.beatSpeed;
 			beatObj.warmupPosition = -data.beatWarmupTime * data.beatWarmupSpeed;
 
 			beatObj.time = note._songTime;
 			beatObj.tailTime = note._songTailTime;
+			beatObj.hasTailNote = note.tail != null;
 			beatObj.anticipationTime = this.beatAnticipationTime;
 			beatObj.warmupTime = data.beatWarmupTime;
 			beatObj.warmupSpeed = data.beatWarmupSpeed;

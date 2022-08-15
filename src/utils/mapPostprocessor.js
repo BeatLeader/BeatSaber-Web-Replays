@@ -198,6 +198,11 @@ function addScoringTypeAndChains(map) {
 		var tail = mapnotes.find(
 			n => n._time == slider._tailTime && n._lineIndex == slider._tailLineIndex && n._lineLayer == slider._tailLineLayer
 		);
+		if (head) {
+			head.tail = tail;
+		}
+
+		slider.tail = tail;
 		if (tail && tail._scoringType == ScoringType.Normal) {
 			tail._scoringType = ScoringType.SliderTail;
 		}
@@ -210,6 +215,14 @@ function addScoringTypeAndChains(map) {
 		if (head) {
 			if (head._scoringType == ScoringType.Normal) {
 				head._scoringType = ScoringType.BurstSliderHead;
+			}
+			if (head._scoringType == ScoringType.SliderHead && head.tail) {
+				let nextHead = map._burstSliders.find(
+					n => n._time == head.tail._time && n._lineIndex == head.tail._lineIndex && n._lineLayer == head.tail._lineLayer
+				);
+				if (nextHead) {
+					head._scoringType = ScoringType.BurstSliderHead;
+				}
 			}
 			head.sliderhead = slider;
 		}

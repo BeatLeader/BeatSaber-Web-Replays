@@ -145,7 +145,6 @@ AFRAME.registerState({
 			difficulties = payload.difficulties;
 
 			state.challenge.audio = payload.audio;
-			state.challenge.author = payload.info._levelAuthorName;
 
 			const mode = payload.mode;
 			state.challenge.mode = mode;
@@ -156,9 +155,6 @@ AFRAME.registerState({
 			}
 
 			state.challenge.id = payload.isDragDrop ? '' : payload.id;
-			if (payload.image) {
-				state.challenge.image = payload.image;
-			}
 
 			state.challenge.songName = payload.info._songName;
 			state.challenge.songNameShort = truncate(payload.info._songName, 18);
@@ -336,28 +332,6 @@ AFRAME.registerState({
 
 		songprocessingstart: state => {
 			state.isSongBufferProcessing = true;
-		},
-
-		/**
-		 * From search.
-		 */
-		songselect: (state, payload) => {
-			state.challenge = Object.assign(state.challenge, emptyChallenge);
-			state.challenge.id = payload.id;
-			state.challenge.author = payload.metadata.levelAuthorName;
-			state.challenge.image = utils.beatsaverCdnCors(payload.versions[0].coverURL);
-			state.challenge.songName = payload.metadata.songName;
-			state.challenge.songNameShort = truncate(payload.metadata.songName, 18);
-			state.challenge.songNameMedium = truncate(payload.metadata.songName, 30);
-			state.challenge.songSubName = payload.metadata.songSubName;
-			state.challenge.songSubNameShort = truncate(payload.metadata.songSubName, 21);
-			state.challenge.isBeatsPreloaded = false;
-			state.challenge.isLoading = true;
-
-			state.hasReceivedUserGesture = false;
-			state.isPaused = false;
-			state.isFinished = false;
-			state.isSongBufferProcessing = false;
 		},
 
 		usergesturereceive: state => {

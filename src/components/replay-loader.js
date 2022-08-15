@@ -1,6 +1,6 @@
 const dragDrop = require('drag-drop');
 import {checkBSOR, NoteEventType, ssReplayToBSOR} from '../open-replay-decoder';
-import {Mirror_Horizontal, mirrorNote} from '../chirality-support';
+import {Mirror_Horizontal, Mirror_Horizontal_Note} from '../chirality-support';
 import {MultiplierCounter} from '../utils/MultiplierCounter';
 const DECODER_LINK = 'https://ssdecode.azurewebsites.net';
 
@@ -473,7 +473,7 @@ AFRAME.registerComponent('replay-loader', {
 
 			if (mapNote && replayNote) {
 				let mirroredNote = Object.assign({}, mapNote);
-				mirrorNote(mapNote, mirroredNote);
+				Mirror_Horizontal_Note(mirroredNote, 4, true);
 
 				const replayNoteId = replayNote.noteID;
 				const mirroredNoteId =

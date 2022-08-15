@@ -17,6 +17,7 @@ AFRAME.registerComponent('slider', {
 		warmupPosition: {default: 0},
 		time: {default: 0},
 		tailTime: {default: 0},
+		hasTailNote: {default: false},
 		anticipationTime: {default: 0},
 		warmupTime: {default: 0},
 		warmupSpeed: {default: 0},
@@ -141,12 +142,16 @@ AFRAME.registerComponent('slider', {
 		const tailAngle =
 			Math.PI + THREE.Math.degToRad(this.rotations[data.tailCutDirection] + (this.data.rotationOffset ? this.data.rotationOffset : 0.0));
 
-		const pipeSpline = new THREE.CatmullRomCurve3([
-			new THREE.Vector3(headX, headY, 0),
-			new THREE.Vector3(headX + 0.6 * Math.sin(headAngle), headY - 0.6 * Math.cos(headAngle), -0.3),
-			new THREE.Vector3(tailX + 0.6 * Math.sin(tailAngle), tailY - 0.6 * Math.cos(tailAngle), tailZ + 0.3),
-			new THREE.Vector3(tailX, tailY, tailZ),
-		]);
+		let points = [new THREE.Vector3(headX, headY, 0)];
+		if (tailZ <= -0.6) {
+			points.push(new THREE.Vector3(headX + 0.6 * Math.sin(headAngle), headY - 0.6 * Math.cos(headAngle), -0.3));
+			if (data.hasTailNote) {
+				points.push(new THREE.Vector3(tailX + 0.6 * Math.sin(tailAngle), tailY - 0.6 * Math.cos(tailAngle), tailZ + 0.3));
+			}
+		}
+		points.push(new THREE.Vector3(tailX, tailY, tailZ));
+
+		const pipeSpline = new THREE.CatmullRomCurve3(points);
 
 		const geometry = new THREE.TubeGeometry(pipeSpline, 30, 0.05, 6, false);
 

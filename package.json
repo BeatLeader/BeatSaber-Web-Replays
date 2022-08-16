@@ -45,6 +45,7 @@
     "html-minifier": "^3.5.11",
     "ip": "1.1.5",
     "json-loader": "^0.5.7",
+    "jszip": "^3.10.1",
     "nosleep.js": "^0.12.0",
     "nunjucks": "3.0.1",
     "postcss": "^6.0.23",
@@ -56,8 +57,7 @@
     "uglify-js": "git://github.com/mishoo/UglifyJS2#harmony",
     "uglifyjs-webpack-plugin": "0.4.6",
     "webpack-glsl-loader": "^1.0.1",
-    "webpack-sources": "1.0.1",
-    "zip-loader": "git+https://github.com/radulov/ZipLoader.git#280005fa0b6c5d78f2025c800a9691f88ffeaeb9"
+    "webpack-sources": "1.0.1"
   },
   "devDependencies": {
     "cross-env": "4.0.0",

@@ -1,5 +1,5 @@
 const utils = require('../utils');
-import ZipLoader from 'zip-loader';
+import JSZip from 'jszip';
 import {Mirror_Inverse, Mirror_Horizontal, Mirror_Vertical} from '../chirality-support';
 import {postprocess} from '../utils/mapPostprocessor';
 
@@ -47,9 +47,7 @@ AFRAME.registerComponent('zip-loader', {
 		this.loadingIndicator = document.getElementById('challengeLoadingIndicator');
 	},
 
-	processFiles: function (loader, isDragDrop) {
-		let imageBlob;
-		let songBlob;
+	processFiles: async function (files, info) {
 		const event = {
 			audio: '',
 			beatmaps: {Standard: {}},
@@ -57,19 +55,11 @@ AFRAME.registerComponent('zip-loader', {
 			beatOffsets: {Standard: {}},
 			difficulties: {Standard: []},
 			customData: {Standard: []},
-			id: isDragDrop ? '' : this.data.id,
+			id: this.data.id,
 			image: '',
-			info: '',
-			isDragDrop: isDragDrop,
+			info,
 			mappingExtensions: {isEnabled: false},
 		};
-
-		// Process info first.
-		Object.keys(loader.files).forEach(filename => {
-			if (filename.toLowerCase().endsWith('info.dat')) {
-				event.info = jsonParseClean(loader.extractAsText(filename));
-			}
-		});
 
 		// See whether we need mapping extensions (per difficulty).
 		const customData = event.info._customData;
@@ -85,7 +75,8 @@ AFRAME.registerComponent('zip-loader', {
 
 		// Index beatmaps (modes + difficulties).
 		const beatmapSets = event.info._difficultyBeatmapSets;
-		beatmapSets.forEach(set => {
+		for (let index = 0; index < beatmapSets.length; index++) {
+			const set = beatmapSets[index];
 			const mode = set._beatmapCharacteristicName;
 			event.beatmaps[mode] = {};
 			event.beatSpeeds[mode] = {};
@@ -93,8 +84,10 @@ AFRAME.registerComponent('zip-loader', {
 			event.customData[mode] = {};
 
 			const diffBeatmaps = set._difficultyBeatmaps.sort(d => d._difficultyRank);
-			diffBeatmaps.forEach(diff => {
-				let map = postprocess(loader.extractAsJSON(diff._beatmapFilename), event.info);
+			for (let index = 0; index < diffBeatmaps.length; index++) {
+				const diff = diffBeatmaps[index];
+
+				let map = postprocess(JSON.parse(await files[diff._beatmapFilename].async('string')), event.info);
 				event.beatmaps[mode][diff._difficulty] = map;
 				event.beatSpeeds[mode][diff._difficulty] = diff._noteJumpMovementSpeed;
 				event.beatOffsets[mode][diff._difficulty] = diff._noteJumpStartBeatOffset;
@@ -109,11 +102,11 @@ AFRAME.registerComponent('zip-loader', {
 				) {
 					event.mappingExtensions = {isEnabled: true};
 				}
-			});
+			}
 
 			// Get difficulties.
 			event.difficulties[mode] = diffBeatmaps;
-		});
+		}
 
 		if (!event.beatmaps[this.data.mode]) {
 			generateMode(event, this.data.difficulty, this.data.mode);
@@ -125,36 +118,40 @@ AFRAME.registerComponent('zip-loader', {
 		}
 		event.mode = this.data.mode;
 
-		Object.keys(loader.files).forEach(filename => {
-			// Only needed if loading ZIP directly and not from API.
-			if (!this.data.id) {
-				if (filename.endsWith('jpg')) {
-					event.image = loader.extractAsBlobUrl(filename, 'image/jpg');
-				}
-				if (filename.endsWith('png')) {
-					event.image = loader.extractAsBlobUrl(filename, 'image/png');
-				}
-			}
+		let extractAsBlobUrl = async (name, type) => {
+			return URL.createObjectURL(new Blob([await files[name].async('arraybuffer')], {type: type}));
+		};
+
+		let keys = Object.keys(files);
+		for (let index = 0; index < keys.length; index++) {
+			const filename = keys[index];
 			if (!event.audio) {
 				if (filename.endsWith('egg') || filename.endsWith('ogg')) {
-					event.audio = loader.extractAsBlobUrl(filename, 'audio/ogg');
+					event.audio = await extractAsBlobUrl(filename, 'audio/ogg');
 				}
 				if (filename.endsWith('wav')) {
-					event.audio = loader.extractAsBlobUrl(filename, 'audio/wav');
+					event.audio = await extractAsBlobUrl(filename, 'audio/wav');
 				}
 				if (filename.endsWith('mp3')) {
-					event.audio = loader.extractAsBlobUrl(filename, 'audio/mp3');
+					event.audio = await extractAsBlobUrl(filename, 'audio/mp3');
 				}
 			}
-		});
-
-		if (!event.image && !this.data.id) {
-			event.image = 'assets/img/favicon-196x196.png';
 		}
 
 		this.isFetching = '';
 		console.log(event);
 		this.el.emit('challengeloadend', event, false);
+	},
+
+	processInfo: function (files) {
+		let captureSelf = this;
+		Object.keys(files).forEach(filename => {
+			if (filename.toLowerCase().endsWith('info.dat')) {
+				files[filename].async('string').then(function (fileData) {
+					captureSelf.processFiles(files, jsonParseClean(fileData));
+				});
+			}
+		});
 	},
 
 	/**
@@ -199,29 +196,32 @@ AFRAME.registerComponent('zip-loader', {
 		this.el.emit('challengeloadstart', this.data.id, false);
 		this.isFetching = zipUrl;
 
-		// Fetch and unzip.
-		const loader = new ZipLoader(zipUrl);
+		const xhr = new XMLHttpRequest();
+		xhr.open('GET', zipUrl, true);
+		xhr.responseType = 'arraybuffer';
 
-		loader.on('error', err => {
+		xhr.onprogress = e => {
+			this.loadingIndicator.object3D.visible = true;
+			this.loadingIndicator.setAttribute('material', 'progress', e.loaded / e.total);
+		};
+
+		xhr.onload = () => {
+			JSZip.loadAsync(xhr.response).then(zip => {
+				this.fetchedZip = this.data.id;
+				this.processInfo(zip.files);
+			});
+		};
+
+		xhr.onerror = event => {
 			if (fallbackUrl) {
 				this.fetchZip(fallbackUrl);
 			} else {
 				this.el.emit('challengeloaderror', {hash: this.data.hash});
 				this.isFetching = '';
 			}
-		});
+		};
 
-		loader.on('progress', evt => {
-			this.loadingIndicator.object3D.visible = true;
-			this.loadingIndicator.setAttribute('material', 'progress', evt.loaded / evt.total);
-		});
-
-		loader.on('load', () => {
-			this.fetchedZip = this.data.id;
-			this.processFiles(loader);
-		});
-
-		loader.load();
+		xhr.send();
 	},
 
 	difficultyFromId: function (diffId) {

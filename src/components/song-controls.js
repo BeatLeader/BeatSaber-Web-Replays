@@ -74,27 +74,31 @@ AFRAME.registerComponent('song-controls', {
 				this.notes = event.detail.notes;
 			}
 
-			let replay = event.detail.replay;
-			if (replay) {
-				let speedSlider = document.getElementById('speedSlider');
-				let speed = 1;
-				if (replay.info.speed > 0.0001) {
-					speed = replay.info.speed;
-				} else {
-					if (replay.info.modifiers.includes('SS')) {
-						speed = 0.85;
+			if (AFRAME.utils.getUrlParameter('speed')) {
+				// keep speed from url param
+			} else {
+				let replay = event.detail.replay;
+				if (replay) {
+					let speedSlider = document.getElementById('speedSlider');
+					let speed = 1;
+					if (replay.info.speed > 0.0001) {
+						speed = replay.info.speed;
+					} else {
+						if (replay.info.modifiers.includes('SS')) {
+							speed = 0.85;
+						}
+						if (replay.info.modifiers.includes('FS')) {
+							speed = 1.2;
+						}
+						if (replay.info.modifiers.includes('SF')) {
+							speed = 1.5;
+						}
 					}
-					if (replay.info.modifiers.includes('FS')) {
-						speed = 1.2;
-					}
-					if (replay.info.modifiers.includes('SF')) {
-						speed = 1.5;
-					}
+					this.el.addEventListener('songstartaudio', () => {
+						speedSlider.value = speed;
+						speedSlider.dispatchEvent(new Event('input', { bubbles: true }));
+					}, { once: true });
 				}
-				this.el.addEventListener('songstartaudio', () => {
-					speedSlider.value = speed;
-					speedSlider.dispatchEvent(new Event('input', { bubbles: true}));
-				}, {once: true });
 			}
 		});
 

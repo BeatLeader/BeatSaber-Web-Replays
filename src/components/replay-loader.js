@@ -441,7 +441,7 @@ AFRAME.registerComponent('replay-loader', {
 		this.bombs = bombStructs;
 		this.walls = wallStructs;
 
-		this.el.sceneEl.emit('replayloaded', {notes: allStructs}, null);
+		this.el.sceneEl.emit('replayloaded', {notes: allStructs, replay: replay}, null);
 	},
 
 	applyLeftHanded: function (map, replay) {

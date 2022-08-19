@@ -3,18 +3,17 @@ const COLORS = require('../constants/colors.js');
 const WALL_COLOR = new THREE.Color(COLORS.NEON_RED);
 const RIGHT_COLOR = new THREE.Color(COLORS.NEON_BLUE);
 const WALL_BG = new THREE.Color(COLORS.SKY_RED);
-const WALL_HL_COLOR = new THREE.Color("yellow");
-
+const WALL_HL_COLOR = new THREE.Color('yellow');
 
 AFRAME.registerShader('wallShader', {
-  schema: {
-    iTime: {type: 'time', is: 'uniform'},
-    hitRight: {type: 'vec3', is: 'uniform', default: {x: -999, y: 0, z: 0}},
-    hitLeft: {type: 'vec3', is: 'uniform', default: {x: -999, y: 0, z: 0}},
-    highlight: {type: 'bool', is: 'uniform', default: false}
-  },
+	schema: {
+		iTime: {type: 'time', is: 'uniform'},
+		hitRight: {type: 'vec3', is: 'uniform', default: {x: -999, y: 0, z: 0}},
+		hitLeft: {type: 'vec3', is: 'uniform', default: {x: -999, y: 0, z: 0}},
+		highlight: {type: 'bool', is: 'uniform', default: false},
+	},
 
-  vertexShader: `
+	vertexShader: `
     varying vec2 uvs;
     varying vec3 nrml;
     varying vec3 worldPos;
@@ -27,7 +26,7 @@ AFRAME.registerShader('wallShader', {
     }
   `,
 
-  fragmentShader: `
+	fragmentShader: `
     varying vec2 uvs;
     varying vec3 nrml;
     varying vec3 worldPos;
@@ -116,6 +115,5 @@ AFRAME.registerShader('wallShader', {
 
       gl_FragColor = vec4(col + hit, 0.3 + w + hit.x);
     }
-`
-
+`,
 });

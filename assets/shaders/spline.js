@@ -1,5 +1,5 @@
 module.exports = {
-    vertexShader : `
+	vertexShader: `
         varying vec2 vUv;
         varying vec3 worldPos;
     
@@ -10,8 +10,8 @@ module.exports = {
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         }
     `,
-    
-    fragmentShader: `
+
+	fragmentShader: `
         #extension GL_OES_standard_derivatives : enable
         #define PI 3.14159265358979
 
@@ -37,4 +37,5 @@ module.exports = {
         }
         
         }
-    `};
+    `,
+};

@@ -1,5 +1,5 @@
 module.exports = {
-  vertexShader : `
+	vertexShader: `
     varying vec2 uvs;
     void main() {
       uvs.xy = uv.xy;
@@ -7,11 +7,12 @@ module.exports = {
     }
   `,
 
-  fragmentShader: `
+	fragmentShader: `
     varying vec2 uvs;
     uniform sampler2D src;
 
     void main() {
       gl_FragColor = texture2D(src, uvs);
     }
-`};
+`,
+};

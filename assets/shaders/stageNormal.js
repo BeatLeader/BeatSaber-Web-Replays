@@ -1,5 +1,5 @@
 module.exports = {
-  vertexShader : `
+	vertexShader: `
     varying vec2 uvs;
     varying vec3 worldPos;
     void main() {
@@ -10,7 +10,7 @@ module.exports = {
     }
   `,
 
-  fragmentShader: `
+	fragmentShader: `
     #define FOG_RADIUS  55.0
     #define FOG_FALLOFF 48.0
     #define FOG_COLOR_MULT 0.8
@@ -38,5 +38,5 @@ module.exports = {
 
       gl_FragColor = col;
     }
-  `
+  `,
 };

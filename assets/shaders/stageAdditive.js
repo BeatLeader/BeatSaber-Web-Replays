@@ -1,5 +1,5 @@
 module.exports = {
-  vertexShader : `
+	vertexShader: `
     varying vec2 uvs;
     varying vec3 worldPos;
     void main() {
@@ -10,7 +10,7 @@ module.exports = {
     }
   `,
 
-  fragmentShader: `
+	fragmentShader: `
     varying vec2 uvs;
     varying vec3 worldPos;
     uniform vec3 tunnelNeon;
@@ -46,5 +46,5 @@ module.exports = {
 
       gl_FragColor = col;
     }
-  `
+  `,
 };

@@ -1,5 +1,5 @@
 module.exports = {
-vertexShader : `
+	vertexShader: `
     varying vec2 vUv;
 
     void main () {
@@ -8,7 +8,7 @@ vertexShader : `
     }
 `,
 
-fragmentShader: `
+	fragmentShader: `
     #extension GL_OES_standard_derivatives : enable
     #define PI 3.14159265358979
     uniform float progress;
@@ -28,4 +28,5 @@ fragmentShader: `
     vec4 foreCol = vec4(1.0, progress, progress, 1.0);
     gl_FragColor = foreCol*blend + backCol*(1.0-blend);
     }
-`};
+`,
+};

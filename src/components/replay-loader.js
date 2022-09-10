@@ -306,13 +306,16 @@ AFRAME.registerComponent('replay-loader', {
 			wallStructs.push(note);
 		}
 
-		var group, groupIndex, groupTime;
+		var group,
+			groupIndex,
+			groupTime,
+			offset = 0;
 
 		const processGroup = () => {
 			for (var j = 0; j < group.length; j++) {
 				const mapnote = mapnotes[group[j]];
 				for (var m = 0; m < group.length; m++) {
-					const replaynote = noteStructs[groupIndex + m];
+					const replaynote = noteStructs[groupIndex + offset + m];
 
 					const lineIndex = mapnote._lineIndex;
 					const colorType = mapnote._type;
@@ -337,6 +340,11 @@ AFRAME.registerComponent('replay-loader', {
 
 		for (var i = 0; i < mapnotes.length && i < noteStructs.length; i++) {
 			if (!group) {
+				if (i > 0 && noteStructs[i + offset].spawnTime == noteStructs[i + offset - 1].spawnTime) {
+					offset++;
+					i--;
+					continue;
+				}
 				group = [i];
 				groupIndex = i;
 				groupTime = mapnotes[i]._time;

@@ -79,7 +79,7 @@ AFRAME.registerComponent('song-controls', {
 			} else {
 				let replay = event.detail.replay;
 				if (replay) {
-					let speedSlider = document.getElementById('speedSlider');
+					let speedSlider = document.querySelectorAll('.speedSlider');
 					let speed = 1;
 					if (replay.info.speed > 0.0001) {
 						speed = replay.info.speed;
@@ -94,16 +94,22 @@ AFRAME.registerComponent('song-controls', {
 							speed = 1.5;
 						}
 					}
-					this.el.addEventListener('songstartaudio', () => {
-						speedSlider.value = speed;
-						speedSlider.dispatchEvent(new Event('input', { bubbles: true }));
-					}, { once: true });
+					this.el.addEventListener(
+						'songstartaudio',
+						() => {
+							speedSlider.forEach(element => {
+								element.value = speed;
+								element.dispatchEvent(new Event('input', {bubbles: true}));
+							});
+						},
+						{once: true}
+					);
 				}
 			}
 		});
 
 		this.songProgress = document.getElementById('songProgress');
-		this.songSpeedPercent = document.getElementById('songSpeedPercent');
+		this.songSpeedPercent = document.querySelectorAll('.songSpeedPercent');
 	},
 
 	update: function (oldData) {
@@ -414,7 +420,7 @@ AFRAME.registerComponent('song-controls', {
 				}
 			}
 
-			if (!evt.target.closest('#settingsContainer') && !evt.target.closest('#controlsSettings')) {
+			if (!evt.target.closest('#settingsContainer') && !evt.target.closest('.controlsSettings')) {
 				const container = document.getElementById('settingsContainer');
 				const active = container.classList.contains('settingsActive');
 				if (active) {
@@ -422,8 +428,16 @@ AFRAME.registerComponent('song-controls', {
 				}
 			}
 
-			if (!evt.target.closest('#cameraSettingsContainer') && !evt.target.closest('#controlsCamera')) {
+			if (!evt.target.closest('#cameraSettingsContainer') && !evt.target.closest('.controlsCamera')) {
 				const container = document.getElementById('cameraSettingsContainer');
+				const active = container.classList.contains('settingsActive');
+				if (active) {
+					container.classList.remove('settingsActive');
+				}
+			}
+
+			if (!evt.target.closest('#mobileContainer') && !evt.target.closest('.controlsMobile')) {
+				const container = document.getElementById('mobileContainer');
 				const active = container.classList.contains('settingsActive');
 				if (active) {
 					container.classList.remove('settingsActive');
@@ -522,23 +536,34 @@ AFRAME.registerComponent('song-controls', {
 			document.getElementById('volumeSliderContainer').classList.toggle('volumeActive');
 		});
 
-		document.getElementById('controlsSettings').addEventListener('click', evt => {
-			document.getElementById('settingsContainer').classList.toggle('settingsActive');
+		document.querySelectorAll('.controlsSettings').forEach(element => {
+			element.addEventListener('click', evt => {
+				document.getElementById('settingsContainer').classList.toggle('settingsActive');
+			});
 		});
 
-		document.getElementById('controlsCamera').addEventListener('click', evt => {
-			document.getElementById('cameraSettingsContainer').classList.toggle('settingsActive');
+		document.querySelectorAll('.controlsCamera').forEach(element => {
+			element.addEventListener('click', evt => {
+				document.getElementById('cameraSettingsContainer').classList.toggle('settingsActive');
+			});
+		});
+
+		document.querySelectorAll('.controlsMobile').forEach(element => {
+			console.log('HUI');
+			element.addEventListener('click', evt => {
+				document.getElementById('mobileContainer').classList.toggle('settingsActive');
+			});
 		});
 
 		this.setupVolumeControls();
 		this.setupOrtoCameraControls();
 
-		let speedSlider = document.getElementById('speedSlider');
+		let speedSlider = document.querySelectorAll('.speedSlider');
 
 		let firefoxHandler = () => {
 			// Firefox seems to not like zeros
 			if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) {
-				if (speedSlider.value == 0) {
+				if (speedSlider[0].value == 0) {
 					this.song.audioAnalyser.suspendContext();
 					this.firefoxZeroed = true;
 				} else if (this.firefoxZeroed && this.song.isPlaying) {
@@ -548,59 +573,75 @@ AFRAME.registerComponent('song-controls', {
 			}
 		};
 
-		let speedHandler = () => {
+		let speedHandler = value => {
 			firefoxHandler();
-			this.song.source.playbackRate.value = speedSlider.value;
+			this.song.source.playbackRate.value = value;
 
-			this.song.speed = speedSlider.value;
-			speedSlider.style.setProperty('--value', speedSlider.value);
-			this.songSpeedPercent.innerHTML = Math.round(speedSlider.value * 10000) / 10000 + 'x';
+			this.song.speed = value;
+			speedSlider.forEach(element => {
+				element.value = value;
+				element.style.setProperty('--value', element.value);
+			});
+
+			this.songSpeedPercent.forEach(element => {
+				element.innerHTML = Math.round(value * 10000) / 10000 + 'x';
+			});
 		};
 
-		speedSlider.addEventListener('input', evt => {
-			speedHandler();
-		});
+		speedSlider.forEach(element => {
+			element.addEventListener('input', evt => {
+				speedHandler(evt.target.value);
+			});
 
-		speedSlider.addEventListener('wheel', function (e) {
-			if (e.deltaY < 0) {
-				speedSlider.valueAsNumber += 0.01;
-			} else {
-				speedSlider.value -= 0.01;
-			}
-			speedHandler();
-			e.preventDefault();
-			e.stopPropagation();
+			element.addEventListener('wheel', function (e) {
+				if (e.deltaY < 0) {
+					element.valueAsNumber += 0.01;
+				} else {
+					element.value -= 0.01;
+				}
+				speedHandler(element.value);
+				e.preventDefault();
+				e.stopPropagation();
+			});
+
+			this.songSpeedPercent.forEach(element => {
+				element.innerHTML = this.song.speed + 'x';
+			});
+
+			element.value = this.song.speed;
+			element.style.setProperty('--value', this.song.speed);
 		});
 
 		const rangePoints = document.querySelectorAll('.range__point');
 		rangePoints.forEach((el, i) => {
 			el.addEventListener('click', evt => {
-				speedSlider.valueAsNumber = i * (2 / (rangePoints.length - 1));
+				speedSlider.forEach(element => {
+					element.valueAsNumber = i * (2 / (rangePoints.length - 1));
+				});
 				speedHandler();
 			});
 		});
-		this.songSpeedPercent.innerHTML = this.song.speed + 'x';
-		speedSlider.value = this.song.speed;
-		speedSlider.style.setProperty('--value', this.song.speed);
 
 		this.el.addEventListener('songstartaudio', () => {
 			firefoxHandler();
 		});
 
-		let fullscreen = document.getElementById('controlsFullscreen');
+		let fullscreen = document.querySelectorAll('.controlsFullscreen');
 
 		const fullscreenHandler = inFullscreen => {
-			if (inFullscreen) {
-				fullscreen.classList.add('inFullscreen');
-				fullscreen.title = 'Exit fullscreen (f)';
-			} else {
-				fullscreen.classList.remove('inFullscreen');
-				fullscreen.title = 'Enter fullscreen (f)';
-			}
+			fullscreen.forEach(element => {
+				if (inFullscreen) {
+					element.classList.add('inFullscreen');
+					element.title = 'Exit fullscreen (f)';
+				} else {
+					element.classList.remove('inFullscreen');
+					element.title = 'Enter fullscreen (f)';
+				}
+			});
 		};
 
 		const toggleFullscreen = () => {
-			if (fullscreen.classList.contains('inFullscreen')) {
+			if (fullscreen[0].classList.contains('inFullscreen')) {
 				if (this.data.isSafari) {
 					document.webkitCancelFullScreen();
 				} else {
@@ -618,8 +659,10 @@ AFRAME.registerComponent('song-controls', {
 			}
 		};
 
-		fullscreen.addEventListener('click', () => {
-			toggleFullscreen();
+		fullscreen.forEach(element => {
+			element.addEventListener('click', () => {
+				toggleFullscreen();
+			});
 		});
 
 		document.addEventListener('fullscreenchange', () => {

@@ -31,9 +31,11 @@ AFRAME.registerComponent('camera-mover', {
 			this.updateSaveButtons();
 			this.el.sceneEl.emit('povchanged', {newPov: this.pov}, false);
 		};
-		document.getElementById('povswitch').addEventListener('click', e => {
-			e.preventDefault();
-			powHandler();
+		document.querySelectorAll('.povswitch').forEach(element => {
+			element.addEventListener('click', e => {
+				e.preventDefault();
+				powHandler();
+			});
 		});
 
 		let toLeftHandler = () => {

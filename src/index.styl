@@ -10,13 +10,19 @@ html
   user-select: none;
 
 #body:not(.showControls)
-  #povswitch
+  .povswitch
     display: none !important;
   .a-canvas
     cursor: none !important;
 
+@media screen and (max-width: 700px)
+  .povswitch.mobileControl
+    display: block !important;
+  .povswitch:not(.mobileControl)
+    display: none !important;
+
 @media screen and (max-width: 600px)
-  #speedSliderContainer, #songSpeed, #povswitch
+  #desktopContainer
     display: none !important;
   #songInfoOverlay
     padding-left: 1px !important;
@@ -50,8 +56,30 @@ html
       width 16px !important;
       height 11px !important;
 
-@media screen and (max-width: 400px)
-  #controlsSettings, #controlsCamera
+  .controlsMobile
+    display: block !important;
+
+.mobileControl
+    display: none !important;
+
+@media screen and (max-width: 450px)
+  .desktopControl:not(.controlsFullscreen)
+    display: none !important;
+  .controlsSettings.mobileControl, .controlsCamera.mobileControl
+    display: block !important;
+  .controlsSettings:not(.mobileControl), .controlsCamera:not(.mobileControl)
+    display: none !important;
+
+@media screen and (max-width: 374px)
+  .povswitch.mobileControl
+    display: block !important;
+  .povswitch:not(.mobileControl)
+    display: none !important;
+
+@media screen and (max-width: 380px)
+  .controlsFullscreen.mobileControl
+    display: block !important;
+  .controlsFullscreen:not(.mobileControl)
     display: none !important;
 
 #controls
@@ -130,10 +158,9 @@ html
     #mixerContainer .fas
         margin: 10px
 
-  #controlsSettings
+  .controlsSettings
     cursor pointer
     margin: 6px 16px 0 8px;
-    position: absolute;
     right: 24px;
     width: 24px;
     img
@@ -148,10 +175,10 @@ html
   .exitFullscreen
         display none
 
-  #controlsFullscreen.inFullscreen
+  .controlsFullscreen.inFullscreen
       margin 0px 0px 0 0px
 
-  #controlsFullscreen
+  .controlsFullscreen
     cursor pointer
     margin 6px 0px 0 0px
     position: absolute
@@ -162,12 +189,24 @@ html
       height 26px
       width 26px
 
-  #controlsCamera
+  .controlsFullscreen.mobileControl
+    position relative
+
+  .controlsCamera
     cursor pointer
-    margin 6px 0px 0 0px
-    position: absolute
-    right: 68px
-    width: 30px
+    margin 6px 0px 0 6px
+    right 93px
+    width 25px
+    img
+      height 30px
+      width 26px
+
+  .controlsMobile
+    cursor: pointer;
+    margin: 4px 0 0 0;
+    right: 68px;
+    width: 21px;
+    display: none
     img
       height 30px
       width 26px
@@ -225,14 +264,18 @@ html
     grid-gap: 0.5em;
     margin: 10px 0px 10px 0px
 
-  #speedSliderContainer
+  #mobileContainer
+    padding 0.5em
+    .speedSliderContainer
+      height 2.4em
+      background transparent !important
+
+  .speedSliderContainer
     background rgba(0, 0, 0, 0.85)
     border-radius 0 5px 5px 0
-    bottom 5px
     cursor pointer
     display none
     margin-left -6px
-    padding-top 4px
     z-index 99
     display block
 
@@ -240,13 +283,12 @@ html
       --value: 1;
       -webkit-appearance: none;
       -moz-appearance: none;
-      position: absolute
       cursor pointer
       margin-left: -1px
-      margin-top: -5px
       width 104px
       height: 8px
       background-color transparent
+      margin-top 13px
       z-index 100
       border-radius: 10px;
       background: #4776e6; /* fallback for old browsers */
@@ -315,13 +357,36 @@ html
   margin-right 0
   width 70px
 
-#songSpeed
+.songSpeed
   color $gray
   font-size 11px
-  right: 93px
-  position: absolute
-  width 30px
   align-self baseline
+  margin-right 1em
+  width 10px
+
+#mobileContainer
+  background rgba(85, 85, 85, 0.85)
+  border-radius 5px 5px 5px 5px
+  bottom 60px
+  cursor pointer
+  display none
+  right 0px
+  position absolute
+  z-index 5
+  text-align: center;
+  align-items: center;
+
+  input
+    cursor pointer
+    padding 0
+    width 90%
+
+  .settingHeader
+    color: #bdbdbd;
+    margin-bottom: 5px;
+
+  .toggleButton
+    text-align: left
 
 #controlsModes,
 #controlsDifficultyOptions
@@ -486,6 +551,9 @@ html
       &.volumeActive
         display flex
         align-items center
+    #mobileContainer
+      &.settingsActive
+        display flex
 
 .isPlaying
   .discord-link
@@ -628,24 +696,28 @@ html
     padding-left 5px
     padding-top 5px
 
-#povswitch {
-    background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20245.82%20141.73%22%3E%3Cdefs%3E%3Cstyle%3E.a%7Bfill%3A%23fff%3Bfill-rule%3Aevenodd%3B%7D%3C%2Fstyle%3E%3C%2Fdefs%3E%3Ctitle%3Emask%3C%2Ftitle%3E%3Cpath%20class%3D%22a%22%20d%3D%22M175.56%2C111.37c-22.52%2C0-40.77-18.84-40.77-42.07S153%2C27.24%2C175.56%2C27.24s40.77%2C18.84%2C40.77%2C42.07S198.08%2C111.37%2C175.56%2C111.37ZM26.84%2C69.31c0-23.23%2C18.25-42.07%2C40.77-42.07s40.77%2C18.84%2C40.77%2C42.07-18.26%2C42.07-40.77%2C42.07S26.84%2C92.54%2C26.84%2C69.31ZM27.27%2C0C11.54%2C0%2C0%2C12.34%2C0%2C28.58V110.9c0%2C16.24%2C11.54%2C30.83%2C27.27%2C30.83H99.57c2.17%2C0%2C4.19-1.83%2C5.4-3.7L116.47%2C118a8%2C8%2C0%2C0%2C1%2C12.52-.18l11.51%2C20.34c1.2%2C1.86%2C3.22%2C3.61%2C5.39%2C3.61h72.29c15.74%2C0%2C27.63-14.6%2C27.63-30.83V28.58C245.82%2C12.34%2C233.93%2C0%2C218.19%2C0H27.27Z%22%2F%3E%3C%2Fsvg%3E") 50% 50%/70% 70% no-repeat rgba(0,0,0,.35);
-    border: 0;
-    bottom: 10px;
-    cursor: pointer;
-    min-width: 50px;
-    min-height: 30px;
-    padding-right: 5%;
-    padding-top: 4%;
-    position: absolute;
-    right: 10px;
-    transition: background-color .05s ease;
-    -webkit-transition: background-color .05s ease;
-    z-index: 9999;
-    border-radius: 8px;
-}
+.povswitch
+  background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20245.82%20141.73%22%3E%3Cdefs%3E%3Cstyle%3E.a%7Bfill%3A%23fff%3Bfill-rule%3Aevenodd%3B%7D%3C%2Fstyle%3E%3C%2Fdefs%3E%3Ctitle%3Emask%3C%2Ftitle%3E%3Cpath%20class%3D%22a%22%20d%3D%22M175.56%2C111.37c-22.52%2C0-40.77-18.84-40.77-42.07S153%2C27.24%2C175.56%2C27.24s40.77%2C18.84%2C40.77%2C42.07S198.08%2C111.37%2C175.56%2C111.37ZM26.84%2C69.31c0-23.23%2C18.25-42.07%2C40.77-42.07s40.77%2C18.84%2C40.77%2C42.07-18.26%2C42.07-40.77%2C42.07S26.84%2C92.54%2C26.84%2C69.31ZM27.27%2C0C11.54%2C0%2C0%2C12.34%2C0%2C28.58V110.9c0%2C16.24%2C11.54%2C30.83%2C27.27%2C30.83H99.57c2.17%2C0%2C4.19-1.83%2C5.4-3.7L116.47%2C118a8%2C8%2C0%2C0%2C1%2C12.52-.18l11.51%2C20.34c1.2%2C1.86%2C3.22%2C3.61%2C5.39%2C3.61h72.29c15.74%2C0%2C27.63-14.6%2C27.63-30.83V28.58C245.82%2C12.34%2C233.93%2C0%2C218.19%2C0H27.27Z%22%2F%3E%3C%2Fsvg%3E") 50% 50%/70% 70% no-repeat rgba(0,0,0,.35);
+  border: 0;
+  bottom: 10px;
+  cursor: pointer;
+  min-width: 50px;
+  min-height: 30px;
+  padding-right: 5%;
+  padding-top: 4%;
+  position: absolute;
+  right: 10px;
+  transition: background-color .05s ease;
+  -webkit-transition: background-color .05s ease;
+  z-index: 9999;
+  border-radius: 8px;
 
-#povswitch:hover {
+.povswitch.mobileControl
+  position relative
+  right 0
+  bottom 0
+
+.povswitch:hover {
   background-color: #FF94C8;
 }
 
@@ -862,14 +934,14 @@ input:checked + .slider:before {
   &:hover
     fill: red
 
-#rangeTicks {
+.rangeTicks {
   position: absolute
   bottom: 35px
   margin-left: 1.5px
   width: 100px
 }
 
-#rangePoints {
+.rangePoints {
   position: absolute
   bottom: 11px
   margin-left: 1.5px

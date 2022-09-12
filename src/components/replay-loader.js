@@ -340,11 +340,16 @@ AFRAME.registerComponent('replay-loader', {
 
 		for (var i = 0; i < mapnotes.length && i < noteStructs.length; i++) {
 			if (!group) {
-				if (i > 0 && noteStructs[i + offset].spawnTime == noteStructs[i + offset - 1].spawnTime) {
+				if (i + offset == noteStructs.length) {
+					group = [];
+					break;
+				}
+				if (i > 0 && noteStructs[i + offset].eventType != 0 && noteStructs[i + offset].spawnTime == noteStructs[i + offset - 1].spawnTime) {
 					offset++;
 					i--;
 					continue;
 				}
+
 				group = [i];
 				groupIndex = i;
 				groupTime = mapnotes[i]._time;

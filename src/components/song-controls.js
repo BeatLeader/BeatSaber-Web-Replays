@@ -615,10 +615,11 @@ AFRAME.registerComponent('song-controls', {
 		const rangePoints = document.querySelectorAll('.range__point');
 		rangePoints.forEach((el, i) => {
 			el.addEventListener('click', evt => {
+				const value = (i % 5) * (4 / (rangePoints.length - 2));
 				speedSlider.forEach(element => {
-					element.valueAsNumber = i * (2 / (rangePoints.length - 1));
+					element.valueAsNumber = value;
 				});
-				speedHandler();
+				speedHandler(value);
 			});
 		});
 

@@ -59,8 +59,8 @@ AFRAME.registerSystem('materials', {
 				src: {
 					value: new THREE.TextureLoader().load('assets/img/atlas.png'),
 				},
-				start: {value: 100},
-				finish: {value: -100},
+				start: {value: 10000},
+				finish: {value: 10000},
 			},
 			vertexShader: beatArrowShaders.vertexShader,
 			fragmentShader: beatArrowShaders.fragmentShader,

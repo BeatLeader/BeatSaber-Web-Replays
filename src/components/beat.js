@@ -161,7 +161,7 @@ AFRAME.registerComponent('beat', {
 				this.setObjModelFromTemplate(
 					this.signEl,
 					this.signModels[this.data.type + this.data.color],
-					this.el.sceneEl.systems.materials.clearStageAdditive
+					this.el.sceneEl.systems.materials.beatSignMaterial
 				);
 				this.el.object3D.rotation.y = ((this.data.color == 'red' ? 1 : -1) * Math.PI) / 4;
 				this.el.object3D.rotation.z = ((this.data.color == 'red' ? 1 : -1) * Math.PI) / 4;
@@ -417,6 +417,17 @@ AFRAME.registerComponent('beat', {
 			}
 		}
 
+		const modifiers = this.replayLoader.replay.info.modifiers;
+
+		if (modifiers.includes('GN')) {
+			this.blockEl.setAttribute('material', 'visible: ' + (this.data.index == 0));
+		}
+		if (modifiers.includes('GN') || modifiers.includes('DA')) {
+			const signMaterial = this.el.sceneEl.systems.materials.beatSignMaterial;
+			signMaterial.uniforms.start.value = data.anticipationPosition + (this.headset.object3D.position.z - data.anticipationPosition) * 0.3;
+			signMaterial.uniforms.finish.value = data.anticipationPosition + (this.headset.object3D.position.z - data.anticipationPosition) * 0.7;
+		}
+
 		this.updatePosition();
 
 		if (!this.hitboxObject) {
@@ -455,6 +466,8 @@ AFRAME.registerComponent('beat', {
 		var blockEl = (this.blockEl = document.createElement('a-entity'));
 		var signEl = (this.signEl = document.createElement('a-entity'));
 
+		signEl.setAttribute('render-order', 'walls');
+
 		// Small offset to prevent z-fighting when the blocks are far away
 		signEl.object3D.position.z += 0.02;
 		blockEl.appendChild(signEl);
@@ -490,11 +503,11 @@ AFRAME.registerComponent('beat', {
 
 		if (this.data.type !== 'mine') {
 			// Uncomment in case of new Chrome version
-			// signEl.setAttribute('materials', "name: clearStageAdditive");
+			// signEl.setAttribute('materials', "name: beatSignMaterial");
 			this.setObjModelFromTemplate(
 				signEl,
 				this.signModels[this.data.type + this.data.color],
-				this.el.sceneEl.systems.materials.clearStageAdditive
+				this.el.sceneEl.systems.materials.beatSignMaterial
 			);
 		}
 

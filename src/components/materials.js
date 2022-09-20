@@ -1,6 +1,7 @@
 const COLORS = require('../constants/colors.js');
 const flatShaders = require('../../assets/shaders/flat.js');
 const stageAdditiveShaders = require('../../assets/shaders/stageAdditive.js');
+const beatArrowShaders = require('../../assets/shaders/beatArrow.js');
 const stageNormalShaders = require('../../assets/shaders/stageNormal.js');
 const energyShaders = require('../../assets/shaders/energy.js');
 const splineShaders = require('../../assets/shaders/spline.js');
@@ -53,19 +54,16 @@ AFRAME.registerSystem('materials', {
 			transparent: true,
 		});
 
-		this.clearStageAdditive = new THREE.ShaderMaterial({
+		this.beatSignMaterial = new THREE.ShaderMaterial({
 			uniforms: {
-				tunnelNeon: {value: new THREE.Color(COLORS.NEON_RED)},
-				floorNeon: {value: new THREE.Color(COLORS.NEON_RED)},
-				leftLaser: {value: new THREE.Color(COLORS.NEON_BLUE)},
-				rightLaser: {value: new THREE.Color(COLORS.NEON_BLUE)},
-				textGlow: {value: new THREE.Color(COLORS.TEXT_OFF)},
 				src: {
 					value: new THREE.TextureLoader().load('assets/img/atlas.png'),
 				},
+				start: {value: 100},
+				finish: {value: -100},
 			},
-			vertexShader: stageAdditiveShaders.vertexShader,
-			fragmentShader: stageAdditiveShaders.fragmentShader,
+			vertexShader: beatArrowShaders.vertexShader,
+			fragmentShader: beatArrowShaders.fragmentShader,
 			blending: THREE.AdditiveBlending,
 			depthWrite: false,
 			fog: false,

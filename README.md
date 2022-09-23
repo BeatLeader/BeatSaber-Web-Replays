@@ -62,7 +62,8 @@ Go to the project directory in the terminal and type.
 npm install
 ```
 
-If you don't have NodeJS - download it here: https://nodejs.org/en/ (LTS is recommended.) And repeat.
+If you don't have NodeJS - download it here first: https://nodejs.org/en/  
+Version 16 or greater (LTS) is recommended; some developers have experienced issues with older Node versions.
 
 ### Starting local build
 

@@ -67562,18 +67562,25 @@ module.exports.Component = registerComponent("look-controls", {
           this.gestureTouches[1].ended = true;
         }
 
-        e.preventDefault();
+        if (this.gesturing) {
+          e.preventDefault();
+        }
+
         this.gesturing = false;
         this.zoom = 0;
         break;
       }
     }
 
-    if (!this.gestureTouches.filter((x) => x.ended).length) {
+    if (!this.gestureTouches.filter((x) => !x.ended).length) {
       this.touchStarted = false;
     } else {
       const touchEvent = this.gestureTouches.filter((x) => !x.ended)[0];
-      this.gestureStartPoints[0] = [touchEvent.pageX, touchEvent.pageY];
+      if (touchEvent) {
+        this.gestureStartPoints[0] = [touchEvent.pageX, touchEvent.pageY];
+      } else {
+        this.touchStarted = false;
+      }
     }
   },
 
@@ -76029,7 +76036,7 @@ require('./core/a-mixin');
 require('./extras/components/');
 require('./extras/primitives/');
 
-console.log('A-Frame Version: 0.8.2 (Date 2022-09-18, Commit #50eae056)');
+console.log('A-Frame Version: 0.8.2 (Date 2022-09-24, Commit #50eae056)');
 console.log('three Version:', pkg.dependencies['three']);
 console.log('WebVR Polyfill Version:', pkg.dependencies['webvr-polyfill']);
 

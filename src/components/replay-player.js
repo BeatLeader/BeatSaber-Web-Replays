@@ -85,6 +85,8 @@ AFRAME.registerComponent('replay-player', {
 		const headset = this.headset.object3D;
 		const povCamera = this.povCameraRig.object3D;
 
+		const offsetInput = document.getElementById('saberOffset');
+
 		const v1 = this.v1;
 		const v2 = this.v2;
 
@@ -112,6 +114,12 @@ AFRAME.registerComponent('replay-player', {
 		const lquat = q1.slerp(q2, slerpValue);
 		lrotation = euler.setFromQuaternion(lquat);
 		leftSaber.rotation.set(lrotation.x, lrotation.y + Math.PI, -lrotation.z);
+
+		if (!!offsetInput) {
+			leftSaber.translateZ(-offsetInput.value);
+			rightSaber.translateZ(-offsetInput.value);
+			document.getElementById('saberOffsetLabel').innerHTML = offsetInput.value;
+		}
 
 		q1.set(frame.r.r.w, frame.r.r.z, frame.r.r.y, frame.r.r.x);
 		q2.set(nextFrame.r.r.w, nextFrame.r.r.z, nextFrame.r.r.y, nextFrame.r.r.x);

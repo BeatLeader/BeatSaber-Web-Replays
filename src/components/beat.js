@@ -419,13 +419,19 @@ AFRAME.registerComponent('beat', {
 
 		const modifiers = this.replayLoader.replay.info.modifiers;
 
-		if (modifiers.includes('GN')) {
+		if (modifiers.includes('GN') && this.settings.settings.showNoteModifierVisuals) {
 			this.blockEl.setAttribute('material', 'visible: ' + (this.data.index == 0));
+		} else {
+			this.blockEl.setAttribute('material', 'visible: true');
 		}
-		if (modifiers.includes('GN') || modifiers.includes('DA')) {
+		if ((modifiers.includes('GN') || modifiers.includes('DA')) && this.settings.settings.showNoteModifierVisuals) {
 			const signMaterial = this.el.sceneEl.systems.materials.beatSignMaterial;
 			signMaterial.uniforms.start.value = data.anticipationPosition + (this.headset.object3D.position.z - data.anticipationPosition) * 0.3;
 			signMaterial.uniforms.finish.value = data.anticipationPosition + (this.headset.object3D.position.z - data.anticipationPosition) * 0.7;
+		} else {
+			const signMaterial = this.el.sceneEl.systems.materials.beatSignMaterial;
+			signMaterial.uniforms.start.value = 10000;
+			signMaterial.uniforms.finish.value = 10000;
 		}
 
 		this.updatePosition();

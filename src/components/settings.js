@@ -10,6 +10,7 @@ AFRAME.registerComponent('settings', {
 			pixelRatio: 1.5,
 			saberWidth: 100,
 			showFps: false,
+			showNoteModifierVisuals: true,
 			savedCameraDefault: false,
 			highlightErrors: false,
 			colorScores: true,

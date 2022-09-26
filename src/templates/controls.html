@@ -264,6 +264,18 @@
         </label>
       </div>
 
+      <div class="toggleButton" title="Display GN/DA visual.">
+        <label class="switch">
+          <input type="checkbox" id="showNoteModifierVisuals">
+          <span class="slider round"></span>
+        </label>
+        <label class="toggleButtonLabel">
+          <td>
+            <nobr>GN / DA effects</nobr>
+          </td>
+        </label>
+      </div>
+
       <div class="toggleButton" title="Left saber color, will show for everyone.">
         <input type="color" id="leftSaberColor" value="#ff0000">
         <label class="toggleButtonLabel"><td><nobr>Left</nobr></td></label>
@@ -305,6 +317,16 @@
             <label id="saberWidthLabel" class="toggleButtonLabel" style="margin-left: 28px;">100</label>
           </div>
           <input id="saberWidth" type="range" min="0" max="200" step="1" value="100">
+        </label>
+      </div>
+
+      <div class="toggleButton" title="Custom z offset (visual only).">
+        <label>
+          <div style="height: .9em">
+            <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Saber z offset:</nobr></td></label>
+            <label id="saberOffsetLabel" class="toggleButtonLabel" style="margin-left: 40px;">0</label>
+          </div>
+          <input id="saberOffset" type="range" min="-0.5" max="0.5" step="0.05" value="0">
         </label>
       </div>
 

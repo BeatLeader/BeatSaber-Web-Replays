@@ -739,15 +739,15 @@ AFRAME.registerComponent('song-controls', {
 		});
 
 		this.el.sceneEl.addEventListener('colorsFetched', e => {
-			const patreonFeatures = e.detail.features;
-			if (patreonFeatures.leftSaberColor) {
-				leftSaberColorInput.value = patreonFeatures.leftSaberColor;
-				this.el.sceneEl.emit('colorChanged', {hand: 'left', color: patreonFeatures.leftSaberColor}, null);
+			const profileSettings = e.detail.features;
+			if (profileSettings.leftSaberColor) {
+				leftSaberColorInput.value = profileSettings.leftSaberColor;
+				this.el.sceneEl.emit('colorChanged', {hand: 'left', color: profileSettings.leftSaberColor}, null);
 			}
 
-			if (patreonFeatures.rightSaberColor) {
-				rightSaberColorInput.value = patreonFeatures.rightSaberColor;
-				this.el.sceneEl.emit('colorChanged', {hand: 'right', color: patreonFeatures.rightSaberColor}, null);
+			if (profileSettings.rightSaberColor) {
+				rightSaberColorInput.value = profileSettings.rightSaberColor;
+				this.el.sceneEl.emit('colorChanged', {hand: 'right', color: profileSettings.rightSaberColor}, null);
 			}
 
 			this.replayPlayerId = e.detail.playerId;
@@ -784,7 +784,7 @@ AFRAME.registerComponent('song-controls', {
 			this.start = new Date().getTime();
 			setTimeout(() => {
 				if (new Date().getTime() - this.start > 999) {
-					fetch(`https://api.beatleader.xyz/user/patreon?${hand}=${encodeURIComponent(color)}`, {
+					fetch(`https://api.beatleader.xyz/user?${hand}=${encodeURIComponent(color)}`, {
 						method: 'PATCH',
 						credentials: 'include',
 					});
@@ -1080,34 +1080,6 @@ AFRAME.registerComponent('song-controls', {
 		});
 	},
 });
-
-const changeSaberColor = message =>
-	fetch(BL_API_URL + 'user/patreon?message=' + encodeURIComponent(message), {
-		method: 'PATCH',
-		credentials: 'include',
-	})
-		.then(checkResponse)
-		.then(data => {
-			account.error = null;
-
-			if (data.length > 0) {
-				account.error = data;
-				setTimeout(function () {
-					account.error = null;
-					set(account);
-				}, 3500);
-			}
-
-			set(account);
-		});
-
-const logOut = () => {
-	fetch(BL_API_URL + 'signout', {
-		credentials: 'include',
-	}).then(_ => {
-		refresh(true);
-	});
-};
 
 function truncate(str, length) {
 	if (!str) {

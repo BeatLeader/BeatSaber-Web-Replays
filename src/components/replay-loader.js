@@ -114,9 +114,9 @@ AFRAME.registerComponent('replay-loader', {
 					},
 					null
 				);
-				let patreonFeatures = data.player.patreonFeatures;
-				if (patreonFeatures) {
-					this.el.sceneEl.emit('colorsFetched', {playerId: data.player.id, features: patreonFeatures}, null);
+				let profileSettings = data.player.profileSettings;
+				if (profileSettings) {
+					this.el.sceneEl.emit('colorsFetched', {playerId: data.player.id, features: profileSettings}, null);
 				}
 			} else {
 				this.el.sceneEl.emit(

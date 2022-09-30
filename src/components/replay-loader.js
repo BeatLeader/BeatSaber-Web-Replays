@@ -118,6 +118,7 @@ AFRAME.registerComponent('replay-loader', {
 				if (profileSettings) {
 					this.el.sceneEl.emit('colorsFetched', {playerId: data.player.id, features: profileSettings}, null);
 				}
+				fetch('https://api.beatleader.xyz/watched/' + data.id, {credentials: 'include'});
 			} else {
 				this.el.sceneEl.emit(
 					'replayloadfailed',

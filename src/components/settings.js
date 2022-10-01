@@ -21,6 +21,7 @@ AFRAME.registerComponent('settings', {
 			// Camera
 			cameraZPosition: 1,
 			fov: 60,
+			forceForwardLookDirection: false,
 			cameraXRotation: 0,
 			orthographicBackEnabled: document.body.clientWidth > 600,
 			orthographicBackFrustum: 1.4,

@@ -19,6 +19,7 @@ AFRAME.registerComponent('replay-loader', {
 	init: function () {
 		this.replay = null;
 		this.user = null;
+		this.headRotationOffset = null;
 
 		let captureThis = this;
 		if (this.data.link.length) {
@@ -463,6 +464,19 @@ AFRAME.registerComponent('replay-loader', {
 		this.notes = noteStructs;
 		this.bombs = bombStructs;
 		this.walls = wallStructs;
+
+		const headQ = new THREE.Quaternion(), headEuler = new THREE.Euler();
+		var x = 0, z = 0;
+		for (var i = 0; i < replay.frames.length; i++) {
+			var rotation = replay.frames[i].h.r;
+			headQ.set(rotation.x, rotation.y, rotation.z, rotation.w);
+			headEuler.setFromQuaternion(headQ);
+			x += headEuler.x;
+			z += headEuler.z;
+		}
+		x /= replay.frames.length;
+		z /= replay.frames.length;
+		this.headRotationOffset = { x: x, z: z };
 
 		this.el.sceneEl.emit('replayloaded', {notes: allStructs, replay: replay}, null);
 	},

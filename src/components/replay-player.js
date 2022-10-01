@@ -152,7 +152,14 @@ AFRAME.registerComponent('replay-player', {
 		}
 		hrotation = euler.setFromQuaternion(hquat);
 
-		hrotation.x += this.settings.settings.cameraXRotation * 0.017453;
+		let forceForwardLookDirection = this.settings.settings.forceForwardLookDirection;
+		let headRotationOffset = this.replayDecoder.headRotationOffset;
+		if (headRotationOffset && forceForwardLookDirection) {
+			hrotation.x += headRotationOffset.x;
+			hrotation.z += headRotationOffset.z;
+		} else {
+			hrotation.x += this.settings.settings.cameraXRotation * 0.017453;
+		}
 
 		povCamera.rotation.set(hrotation.x, hrotation.y + Math.PI, -hrotation.z + Math.PI);
 		povCamera.hquat = hquat;

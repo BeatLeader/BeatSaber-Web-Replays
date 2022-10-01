@@ -11,6 +11,7 @@ AFRAME.registerComponent('replay-player', {
 		this.replayDecoder = this.el.sceneEl.components['replay-loader'];
 		this.fpsCounter = this.el.sceneEl.components['fps-counter'];
 		this.song = this.el.sceneEl.components.song;
+		this.cameraXRotationSlider = document.querySelector('#cameraXRotation');
 		this.settings = this.el.sceneEl.components.settings;
 		this.score = {
 			totalScore: 0,
@@ -157,8 +158,10 @@ AFRAME.registerComponent('replay-player', {
 		if (headRotationOffset && forceForwardLookDirection) {
 			hrotation.x += headRotationOffset.x;
 			hrotation.z += headRotationOffset.z;
+			this.cameraXRotationSlider.disabled = true;
 		} else {
 			hrotation.x += this.settings.settings.cameraXRotation * 0.017453;
+			this.cameraXRotationSlider.disabled = false;
 		}
 
 		povCamera.rotation.set(hrotation.x, hrotation.y + Math.PI, -hrotation.z + Math.PI);

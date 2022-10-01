@@ -23,6 +23,7 @@ AFRAME.registerComponent('replay-loader', {
 		this.replays = [];
 		this.users = [];
 		this.processedScores = 0;
+		this.headRotationOffset = null;
 	},
 
 	update: function () {
@@ -448,6 +449,21 @@ AFRAME.registerComponent('replay-loader', {
 			this.bombs = bombStructs;
 			this.walls = wallStructs;
 		}
+
+		const headQ = new THREE.Quaternion(),
+			headEuler = new THREE.Euler();
+		var x = 0,
+			z = 0;
+		for (var i = 0; i < replay.frames.length; i++) {
+			var rotation = replay.frames[i].h.r;
+			headQ.set(rotation.x, rotation.y, rotation.z, rotation.w);
+			headEuler.setFromQuaternion(headQ);
+			x += headEuler.x;
+			z += headEuler.z;
+		}
+		x /= replay.frames.length;
+		z /= replay.frames.length;
+		replay.headRotationOffset = {x: x, z: z};
 
 		replay.noteStructs = allStructs;
 		this.processedScores++;

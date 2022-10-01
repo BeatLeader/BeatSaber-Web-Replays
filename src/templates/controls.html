@@ -77,6 +77,15 @@
           <input id="fov" type="range" min="30" max="150" step="1" value="60">
         </label>
       </div>
+      <div class="toggleButton" title="How far back would be camera relative to the player.">
+        <label>
+          <div>
+            <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Z position offset:</nobr></td></label>
+            <label id="cameraZPositionLabel" class="toggleButtonLabel" style="margin-left: 51px;">1m</label>
+          </div>
+          <input id="cameraZPosition" type="range" min="-5" max="5" step="0.1" value="1">
+        </label>
+      </div>
       <div class="toggleButton" title="Rotate camera higher or lower on X axis">
         <label>
           <div>
@@ -86,14 +95,12 @@
           <input id="cameraXRotation" type="range" min="-100" max="100" step="1" value="0">
         </label>
       </div>
-      <div class="toggleButton" title="How far back would be camera relative to the player.">
-        <label>
-          <div>
-            <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Z position offset:</nobr></td></label>
-            <label id="cameraZPositionLabel" class="toggleButtonLabel" style="margin-left: 51px;">1m</label>
-          </div>
-          <input id="cameraZPosition" type="range" min="-5" max="5" step="0.1" value="1">
+      <div class="toggleButton" title="Normalize look direction in First Person Camera. &#10;(Ignores 'X rotation offset' option)">
+        <label class="switch">
+          <input type="checkbox" id="forceForwardLookDirection">
+          <span class="slider round"></span>
         </label>
+        <label class="toggleButtonLabel"><td><nobr>Force look upright</nobr></td></label>
       </div>
       <div class="settingHeader">Main camera</div>
       <div id="cameraPositionContainer">

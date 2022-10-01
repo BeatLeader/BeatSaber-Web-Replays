@@ -11,6 +11,7 @@ AFRAME.registerComponent('replay-player', {
 		this.replayDecoder = this.el.sceneEl.components['replay-loader'];
 		this.fpsCounter = this.el.sceneEl.components['fps-counter'];
 		this.song = this.el.sceneEl.components.song;
+		this.cameraXRotationSlider = document.querySelector('#cameraXRotation');
 		this.settings = this.el.sceneEl.components.settings;
 		this.score = {
 			totalScore: 0,
@@ -84,14 +85,14 @@ AFRAME.registerComponent('replay-player', {
 				let slerpValue = (currentTime - frame.time) / Math.max(1e-6, nextFrame.time - frame.time);
 
 				if (replay.info.leftHanded) {
-					this.leftHandedTock(frame, nextFrame, height, slerpValue, delta / 1000, i, replays.length > 1);
+					this.leftHandedTock(frame, nextFrame, height, slerpValue, delta / 1000, i, replays.length > 1, replay.headRotationOffset);
 				} else {
-					this.rightHandedTock(frame, nextFrame, height, slerpValue, delta / 1000, i, replays.length > 1);
+					this.rightHandedTock(frame, nextFrame, height, slerpValue, delta / 1000, i, replays.length > 1, replay.headRotationOffset);
 				}
 			}
 		}
 	},
-	rightHandedTock: function (frame, nextFrame, height, slerpValue, delta, index, resetZ) {
+	rightHandedTock: function (frame, nextFrame, height, slerpValue, delta, index, resetZ, headRotationOffset) {
 		const leftSaber = this.saberEls[index * 2].object3D;
 		const rightSaber = this.saberEls[index * 2 + 1].object3D;
 		const leftHitboxSaber = this.firstSaberControl.hitboxSaber;
@@ -160,13 +161,21 @@ AFRAME.registerComponent('replay-player', {
 			}
 			hrotation = euler.setFromQuaternion(hquat);
 
-			hrotation.x += this.settings.settings.cameraXRotation * 0.017453;
+			let forceForwardLookDirection = this.settings.settings.forceForwardLookDirection;
+			if (headRotationOffset && forceForwardLookDirection) {
+				hrotation.x += headRotationOffset.x;
+				hrotation.z += headRotationOffset.z;
+				this.cameraXRotationSlider.disabled = true;
+			} else {
+				hrotation.x += this.settings.settings.cameraXRotation * 0.017453;
+				this.cameraXRotationSlider.disabled = false;
+			}
 
 			povCamera.rotation.set(hrotation.x, hrotation.y + Math.PI, -hrotation.z + Math.PI);
 			povCamera.hquat = hquat;
 		}
 	},
-	leftHandedTock: function (frame, nextFrame, height, slerpValue, delta, index, resetZ) {
+	leftHandedTock: function (frame, nextFrame, height, slerpValue, delta, index, resetZ, headRotationOffset) {
 		const leftSaber = this.saberEls[index * 2].object3D;
 		const rightSaber = this.saberEls[index * 2 + 1].object3D;
 		const leftHitboxSaber = this.firstSaberControl.hitboxSaber;
@@ -235,7 +244,15 @@ AFRAME.registerComponent('replay-player', {
 			}
 			hrotation = euler.setFromQuaternion(hquat);
 
-			hrotation.x += this.settings.settings.cameraXRotation * 0.017453;
+			let forceForwardLookDirection = this.settings.settings.forceForwardLookDirection;
+			if (headRotationOffset && forceForwardLookDirection) {
+				hrotation.x += headRotationOffset.x;
+				hrotation.z += headRotationOffset.z;
+				this.cameraXRotationSlider.disabled = true;
+			} else {
+				hrotation.x += this.settings.settings.cameraXRotation * 0.017453;
+				this.cameraXRotationSlider.disabled = false;
+			}
 
 			povCamera.rotation.set(-hrotation.x, hrotation.y + Math.PI, -hrotation.z + Math.PI);
 			povCamera.hquat = hquat;

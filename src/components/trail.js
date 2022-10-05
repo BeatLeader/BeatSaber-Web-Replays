@@ -1,6 +1,17 @@
 const TRAILS = {
 	bright: {
-		width: 0.9,
+		vertexShader: `
+      attribute vec4 vertexData;
+      varying vec2 uv0;
+      
+      void main() {
+      	float forward_offset = 0.1 + 0.9 * uv.x;
+      	vec3 offset = normalize(vertexData.xyz) * forward_offset;
+      
+        uv0 = uv;
+        vec4 modelViewPosition = modelViewMatrix * vec4(position + offset, 1.0);
+        gl_Position = projectionMatrix * modelViewPosition;
+      }`,
 		fragmentShader: `
       uniform vec4 bladeColor;
       varying vec2 uv0;
@@ -26,7 +37,18 @@ const TRAILS = {
       }`,
 	},
 	dim: {
-		width: 0.4,
+		vertexShader: `
+      attribute vec4 vertexData;
+      varying vec2 uv0;
+      
+      void main() {
+      	float forward_offset = 0.6 + 0.4 * uv.x;
+      	vec3 offset = normalize(vertexData.xyz) * forward_offset;
+      
+        uv0 = uv;
+        vec4 modelViewPosition = modelViewMatrix * vec4(position + offset, 1.0);
+        gl_Position = projectionMatrix * modelViewPosition;
+      }`,
 		fragmentShader: `
       uniform vec4 bladeColor;
       varying vec2 uv0;
@@ -52,7 +74,20 @@ const TRAILS = {
       }`,
 	},
 	timeDependence: {
-		width: 0.9,
+		vertexShader: `
+      attribute vec4 vertexData;
+      varying vec2 uv0;
+      varying float td;
+      
+      void main() {
+      	float forward_offset = 0.1 + 0.9 * uv.x;
+      	vec3 offset = normalize(vertexData.xyz) * forward_offset;
+      
+        uv0 = uv;
+        td = vertexData.w;
+        vec4 modelViewPosition = modelViewMatrix * vec4(position + offset, 1.0);
+        gl_Position = projectionMatrix * modelViewPosition;
+      }`,
 		fragmentShader: `
       uniform vec4 bladeColor;
       varying vec2 uv0;
@@ -94,8 +129,37 @@ const TRAILS = {
       }`,
 	},
 	slim: {
-		halfWidth: 0.02,
-		zDepth: 0.012,
+		vertexShader: `
+      attribute vec4 vertexData;
+      varying vec2 uv0;
+      
+      #define thickness 0.06
+      
+      vec3 get_cam_pos(const mat4 a_modelView)
+      {
+        mat3 rotMat = mat3(a_modelView);
+        vec3 d = vec3(a_modelView[3]);
+        vec3 retVec = -d * rotMat;
+        return retVec;
+      }
+			
+      void main() {
+      	vec3 cam_pos = get_cam_pos(modelViewMatrix);
+      	
+      	vec3 forward = normalize(vertexData.xyz);
+    		vec3 velocity = vec3(0, 1, 0);
+    		vec3 look_from = position + forward;
+		
+    		float x_offset = (uv.x - 0.5) * thickness;
+    		vec3 look_up = cam_pos - look_from;
+    		vec3 look_z_axis = normalize(velocity);
+    		vec3 look_x_axis = normalize(cross(look_up, look_z_axis));
+    		vec3 pos = look_from + look_x_axis * x_offset;
+      
+        uv0 = uv;
+        vec4 modelViewPosition = modelViewMatrix * vec4(pos, 1.0);
+        gl_Position = projectionMatrix * modelViewPosition;
+      }`,
 		fragmentShader: `
       uniform vec4 bladeColor;
       varying vec2 uv0;
@@ -155,7 +219,8 @@ const TRAILS = {
           float middle_curve_value = ((middle_curve_ratio > 0.0 && middle_curve_ratio <= 1.0) ? 1.0 : 0.0) * middle_curve(middle_curve_ratio);
           float end_curve_value = ((end_curve_ratio > 0.0 && end_curve_ratio <= 1.0) ? 1.0 : 0.0) * end_curve(end_curve_ratio);
           
-          return (x < start_curve_value + middle_curve_value + end_curve_value) ? 1.0 : 0.0;
+          float diff = (start_curve_value + middle_curve_value + end_curve_value) - x;
+          return clamp(diff/0.3, 0.0, 1.0);
       }
       
       void main() {
@@ -199,11 +264,11 @@ AFRAME.registerComponent('trail', {
 		const geometry = (this.geometry = new THREE.BufferGeometry());
 		const vertices = (this.vertices = new Float32Array(quadCount * 6 * 3));
 		const uv = (this.uv = new Float32Array(quadCount * 6 * 2));
-		const timeDependence = (this.timeDependence = new Float32Array(quadCount * 6));
+		const vertexData = (this.vertexData = new Float32Array(quadCount * 6 * 4));
 
 		geometry.addAttribute('position', new THREE.BufferAttribute(vertices, 3).setDynamic(true));
 		geometry.addAttribute('uv', new THREE.BufferAttribute(uv, 2).setDynamic(true));
-		geometry.addAttribute('timeDependence', new THREE.BufferAttribute(timeDependence, 1).setDynamic(true));
+		geometry.addAttribute('vertexData', new THREE.BufferAttribute(vertexData, 4).setDynamic(true));
 
 		const mesh = new THREE.Mesh(geometry, this.material);
 		mesh.frustumCulled = false;
@@ -217,25 +282,12 @@ AFRAME.registerComponent('trail', {
 	},
 
 	createMaterial: function () {
-		const vertexShader = `
-      varying vec2 uv0;
-      varying float td;
-      
-      attribute float timeDependence;
-      
-      void main() {
-        uv0 = uv;
-        td = timeDependence;
-        vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
-        gl_Position = projectionMatrix * modelViewPosition;
-      }`;
-
 		return new THREE.ShaderMaterial({
 			side: THREE.DoubleSide,
 			transparent: true,
 			depthWrite: false,
 			blending: THREE.AdditiveBlending,
-			vertexShader: vertexShader,
+			vertexShader: this.trailType.vertexShader,
 			fragmentShader: this.trailType.fragmentShader,
 			uniforms: {
 				bladeColor: {value: {x: 0, y: 0, z: 0, w: 0}},
@@ -328,7 +380,7 @@ AFRAME.registerComponent('trail', {
 			this.hotUpdateLifetime(this.data.lifetime / song.speed);
 		}
 
-		if (!this.addNode(this.createNewNode())) return;
+		if (!this.addNewNode()) return;
 		this.updateMesh(this.calculateRowNodes());
 	},
 
@@ -344,110 +396,76 @@ AFRAME.registerComponent('trail', {
 	},
 
 	updateMesh: function (rowNodes) {
-		const vertices = this.geometry.attributes.position.array;
-		const tdArray = this.geometry.attributes.timeDependence.array;
+		const positionsArray = this.geometry.attributes.position.array;
+		const dataArray = this.geometry.attributes.vertexData.array;
 
-		const horizontalRatioPerStep = 1 / this.horizontalResolution;
+		let setVertexData = function(positionsOffset, dataOffset, quadVertexIndex, node) {
+			positionsArray[positionsOffset + quadVertexIndex * 3] = node.position.x;
+			positionsArray[positionsOffset + quadVertexIndex * 3 + 1] = node.position.y;
+			positionsArray[positionsOffset + quadVertexIndex * 3 + 2] = node.position.z;
+			dataArray[dataOffset + quadVertexIndex * 4] = node.forward.x;
+			dataArray[dataOffset + quadVertexIndex * 4 + 1] = node.forward.y;
+			dataArray[dataOffset + quadVertexIndex * 4 + 2] = node.forward.z;
+			dataArray[dataOffset + quadVertexIndex * 4 + 3] = node.timeDependence;
+		}
 
 		for (let rowIndex = 0; rowIndex < this.rowsCount - 1; rowIndex++) {
 			const currentNode = rowNodes[rowIndex];
 			const nextNode = rowNodes[rowIndex + 1];
 
-			let currentHorizontalRatio = 0;
-			for (let columnIndex = 0; columnIndex < this.columnsCount - 1; columnIndex++, currentHorizontalRatio += horizontalRatioPerStep) {
-				const nextHorizontalRatio = currentHorizontalRatio + horizontalRatioPerStep;
+			for (let columnIndex = 0; columnIndex < this.columnsCount - 1; columnIndex++) {
+				const quadIndex = rowIndex * this.horizontalResolution + columnIndex;
+				const positionsOffset = quadIndex * 6 * 3;
+				const dataOffset = quadIndex * 6 * 4;
 
-				const topLeftVertex = this.lerpNode(currentNode, currentHorizontalRatio);
-				const topRightVertex = this.lerpNode(currentNode, nextHorizontalRatio);
-				const bottomLeftVertex = this.lerpNode(nextNode, currentHorizontalRatio);
-				const bottomRightVertex = this.lerpNode(nextNode, nextHorizontalRatio);
+				//   Quad:
+				//   V0---V1   <-- Current Node
+				//   |   / |
+				//   |T0/T1|
+				//   | /   |
+				//   V2---V3   <-- Next Node
 
-				const tdIndexOffset = (rowIndex * this.horizontalResolution + columnIndex) * 6;
-				const vertexIndexOffset = tdIndexOffset * 3;
+				//<------ T0 - V0 ------>
+				setVertexData(positionsOffset, dataOffset, 0, currentNode)
+				//<------ T0 - V2 ------>
+				setVertexData(positionsOffset, dataOffset, 1, nextNode)
+				//<------ T0 - V1 ------>
+				setVertexData(positionsOffset, dataOffset, 2, currentNode)
 
-				tdArray[tdIndexOffset] = currentNode.timeDependence;
-				vertices[vertexIndexOffset] = topRightVertex.x;
-				vertices[vertexIndexOffset + 1] = topRightVertex.y;
-				vertices[vertexIndexOffset + 2] = topRightVertex.z;
-
-				tdArray[tdIndexOffset + 1] = nextNode.timeDependence;
-				vertices[vertexIndexOffset + 3] = bottomLeftVertex.x;
-				vertices[vertexIndexOffset + 4] = bottomLeftVertex.y;
-				vertices[vertexIndexOffset + 5] = bottomLeftVertex.z;
-
-				tdArray[tdIndexOffset + 2] = currentNode.timeDependence;
-				vertices[vertexIndexOffset + 6] = topLeftVertex.x;
-				vertices[vertexIndexOffset + 7] = topLeftVertex.y;
-				vertices[vertexIndexOffset + 8] = topLeftVertex.z;
-
-				tdArray[tdIndexOffset + 3] = currentNode.timeDependence;
-				vertices[vertexIndexOffset + 9] = topRightVertex.x;
-				vertices[vertexIndexOffset + 10] = topRightVertex.y;
-				vertices[vertexIndexOffset + 11] = topRightVertex.z;
-
-				tdArray[tdIndexOffset + 4] = nextNode.timeDependence;
-				vertices[vertexIndexOffset + 12] = bottomRightVertex.x;
-				vertices[vertexIndexOffset + 13] = bottomRightVertex.y;
-				vertices[vertexIndexOffset + 14] = bottomRightVertex.z;
-
-				tdArray[tdIndexOffset + 5] = nextNode.timeDependence;
-				vertices[vertexIndexOffset + 15] = bottomLeftVertex.x;
-				vertices[vertexIndexOffset + 16] = bottomLeftVertex.y;
-				vertices[vertexIndexOffset + 17] = bottomLeftVertex.z;
+				//<------ T1 - V1 ------>
+				setVertexData(positionsOffset, dataOffset, 3, currentNode)
+				//<------ T1 - V3 ------>
+				setVertexData(positionsOffset, dataOffset, 4, nextNode)
+				//<------ T1 - V2 ------>
+				setVertexData(positionsOffset, dataOffset, 5, nextNode)
 			}
 		}
 
 		this.geometry.attributes.position.needsUpdate = true;
-		this.geometry.attributes.timeDependence.needsUpdate = true;
+		this.geometry.attributes.vertexData.needsUpdate = true;
 	},
 
-	createNewNode: function () {
+	addNewNode: function () {
 		const saberObject = this.saberEl.object3D;
-
-		let newNode;
-
-		switch (this.trailType) {
-			case TRAILS.bright:
-			case TRAILS.dim:
-			case TRAILS.timeDependence:
-				newNode = {
-					from: new THREE.Vector3(0, -0.5 + this.trailType.width, 0),
-					to: new THREE.Vector3(0, -0.5, 0),
-					timeDependence: 0.0,
-				};
-				break;
-			case TRAILS.slim:
-				let zOffset = this.data.hand === 'left' ? this.trailType.zDepth : -this.trailType.zDepth;
-				newNode = {
-					from: new THREE.Vector3(0, -0.5 + zOffset, 0),
-					to: new THREE.Vector3(0, -0.5 - zOffset, 0),
-					timeDependence: 0.0,
-				};
-				break;
-		}
-
 		saberObject.parent.updateMatrixWorld();
-		saberObject.localToWorld(newNode.from);
-		saberObject.localToWorld(newNode.to);
+		const hiltPosition = new THREE.Vector3(0, 0.5, 0);
+		const tipPosition = new THREE.Vector3(0, -0.5, 0);
+		saberObject.localToWorld(hiltPosition);
+		saberObject.localToWorld(tipPosition);
 
-		if (this.trailType === TRAILS.slim) {
-			newNode.from.x -= this.trailType.halfWidth;
-			newNode.to.x += this.trailType.halfWidth;
-		}
-
-		return newNode;
-	},
-
-	addNode: function (newNode) {
-		const newTipPosition = newNode.from;
 		let totalDifference = 0.0;
-		totalDifference += Math.abs(this.previousTipPosition.x - newTipPosition.x);
-		totalDifference += Math.abs(this.previousTipPosition.y - newTipPosition.y);
-		totalDifference += Math.abs(this.previousTipPosition.z - newTipPosition.z);
+		totalDifference += Math.abs(this.previousTipPosition.x - tipPosition.x);
+		totalDifference += Math.abs(this.previousTipPosition.y - tipPosition.y);
+		totalDifference += Math.abs(this.previousTipPosition.z - tipPosition.z);
 		if (totalDifference < 0.0001) return false;
-		const cutPlane = this.cutPlane.setFromCoplanarPoints(this.previousTipPosition, newNode.from, newNode.to);
-		newNode.timeDependence = Math.abs(cutPlane.normal.z);
-		this.previousTipPosition = newTipPosition;
+		const cutPlane = this.cutPlane.setFromCoplanarPoints(this.previousTipPosition, tipPosition, hiltPosition);
+		this.previousTipPosition.copy(tipPosition);
+
+		const newNode = {
+			position: hiltPosition,
+			forward: tipPosition.subVectors(tipPosition, hiltPosition),
+			timeDependence: Math.abs(cutPlane.normal.z),
+		};
 
 		if (this.lastAddedNode) {
 			const linearFrom = this.divideNode(this.sumNodes(this.lastAddedNode, newNode), 2);
@@ -503,17 +521,14 @@ AFRAME.registerComponent('trail', {
 		const linearAmplitude = linearWeight / totalWeight;
 		const splinesAmplitude = splinesWeight / totalWeight;
 
-		let i;
-		let t = 0.0;
-		let localT;
-		const tPerStep = 1 / this.verticalResolution;
+		for (let i = 0; i < this.rowsCount; i++) {
+			const t = i / (this.verticalResolution);
 
-		for (i = 0; i < this.rowsCount; i++, t += tPerStep) {
 			if (t <= linearAmplitude) {
-				localT = 1 - t / linearAmplitude;
+				const localT = 1 - t / linearAmplitude;
 				rowNodesArray.push(this.getPointLinear(localT));
 			} else {
-				localT = 1 - (t - linearAmplitude) / splinesAmplitude;
+				const localT = 1 - (t - linearAmplitude) / splinesAmplitude;
 				rowNodesArray.push(this.getPointSplines(localT));
 			}
 		}
@@ -523,7 +538,9 @@ AFRAME.registerComponent('trail', {
 
 	getPointLinear: function (localT) {
 		const linearSegment = this.linearSegment;
-		return this.sumNodes(linearSegment.from, this.multiplyNode(linearSegment.amplitude, localT));
+		const result = this.sumNodes(linearSegment.from, this.multiplyNode(linearSegment.amplitude, localT));
+		result.forward.normalize();
+		return result;
 	},
 
 	getPointSplines: function (localT) {
@@ -532,7 +549,9 @@ AFRAME.registerComponent('trail', {
 		if (splineIndex < 0) splineIndex = 0;
 		if (splineIndex >= this.curvedSegmentsArray.length) splineIndex = this.curvedSegmentsArray.length - 1;
 		const splineT = (localT - tPerSpline * splineIndex) / tPerSpline;
-		return this.evaluateCurvedSegment(this.curvedSegmentsArray[splineIndex], splineT);
+		const result = this.evaluateCurvedSegment(this.curvedSegmentsArray[splineIndex], splineT);
+		result.forward.normalize();
+		return result;
 	},
 
 	evaluateCurvedSegment: function (segment, t) {
@@ -542,38 +561,34 @@ AFRAME.registerComponent('trail', {
 		return this.sumNodes(p10, this.multiplyNode(v10, t));
 	},
 
-	lerpNode: function (node, t) {
-		return new THREE.Vector3().lerpVectors(node.from, node.to, t);
-	},
-
 	sumNodes: function (nodeA, nodeB) {
 		return {
-			from: new THREE.Vector3().addVectors(nodeA.from, nodeB.from),
-			to: new THREE.Vector3().addVectors(nodeA.to, nodeB.to),
+			position: new THREE.Vector3().addVectors(nodeA.position, nodeB.position),
+			forward: new THREE.Vector3().addVectors(nodeA.forward, nodeB.forward),
 			timeDependence: nodeA.timeDependence + nodeB.timeDependence,
 		};
 	},
 
 	subtractNodes: function (nodeA, nodeB) {
 		return {
-			from: new THREE.Vector3().subVectors(nodeA.from, nodeB.from),
-			to: new THREE.Vector3().subVectors(nodeA.to, nodeB.to),
+			position: new THREE.Vector3().subVectors(nodeA.position, nodeB.position),
+			forward: new THREE.Vector3().subVectors(nodeA.forward, nodeB.forward),
 			timeDependence: nodeA.timeDependence - nodeB.timeDependence,
 		};
 	},
 
 	multiplyNode: function (node, number) {
 		return {
-			from: node.from.clone().multiplyScalar(number),
-			to: node.to.clone().multiplyScalar(number),
+			position: node.position.clone().multiplyScalar(number),
+			forward: node.forward.clone().multiplyScalar(number),
 			timeDependence: node.timeDependence * number,
 		};
 	},
 
 	divideNode: function (node, number) {
 		return {
-			from: node.from.clone().divideScalar(number),
-			to: node.to.clone().divideScalar(number),
+			position: node.position.clone().divideScalar(number),
+			forward: node.forward.clone().divideScalar(number),
 			timeDependence: node.timeDependence / number,
 		};
 	},

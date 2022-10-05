@@ -116,12 +116,6 @@ AFRAME.registerComponent('replay-player', {
 		lrotation = euler.setFromQuaternion(lquat);
 		leftSaber.rotation.set(lrotation.x, lrotation.y + Math.PI, -lrotation.z);
 
-		if (!!offsetInput) {
-			leftSaber.translateZ(-offsetInput.value);
-			rightSaber.translateZ(-offsetInput.value);
-			document.getElementById('saberOffsetLabel').innerHTML = offsetInput.value;
-		}
-
 		q1.set(frame.r.r.w, frame.r.r.z, frame.r.r.y, frame.r.r.x);
 		q2.set(nextFrame.r.r.w, nextFrame.r.r.z, nextFrame.r.r.y, nextFrame.r.r.x);
 		let rrotation = euler.setFromQuaternion(q1);
@@ -130,6 +124,12 @@ AFRAME.registerComponent('replay-player', {
 		const rquat = q1.slerp(q2, slerpValue);
 		rrotation = euler.setFromQuaternion(rquat);
 		rightSaber.rotation.set(rrotation.x, rrotation.y + Math.PI, -rrotation.z);
+
+		if (!!offsetInput) {
+			leftSaber.translateZ(-offsetInput.value);
+			rightSaber.translateZ(-offsetInput.value);
+			document.getElementById('saberOffsetLabel').innerHTML = offsetInput.value;
+		}
 
 		v1.set(frame.h.p.x, frame.h.p.y, frame.h.p.z);
 		v2.set(nextFrame.h.p.x, nextFrame.h.p.y, nextFrame.h.p.z);

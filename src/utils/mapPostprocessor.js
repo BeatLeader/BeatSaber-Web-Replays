@@ -110,6 +110,16 @@ function upgrade(map) {
 	return map;
 }
 
+function processNoodle(map) {
+	[...map._notes].forEach(note => {
+		if (note._customData && note._customData._cutDirection !== undefined) {
+			note._cutDirection = note._cutDirection !== 8 && note._customData && note._customData._cutDirection !== undefined ? 1 : note._cutDirection;
+		}
+	} )
+	
+	return map;
+}
+
 function processNotesByColorType(notesWithTheSameColorTypeList) {
 	if (notesWithTheSameColorTypeList.length != 2) return;
 	const theSameColorType1 = notesWithTheSameColorTypeList[0];
@@ -319,3 +329,4 @@ function postprocess(map, info) {
 }
 
 module.exports.postprocess = postprocess;
+module.exports.processNoodle = processNoodle;

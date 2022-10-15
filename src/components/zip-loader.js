@@ -1,7 +1,7 @@
 const utils = require('../utils');
 import JSZip from 'jszip';
 import {Mirror_Inverse, Mirror_Horizontal, Mirror_Vertical} from '../chirality-support';
-import {postprocess} from '../utils/mapPostprocessor';
+import {postprocess, processNoodle} from '../utils/mapPostprocessor';
 
 AFRAME.registerComponent('zip-loader', {
 	schema: {
@@ -101,6 +101,7 @@ AFRAME.registerComponent('zip-loader', {
 						diff._customData._requirements.indexOf('Noodle Extensions') !== -1)
 				) {
 					event.mappingExtensions = {isEnabled: true};
+					map = processNoodle(map);
 				}
 			}
 

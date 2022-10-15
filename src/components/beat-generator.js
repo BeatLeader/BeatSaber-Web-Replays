@@ -74,6 +74,9 @@ AFRAME.registerComponent('beat-generator', {
 			} else {
 				this.mappingExtensions = null;
 			}
+
+			this.noodleExtensions = this.customData._requirements.includes("Noodle Extensions");
+
 		});
 		this.el.addEventListener('songprocessingfinish', evt => {
 			this.beatsTime = 0;
@@ -382,6 +385,16 @@ AFRAME.registerComponent('beat-generator', {
 			}
 			beatObj.horizontalPosition = note._lineIndex;
 			beatObj.verticalPosition = note._lineLayer;
+			
+			if (this.noodleExtensions && note._customData) {
+				if (note._customData._position) {
+					beatObj.horizontalPosition = note._customData._position[0] + 4 / 2
+					beatObj.verticalPosition = note._customData._position[1];
+				}
+				if (note._customData._cutDirection || note._customData._cutDirection === 0) {
+					beatObj.rotationOffset = note._customData._cutDirection;
+				}
+			}
 
 			beatEl.setAttribute('beat', beatObj);
 			beatEl.components.beat.onGenerate(this.mappingExtensions);

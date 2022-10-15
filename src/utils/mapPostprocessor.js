@@ -108,6 +108,12 @@ function upgrade(map) {
 		map['_burstSliders'] = [];
 	}
 
+	[...map._notes].forEach(note => {
+		if (note._customData && note._customData._cutDirection) {
+			note._cutDirection = note._cutDirection !== 8 && note._customData && note._customData._cutDirection !== undefined ? 1 : note._cutDirection;
+		}
+	} )
+	
 	return map;
 }
 

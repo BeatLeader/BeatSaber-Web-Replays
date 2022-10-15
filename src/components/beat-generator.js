@@ -75,7 +75,9 @@ AFRAME.registerComponent('beat-generator', {
 				this.mappingExtensions = null;
 			}
 
+			if (this.customData && this.customData._requirements) {
 			this.noodleExtensions = this.customData._requirements.includes("Noodle Extensions");
+			}
 
 		});
 		this.el.addEventListener('songprocessingfinish', evt => {

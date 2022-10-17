@@ -248,7 +248,7 @@ AFRAME.registerComponent('beat', {
 	tock: function (time, timeDelta) {
 		if (this.data.loadingCube) {
 			if (this.data.animating) {
-				if (!this.signEl.object3D.visible && this.signEl.getObject3D('mesh').material) {
+				if (!this.signEl.object3D.visible && this.signEl.getObject3D('mesh') && this.signEl.getObject3D('mesh').material) {
 					this.signEl.object3D.visible = true;
 				}
 				let object = this.el.object3D;

@@ -28,6 +28,14 @@ function Mirror_Horizontal(beatmap, numberOfLines, flip_lines, remove_walls) {
 				Mirror_Horizontal_Slider(note.sliderhead, numberOfLines, flip_lines);
 			}
 		}
+
+		if (note._customData && note._customData._position) {
+			note._customData._position[0] = numberOfLines - note._customData._position[0] - 5;
+		}
+
+		if (note._customData && note._customData._cutDirection) {
+			note._customData._cutDirection = -1 * note._customData._cutDirection;
+		}
 	});
 
 	beatmap._sliders.forEach(note => {

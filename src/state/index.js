@@ -137,6 +137,7 @@ AFRAME.registerState({
 		},
 
 		challengeloadstart: (state, payload) => {
+			state.challenge.hasLoadError = false;
 			state.challenge.isLoading = true;
 		},
 
@@ -162,6 +163,10 @@ AFRAME.registerState({
 
 			state.challenge.songSubName = payload.info._songSubName || payload.info._songAuthorName;
 			state.challenge.songSubNameShort = truncate(state.challenge.songSubName, 21);
+
+			if (!state.challenge.image) {
+				state.challenge.image = payload.image;
+			}
 
 			document.title = `Replay | ${state.player.name} | ${payload.info._songName}`;
 			state.challenge.isLoading = false;
@@ -198,7 +203,7 @@ AFRAME.registerState({
 		challengeloaderror: (state, payload) => {
 			state.challenge.hasLoadError = true;
 			state.challenge.isLoading = false;
-			state.challenge.loadErrorText = `Sorry, song ${payload.hash} was not found.`;
+			state.challenge.loadErrorText = `Map was not found. Drop or click to select zip localy`;
 		},
 
 		controllerconnected: (state, payload) => {

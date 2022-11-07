@@ -1,4 +1,5 @@
 const utils = require('../utils');
+const dragDrop = require('drag-drop');
 import JSZip from 'jszip';
 import {Mirror_Inverse, Mirror_Horizontal, Mirror_Vertical} from '../chirality-support';
 import {postprocess, processNoodle} from '../utils/mapPostprocessor';
@@ -7,6 +8,7 @@ AFRAME.registerComponent('zip-loader', {
 	schema: {
 		id: {default: AFRAME.utils.getUrlParameter('id')},
 		hash: {default: AFRAME.utils.getUrlParameter('hash')},
+		mapLink: {default: AFRAME.utils.getUrlParameter('mapLink')},
 		difficulty: {default: AFRAME.utils.getUrlParameter('difficulty') || 'ExpertPlus'},
 		mode: {default: AFRAME.utils.getUrlParameter('mode') || 'Standard'},
 	},
@@ -21,7 +23,11 @@ AFRAME.registerComponent('zip-loader', {
 				this.leaderboardId = e.detail.leaderboardId;
 				this.data.difficulty = this.difficultyFromId(e.detail.difficulty);
 				this.data.mode = e.detail.mode;
-				this.fetchData(e.detail.hash.replace('custom_level_', ''), true);
+				if (this.data.mapLink) {
+					this.fetchZip(this.data.mapLink.replace('https://cdn.discordapp.com/', '/cors/discord-cdn/'));
+				} else {
+					this.fetchData(e.detail.hash.replace('custom_level_', ''), true);
+				}
 			}
 		};
 
@@ -122,7 +128,7 @@ AFRAME.registerComponent('zip-loader', {
 		event.mode = this.data.mode;
 
 		let extractAsBlobUrl = async (name, type) => {
-			return URL.createObjectURL(new Blob([await files[name].async('arraybuffer')], {type: type}));
+			return URL.createObjectURL(new Blob([await files[name].async('arraybuffer')], {type}));
 		};
 
 		let keys = Object.keys(files);
@@ -137,6 +143,14 @@ AFRAME.registerComponent('zip-loader', {
 				}
 				if (filename.endsWith('mp3')) {
 					event.audio = await extractAsBlobUrl(filename, 'audio/mp3');
+				}
+			}
+			if (!event.image) {
+				if (filename.endsWith('jpg') || filename.endsWith('jpeg')) {
+					event.image = await extractAsBlobUrl(filename, 'image/jpeg');
+				}
+				if (filename.endsWith('png')) {
+					event.image = await extractAsBlobUrl(filename, 'image/png');
 				}
 			}
 		}
@@ -157,6 +171,43 @@ AFRAME.registerComponent('zip-loader', {
 		});
 	},
 
+	postchallengeloaderror: function (hash) {
+		const gestureListener = e => {
+			if (this.fetching) {
+				return;
+			}
+			var input = document.createElement('input');
+			input.type = 'file';
+			input.accept = '.zip';
+			input.webkitdirectory = '';
+			input.directory = '';
+
+			input.onchange = e => {
+				this.el.removeEventListener('usergesturereceive', gestureListener);
+				this.cleanup && this.cleanup();
+				this.el.emit('challengeloadstart', this.data.id, false);
+				JSZip.loadAsync(e.target.files[0]).then(zip => {
+					this.fetchedZip = this.data.id;
+					this.processInfo(zip.files);
+				});
+			};
+
+			input.click();
+		};
+		this.el.sceneEl.addEventListener('usergesturereceive', gestureListener);
+		this.cleanup = dragDrop('#body', files => {
+			this.el.removeEventListener('usergesturereceive', gestureListener);
+			this.cleanup && this.cleanup();
+			this.el.emit('challengeloadstart', this.data.id, false);
+			JSZip.loadAsync(files[0]).then(zip => {
+				this.fetchedZip = this.data.id;
+				this.processInfo(zip.files);
+			});
+		});
+
+		this.el.emit('challengeloaderror', {hash});
+	},
+
 	/**
 	 * Read API first to get hash and URLs.
 	 */
@@ -173,6 +224,7 @@ AFRAME.registerComponent('zip-loader', {
 						data.image = utils.beatsaverCdnCors(cover);
 						data.hash = hash;
 						data.leaderboardId = this.leaderboardId;
+						this.data.hash = hash;
 
 						this.el.sceneEl.emit('songFetched', data);
 
@@ -185,7 +237,7 @@ AFRAME.registerComponent('zip-loader', {
 						callback(desiredHash, currentVersion.coverURL, urls[0], urls[1]);
 					}
 				} else {
-					this.el.emit('challengeloaderror', {hash: id});
+					this.postchallengeloaderror(id);
 				}
 			});
 		});
@@ -220,7 +272,7 @@ AFRAME.registerComponent('zip-loader', {
 			if (fallbackUrl) {
 				this.fetchZip(fallbackUrl);
 			} else {
-				this.el.emit('challengeloaderror', {hash: this.data.hash});
+				this.postchallengeloaderror(this.data.hash);
 				this.isFetching = '';
 			}
 		};

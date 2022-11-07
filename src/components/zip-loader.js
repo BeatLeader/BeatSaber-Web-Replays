@@ -183,13 +183,15 @@ AFRAME.registerComponent('zip-loader', {
 			input.directory = '';
 
 			input.onchange = e => {
-				this.el.removeEventListener('usergesturereceive', gestureListener);
-				this.cleanup && this.cleanup();
-				this.el.emit('challengeloadstart', this.data.id, false);
-				JSZip.loadAsync(e.target.files[0]).then(zip => {
-					this.fetchedZip = this.data.id;
-					this.processInfo(zip.files);
-				});
+				if (e.target.files[0].name.includes('.zip')) {
+					this.el.removeEventListener('usergesturereceive', gestureListener);
+					this.cleanup && this.cleanup();
+					this.el.emit('challengeloadstart', this.data.id, false);
+					JSZip.loadAsync(e.target.files[0]).then(zip => {
+						this.fetchedZip = this.data.id;
+						this.processInfo(zip.files);
+					});
+				}
 			};
 
 			input.click();

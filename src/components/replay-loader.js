@@ -28,18 +28,20 @@ AFRAME.registerComponent('replay-loader', {
 			captureThis.downloadReplay(null, this.data.scoreId);
 		} else if (!this.data.playerID.length) {
 			this.cleanup = dragDrop('#body', files => {
-				this.fetchByFile(files[0]);
+				if (files[0].name.includes('.bsor') || files[0].name.includes('.dat')) {
+					this.fetchByFile(files[0]);
+				}
 			});
 			this.el.sceneEl.addEventListener('usergesturereceive', e => {
 				if (this.replay || this.fetching) {
 					return;
 				}
+				this.fetching = true;
 				var input = document.createElement('input');
 				input.type = 'file';
 				input.accept = '.bsor, .bsortemp, .dat';
 
 				input.onchange = e => {
-					this.fetching = true;
 					this.fetchByFile(e.target.files[0]);
 				};
 

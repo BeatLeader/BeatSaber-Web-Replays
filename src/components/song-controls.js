@@ -82,7 +82,7 @@ AFRAME.registerComponent('song-controls', {
 		});
 
 		this.songProgress = document.getElementById('songProgress');
-		this.songSpeedPercent = document.getElementById('songSpeedPercent');
+		this.songSpeedPercent = document.querySelectorAll('.songSpeedPercent');
 		this.loadedUsersCount = 0;
 	},
 

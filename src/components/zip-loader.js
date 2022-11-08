@@ -146,13 +146,19 @@ AFRAME.registerComponent('zip-loader', {
 
 	processInfo: function (files) {
 		let captureSelf = this;
+		var processed = false;
 		Object.keys(files).forEach(filename => {
 			if (filename.toLowerCase().endsWith('info.dat')) {
+				processed = true;
 				files[filename].async('string').then(function (fileData) {
 					captureSelf.processFiles(files, jsonParseClean(fileData));
 				});
 			}
 		});
+
+		if (!processed) {
+			this.postchallengeloaderror(this.data.hash);
+		}
 	},
 
 	/**

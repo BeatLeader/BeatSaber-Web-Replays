@@ -213,9 +213,9 @@ AFRAME.registerComponent('beat', {
 			newPosition = data.anticipationPosition;
 			timeOffset += data.warmupTime;
 			newPosition += -timeOffset * data.speed;
-			if (!this.settings.settings.noEffects && Math.abs(timeOffset) < 1) {
-				this.beams.newBeam(data.color, data.anticipationPosition);
-			}
+			// if (!this.settings.settings.noEffects && Math.abs(timeOffset) < 1) {
+			// 	this.beams.newBeam(data.color, data.anticipationPosition);
+			// }
 		} else {
 			newPosition = data.anticipationPosition + data.warmupPosition + data.warmupSpeed * -timeOffset;
 		}

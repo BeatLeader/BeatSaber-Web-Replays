@@ -76,9 +76,8 @@ AFRAME.registerComponent('beat-generator', {
 			}
 
 			if (this.customData && this.customData._requirements) {
-			this.noodleExtensions = this.customData._requirements.includes("Noodle Extensions");
+				this.noodleExtensions = this.customData._requirements.includes('Noodle Extensions');
 			}
-
 		});
 		this.el.addEventListener('songprocessingfinish', evt => {
 			this.beatsTime = 0;
@@ -387,10 +386,10 @@ AFRAME.registerComponent('beat-generator', {
 			}
 			beatObj.horizontalPosition = note._lineIndex;
 			beatObj.verticalPosition = note._lineLayer;
-			
+
 			if (this.noodleExtensions && note._customData) {
 				if (note._customData._position) {
-					beatObj.horizontalPosition = note._customData._position[0] + 4 / 2
+					beatObj.horizontalPosition = note._customData._position[0] + 4 / 2;
 					beatObj.verticalPosition = note._customData._position[1];
 				}
 				if (note._customData._cutDirection || note._customData._cutDirection === 0) {
@@ -476,8 +475,9 @@ AFRAME.registerComponent('beat-generator', {
 				if (wall._lineIndex <= -1000 || wall._lineIndex >= 1000) {
 					wallObj.horizontalPosition = wall._lineIndex < 0 ? wall._lineIndex / 1000 + 1 : wall._lineIndex / 1000 - 1;
 				}
-
-				wallObj.width = ((wall._width - 1000) / 1000) * WALL_THICKNESS;
+				if (wall._width >= 1000) {
+					wallObj.width = ((wall._width - 1000) / 1000) * WALL_THICKNESS;
+				}
 			}
 
 			el.setAttribute('wall', wallObj);

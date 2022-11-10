@@ -61,10 +61,29 @@ AFRAME.registerComponent('saber-controls', {
 
 		this.el.sceneEl.addEventListener('colorChanged', e => {
 			if (e.detail.index == this.data.index && e.detail.color) {
+				if (e.detail.opacity) {
+					this.el.components.trail.data.opacity = e.detail.opacity * 3;
+				} else {
+					this.el.components.trail.data.opacity = 1;
+				}
 				this.el.components.trail.data.color = e.detail.color;
 				this.el.components.trail.updateColor();
 				this.el.querySelector('.saberHandle').setAttribute('material', 'color', e.detail.color);
 				this.el.querySelector('.saberglow').setAttribute('material', 'color', e.detail.color);
+
+				if (e.detail.opacity) {
+					this.el.querySelector('.highlightTop').setAttribute('material', 'opacity', e.detail.opacity);
+					this.el.querySelector('.highlightBottom').setAttribute('material', 'opacity', e.detail.opacity);
+					this.el.querySelector('.blade').setAttribute('material', 'opacity', e.detail.opacity);
+					this.el.querySelector('.saberHandle').setAttribute('material', 'opacity', e.detail.opacity);
+					this.el.querySelector('.saberglow').setAttribute('material', 'opacity', e.detail.opacity * 0.01);
+				} else {
+					this.el.querySelector('.highlightTop').setAttribute('material', 'opacity', 1);
+					this.el.querySelector('.highlightBottom').setAttribute('material', 'opacity', 1);
+					this.el.querySelector('.blade').setAttribute('material', 'opacity', 1);
+					this.el.querySelector('.saberHandle').setAttribute('material', 'opacity', 1);
+					this.el.querySelector('.saberglow').setAttribute('material', 'opacity', 0.08);
+				}
 			}
 		});
 

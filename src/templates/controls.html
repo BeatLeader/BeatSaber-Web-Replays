@@ -56,7 +56,6 @@
           <g><path d="M8 8V3H6v3H2v2h6zM12 8h6V6h-4V3h-2v5zM12 17v-5h6v2h-4v3h-2zM8 12H2v2h4v3h2v-5z"></path></g>
       </svg>
     </div>
-    <button class="povswitch mobileControl" onmousedown="event.preventDefault();" title="First person view (shift+f)"></button>
   </div>
 
   <p id="skipIntro" style="display: none;">Skip intro</p>
@@ -231,6 +230,14 @@
         <label class="toggleButtonLabel"><td><nobr>Color pickers</nobr></td></label>
       </div>
 
+      <div class="toggleButton" title="Show POV buttons to view as for players">
+        <label class="switch">
+          <input type="checkbox" id="showPovs">
+          <span class="slider round"></span>
+        </label>
+        <label class="toggleButtonLabel"><td><nobr>POV buttons</nobr></td></label>
+      </div>
+
       <div class="toggleButton" title="Disable parts of notes flying off.">
         <label class="switch">
           <input type="checkbox" id="reducedDebris">
@@ -267,28 +274,17 @@
         </label>
       </div>
 
-      <div class="toggleButton" title="Show fps counter for viewer and replay.">
+      <div class="toggleButton" title="Show score and fps.">
         <label class="switch">
           <input type="checkbox" id="showFps">
           <span class="slider round"></span>
         </label>
         <label class="toggleButtonLabel">
           <td>
-            <nobr>Show fps</nobr>
+            <nobr>Show HUD</nobr>
           </td>
         </label>
       </div>
-
-      <div class="toggleButton" title="Left saber color, will show for everyone.">
-        <input type="color" id="leftSaberColor" value="#ff0000">
-        <label class="toggleButtonLabel"><td><nobr>Left</nobr></td></label>
-      </div>
-
-      <div class="toggleButton" title="Different note score color based on score value.">
-        <input type="color" id="rightSaberColor" value="#335aff">
-        <label class="toggleButtonLabel"><td><nobr>Right</nobr></td></label>
-      </div>
-
     </div>
 
     <div class="sliders" style="display: flex; flex-direction: column; justify-content: space-between;">
@@ -419,8 +415,6 @@
 </a>
 
 <div id="usersContainer" style="position: absolute; display: flex; align-items: center; height: 100%; left: 5px; bottom: -60px;"></div>
-
-<button class="povswitch" onmousedown="event.preventDefault();" title="First person view (shift+f)"></button>
 
 <a id="orthographicBackFullscreen" class="orthographicFullscreen" style="right: 23%; bottom: 0.5%; display: none;" title="Show fullscreen this camera">
   <svg class="enterFullscreen" width="100%" height="100%" version="1.1" viewBox="0 0 20 20" x="0px" y="0px">

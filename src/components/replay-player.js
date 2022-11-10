@@ -39,6 +39,11 @@ AFRAME.registerComponent('replay-player', {
 			if (e.detail.color) {
 				this.headsets[e.detail.index].setAttribute('material', 'color', e.detail.color);
 			}
+			if (e.detail.opacity) {
+				this.headsets[e.detail.index].setAttribute('material', 'opacity', e.detail.opacity);
+			} else {
+				this.headsets[e.detail.index].setAttribute('material', 'opacity', 0.45);
+			}
 		});
 	},
 
@@ -98,6 +103,7 @@ AFRAME.registerComponent('replay-player', {
 		const leftHitboxSaber = this.firstSaberControl.hitboxSaber;
 		const rightHitboxSaber = this.secondSaberControl.hitboxSaber;
 		const headset = this.headsets[index].object3D;
+		const povReplayIndex = this.replayDecoder.povReplayIndex;
 
 		const v1 = this.v1;
 		const v2 = this.v2;
@@ -148,7 +154,7 @@ AFRAME.registerComponent('replay-player', {
 		var hrotation = euler.setFromQuaternion(hquat);
 		headset.rotation.set(hrotation.x, hrotation.y + Math.PI, -hrotation.z + Math.PI);
 
-		if (index == 0) {
+		if (index == povReplayIndex) {
 			const povCamera = this.povCameraRig.object3D;
 			this.v3.copy(headset.position);
 			this.v3.z += parseFloat(this.settings.settings.cameraZPosition);
@@ -182,6 +188,7 @@ AFRAME.registerComponent('replay-player', {
 		const rightHitboxSaber = this.secondSaberControl.hitboxSaber;
 		const headset = this.headsets[index].object3D;
 		const povCamera = this.povCameraRig.object3D;
+		const povReplayIndex = this.replayDecoder.povReplayIndex;
 
 		const v1 = this.v1;
 		const v2 = this.v2;
@@ -232,7 +239,7 @@ AFRAME.registerComponent('replay-player', {
 		var hrotation = euler.setFromQuaternion(hquat);
 		headset.rotation.set(-hrotation.x, hrotation.y + Math.PI, -hrotation.z + Math.PI);
 
-		if (index == 0) {
+		if (index == povReplayIndex) {
 			this.v3.copy(headset.position);
 			this.v3.z += parseFloat(this.settings.settings.cameraZPosition);
 			povCamera.position.copy(povCamera.position.lerp(this.v3, 5 * delta));

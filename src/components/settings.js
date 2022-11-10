@@ -17,6 +17,7 @@ AFRAME.registerComponent('settings', {
 			trailType: 'dim',
 			trailLength: 30,
 			colorPickers: false,
+			showPovs: true,
 			royaleEnabled: true,
 
 			// Camera

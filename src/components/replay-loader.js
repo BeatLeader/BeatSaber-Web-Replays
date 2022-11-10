@@ -23,6 +23,7 @@ AFRAME.registerComponent('replay-loader', {
 		this.replays = [];
 		this.users = [];
 		this.processedScores = 0;
+		this.povReplayIndex = 0;
 		this.headRotationOffset = null;
 	},
 

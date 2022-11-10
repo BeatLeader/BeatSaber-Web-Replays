@@ -7,7 +7,7 @@
 <a-entity
   id="scoreContainer"
   bind__score-texts="isSongLoading: isSongLoading"
-  bind__visible="(isPlaying || isPaused) && replaysCount == 1">
+  bind__visible="(isPlaying || isPaused) && settings.showFps">
 
   <a-entity id="scoreTextContainer" position="1.8 0.3 -4">
     <a-entity

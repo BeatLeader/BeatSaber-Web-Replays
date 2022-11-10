@@ -19,25 +19,6 @@ AFRAME.registerComponent('camera-mover', {
 	},
 
 	play: function () {
-		let powHandler = () => {
-			if (this.pov) {
-				this.povCamera.setAttribute('camera', 'active', false);
-				this.defaultCamera.setAttribute('camera', 'active', true);
-			} else {
-				this.defaultCamera.setAttribute('camera', 'active', false);
-				this.povCamera.setAttribute('camera', 'active', true);
-			}
-			this.pov = !this.pov;
-			this.updateSaveButtons();
-			this.el.sceneEl.emit('povchanged', {newPov: this.pov}, false);
-		};
-		document.querySelectorAll('.povswitch').forEach(element => {
-			element.addEventListener('click', e => {
-				e.preventDefault();
-				powHandler();
-			});
-		});
-
 		let toLeftHandler = () => {
 			this.defaultCamera.object3D.position.y = 1.75;
 			this.defaultCamera.object3D.position.x = -2.0;
@@ -80,7 +61,7 @@ AFRAME.registerComponent('camera-mover', {
 		document.addEventListener('keydown', e => {
 			if (e.keyCode === 70 && e.shiftKey) {
 				// f + Shift
-				powHandler();
+				this.togglePov(false);
 			}
 			if (e.keyCode === 81 && e.shiftKey) {
 				// q + Shift
@@ -126,6 +107,19 @@ AFRAME.registerComponent('camera-mover', {
 		} else {
 			this.defaultCamera.object3D.position.z = 2.0;
 		}
+	},
+
+	togglePov: function (outside = true) {
+		if (this.pov) {
+			this.povCamera.setAttribute('camera', 'active', false);
+			this.defaultCamera.setAttribute('camera', 'active', true);
+		} else {
+			this.defaultCamera.setAttribute('camera', 'active', false);
+			this.povCamera.setAttribute('camera', 'active', true);
+		}
+		this.pov = !this.pov;
+		this.updateSaveButtons();
+		this.el.sceneEl.emit('povchanged', {newPov: this.pov, outside}, false);
 	},
 
 	disablePovIfNeeded: function () {

@@ -33,6 +33,7 @@ AFRAME.registerComponent('song-controls', {
 		isSafari: {default: false},
 		disabledRoyale: {default: !disabledRoyale},
 		showColorInputs: {default: false},
+		showPovs: {default: true},
 	},
 
 	init: function () {
@@ -78,6 +79,28 @@ AFRAME.registerComponent('song-controls', {
 				this.showMisses(event.detail.notes, this.song.source.buffer, this);
 			} else {
 				this.notes = event.detail.notes;
+			}
+		});
+
+		this.el.sceneEl.addEventListener('povchanged', event => {
+			if (event.detail.outside) return;
+			if (event.detail.newPov) {
+				if (this.povUserIndex !== undefined) {
+					this.lastpovswitch.classList.toggle('selected');
+				} else {
+					this.povUserIndex = 0;
+
+					document.querySelectorAll('.povswitch').forEach(element => {
+						if (element.user.replay && element.user.replay.index == 0) {
+							element.classList.toggle('selected');
+							this.lastpovswitch = element;
+						}
+					});
+				}
+			} else {
+				if (this.povUserIndex !== undefined) {
+					this.lastpovswitch.classList.toggle('selected');
+				}
 			}
 		});
 
@@ -133,10 +156,25 @@ AFRAME.registerComponent('song-controls', {
 			this.updateDifficultyOptions();
 		}
 
+		var updateDivs = false;
 		if (oldData.showColorInputs != data.showColorInputs) {
 			const colorInputs = document.querySelectorAll('.colorInput');
 			colorInputs.forEach(element => {
 				element.style.display = data.showColorInputs ? 'block' : 'none';
+			});
+		}
+
+		if (oldData.showPovs != data.showPovs) {
+			const colorInputs = document.querySelectorAll('.povswitch');
+			colorInputs.forEach(element => {
+				element.style.display = data.showPovs ? 'block' : 'none';
+			});
+		}
+
+		if (updateDivs) {
+			const colorInputs = document.querySelectorAll('.colorpovswitchdiv');
+			colorInputs.forEach(element => {
+				element.style.display = data.showColorInputs || data.showColorInputs ? 'flex' : 'none';
 			});
 		}
 	},
@@ -1017,13 +1055,14 @@ AFRAME.registerComponent('song-controls', {
 	},
 	setupPlayersBoard: function () {
 		const loader = this.el.sceneEl.components['replay-loader'];
+		const cameraMover = this.el.sceneEl.components['camera-mover'];
 		const saberEls = this.el.sceneEl.querySelectorAll('[saber-controls]');
 		const headsets = this.el.sceneEl.querySelectorAll('.headset');
 
 		let usersContainer = document.getElementById('usersContainer');
 		let table = document.createElement('table');
 		table.className = 'usersTable';
-		table.style = 'overflow: auto;';
+		table.style = 'overflow: auto; border-collapse: collapse';
 
 		usersContainer.append(table);
 
@@ -1031,6 +1070,8 @@ AFRAME.registerComponent('song-controls', {
 			let tableBodyRow = document.createElement('tr');
 			tableBodyRow.className = 'playerTableRow';
 			tableBodyRow.style.height = '40px';
+			tableBodyRow.style.cursor = 'pointer';
+
 			let colorInput = document.createElement('input');
 			colorInput.type = 'color';
 			colorInput.className = 'colorInput';
@@ -1097,7 +1138,87 @@ AFRAME.registerComponent('song-controls', {
 				this.el.sceneEl.emit('colorChanged', {index: user.replay.index, color: evt.target.value}, null);
 			});
 
-			div2.append(scoreLabel, accLabel, colorInput);
+			let div3 = document.createElement('div');
+			div3.style.display = 'flex';
+			div3.style.alignItems = 'center';
+			div3.className = 'colorpovswitchdiv';
+			div3.style.justifyContent = 'space-between';
+
+			let povswitch = document.createElement('button');
+			povswitch.title = 'First person view (shift+f)';
+			povswitch.className = 'povswitch';
+			povswitch.style.display = this.data.showPovs ? 'block' : 'none';
+			povswitch.user = user;
+			povswitch.addEventListener('click', e => {
+				if (this.povUserIndex === undefined || this.povUserIndex == user.replay.index) {
+					cameraMover.togglePov();
+					if (this.povUserIndex !== undefined) {
+						this.povUserIndex = undefined;
+					} else {
+						this.povUserIndex = user.replay.index;
+					}
+				} else {
+					this.povUserIndex = user.replay.index;
+				}
+
+				loader.povReplayIndex = user.replay.index;
+				if (this.lastpovswitch) {
+					this.lastpovswitch.classList.toggle('selected');
+					this.lastpovswitch = undefined;
+				} else if (this.lastpovswitch != povswitch) {
+					this.lastpovswitch = povswitch;
+					povswitch.classList.toggle('selected');
+				}
+			});
+
+			div3.style.display = this.data.showPovs || this.data.showColorInputs ? 'flex' : 'none';
+
+			div3.append(povswitch, colorInput);
+			div2.append(scoreLabel, accLabel, div3);
+
+			const selectUser = () => {
+				tableBodyRow.style.border = '3px solid white';
+				loader.users.forEach((inneruser, index) => {
+					if (inneruser.replay.index == user.replay.index) {
+						this.el.sceneEl.emit('colorChanged', {index: user.replay.index, color: 'white', opacity: 1.0}, null);
+					} else {
+						this.el.sceneEl.emit('colorChanged', {index: inneruser.replay.index, color: inneruser.replay.color, opacity: 0.25}, null);
+					}
+				});
+				this.selectedUserIndex = user.replay.index;
+				this.selectedRow = tableBodyRow;
+			};
+			const unselectUser = () => {
+				if (this.selectedRow) {
+					this.selectedRow.style.border = '';
+				}
+				loader.users.forEach((user, index) => {
+					this.el.sceneEl.emit('colorChanged', {index: user.replay.index, color: user.replay.color}, null);
+				});
+			};
+
+			tableBodyRow.addEventListener('mouseenter', evt => {
+				if (tableBodyRow.visible == false) return;
+				if (!this.userSelected) {
+					selectUser();
+				}
+			});
+			tableBodyRow.addEventListener('click', evt => {
+				if (evt.target.classList.contains('povswitch') || evt.target.classList.contains('colorInput')) return;
+				if (tableBodyRow.visible == false) return;
+				if (this.userSelected && this.selectedUserIndex != user.replay.index) {
+					unselectUser();
+					selectUser();
+				} else {
+					this.userSelected = !this.userSelected;
+				}
+			});
+			tableBodyRow.addEventListener('mouseleave', evt => {
+				if (tableBodyRow.visible == false) return;
+				if (!this.userSelected) {
+					unselectUser();
+				}
+			});
 
 			tableBodyRow.append(div, div2);
 			table.append(tableBodyRow);
@@ -1111,6 +1232,8 @@ AFRAME.registerComponent('song-controls', {
 					if (this.data.disabledRoyale) {
 						scoreLabel.innerHTML = '' + note.totalScore;
 						if (!leftSaberEl.object3D.visible) {
+							tableBodyRow.visible = true;
+							tableBodyRow.style.cursor = 'pointer';
 							tableBodyRow.style.opacity = 1;
 							leftSaberEl.object3D.visible = true;
 							leftSaberEl.components.trail.data.eliminated = false;
@@ -1127,6 +1250,8 @@ AFRAME.registerComponent('song-controls', {
 						if (event.detail.index > loader.noteCountForBattle * Math.max(loader.replays.length - 1 - tableBodyRow.rowIndex, 0.8)) {
 							scoreLabel.innerHTML = '' + 0;
 							if (leftSaberEl.object3D.visible) {
+								tableBodyRow.visible = false;
+								tableBodyRow.style.cursor = '';
 								tableBodyRow.style.opacity = 0;
 								leftSaberEl.object3D.visible = false;
 								leftSaberEl.components.trail.data.enabled = false;
@@ -1138,10 +1263,16 @@ AFRAME.registerComponent('song-controls', {
 								rightSaberEl.components.trail.mesh.visible = false;
 								headset.object3D.visible = false;
 								this.headsetStates[user.replay.index] = false;
+
+								if (this.selectedUserIndex == user.replay.index) {
+									unselectUser();
+								}
 							}
 						} else {
 							scoreLabel.innerHTML = '' + note.totalScore;
 							if (!leftSaberEl.object3D.visible) {
+								tableBodyRow.visible = true;
+								tableBodyRow.style.cursor = 'pointer';
 								tableBodyRow.style.opacity = 1;
 								leftSaberEl.object3D.visible = true;
 								leftSaberEl.components.trail.data.eliminated = false;

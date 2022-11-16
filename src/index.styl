@@ -807,12 +807,62 @@ input:checked + .slider:before {
   height: 10px;
   position: absolute;
   z-index: 2;
+ -webkit-transition: all 0.3s ease 0s;
+     transition: all 0.3s ease 0s;
+     bottom: -5px
 }
 
 .missMark:hover {
   width: 15px;
   height: 15px;
   z-index: 3;
+}
+
+.timeline-filter {
+  position: absolute;
+  -webkit-transition: bottom 0.3s ease 0s;
+  transition: bottom 0.3s ease 0s;
+  bottom: -40px
+  z-index: 1;
+  overflow: hidden;
+}
+
+.acc-canvas-filter {
+  height: 0px
+  opacity: 0
+  -webkit-transition: all 0.3s ease 0s;
+  transition: all 0.3s ease 0s;
+}
+
+.acc-canvas {
+  -webkit-transition: all 0.3s ease 0s;
+  transition: all 0.3s ease 0s;
+  position: relative
+  opacity: 0
+  height: 0px
+  bottom: 0px
+     
+}
+
+#timeline:hover {
+  .missMark {
+    bottom: var(--hover-bottom);
+  }
+
+  .acc-canvas {
+    height: 150px !important;
+    bottom: 40px !important;
+    opacity: 1 !important;
+  }
+
+  .timeline-filter {
+    bottom: 3px !important;
+  }
+
+  .acc-canvas-filter {
+    height: 150px !important;
+    opacity: 1 !important;
+  }
 }
 
 #ctxMenu {

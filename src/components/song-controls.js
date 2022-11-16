@@ -56,23 +56,27 @@ AFRAME.registerComponent('song-controls', {
 		analyser.addEventListener('audioanalyserbuffersource', evt => {
 			const songDuration = evt.detail.buffer.duration;
 			document.getElementById('songDuration').innerHTML = formatSeconds(songDuration);
-			if (this.notes) {
-				this.showMisses(this.notes, evt.detail.buffer, this);
-				this.notes = null;
+			if (this.shouldShowMisses) {
+				this.showMissesAndGraph(this.notes, evt.detail.buffer, this);
+				this.shouldShowMisses = false;
 			}
 			if (queryParamTime >= 0 && queryParamTime <= songDuration) {
-				const progress = Math.max(0, Math.min(100, 100 * (queryParamTime / songDuration)));
+				const percent = queryParamTime / songDuration;
+				const progress = Math.max(0, Math.min(100, 100 * percent));
 				this.playhead.style.width = progress + '%';
+
 				document.getElementById('songProgress').innerHTML = formatSeconds(queryParamTime);
+				this.timelineFilter.style.width = this.timeline.getBoundingClientRect().width * percent + 'px';
 			}
 		});
 
 		this.el.sceneEl.addEventListener('replayloaded', event => {
 			if (this.song.source && this.song.source.buffer) {
-				this.showMisses(event.detail.notes, this.song.source.buffer, this);
+				this.showMissesAndGraph(event.detail.notes, this.song.source.buffer, this);
 			} else {
-				this.notes = event.detail.notes;
+				this.shouldShowMisses = true;
 			}
+			this.notes = event.detail.notes;
 
 			if (AFRAME.utils.getUrlParameter('speed')) {
 				// keep speed from url param
@@ -299,8 +303,24 @@ AFRAME.registerComponent('song-controls', {
 				handleLeave();
 				return;
 			}
+			const seconds = percent * this.song.source.buffer.duration;
+
+			var note = null;
+			for (let index = 0; index < this.notes.length; index++) {
+				const element = this.notes[index];
+				if (element.time > seconds) {
+					note = element;
+					break;
+				}
+			}
+
 			timelineHover.style.left = marginLeft - 17 + 'px';
-			timelineHover.innerHTML = formatSeconds(percent * this.song.source.buffer.duration);
+			var hoverText = formatSeconds(seconds);
+			if (note) {
+				hoverText += ' ' + note.accuracy + '%';
+				timelineHover.style.bottom = ((parseFloat(note.accuracy) - this.minAcc) / (this.maxAcc - this.minAcc)) * 40 + 5 + 'px';
+			}
+			timelineHover.innerHTML = hoverText;
 		});
 		timeline.addEventListener('mouseleave', handleLeave);
 
@@ -793,14 +813,43 @@ AFRAME.registerComponent('song-controls', {
 		}
 	},
 
-	showMisses: (notes, buffer, target) => {
+	showMissesAndGraph: (notes, buffer, target) => {
 		const timeline = target.timeline;
-
-		const marginLeft = timeline.getBoundingClientRect().left;
+		const height = 40;
 		const width = timeline.getBoundingClientRect().width;
 		const duration = buffer.duration;
 
 		const container = document.createElement('div');
+
+		const canvas = document.createElement('canvas');
+		canvas.className = 'acc-canvas';
+		canvas.style.width = width + 'px';
+		const canvas2 = document.createElement('canvas');
+		canvas2.className = 'acc-canvas-filter';
+		canvas2.style.width = width + 'px';
+
+		const context = canvas.getContext('2d');
+		const context2 = canvas2.getContext('2d');
+		var minAcc = 100,
+			maxAcc = 0;
+
+		for (var i = 0; i < notes.length; i++) {
+			if (notes[i].accuracy < minAcc) {
+				minAcc = notes[i].accuracy;
+			}
+
+			if (notes[i].accuracy > maxAcc) {
+				maxAcc = notes[i].accuracy;
+			}
+		}
+
+		context.scale(300 / width, 1);
+		context.beginPath();
+		context.moveTo(0, height);
+
+		context2.scale(300 / width, 1);
+		context2.beginPath();
+		context2.moveTo(0, height);
 
 		for (var i = 0; i < notes.length; i++) {
 			const note = notes[i];
@@ -810,6 +859,8 @@ AFRAME.registerComponent('song-controls', {
 				img.src = 'assets/img/wrong.png';
 				img.className = 'missMark';
 				img.style.left = (note.time / duration) * width - 6 + 'px';
+				img.style.setProperty('--hover-bottom', ((note.accuracy - minAcc) / (maxAcc - minAcc)) * height + 5 + 'px');
+
 				if (note.score == -3) {
 					img.title = 'Miss';
 				} else if (note.score == -2) {
@@ -824,9 +875,33 @@ AFRAME.registerComponent('song-controls', {
 
 				container.appendChild(img);
 			}
-		}
 
+			context.lineTo((note.time / duration) * width, height - (((note.accuracy - minAcc) / (maxAcc - minAcc)) * height + 5));
+			context2.lineTo((note.time / duration) * width, height - (((note.accuracy - minAcc) / (maxAcc - minAcc)) * height + 5));
+		}
+		context.lineTo((notes[notes.length - 1].time / duration) * width, height);
+		context.lineTo(0, height);
+		context.fillStyle = '#d11769';
+		context.fill();
+
+		context2.lineTo((notes[notes.length - 1].time / duration) * width, height);
+		context2.lineTo(0, height);
+		context2.fillStyle = 'white';
+		context2.fill();
+
+		const filter = document.createElement('div');
+		filter.className = 'timeline-filter';
+		filter.style.width = '0px';
+		filter.style.height = height + 'px';
+		target.timelineFilter = filter;
+
+		filter.appendChild(canvas2);
+		container.appendChild(filter);
+		container.appendChild(canvas);
 		timeline.appendChild(container);
+
+		target.minAcc = minAcc;
+		target.maxAcc = maxAcc;
 	},
 
 	tick: function () {
@@ -910,11 +985,14 @@ AFRAME.registerComponent('song-controls', {
 	},
 
 	updatePlayhead: function (seek) {
-		const progress = Math.max(0, Math.min(100, 100 * (this.song.getCurrentTime() / this.song.source.buffer.duration)));
+		const percent = this.song.getCurrentTime() / this.song.source.buffer.duration;
+		const progress = Math.max(0, Math.min(100, 100 * percent));
 		this.playhead.style.width = progress + '%';
 		if (seek) {
 			this.el.sceneEl.emit('timechanged', {newTime: this.song.getCurrentTime()}, null);
 		}
+
+		this.timelineFilter.style.width = this.timeline.getBoundingClientRect().width * percent + 'px';
 	},
 
 	setupVolumeControls: function () {

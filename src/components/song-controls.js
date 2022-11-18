@@ -878,7 +878,7 @@ AFRAME.registerComponent('song-controls', {
 				container.appendChild(img);
 			}
 
-			if (unasignedPauseIndex < pauses.length && pauses[unasignedPauseIndex].time < note.time) {
+			if (pauses && unasignedPauseIndex < pauses.length && pauses[unasignedPauseIndex].time < note.time) {
 				pauses[unasignedPauseIndex].accuracy = note.accuracy;
 				unasignedPauseIndex++;
 			}
@@ -886,16 +886,18 @@ AFRAME.registerComponent('song-controls', {
 			context.lineTo((note.time / duration) * width, height - (((note.accuracy - minAcc) / (maxAcc - minAcc)) * height + 5));
 			context2.lineTo((note.time / duration) * width, height - (((note.accuracy - minAcc) / (maxAcc - minAcc)) * height + 5));
 		});
-		pauses.forEach(pause => {
-			const img = document.createElement('img');
-			img.src = 'assets/img/pause.png';
-			img.className = 'missMark';
-			img.style.left = (pause.time / duration) * width - 6 + 'px';
-			img.style.setProperty('--hover-bottom', ((pause.accuracy - minAcc) / (maxAcc - minAcc)) * height + 5 + 'px');
-			img.title += 'Pause at ' + formatSeconds(pause.time) + ' for ' + formatSeconds(parseInt(pause.duration));
+		if (pauses) {
+			pauses.forEach(pause => {
+				const img = document.createElement('img');
+				img.src = 'assets/img/pause.png';
+				img.className = 'missMark';
+				img.style.left = (pause.time / duration) * width - 6 + 'px';
+				img.style.setProperty('--hover-bottom', ((pause.accuracy - minAcc) / (maxAcc - minAcc)) * height + 5 + 'px');
+				img.title += 'Pause at ' + formatSeconds(pause.time) + ' for ' + formatSeconds(parseInt(pause.duration));
 
-			container.appendChild(img);
-		});
+				container.appendChild(img);
+			});
+		}
 
 		context.lineTo((notes[notes.length - 1].time / duration) * width, height);
 		context.lineTo(0, height);

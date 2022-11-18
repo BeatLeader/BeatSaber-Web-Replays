@@ -892,7 +892,7 @@ AFRAME.registerComponent('song-controls', {
 			img.className = 'missMark';
 			img.style.left = (pause.time / duration) * width - 6 + 'px';
 			img.style.setProperty('--hover-bottom', ((pause.accuracy - minAcc) / (maxAcc - minAcc)) * height + 5 + 'px');
-			img.title += 'Pause at ' + formatSeconds(pause.time) + ' for ' + formatSeconds(Number(pause.duration));
+			img.title += 'Pause at ' + formatSeconds(pause.time) + ' for ' + formatSeconds(parseInt(pause.duration));
 
 			container.appendChild(img);
 		});

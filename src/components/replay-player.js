@@ -45,6 +45,10 @@ AFRAME.registerComponent('replay-player', {
 
 	tock: function (time, delta) {
 		let replay = this.replayDecoder.replay;
+		if (replay && !this.headRotationOffset) {
+			this.calculateHeadRotationOffset(replay);
+		}
+
 		if (this.song.isPlaying && replay) {
 			const currentTime = this.song.getCurrentTime();
 			const frames = this.replayDecoder.replay.frames;
@@ -154,7 +158,7 @@ AFRAME.registerComponent('replay-player', {
 		hrotation = euler.setFromQuaternion(hquat);
 
 		let forceForwardLookDirection = this.settings.settings.forceForwardLookDirection;
-		let headRotationOffset = this.replayDecoder.headRotationOffset;
+		let headRotationOffset = this.headRotationOffset;
 		if (headRotationOffset && forceForwardLookDirection) {
 			hrotation.x += headRotationOffset.x;
 			hrotation.z += headRotationOffset.z;
@@ -166,5 +170,22 @@ AFRAME.registerComponent('replay-player', {
 
 		povCamera.rotation.set(hrotation.x, hrotation.y + Math.PI, -hrotation.z + Math.PI);
 		povCamera.hquat = hquat;
+	},
+
+	calculateHeadRotationOffset: function (replay) {
+		const headQ = new THREE.Quaternion(),
+			headEuler = new THREE.Euler();
+		var x = 0,
+			z = 0;
+		for (var i = 0; i < replay.frames.length; i++) {
+			var rotation = replay.frames[i].h.r;
+			headQ.set(rotation.x, rotation.y, rotation.z, rotation.w);
+			headEuler.setFromQuaternion(headQ);
+			x += headEuler.x;
+			z += headEuler.z;
+		}
+		x /= replay.frames.length;
+		z /= replay.frames.length;
+		this.headRotationOffset = {x: x, z: z};
 	},
 });

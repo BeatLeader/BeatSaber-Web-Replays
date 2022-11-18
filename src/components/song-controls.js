@@ -57,7 +57,7 @@ AFRAME.registerComponent('song-controls', {
 			const songDuration = evt.detail.buffer.duration;
 			document.getElementById('songDuration').innerHTML = formatSeconds(songDuration);
 			if (this.shouldShowMisses) {
-				this.showMissesAndGraph(this.notes, evt.detail.buffer, this);
+				this.makeTimelineOverlay(this.replayData, evt.detail.buffer, this);
 				this.shouldShowMisses = false;
 			}
 			if (queryParamTime >= 0 && queryParamTime <= songDuration) {
@@ -72,11 +72,11 @@ AFRAME.registerComponent('song-controls', {
 
 		this.el.sceneEl.addEventListener('replayloaded', event => {
 			if (this.song.source && this.song.source.buffer) {
-				this.showMissesAndGraph(event.detail.notes, this.song.source.buffer, this);
+				this.makeTimelineOverlay(event.detail, this.song.source.buffer, this);
 			} else {
 				this.shouldShowMisses = true;
 			}
-			this.notes = event.detail.notes;
+			this.replayData = event.detail;
 
 			if (AFRAME.utils.getUrlParameter('speed')) {
 				// keep speed from url param
@@ -306,8 +306,8 @@ AFRAME.registerComponent('song-controls', {
 			const seconds = percent * this.song.source.buffer.duration;
 
 			var note = null;
-			for (let index = 0; index < this.notes.length; index++) {
-				const element = this.notes[index];
+			for (let index = 0; index < this.replayData.notes.length; index++) {
+				const element = this.replayData.notes[index];
 				if (element.time > seconds) {
 					note = element;
 					break;
@@ -813,7 +813,10 @@ AFRAME.registerComponent('song-controls', {
 		}
 	},
 
-	showMissesAndGraph: (notes, buffer, target) => {
+	makeTimelineOverlay: (replayData, buffer, target) => {
+		const notes = replayData.notes;
+		const pauses = replayData.replay.pauses;
+
 		const timeline = target.timeline;
 		const height = 40;
 		const width = timeline.getBoundingClientRect().width;
@@ -851,9 +854,8 @@ AFRAME.registerComponent('song-controls', {
 		context2.beginPath();
 		context2.moveTo(0, height);
 
-		for (var i = 0; i < notes.length; i++) {
-			const note = notes[i];
-
+		var unasignedPauseIndex = 0;
+		notes.forEach(note => {
 			if (note.score < 0) {
 				const img = document.createElement('img');
 				img.src = 'assets/img/wrong.png';
@@ -876,9 +878,25 @@ AFRAME.registerComponent('song-controls', {
 				container.appendChild(img);
 			}
 
+			if (unasignedPauseIndex < pauses.length && pauses[unasignedPauseIndex].time < note.time) {
+				pauses[unasignedPauseIndex].accuracy = note.accuracy;
+				unasignedPauseIndex++;
+			}
+
 			context.lineTo((note.time / duration) * width, height - (((note.accuracy - minAcc) / (maxAcc - minAcc)) * height + 5));
 			context2.lineTo((note.time / duration) * width, height - (((note.accuracy - minAcc) / (maxAcc - minAcc)) * height + 5));
-		}
+		});
+		pauses.forEach(pause => {
+			const img = document.createElement('img');
+			img.src = 'assets/img/pause.png';
+			img.className = 'missMark';
+			img.style.left = (pause.time / duration) * width - 6 + 'px';
+			img.style.setProperty('--hover-bottom', ((pause.accuracy - minAcc) / (maxAcc - minAcc)) * height + 5 + 'px');
+			img.title += 'Pause at ' + formatSeconds(pause.time) + ' for ' + formatSeconds(Number(pause.duration));
+
+			container.appendChild(img);
+		});
+
 		context.lineTo((notes[notes.length - 1].time / duration) * width, height);
 		context.lineTo(0, height);
 		context.fillStyle = '#d11769';

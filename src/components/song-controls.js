@@ -856,48 +856,48 @@ AFRAME.registerComponent('song-controls', {
 
 		var unasignedPauseIndex = 0;
 		notes.forEach(note => {
-			if (note.score < 0) {
-				const img = document.createElement('img');
-				img.src = 'assets/img/wrong.png';
-				img.className = 'missMark';
-				img.style.left = (note.time / duration) * width - 6 + 'px';
-				img.style.setProperty('--hover-bottom', ((note.accuracy - minAcc) / (maxAcc - minAcc)) * height + 5 + 'px');
-
-				if (note.score == -3) {
-					img.title = 'Miss';
-				} else if (note.score == -2) {
-					img.title = 'Bad cut';
-				} else if (note.score == -5) {
-					img.title = 'Wall hit';
-				} else if (note.score == -4) {
-					img.title = 'Bomb hit';
-					img.src = 'assets/img/explode.png';
-				}
-				img.title += ' at ' + formatSeconds(note.time);
-
-				container.appendChild(img);
-			}
-
 			if (pauses && unasignedPauseIndex < pauses.length && pauses[unasignedPauseIndex].time < note.time) {
-				pauses[unasignedPauseIndex].accuracy = note.accuracy;
+				let pause = pauses[unasignedPauseIndex];
+				pause.accuracy = note.accuracy;
 				unasignedPauseIndex++;
-			}
 
-			context.lineTo((note.time / duration) * width, height - (((note.accuracy - minAcc) / (maxAcc - minAcc)) * height + 5));
-			context2.lineTo((note.time / duration) * width, height - (((note.accuracy - minAcc) / (maxAcc - minAcc)) * height + 5));
-		});
-		if (pauses) {
-			pauses.forEach(pause => {
 				const img = document.createElement('img');
-				img.src = 'assets/img/pause.png';
+				img.src = 'assets/img/pause-timeline.png';
 				img.className = 'missMark';
 				img.style.left = (pause.time / duration) * width - 6 + 'px';
 				img.style.setProperty('--hover-bottom', ((pause.accuracy - minAcc) / (maxAcc - minAcc)) * height + 5 + 'px');
 				img.title += 'Pause at ' + formatSeconds(pause.time) + ' for ' + formatSeconds(parseInt(pause.duration));
 
 				container.appendChild(img);
-			});
-		}
+			}
+
+			if (note.score < 0) {
+				const img = document.createElement('img');
+				img.className = 'missMark';
+				img.style.left = (note.time / duration) * width - 6 + 'px';
+				img.style.setProperty('--hover-bottom', ((note.accuracy - minAcc) / (maxAcc - minAcc)) * height + 5 + 'px');
+
+				if (note.score == -3) {
+					img.title = 'Miss';
+					img.src = 'assets/img/miss-timeline.png';
+				} else if (note.score == -2) {
+					img.title = 'Bad cut';
+					img.src = 'assets/img/badcut-timeline.png';
+				} else if (note.score == -5) {
+					img.title = 'Wall hit';
+					img.src = 'assets/img/wall-timeline.png';
+				} else if (note.score == -4) {
+					img.title = 'Bomb hit';
+					img.src = 'assets/img/bomb-timeline.png';
+				}
+				img.title += ' at ' + formatSeconds(note.time);
+
+				container.appendChild(img);
+			}
+
+			context.lineTo((note.time / duration) * width, height - (((note.accuracy - minAcc) / (maxAcc - minAcc)) * height + 5));
+			context2.lineTo((note.time / duration) * width, height - (((note.accuracy - minAcc) / (maxAcc - minAcc)) * height + 5));
+		});
 
 		context.lineTo((notes[notes.length - 1].time / duration) * width, height);
 		context.lineTo(0, height);

@@ -456,8 +456,18 @@ html
   display none
   padding 5px
   position absolute
+  z-index 2
   &.timelineHoverActive
     display block
+
+#timelineCursor
+  height 40px
+  bottom 0
+  width 1px
+  position absolute
+  display none
+  background-color #0dcef0c2
+  z-index 2
 
 #vrButton
   background url(assets/img/enter-vr-button-background.png) no-repeat
@@ -862,6 +872,10 @@ input:checked + .slider:before {
   .acc-canvas-filter {
     height: 150px !important;
     opacity: 1 !important;
+  }
+
+  #timelineCursor {
+    display: block;
   }
 }
 

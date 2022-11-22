@@ -164,8 +164,10 @@ AFRAME.registerComponent('song-controls', {
 		this.modeDropdownEl = document.getElementById('controlsMode');
 		this.modeOptionEls = document.getElementById('controlsModes');
 		this.playhead = document.getElementById('playhead');
+
 		const timeline = (this.timeline = document.getElementById('timeline'));
 		const timelineHover = (this.timelineHover = document.getElementById('timelineHover'));
+		const timelineCursor = document.getElementById('timelineCursor');
 
 		const timelineWidth = timeline.offsetWidth;
 
@@ -321,6 +323,8 @@ AFRAME.registerComponent('song-controls', {
 				timelineHover.style.bottom = ((parseFloat(note.accuracy) - this.minAcc) / (this.maxAcc - this.minAcc)) * 40 + 5 + 'px';
 			}
 			timelineHover.innerHTML = hoverText;
+
+			timelineCursor.style.left = marginLeft + 'px';
 		});
 		timeline.addEventListener('mouseleave', handleLeave);
 

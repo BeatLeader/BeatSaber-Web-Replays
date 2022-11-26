@@ -6,6 +6,7 @@
 
 <a-entity
   id="scoreContainer"
+  animation__rotationY="property: object3D.rotation.y; from: 0; to: 0; dur: 600; easing: easeInOutQuad; startEvents: spawnRotationStart"
   bind__score-texts="isSongLoading: isSongLoading"
   bind__visible="isPlaying || isPaused">
 

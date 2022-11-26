@@ -75,6 +75,7 @@
   animation__opacityin="property: components.text.material.uniforms.opacity.value; from: .5; to: 1; dur: 500; startEvents: beatscorestart"
   animation__opacityout="property: components.text.material.uniforms.opacity.value; from: 1; to: 0; dur: 500; delay: 700; startEvents: beatscorestart"
   animation__motionz="property: object3D.position.z; to: -6; dur: 500; easing: linear; startEvents: beatscorestart"
+  animation__motionx="property: object3D.position.x; to: -6; dur: 500; easing: linear; startEvents: beatscorestart"
   animation__motiony="property: object3D.position.y; to: 0.1; dur: 500; easing: easeOutQuart; startEvents: beatscorestart"
 ></a-mixin>
 
@@ -109,14 +110,16 @@
   obj-model="obj: #wrongObj"
   material="shader: flat; transparent: true; depthWrite: false; src: #atlasImg"
   visible="false"
-  animation__posz="property: object3D.position.z; to: -8; startEvents: beatwrong; easing: easeOutQuart; dur: 4000"
+  animation__motionz="property: object3D.position.z; to: -8; startEvents: beatwrong; easing: easeOutQuart; dur: 4000"
+  animation__motionx="property: object3D.position.x; to: -8; startEvents: beatwrong; easing: easeOutQuart; dur: 4000"
   animation__alpha="property: components.material.material.opacity; from: 1; to: 0; startEvents: beatwrong; easing: easeOutQuart; dur: 4000"></a-mixin>
 
 <a-mixin id="beatMiss"
   obj-model="obj: #missObj"
   material="shader: flat; transparent: true; depthWrite: false; src: #atlasImg"
   visible="false"
-  animation__posz="property: object3D.position.z; to: -8; startEvents: beatmiss; easing: easeOutQuart; dur: 4000"
+  animation__motionz="property: object3D.position.z; to: -8; startEvents: beatmiss; easing: easeOutQuart; dur: 4000"
+  animation__motionx="property: object3D.position.x; to: -8; startEvents: beatmiss; easing: easeOutQuart; dur: 4000"
   animation__alpha="property: components.material.material.opacity; from: 1; to: 0; startEvents: beatmiss; easing: easeOutQuart; dur: 4000"></a-mixin>
 
 <a-mixin

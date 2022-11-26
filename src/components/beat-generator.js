@@ -55,6 +55,9 @@ AFRAME.registerComponent('beat-generator', {
 		this.leftStageLasers = document.getElementById('leftStageLasers');
 		this.rightStageLasers = document.getElementById('rightStageLasers');
 		this.colors = {};
+		this.spawnRotation = {rotation: 0};
+		this.spawnRotationKeys = [];
+		this.spawnRotations = {};
 
 		this.el.addEventListener('cleargame', this.clearBeats.bind(this));
 		this.el.addEventListener('challengeloadend', evt => {
@@ -170,6 +173,15 @@ AFRAME.registerComponent('beat-generator', {
 			}
 		}
 
+		let spawnRotation = 0;
+
+		events.forEach(event => {
+			if (event._type == 15 || event._type == 14) {
+				spawnRotation += 60 - (event._value < 4 ? event._value : event._value + 1) * 15;
+				this.spawnRotationKeys.push(event._songTime);
+				this.spawnRotations[event._songTime] = {rotation: spawnRotation, early: event._type == 14};
+			}
+		});
 		this.beatDataProcessed = true;
 		console.log('[beat-generator] Finished processing beat data.');
 	},
@@ -202,6 +214,20 @@ AFRAME.registerComponent('beat-generator', {
 		// Load in stuff scheduled between the last timestamp and current timestamp.
 		// Beats.
 		const beatsTime = this.beatsTime + skipDebug;
+		const eventsTime = this.eventsTime + skipDebug;
+
+		var oldSpawnRotation = this.spawnRotation;
+		const rotations = this.spawnRotationKeys;
+		for (let i = 0; i < rotations.length; ++i) {
+			let noteTime = rotations[i];
+			if (noteTime > prevEventsTime && noteTime <= eventsTime) {
+				this.spawnRotation = this.spawnRotations[rotations[i]].rotation;
+				if (this.spawnRotation != oldSpawnRotation) {
+					this.el.sceneEl.emit('spawnRotationChanged', {spawnRotation: this.spawnRotation, oldSpawnRotation}, false);
+					oldSpawnRotation = this.spawnRotation;
+				}
+			}
+		}
 
 		const notes = this.beatData._notes;
 		for (let i = 0; i < notes.length; ++i) {
@@ -282,6 +308,28 @@ AFRAME.registerComponent('beat-generator', {
 		this.isSeeking = true;
 	},
 
+	getRotation: function (time) {
+		const rotations = this.spawnRotationKeys;
+		if (rotations.length == 0) return 0;
+
+		for (let i = 0; i < rotations.length; ++i) {
+			let noteTime = rotations[i];
+			if (noteTime >= time) {
+				if (i == 0) return 0;
+				const rotationTime = rotations[i - 1];
+				var spawnRotation = this.spawnRotations[rotationTime];
+
+				if (spawnRotation.early || rotationTime != time) {
+					return spawnRotation.rotation;
+				} else if (i == 1) {
+					return 0;
+				} else {
+					return this.spawnRotations[rotations[i - 2]].rotation;
+				}
+			}
+		}
+	},
+
 	generateBeat: function (note) {
 		// if (Math.random() < 0.8) { note._type = 3; } // To debug mines.
 		let color;
@@ -338,8 +386,8 @@ AFRAME.registerComponent('beat-generator', {
 			beatObj.type = type;
 			beatObj.warmupPosition = -data.beatWarmupTime * data.beatWarmupSpeed;
 			beatObj.index = note._index;
-
 			beatObj.time = note._songTime;
+			beatObj.spawnRotation = this.getRotation(note._songTime);
 			beatObj.anticipationTime = this.beatAnticipationTime;
 			beatObj.warmupTime = data.beatWarmupTime;
 			beatObj.warmupSpeed = data.beatWarmupSpeed;
@@ -461,6 +509,7 @@ AFRAME.registerComponent('beat-generator', {
 			wallObj.warmupPosition = -data.beatWarmupTime * data.beatWarmupSpeed;
 			// wall._width can be like 1 or 2. Map that to 0.6 thickness.
 			wallObj.width = wall._width * WALL_THICKNESS;
+			wallObj.spawnRotation = this.getRotation(wall._songTime);
 
 			wallObj.time = wall._songTime;
 			wallObj.anticipationTime = this.beatAnticipationTime;

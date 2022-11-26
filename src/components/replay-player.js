@@ -147,7 +147,9 @@ AFRAME.registerComponent('replay-player', {
 		headset.rotation.set(hrotation.x, hrotation.y + Math.PI, -hrotation.z + Math.PI);
 
 		this.v3.copy(headset.position);
-		this.v3.z += parseFloat(this.settings.settings.cameraZPosition);
+
+		povCamera.getWorldDirection(this.v1);
+		this.v3.add(this.v1.multiplyScalar(parseFloat(this.settings.settings.cameraZPosition)));
 		povCamera.position.copy(povCamera.position.lerp(this.v3, 5 * delta));
 
 		if (povCamera.hquat) {

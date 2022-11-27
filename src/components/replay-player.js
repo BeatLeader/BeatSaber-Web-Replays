@@ -47,6 +47,7 @@ AFRAME.registerComponent('replay-player', {
 		let replay = this.replayDecoder.replay;
 		if (replay && !this.headRotationOffset) {
 			this.calculateHeadRotationOffset(replay);
+			this.supports360 = replay.info.mode == '360Degree' || replay.info.mode == '90Degree';
 		}
 
 		if (this.song.isPlaying && replay) {
@@ -148,8 +149,16 @@ AFRAME.registerComponent('replay-player', {
 
 		this.v3.copy(headset.position);
 
-		povCamera.getWorldDirection(this.v1);
-		this.v3.add(this.v1.multiplyScalar(parseFloat(this.settings.settings.cameraZPosition)));
+		if (this.supports360) {
+			povCamera.getWorldDirection(this.v1);
+			const offset = this.v1.multiplyScalar(parseFloat(this.settings.settings.cameraZPosition));
+
+			this.v3.z += offset.z;
+			this.v3.x += offset.x;
+		} else {
+			this.v3.z += parseFloat(this.settings.settings.cameraZPosition);
+		}
+
 		povCamera.position.copy(povCamera.position.lerp(this.v3, 5 * delta));
 
 		if (povCamera.hquat) {
@@ -161,7 +170,7 @@ AFRAME.registerComponent('replay-player', {
 
 		let forceForwardLookDirection = this.settings.settings.forceForwardLookDirection;
 		let headRotationOffset = this.headRotationOffset;
-		if (headRotationOffset && forceForwardLookDirection) {
+		if (!this.supports360 && headRotationOffset && forceForwardLookDirection) {
 			hrotation.x += headRotationOffset.x;
 			hrotation.z += headRotationOffset.z;
 			this.cameraXRotationSlider.disabled = true;

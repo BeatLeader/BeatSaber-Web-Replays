@@ -18,6 +18,12 @@ function get2DNoteOffset(noteLineIndex, noteLineLayer) {
 	return new THREE.Vector2(getHorizontalPosition(noteLineIndex), getVerticalPosition(noteLineLayer));
 }
 
+const NoteLineLayer = {
+	Base: 0,
+	Upper: 1,
+	Top: 2,
+};
+
 const NoteCutDirection = {
 	Up: 0,
 	Down: 1,
@@ -175,3 +181,4 @@ module.exports.SWORD_OFFSET = SWORD_OFFSET;
 module.exports.difficultyFromName = difficultyFromName;
 module.exports.ScoringType = ScoringType;
 module.exports.BezierCurve = BezierCurve;
+module.exports.NoteLineLayer = NoteLineLayer;

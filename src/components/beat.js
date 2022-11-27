@@ -1,4 +1,4 @@
-import {getHorizontalPosition, getVerticalPosition, NoteErrorType, SWORD_OFFSET, BezierCurve} from '../utils';
+import {getHorizontalPosition, getVerticalPosition, NoteErrorType, SWORD_OFFSET, BezierCurve, LookRotation} from '../utils';
 const COLORS = require('../constants/colors.js');
 
 const auxObj3D = new THREE.Object3D();
@@ -26,6 +26,10 @@ const RandomRotations = [
 	new THREE.Vector3(0.07651193, 0.9474725, -0.3105508),
 	new THREE.Vector3(0.1306983, -0.2508438, -0.9591639),
 ];
+
+function InOutQuad(t) {
+	return t >= 0.5 ? (4.0 - 2.0 * t) * t - 1.0 : 2 * t * t;
+}
 
 /**
  * Bears, beats, Battlestar Galactica.
@@ -61,6 +65,8 @@ AFRAME.registerComponent('beat', {
 		tailTime: {default: 0},
 		squishAmount: {default: 0},
 		spawnRotation: {default: 0},
+		gravity: {default: 0},
+		startVerticalVelocity: {default: 0},
 		// Loading cubes
 		loadingCube: {default: false},
 		visible: {default: true},
@@ -147,10 +153,10 @@ AFRAME.registerComponent('beat', {
 
 		this.onEndStroke = this.onEndStroke.bind(this);
 
-		this.rotEuler = new THREE.Euler();
 		this.strokeDirectionVector = new THREE.Vector3();
 		this.bladeTipPosition = new THREE.Vector3();
 		this.startStrokePosition = new THREE.Vector3();
+		this.startRotation = new THREE.Quaternion(0, 0, 0, 1);
 
 		this.initBlock();
 		if (this.data.type === 'mine') {
@@ -205,9 +211,8 @@ AFRAME.registerComponent('beat', {
 
 		var timeOffset = data.time - song.getCurrentTime() - data.anticipationTime - data.warmupTime;
 
-		var t = timeOffset / -data.anticipationTime - data.warmupTime;
-
-		var currentRotationWarmupTime = timeOffset;
+		var t = (timeOffset / -data.anticipationTime - data.warmupTime) / 2;
+		var num1 = song.getCurrentTime() - (data.time - data.anticipationTime * 0.5);
 
 		if (timeOffset <= -data.warmupTime) {
 			newPosition = data.anticipationPosition;
@@ -232,28 +237,33 @@ AFRAME.registerComponent('beat', {
 
 		this.currentPositionZ = newPosition;
 
-		if (data.type != 'sliderchain' && data.type != 'sliderhead' && currentRotationWarmupTime <= -data.warmupTime) {
-			currentRotationWarmupTime += data.warmupTime;
+		// position.x = t >= 0.25 ? this.endPos.x : this.startPos.x + (this.endPos.x - this.startPos.x) * InOutQuad(t * 4);
 
-			let warmupRotationTime = BEAT_WARMUP_ROTATION_TIME / (20 / data.anticipationPosition); // Closer anticipation - faster the rotation.
-
-			const progress =
-				warmupRotationTime <= currentRotationWarmupTime
-					? AFRAME.ANIME.easings.easeOutBack(currentRotationWarmupTime / warmupRotationTime)
-					: 1.0;
-			el.object3D.rotation.z = this.rotationZStart + progress * this.rotationZChange;
+		position.y = this.endPos.y + data.startVerticalVelocity * num1 - data.gravity * num1 * num1 * 0.5;
+		if (data.yAvoidance != 0.0 && t < 0.25) {
+			position.y += (0.5 - Math.cos(t * 8.0 * 3.1415927410125732) * 0.5) * data.yAvoidance;
 		}
 
-		if (t >= 0.5 && t <= 1 && data.type != 'mine' && data.spawnRotation == 0) {
+		if (t >= 0 && t <= 0.5 && data.type != 'mine') {
+			var a;
+			if (t >= 0.125) {
+				a = this.middleRotation.clone().slerp(this.endRotation, Math.sin((t - 0.125) * Math.PI * 2.0));
+			} else {
+				a = this.startRotation.clone().slerp(this.middleRotation, Math.sin(t * Math.PI * 4.0));
+			}
+
 			var headPseudoLocalPos = this.headset.object3D.position.clone();
 			var localPosition = position.clone();
 
 			headPseudoLocalPos.y = THREE.Math.lerp(headPseudoLocalPos.y, localPosition.y, 0.8);
-			this.rotEuler.copy(el.object3D.rotation);
+
+			const inverseWorldRotation = new THREE.Vector3(0, -data.spawnRotation, 0);
+
+			el.object3D.up = new THREE.Vector3(-Math.sin(this.zRotation), Math.cos(this.zRotation), 0);
 			el.object3D.lookAt(headPseudoLocalPos);
-			el.object3D.rotation.x = THREE.Math.lerp(this.rotEuler.x, el.object3D.rotation.x, 0.4 * t);
-			el.object3D.rotation.y = THREE.Math.lerp(this.rotEuler.y, el.object3D.rotation.y, 0.4 * t);
-			el.object3D.rotation.z = this.rotEuler.z;
+
+			let rotation = new THREE.Euler().setFromQuaternion(a.clone().slerp(el.object3D.quaternion, t * 2));
+			el.object3D.rotation.set(rotation.x, rotation.y, rotation.z);
 		}
 	},
 
@@ -281,7 +291,6 @@ AFRAME.registerComponent('beat', {
 			}
 		}
 		const el = this.el;
-		const position = el.object3D.position;
 
 		if (this.destroyed) {
 			this.tockDestroyed(timeDelta);
@@ -390,29 +399,30 @@ AFRAME.registerComponent('beat', {
 				Math.atan2(tangent.x, -tangent.y) + THREE.Math.degToRad(this.data.rotationOffset ? this.data.rotationOffset : 0.0)
 			);
 		} else {
-			if (data.spawnRotation != 0) {
-				el.object3D.rotation.order = 'YZX';
-			}
-			el.object3D.position.set(
+			this.startPos = new THREE.Vector3(
 				getHorizontalPosition(data.horizontalPosition),
-				getVerticalPosition(data.verticalPosition),
+				getVerticalPosition(0),
 				data.anticipationPosition + data.warmupPosition
 			);
-			el.object3D.rotation.set(
-				0,
-				0,
-				THREE.Math.degToRad(this.rotations[data.cutDirection] + (this.data.rotationOffset ? this.data.rotationOffset : 0.0))
+
+			this.endPos = new THREE.Vector3(getHorizontalPosition(data.horizontalPosition), getVerticalPosition(data.verticalPosition), 0);
+
+			el.object3D.position.set(this.startPos.x, this.startPos.y, this.startPos.z);
+			el.object3D.rotation.set(0, 0, 0);
+			var index = Math.abs(Math.round(data.time * 10.0 + this.endPos.x * 2.0 + this.endPos.y * 2.0) % RandomRotations.length);
+			this.zRotation = THREE.Math.degToRad(this.rotations[data.cutDirection] + (this.data.rotationOffset ? this.data.rotationOffset : 0.0));
+
+			const endRotation = new THREE.Euler(0, 0, this.zRotation, data.spawnRotation != 0 ? 'YZX' : 'YXZ');
+			const randomRotation = RandomRotations[index];
+			const middleRotation = new THREE.Euler(
+				THREE.Math.degToRad(randomRotation.x * 20) + endRotation.x,
+				THREE.Math.degToRad(randomRotation.y * 20) + endRotation.y,
+				THREE.Math.degToRad(randomRotation.z * 20) + endRotation.z,
+				data.spawnRotation != 0 ? 'YZX' : 'YXZ'
 			);
 
-			// Set up rotation warmup.
-			this.startRotationZ = this.el.object3D.rotation.z;
-			this.currentRotationWarmupTime = 0;
-			this.rotationZChange = BEAT_WARMUP_ROTATION_CHANGE;
-			if (Math.random > 0.5) {
-				this.rotationZChange *= -1;
-			}
-			this.el.object3D.rotation.z -= this.rotationZChange;
-			this.rotationZStart = this.el.object3D.rotation.z;
+			this.endRotation = new THREE.Quaternion().setFromEuler(endRotation);
+			this.middleRotation = new THREE.Quaternion().setFromEuler(middleRotation);
 		}
 
 		if (data.spawnRotation) {
@@ -426,6 +436,8 @@ AFRAME.registerComponent('beat', {
 			el.object3D.lookAt(origin);
 			this.startPosition = el.object3D.position.clone();
 		}
+		const flipYSide = 0;
+		this.yAvoidance = flipYSide <= 0.0 ? flipYSide * 0.15 : flipYSide * 0.45;
 
 		// Reset the state properties.
 		this.returnToPoolTimeStart = undefined;

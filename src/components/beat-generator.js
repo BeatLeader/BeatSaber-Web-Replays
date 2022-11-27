@@ -1,5 +1,5 @@
 import {BEAT_WARMUP_OFFSET, BEAT_WARMUP_SPEED, BEAT_WARMUP_TIME} from '../constants/beat';
-import {NoteCutDirection, SWORD_OFFSET, clone} from '../utils';
+import {NoteLineLayer, SWORD_OFFSET, getVerticalPosition} from '../utils';
 
 let skipDebug = AFRAME.utils.getUrlParameter('skip') || 0;
 skipDebug = parseInt(skipDebug, 10);
@@ -13,12 +13,6 @@ if (queryJD.length == 0) {
 		queryJD = null;
 	}
 }
-
-const RIDICULOUS_MAP_EX_CONSTANT = 4001;
-const WALL_HEIGHT_MIN = 0;
-const WALL_HEIGHT_MAX = 1000;
-const WALL_START_BASE = 100;
-const WALL_START_MAX = 400;
 
 /**
  * Load beat data (all the beats and such).
@@ -444,6 +438,11 @@ AFRAME.registerComponent('beat-generator', {
 				}
 			}
 
+			beatObj.gravity = this.noteJumpGravityForLineLayer(beatObj.verticalPosition, 0);
+			beatObj.startVerticalVelocity = beatObj.gravity * this.beatAnticipationTime * 0.5;
+
+			// sliderData.headLineIndex, sliderData.headLineLayer
+
 			beatEl.setAttribute('beat', beatObj);
 			beatEl.components.beat.onGenerate(this.mappingExtensions);
 			beatEl.play();
@@ -737,6 +736,8 @@ AFRAME.registerComponent('beat-generator', {
 			jd = defaultJD;
 		}
 
+		this.jumpDistance = jd;
+
 		if (!itsDefault || this.beatAnticipationTime == null) {
 			this.beatAnticipationTime = (60 / this.bpm) * jt;
 			this.el.sceneEl.emit('jdCalculated', {jd, defaultJd: itsDefault ? defaultJD : null}, false);
@@ -777,6 +778,22 @@ AFRAME.registerComponent('beat-generator', {
 				child.components.wall.returnToPool();
 			}
 		}
+	},
+
+	highestJumpPosYForLineLayerWithoutJumpOffset: function (lineLayer) {
+		if (lineLayer == NoteLineLayer.Base) {
+			return 0.85;
+		}
+		return lineLayer == NoteLineLayer.Upper ? 1.4 : 1.9;
+	},
+
+	highestJumpPosYForLineLayer: function (lineLayer) {
+		return this.highestJumpPosYForLineLayerWithoutJumpOffset(lineLayer);
+	},
+
+	noteJumpGravityForLineLayer: function (lineLayer, beforeJumpLineLayer) {
+		var num = (this.jumpDistance / this.beatSpeed) * 0.5;
+		return (2.0 * (this.highestJumpPosYForLineLayer(lineLayer) - getVerticalPosition(beforeJumpLineLayer))) / (num * num);
 	},
 });
 

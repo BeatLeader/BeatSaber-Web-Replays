@@ -161,8 +161,53 @@ function processNotesByColorType(notesWithTheSameColorTypeList) {
 	}
 }
 
+function SetNoteFlipToNote(thisNote, targetNote) {
+	thisNote._flipLineIndex = targetNote._lineIndex;
+	thisNote._flipYSide = thisNote._lineIndex > targetNote._lineIndex ? 1 : -1;
+	if (
+		(thisNote._lineIndex <= targetNote._lineIndex || thisNote._lineLayer >= targetNote._lineLayer) &&
+		(thisNote._lineIndex >= targetNote._lineIndex || thisNote._lineLayer <= targetNote._lineLayer)
+	)
+		return;
+	thisNote._flipYSide *= -1;
+}
+
+function addRabbitJumps(currentTimeSlice, currentTimeSliceTime, previousTimeSlice) {
+	if (previousTimeSlice) {
+		previousTimeSlice.forEach(noteData => {
+			noteData._timeToNextColorNote = currentTimeSliceTime - noteData._time;
+		});
+	}
+
+	if (currentTimeSlice.length != 2) return;
+
+	// uh oh what a condition
+	// if (items.length != 2
+	// 	|| (Math.abs(this._currentTimeSliceAllNotesAndSliders.time - currentTimeSliceTime) >= 1.0 / 1000.0
+	// 		|| !this._currentTimeSliceAllNotesAndSliders.items.Any<BeatmapDataItem>(
+	// 			(item => item is SliderData
+	// 			|| item is BeatmapObjectsInTimeRowProcessor.SliderTailData))
+	// 			? (this._unprocessedSliderTails.Any<SliderData>((tail =>
+	// 				Math.Abs(tail.tailTime - currentTimeSliceTime) < 1.0 / 1000.0)) ? 1 : 0) : 1) != 0)
+	//   return;
+	const targetNote1 = currentTimeSlice[0];
+	const targetNote2 = currentTimeSlice[1];
+	if (
+		targetNote1._type == targetNote2._type ||
+		((targetNote1._type != 0 || targetNote1._lineIndex <= targetNote2._lineIndex) &&
+			(targetNote1._type != 1 || targetNote1._lineIndex >= targetNote2._lineIndex))
+	) {
+		return;
+	}
+
+	SetNoteFlipToNote(targetNote1, targetNote2);
+	SetNoteFlipToNote(targetNote2, targetNote1);
+}
+
 function calculateRotationOffsets(map) {
-	var group, groupTime;
+	var group, groupTime, previousGroup;
+
+	console.log(map);
 
 	const processGroup = () => {
 		var leftNotes = [];
@@ -174,6 +219,9 @@ function calculateRotationOffsets(map) {
 
 			processNotesByColorType(leftNotes);
 			processNotesByColorType(rightNotes);
+
+			addRabbitJumps(group, groupTime, previousGroup);
+			previousGroup = group;
 		}
 	};
 

@@ -1,10 +1,8 @@
-import {getHorizontalPosition, getVerticalPosition, NoteErrorType, SWORD_OFFSET, BezierCurve, LookRotation} from '../utils';
+import {getHorizontalPosition, getVerticalPosition, NoteErrorType, SWORD_OFFSET, BezierCurve} from '../utils';
 const COLORS = require('../constants/colors.js');
 
 const auxObj3D = new THREE.Object3D();
 const collisionZThreshold = -2.6;
-const BEAT_WARMUP_ROTATION_CHANGE = Math.PI / 5;
-const BEAT_WARMUP_ROTATION_TIME = 0.75;
 const DESTROYED_SPEED = 1.0;
 const ONCE = {once: true};
 
@@ -38,39 +36,55 @@ function InOutQuad(t) {
 AFRAME.registerComponent('beat', {
 	schema: {
 		index: {default: 0},
-		anticipationPosition: {default: 0},
+		type: {default: 'arrow', oneOf: ['arrow', 'dot', 'mine', 'spline']},
 		color: {default: 'red', oneOf: ['red', 'blue']},
 		cutDirection: {default: 'down'},
-		headCutDirection: {default: 'down'},
 		rotationOffset: {default: 0},
-		debug: {default: false},
 		horizontalPosition: {default: 1},
-		size: {default: 0.4},
-		speed: {default: 8.0},
-		type: {default: 'arrow', oneOf: ['arrow', 'dot', 'mine', 'spline']},
 		verticalPosition: {default: 1},
-		warmupPosition: {default: 0},
-		time: {default: 0},
+		size: {default: 0.4},
+
 		noteId: {default: 0},
 		noteIdWithScoring: {default: 0},
+
+		// Z Movement
+		time: {default: 0},
+		speed: {default: 8.0},
+		anticipationPosition: {default: 0},
+		warmupPosition: {default: 0},
 		anticipationTime: {default: 0},
 		warmupTime: {default: 0},
 		warmupSpeed: {default: 0},
+
+		// Colors
 		blue: {default: COLORS.BEAT_BLUE},
 		red: {default: COLORS.BEAT_RED},
+
+		// V3
+		headCutDirection: {default: 'down'},
 		tailHorizontalPosition: {default: 0},
 		tailVerticalPosition: {default: 0},
 		sliceCount: {default: 0},
 		sliceIndex: {default: 0},
 		tailTime: {default: 0},
 		squishAmount: {default: 0},
+
+		// 90/360
 		spawnRotation: {default: 0},
+
+		// Jump animation
 		gravity: {default: 0},
 		startVerticalVelocity: {default: 0},
+		flipHorizontalPosition: {default: undefined},
+		flipYSide: {default: undefined},
+
 		// Loading cubes
 		loadingCube: {default: false},
 		visible: {default: true},
 		animating: {default: true},
+
+		// Debug
+		debug: {default: false},
 	},
 
 	cutColor: {
@@ -237,11 +251,10 @@ AFRAME.registerComponent('beat', {
 
 		this.currentPositionZ = newPosition;
 
-		// position.x = t >= 0.25 ? this.endPos.x : this.startPos.x + (this.endPos.x - this.startPos.x) * InOutQuad(t * 4);
-
+		position.x = t >= 0.25 ? this.endPos.x : this.startPos.x + (this.endPos.x - this.startPos.x) * InOutQuad(t * 4);
 		position.y = this.endPos.y + data.startVerticalVelocity * num1 - data.gravity * num1 * num1 * 0.5;
-		if (data.yAvoidance != 0.0 && t < 0.25) {
-			position.y += (0.5 - Math.cos(t * 8.0 * 3.1415927410125732) * 0.5) * data.yAvoidance;
+		if (this.yAvoidance != 0 && t < 0.25) {
+			position.y += (0.5 - Math.cos(t * 8.0 * 3.1415927410125732) * 0.5) * this.yAvoidance;
 		}
 
 		if (t >= 0 && t <= 0.5 && data.type != 'mine') {
@@ -400,7 +413,9 @@ AFRAME.registerComponent('beat', {
 			);
 		} else {
 			this.startPos = new THREE.Vector3(
-				getHorizontalPosition(data.horizontalPosition),
+				data.flipHorizontalPosition != undefined
+					? getHorizontalPosition(data.flipHorizontalPosition)
+					: getHorizontalPosition(data.horizontalPosition),
 				getVerticalPosition(0),
 				data.anticipationPosition + data.warmupPosition
 			);
@@ -436,8 +451,12 @@ AFRAME.registerComponent('beat', {
 			el.object3D.lookAt(origin);
 			this.startPosition = el.object3D.position.clone();
 		}
-		const flipYSide = 0;
-		this.yAvoidance = flipYSide <= 0.0 ? flipYSide * 0.15 : flipYSide * 0.45;
+
+		if (data.flipYSide != undefined) {
+			this.yAvoidance = data.flipYSide <= 0.0 ? data.flipYSide * 0.15 : data.flipYSide * 0.45;
+		} else {
+			this.yAvoidance = 0;
+		}
 
 		// Reset the state properties.
 		this.returnToPoolTimeStart = undefined;

@@ -440,6 +440,13 @@ AFRAME.registerComponent('beat-generator', {
 
 			beatObj.gravity = this.noteJumpGravityForLineLayer(beatObj.verticalPosition, 0);
 			beatObj.startVerticalVelocity = beatObj.gravity * this.beatAnticipationTime * 0.5;
+			if (note._flipLineIndex != undefined) {
+				beatObj.flipHorizontalPosition = note._flipLineIndex;
+				beatObj.flipYSide = note._flipYSide;
+			} else {
+				beatObj.flipHorizontalPosition = undefined;
+				beatObj.flipYSide = undefined;
+			}
 
 			// sliderData.headLineIndex, sliderData.headLineLayer
 

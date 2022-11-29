@@ -54,6 +54,16 @@ function upgrade(map) {
 				_floatValue: event['f'],
 			});
 		});
+		map['rotationEvents'].forEach(event => {
+			var value = (event['r'] - 60) / -15;
+
+			events.push({
+				_time: event['b'],
+				_type: event['e'] == 1 ? 15 : 14,
+				_value: value < 4 ? value : value - 1,
+				_inverted: true,
+			});
+		});
 
 		map['_events'] = events;
 

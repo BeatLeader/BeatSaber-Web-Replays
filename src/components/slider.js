@@ -1,4 +1,4 @@
-import {getHorizontalPosition, getVerticalPosition} from '../utils';
+import {getHorizontalPosition, getVerticalPosition, rotateAboutPoint} from '../utils';
 const COLORS = require('../constants/colors.js');
 
 AFRAME.registerComponent('slider', {
@@ -23,6 +23,9 @@ AFRAME.registerComponent('slider', {
 		warmupSpeed: {default: 0},
 		blue: {default: COLORS.BEAT_BLUE},
 		red: {default: COLORS.BEAT_RED},
+
+		spawnRotation: {default: 0},
+		tailSpawnRotation: {default: 0},
 	},
 
 	cutColor: {
@@ -80,7 +83,13 @@ AFRAME.registerComponent('slider', {
 		}
 
 		newPosition += this.headset.object3D.position.z;
-		position.z = newPosition;
+
+		if (data.spawnRotation == 0) {
+			position.z = newPosition;
+		} else {
+			var direction = this.startPosition.clone().sub(this.origin).normalize();
+			el.object3D.position.copy(direction.multiplyScalar(-newPosition).add(this.origin));
+		}
 
 		if (this.splineObject.material.uniforms.start) {
 			this.splineObject.material.uniforms.start.value = this.headset.object3D.position.z;
@@ -107,6 +116,20 @@ AFRAME.registerComponent('slider', {
 
 		// Set position.
 		el.object3D.position.set(0, 0, data.anticipationPosition + data.warmupPosition);
+
+		if (data.spawnRotation) {
+			let axis = new THREE.Vector3(0, 1, 0);
+			let theta = data.spawnRotation * 0.0175;
+			let origin = new THREE.Vector3(0, 0, 0);
+
+			origin.applyAxisAngle(axis, theta);
+			this.origin = origin;
+
+			rotateAboutPoint(el.object3D, new THREE.Vector3(0, 0, this.headset.object3D.position.z), axis, theta, true);
+			el.object3D.lookAt(origin);
+			this.startPosition = el.object3D.position.clone();
+			this.startRotation = el.object3D.quaternion.clone();
+		}
 
 		// Reset the state properties.
 		this.returnToPoolTimeStart = undefined;

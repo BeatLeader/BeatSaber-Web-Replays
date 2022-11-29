@@ -164,7 +164,7 @@ AFRAME.registerComponent('beat-generator', {
 
 		events.forEach(event => {
 			if ((event._type == 15 || event._type == 14) && event._value <= 24) {
-				spawnRotation += 60 - (event._value < 4 ? event._value : event._value + 1) * 15;
+				spawnRotation += (60 - (event._value < 4 ? event._value : event._value + 1) * 15) * (event._inverted ? -1 : 1);
 				this.spawnRotationKeys.push(event._songTime);
 				this.spawnRotations[event._songTime] = {rotation: spawnRotation, early: event._type == 14};
 			}
@@ -615,6 +615,9 @@ AFRAME.registerComponent('beat-generator', {
 			beatObj.halfJumpDuration = this.halfJumpDuration;
 			beatObj.warmupTime = data.beatWarmupTime;
 			beatObj.warmupSpeed = data.beatWarmupSpeed;
+
+			beatObj.spawnRotation = this.getRotation(note._songTime);
+			beatObj.tailSpawnRotation = this.getRotation(note._songTailTime);
 
 			if (this.colors['right']) {
 				beatObj.blue = this.colors['right'];

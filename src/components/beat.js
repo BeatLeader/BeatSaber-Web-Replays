@@ -1,4 +1,4 @@
-import {getHorizontalPosition, getVerticalPosition, NoteErrorType, SWORD_OFFSET, BezierCurve} from '../utils';
+import {getHorizontalPosition, getVerticalPosition, NoteErrorType, SWORD_OFFSET, BezierCurve, rotateAboutPoint} from '../utils';
 const COLORS = require('../constants/colors.js');
 
 const auxObj3D = new THREE.Object3D();
@@ -253,7 +253,6 @@ AFRAME.registerComponent('beat', {
 			el.object3D.position.copy(direction.multiplyScalar(-newPosition).add(this.origin));
 			position = el.object3D.position;
 			const xDiff = newX - this.endPos.x;
-			console.log(xDiff);
 			position.z -= xDiff * Math.cos((90 - data.spawnRotation) * 0.0175);
 			position.x += xDiff * Math.sin((90 - data.spawnRotation) * 0.0175);
 
@@ -371,27 +370,6 @@ AFRAME.registerComponent('beat', {
 		this.returnToPool();
 	},
 
-	// obj - your object (THREE.Object3D or derived)
-	// point - the point of rotation (THREE.Vector3)
-	// axis - the axis of rotation (normalized THREE.Vector3)
-	// theta - radian value of rotation
-	// pointIsWorld - boolean indicating the point is in world coordinates (default = false)
-	rotateAboutPoint: function (obj, point, axis, theta, pointIsWorld) {
-		pointIsWorld = pointIsWorld === undefined ? false : pointIsWorld;
-
-		if (pointIsWorld) {
-			obj.parent.localToWorld(obj.position); // compensate for world coordinate
-		}
-
-		obj.position.sub(point); // remove the offset
-		obj.position.applyAxisAngle(axis, theta); // rotate the POSITION
-		obj.position.add(point); // re-add the offset
-
-		if (pointIsWorld) {
-			obj.parent.worldToLocal(obj.position); // undo world coordinates compensation
-		}
-	},
-
 	/**
 	 * Called when summoned by beat-generator.
 	 */
@@ -399,8 +377,6 @@ AFRAME.registerComponent('beat', {
 		const data = this.data;
 		const el = this.el;
 
-		let origin = new THREE.Vector3(getHorizontalPosition(data.horizontalPosition), getVerticalPosition(data.verticalPosition), 0);
-		this.currentPosition = data.anticipationPosition + data.warmupPosition;
 		// Set position.
 
 		if (data.type == 'sliderchain' || data.type == 'sliderhead') {
@@ -425,12 +401,17 @@ AFRAME.registerComponent('beat', {
 			const timeDiff = (data.tailTime - data.time) * t * data.speed;
 			this.chainOffset = timeDiff;
 
-			el.object3D.position.set(pos.x + headX, pos.y + headY, data.anticipationPosition + data.warmupPosition - timeDiff);
-			el.object3D.rotation.set(
-				0,
-				0,
-				Math.atan2(tangent.x, -tangent.y) + THREE.Math.degToRad(this.data.rotationOffset ? this.data.rotationOffset : 0.0)
-			);
+			this.startPos = new THREE.Vector3(pos.x + headX, getVerticalPosition(0), data.anticipationPosition + data.warmupPosition - timeDiff);
+			this.endPos = new THREE.Vector3(pos.x + headX, pos.y + headY, data.anticipationPosition + data.warmupPosition - timeDiff);
+
+			el.object3D.position.copy(this.startPos);
+			el.object3D.rotation.set(0, 0, 0);
+
+			this.zRotation = Math.atan2(tangent.x, -tangent.y) + THREE.Math.degToRad(this.data.rotationOffset ? this.data.rotationOffset : 0.0);
+			const endRotation = new THREE.Euler(0, data.spawnRotation * 0.0175, this.zRotation, data.spawnRotation != 0 ? 'YZX' : 'YXZ');
+
+			this.endRotation = new THREE.Quaternion().setFromEuler(endRotation);
+			this.middleRotation = new THREE.Quaternion().setFromEuler(endRotation);
 		} else {
 			this.startPos = new THREE.Vector3(
 				data.flip ? getHorizontalPosition(data.flipHorizontalPosition) : getHorizontalPosition(data.horizontalPosition),
@@ -440,8 +421,9 @@ AFRAME.registerComponent('beat', {
 
 			this.endPos = new THREE.Vector3(getHorizontalPosition(data.horizontalPosition), getVerticalPosition(data.verticalPosition), 0);
 
-			el.object3D.position.set(this.startPos.x, this.startPos.y, this.startPos.z);
+			el.object3D.position.copy(this.startPos);
 			el.object3D.rotation.set(0, 0, 0);
+
 			var index = Math.abs(Math.round(data.time * 10.0 + this.endPos.x * 2.0 + this.endPos.y * 2.0) % RandomRotations.length);
 			this.zRotation = THREE.Math.degToRad(this.rotations[data.cutDirection] + (this.data.rotationOffset ? this.data.rotationOffset : 0.0));
 
@@ -461,11 +443,12 @@ AFRAME.registerComponent('beat', {
 		if (data.spawnRotation) {
 			let axis = new THREE.Vector3(0, 1, 0);
 			let theta = data.spawnRotation * 0.0175;
+			let origin = new THREE.Vector3(getHorizontalPosition(data.horizontalPosition), getVerticalPosition(data.verticalPosition), 0);
 
 			origin.applyAxisAngle(axis, theta);
 			this.origin = origin;
 
-			this.rotateAboutPoint(el.object3D, new THREE.Vector3(0, 0, this.headset.object3D.position.z), axis, theta, true);
+			rotateAboutPoint(el.object3D, new THREE.Vector3(0, 0, this.headset.object3D.position.z), axis, theta, true);
 			el.object3D.lookAt(origin);
 			this.startPosition = el.object3D.position.clone();
 			this.startRotation = el.object3D.quaternion.clone();

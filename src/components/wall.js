@@ -1,4 +1,4 @@
-import {getHorizontalPosition, getVerticalPosition} from '../utils';
+import {getHorizontalPosition, getVerticalPosition, rotateAboutPoint} from '../utils';
 
 // So wall does not clip the stage ground.
 const RAISE_Y_OFFSET = 0.15;
@@ -125,7 +125,7 @@ AFRAME.registerComponent('wall', {
 		origin.applyAxisAngle(axis, theta);
 		this.origin = origin;
 
-		this.rotateAboutPoint(el.object3D, new THREE.Vector3(0, 0, this.headset.object3D.position.z), axis, theta, true);
+		rotateAboutPoint(el.object3D, new THREE.Vector3(0, 0, this.headset.object3D.position.z), axis, theta, true);
 		el.object3D.lookAt(origin);
 
 		this.startPosition = el.object3D.position.clone();

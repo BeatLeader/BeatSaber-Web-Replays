@@ -25,7 +25,7 @@ AFRAME.registerComponent('wall', {
 		positionOffset: {default: 0},
 		spawnRotation: {default: 0},
 		time: {default: 0},
-		anticipationTime: {default: 0},
+		halfJumpDuration: {default: 0},
 		warmupTime: {default: 0},
 		warmupSpeed: {default: 0},
 	},
@@ -49,7 +49,7 @@ AFRAME.registerComponent('wall', {
 		var newPosition = 0;
 		const currentTime = song.getCurrentTime();
 
-		var timeOffset = data.time - currentTime - data.anticipationTime - data.warmupTime;
+		var timeOffset = data.time - currentTime - data.halfJumpDuration - data.warmupTime;
 
 		if (timeOffset <= -data.warmupTime) {
 			newPosition = data.anticipationPosition - halfDepth;

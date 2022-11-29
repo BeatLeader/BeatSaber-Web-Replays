@@ -18,7 +18,7 @@ AFRAME.registerComponent('slider', {
 		time: {default: 0},
 		tailTime: {default: 0},
 		hasTailNote: {default: false},
-		anticipationTime: {default: 0},
+		halfJumpDuration: {default: 0},
 		warmupTime: {default: 0},
 		warmupSpeed: {default: 0},
 		blue: {default: COLORS.BEAT_BLUE},
@@ -69,7 +69,7 @@ AFRAME.registerComponent('slider', {
 
 		var newPosition = 0;
 
-		var timeOffset = data.time - song.getCurrentTime() - data.anticipationTime - data.warmupTime;
+		var timeOffset = data.time - song.getCurrentTime() - data.halfJumpDuration - data.warmupTime;
 
 		if (timeOffset <= -data.warmupTime) {
 			newPosition = data.anticipationPosition;

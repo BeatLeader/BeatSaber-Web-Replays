@@ -190,7 +190,8 @@ AFRAME.registerComponent('beat-generator', {
 			prevEventsTime = this.eventsTime + skipDebug;
 
 			// Get current song time.
-			this.beatsTime = song.getCurrentTime() + this.beatAnticipationTime + this.data.beatWarmupTime;
+			this.beatsTime = song.getCurrentTime() + this.halfJumpDuration + this.data.beatWarmupTime;
+
 			this.eventsTime = song.getCurrentTime();
 		} else {
 			prevBeatsTime = this.beatsPreloadTime;
@@ -362,7 +363,7 @@ AFRAME.registerComponent('beat-generator', {
 			const data = this.data;
 
 			// Apply sword offset. Blocks arrive on beat in front of the user.
-			beatObj.anticipationPosition = -this.beatAnticipationTime * this.beatSpeed - this.swordOffset;
+			beatObj.anticipationPosition = -this.halfJumpDuration * this.beatSpeed - this.swordOffset;
 			beatObj.color = color;
 			beatObj.cutDirection = this.orientationsHumanized[note._cutDirection];
 
@@ -379,7 +380,7 @@ AFRAME.registerComponent('beat-generator', {
 			beatObj.index = note._index;
 			beatObj.time = note._songTime;
 			beatObj.spawnRotation = this.getRotation(note._songTime);
-			beatObj.anticipationTime = this.beatAnticipationTime;
+			beatObj.halfJumpDuration = this.halfJumpDuration;
 			beatObj.warmupTime = data.beatWarmupTime;
 			beatObj.warmupSpeed = data.beatWarmupSpeed;
 
@@ -439,16 +440,10 @@ AFRAME.registerComponent('beat-generator', {
 			}
 
 			beatObj.gravity = this.noteJumpGravityForLineLayer(beatObj.verticalPosition, 0);
-			beatObj.startVerticalVelocity = beatObj.gravity * this.beatAnticipationTime * 0.5;
-			if (note._flipLineIndex != undefined) {
-				beatObj.flipHorizontalPosition = note._flipLineIndex;
-				beatObj.flipYSide = note._flipYSide;
-			} else {
-				beatObj.flipHorizontalPosition = undefined;
-				beatObj.flipYSide = undefined;
-			}
-
-			// sliderData.headLineIndex, sliderData.headLineLayer
+			beatObj.startVerticalVelocity = beatObj.gravity * this.halfJumpDuration * 0.5;
+			beatObj.flip = note._flipLineIndex !== undefined;
+			beatObj.flipHorizontalPosition = note._flipLineIndex;
+			beatObj.flipYSide = note._flipYSide;
 
 			beatEl.setAttribute('beat', beatObj);
 			beatEl.components.beat.onGenerate(this.mappingExtensions);
@@ -499,7 +494,7 @@ AFRAME.registerComponent('beat-generator', {
 			const speed = this.beatSpeed;
 
 			const durationSeconds = wall._songDuration;
-			wallObj.anticipationPosition = -this.beatAnticipationTime * this.beatSpeed - this.swordOffset;
+			wallObj.anticipationPosition = -this.halfJumpDuration * this.beatSpeed - this.swordOffset;
 			wallObj.durationSeconds = durationSeconds;
 			wallObj.horizontalPosition = wall._lineIndex;
 			if (wall._lineLayer != undefined) {
@@ -514,10 +509,10 @@ AFRAME.registerComponent('beat-generator', {
 			wallObj.warmupPosition = -data.beatWarmupTime * data.beatWarmupSpeed;
 			// wall._width can be like 1 or 2. Map that to 0.6 thickness.
 			wallObj.width = wall._width * WALL_THICKNESS;
-			wallObj.spawnRotation = this.getRotation(wall._songTime);
 
+			wallObj.spawnRotation = this.getRotation(wall._songTime);
 			wallObj.time = wall._songTime;
-			wallObj.anticipationTime = this.beatAnticipationTime;
+			wallObj.halfJumpDuration = this.halfJumpDuration;
 			wallObj.warmupTime = data.beatWarmupTime;
 			wallObj.warmupSpeed = data.beatWarmupSpeed;
 
@@ -601,7 +596,7 @@ AFRAME.registerComponent('beat-generator', {
 			const data = this.data;
 
 			// Apply sword offset. Blocks arrive on beat in front of the user.
-			beatObj.anticipationPosition = -this.beatAnticipationTime * this.beatSpeed - this.swordOffset;
+			beatObj.anticipationPosition = -this.halfJumpDuration * this.beatSpeed - this.swordOffset;
 			beatObj.color = color;
 			beatObj.cutDirection = this.orientationsHumanized[note._cutDirection];
 			beatObj.tailCutDirection = this.orientationsHumanized[note._tailCutDirection];
@@ -617,7 +612,7 @@ AFRAME.registerComponent('beat-generator', {
 			beatObj.time = note._songTime;
 			beatObj.tailTime = note._songTailTime;
 			beatObj.hasTailNote = note.tail != null;
-			beatObj.anticipationTime = this.beatAnticipationTime;
+			beatObj.halfJumpDuration = this.halfJumpDuration;
 			beatObj.warmupTime = data.beatWarmupTime;
 			beatObj.warmupSpeed = data.beatWarmupSpeed;
 
@@ -645,6 +640,13 @@ AFRAME.registerComponent('beat-generator', {
 
 			beatObj.tailHorizontalPosition = note._tailLineIndex;
 			beatObj.tailVerticalPosition = note._tailLineLayer;
+
+			// sliderData.headLineIndex, sliderData.headLineLayer
+			beatObj.gravity = this.noteJumpGravityForLineLayer(beatObj.verticalPosition, 0);
+			beatObj.startVerticalVelocity = beatObj.gravity * this.halfJumpDuration * 0.5;
+			beatObj.flip = note._flipLineIndex !== undefined;
+			beatObj.flipHorizontalPosition = note._flipLineIndex;
+			beatObj.flipYSide = note._flipYSide;
 
 			beatEl.setAttribute('slider', beatObj);
 			beatEl.components.slider.onGenerate(this.mappingExtensions);
@@ -713,7 +715,7 @@ AFRAME.registerComponent('beat-generator', {
 		return pool.requestEntity();
 	},
 
-	calculateJumpTime: function (bpm, njs, offset) {
+	calculateHalfJumpDuration: function (bpm, njs, offset) {
 		let halfjump = 4;
 		let num = 60 / bpm;
 
@@ -731,37 +733,37 @@ AFRAME.registerComponent('beat-generator', {
 	},
 
 	updateJD: function (newJD, itsDefault = false) {
-		const defaultJT = this.calculateJumpTime(this.bpm, this.beatSpeed, this.beatOffset);
-		const defaultJD = (60 / this.bpm) * defaultJT * this.beatSpeed * 2;
+		const defaultHalfJumpDuration = this.calculateHalfJumpDuration(this.bpm, this.beatSpeed, this.beatOffset);
+		const defaultJumpDistance = (60 / this.bpm) * defaultHalfJumpDuration * this.beatSpeed * 2;
 
 		var jt, jd;
 		if (newJD != null) {
 			jt = newJD / (60 / this.bpm) / this.beatSpeed / 2;
 			jd = newJD;
 		} else {
-			jt = defaultJT;
-			jd = defaultJD;
+			jt = defaultHalfJumpDuration;
+			jd = defaultJumpDistance;
 		}
 
 		this.jumpDistance = jd;
 
-		if (!itsDefault || this.beatAnticipationTime == null) {
-			this.beatAnticipationTime = (60 / this.bpm) * jt;
-			this.el.sceneEl.emit('jdCalculated', {jd, defaultJd: itsDefault ? defaultJD : null}, false);
+		if (!itsDefault || this.halfJumpDuration == null) {
+			this.halfJumpDuration = (60 / this.bpm) * jt;
+			this.el.sceneEl.emit('jdCalculated', {jd, defaultJd: itsDefault ? defaultJumpDistance : null}, false);
 		} else if (itsDefault) {
-			this.el.sceneEl.emit('jdCalculated', {defaultJd: defaultJD}, false);
+			this.el.sceneEl.emit('jdCalculated', {defaultJd: defaultJumpDistance}, false);
 		}
 
 		if (!itsDefault) {
 			for (let i = 0; i < this.beatContainer.children.length; i++) {
 				let child = this.beatContainer.children[i];
 				if (child.components.beat) {
-					child.components.beat.data.anticipationTime = this.beatAnticipationTime;
-					child.components.beat.data.anticipationPosition = -this.beatAnticipationTime * this.beatSpeed - this.swordOffset;
+					child.components.beat.data.halfJumpDuration = this.halfJumpDuration;
+					child.components.beat.data.anticipationPosition = -this.halfJumpDuration * this.beatSpeed - this.swordOffset;
 				}
 				if (child.components.wall) {
-					child.components.wall.data.anticipationTime = this.beatAnticipationTime;
-					child.components.wall.data.anticipationPosition = -this.beatAnticipationTime * this.beatSpeed - this.swordOffset;
+					child.components.wall.data.halfJumpDuration = this.halfJumpDuration;
+					child.components.wall.data.anticipationPosition = -this.halfJumpDuration * this.beatSpeed - this.swordOffset;
 				}
 			}
 		}
@@ -794,13 +796,9 @@ AFRAME.registerComponent('beat-generator', {
 		return lineLayer == NoteLineLayer.Upper ? 1.4 : 1.9;
 	},
 
-	highestJumpPosYForLineLayer: function (lineLayer) {
-		return this.highestJumpPosYForLineLayerWithoutJumpOffset(lineLayer);
-	},
-
 	noteJumpGravityForLineLayer: function (lineLayer, beforeJumpLineLayer) {
 		var num = (this.jumpDistance / this.beatSpeed) * 0.5;
-		return (2.0 * (this.highestJumpPosYForLineLayer(lineLayer) - getVerticalPosition(beforeJumpLineLayer))) / (num * num);
+		return (2.0 * (this.highestJumpPosYForLineLayerWithoutJumpOffset(lineLayer) - getVerticalPosition(beforeJumpLineLayer))) / (num * num);
 	},
 });
 

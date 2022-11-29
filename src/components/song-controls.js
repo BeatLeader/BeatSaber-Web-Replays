@@ -1169,6 +1169,17 @@ AFRAME.registerComponent('song-controls', {
 				}
 				volumeHandler();
 			}
+
+			if (e.keyCode === 72) {
+				// h
+
+				if (!this.data.showControls) {
+					document.body.classList.add('showControls');
+				} else {
+					document.body.classList.remove('showControls');
+				}
+				this.data.showControls = !this.data.showControls;
+			}
 		});
 	},
 	setupOrtoCameraControls: function () {

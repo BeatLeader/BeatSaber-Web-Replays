@@ -52,7 +52,7 @@ AFRAME.registerComponent('beat', {
 		speed: {default: 8.0},
 		anticipationPosition: {default: 0},
 		warmupPosition: {default: 0},
-		anticipationTime: {default: 0},
+		halfJumpDuration: {default: 0},
 		warmupTime: {default: 0},
 		warmupSpeed: {default: 0},
 
@@ -75,8 +75,11 @@ AFRAME.registerComponent('beat', {
 		// Jump animation
 		gravity: {default: 0},
 		startVerticalVelocity: {default: 0},
-		flipHorizontalPosition: {default: undefined},
-		flipYSide: {default: undefined},
+
+		// Rabbit jump animation
+		flip: {default: false},
+		flipHorizontalPosition: {default: 0},
+		flipYSide: {default: 0},
 
 		// Loading cubes
 		loadingCube: {default: false},
@@ -111,8 +114,6 @@ AFRAME.registerComponent('beat', {
 		sliderchainblue: 'dotBlueObjTemplate',
 	},
 
-	orientations: [180, 0, 270, 90, 225, 135, 315, 45, 0],
-
 	rotations: {
 		up: 180,
 		down: 0,
@@ -146,8 +147,6 @@ AFRAME.registerComponent('beat', {
 		this.song = this.el.sceneEl.components.song;
 
 		this.scoreEl = null;
-		this.scoreElTime = undefined;
-		this.startPositionZ = undefined;
 		this.rightCutPlanePoints = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
 		this.leftCutPlanePoints = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
 
@@ -223,10 +222,14 @@ AFRAME.registerComponent('beat', {
 
 		var newPosition = 0;
 
-		var timeOffset = data.time - song.getCurrentTime() - data.anticipationTime - data.warmupTime;
+		var timeOffset = data.time - song.getCurrentTime() - data.halfJumpDuration - data.warmupTime;
 
-		var t = (timeOffset / -data.anticipationTime - data.warmupTime) / 2;
-		var num1 = song.getCurrentTime() - (data.time - data.anticipationTime * 0.5);
+		// var t = (timeOffset / -data.halfJumpDuration - data.warmupTime) / 2;
+		var num1 = song.getCurrentTime() - (data.time - data.halfJumpDuration);
+		var t = num1 / (data.halfJumpDuration * 2);
+
+		// var t = (timeOffset / -data.halfJumpDuration - data.warmupTime) / 2;
+		num1 = song.getCurrentTime() - (data.time - data.halfJumpDuration / 2);
 
 		if (timeOffset <= -data.warmupTime) {
 			newPosition = data.anticipationPosition;
@@ -240,21 +243,33 @@ AFRAME.registerComponent('beat', {
 		if (this.chainOffset) {
 			newPosition -= this.chainOffset;
 		}
+
+		const newX = t >= 0.25 ? this.endPos.x : this.startPos.x + (this.endPos.x - this.startPos.x) * InOutQuad(t * 4);
 		if (data.spawnRotation == 0) {
 			position.z = newPosition;
+			position.x = newX;
 		} else {
 			var direction = this.startPosition.clone().sub(this.origin).normalize();
 			el.object3D.position.copy(direction.multiplyScalar(-newPosition).add(this.origin));
 			position = el.object3D.position;
+			const xDiff = newX - this.endPos.x;
+			console.log(xDiff);
+			position.z -= xDiff * Math.cos((90 - data.spawnRotation) * 0.0175);
+			position.x += xDiff * Math.sin((90 - data.spawnRotation) * 0.0175);
+
 			this.currentPosition = newPosition;
 		}
 
 		this.currentPositionZ = newPosition;
 
-		position.x = t >= 0.25 ? this.endPos.x : this.startPos.x + (this.endPos.x - this.startPos.x) * InOutQuad(t * 4);
-		position.y = this.endPos.y + data.startVerticalVelocity * num1 - data.gravity * num1 * num1 * 0.5;
+		//
+		position.y = this.endPos.y + data.startVerticalVelocity * num1 - data.gravity * num1 * num1 * 0.5 - data.verticalPosition * 0.13;
+		if (data.index == 15) {
+			// console.log(song.getCurrentTime() + ' ' + data.time + ' ' + data.halfJumpDuration);
+			console.log(this.endPos.y + '  ' + position.y + '  ' + data.startVerticalVelocity + ' ' + data.gravity);
+		}
 		if (this.yAvoidance != 0 && t < 0.25) {
-			position.y += (0.5 - Math.cos(t * 8.0 * 3.1415927410125732) * 0.5) * this.yAvoidance;
+			position.y += (0.5 - Math.cos(t * 8.0 * Math.PI) * 0.5) * this.yAvoidance;
 		}
 
 		if (t >= 0 && t <= 0.5 && data.type != 'mine') {
@@ -270,13 +285,18 @@ AFRAME.registerComponent('beat', {
 
 			headPseudoLocalPos.y = THREE.Math.lerp(headPseudoLocalPos.y, localPosition.y, 0.8);
 
-			const inverseWorldRotation = new THREE.Vector3(0, -data.spawnRotation, 0);
-
 			el.object3D.up = new THREE.Vector3(-Math.sin(this.zRotation), Math.cos(this.zRotation), 0);
 			el.object3D.lookAt(headPseudoLocalPos);
 
-			let rotation = new THREE.Euler().setFromQuaternion(a.clone().slerp(el.object3D.quaternion, t * 2));
-			el.object3D.rotation.set(rotation.x, rotation.y, rotation.z);
+			if (data.spawnRotation == 0) {
+				let rotation = new THREE.Euler().setFromQuaternion(a.clone().slerp(el.object3D.quaternion, t * 2));
+				el.object3D.rotation.set(rotation.x, rotation.y, rotation.z);
+			} else {
+				// TODO: figure out the look on player in 90/360
+				const inverseWorldRotation = new THREE.Vector3(0, -data.spawnRotation, 0);
+				let rotation = new THREE.Euler().setFromQuaternion(a);
+				el.object3D.rotation.set(rotation.x, rotation.y, rotation.z);
+			}
 		}
 	},
 
@@ -413,9 +433,7 @@ AFRAME.registerComponent('beat', {
 			);
 		} else {
 			this.startPos = new THREE.Vector3(
-				data.flipHorizontalPosition != undefined
-					? getHorizontalPosition(data.flipHorizontalPosition)
-					: getHorizontalPosition(data.horizontalPosition),
+				data.flip ? getHorizontalPosition(data.flipHorizontalPosition) : getHorizontalPosition(data.horizontalPosition),
 				getVerticalPosition(0),
 				data.anticipationPosition + data.warmupPosition
 			);
@@ -427,7 +445,7 @@ AFRAME.registerComponent('beat', {
 			var index = Math.abs(Math.round(data.time * 10.0 + this.endPos.x * 2.0 + this.endPos.y * 2.0) % RandomRotations.length);
 			this.zRotation = THREE.Math.degToRad(this.rotations[data.cutDirection] + (this.data.rotationOffset ? this.data.rotationOffset : 0.0));
 
-			const endRotation = new THREE.Euler(0, 0, this.zRotation, data.spawnRotation != 0 ? 'YZX' : 'YXZ');
+			const endRotation = new THREE.Euler(0, data.spawnRotation * 0.0175, this.zRotation, data.spawnRotation != 0 ? 'YZX' : 'YXZ');
 			const randomRotation = RandomRotations[index];
 			const middleRotation = new THREE.Euler(
 				THREE.Math.degToRad(randomRotation.x * 20) + endRotation.x,
@@ -450,9 +468,10 @@ AFRAME.registerComponent('beat', {
 			this.rotateAboutPoint(el.object3D, new THREE.Vector3(0, 0, this.headset.object3D.position.z), axis, theta, true);
 			el.object3D.lookAt(origin);
 			this.startPosition = el.object3D.position.clone();
+			this.startRotation = el.object3D.quaternion.clone();
 		}
 
-		if (data.flipYSide != undefined) {
+		if (data.flip) {
 			this.yAvoidance = data.flipYSide <= 0.0 ? data.flipYSide * 0.15 : data.flipYSide * 0.45;
 		} else {
 			this.yAvoidance = 0;

@@ -1,4 +1,12 @@
-import {getHorizontalPosition, getVerticalPosition, NoteErrorType, SWORD_OFFSET, BezierCurve, rotateAboutPoint} from '../utils';
+import {
+	getHorizontalPosition,
+	getVerticalPosition,
+	NoteErrorType,
+	SWORD_OFFSET,
+	BezierCurve,
+	rotateAboutPoint,
+	NoteLineLayer,
+} from '../utils';
 const COLORS = require('../constants/colors.js');
 
 const auxObj3D = new THREE.Object3D();
@@ -73,8 +81,7 @@ AFRAME.registerComponent('beat', {
 		spawnRotation: {default: 0},
 
 		// Jump animation
-		gravity: {default: 0},
-		startVerticalVelocity: {default: 0},
+		jumpDistance: {default: 0},
 
 		// Rabbit jump animation
 		flip: {default: false},
@@ -262,11 +269,8 @@ AFRAME.registerComponent('beat', {
 		this.currentPositionZ = newPosition;
 
 		//
-		position.y = this.endPos.y + data.startVerticalVelocity * num1 - data.gravity * num1 * num1 * 0.5 - data.verticalPosition * 0.13;
-		if (data.index == 15) {
-			// console.log(song.getCurrentTime() + ' ' + data.time + ' ' + data.halfJumpDuration);
-			console.log(this.endPos.y + '  ' + position.y + '  ' + data.startVerticalVelocity + ' ' + data.gravity);
-		}
+		position.y = this.endPos.y + this.startVerticalVelocity * num1 - this.gravity * num1 * num1 * 0.5 - data.verticalPosition * 0.13;
+
 		if (this.yAvoidance != 0 && t < 0.25) {
 			position.y += (0.5 - Math.cos(t * 8.0 * Math.PI) * 0.5) * this.yAvoidance;
 		}
@@ -401,8 +405,8 @@ AFRAME.registerComponent('beat', {
 			const timeDiff = (data.tailTime - data.time) * t * data.speed;
 			this.chainOffset = timeDiff;
 
-			this.startPos = new THREE.Vector3(pos.x + headX, getVerticalPosition(0), data.anticipationPosition + data.warmupPosition - timeDiff);
-			this.endPos = new THREE.Vector3(pos.x + headX, pos.y + headY, data.anticipationPosition + data.warmupPosition - timeDiff);
+			this.startPos = new THREE.Vector3(headX, getVerticalPosition(0), data.anticipationPosition + data.warmupPosition - timeDiff);
+			this.endPos = new THREE.Vector3(pos.x + headX, pos.y + headY, 0);
 
 			el.object3D.position.copy(this.startPos);
 			el.object3D.rotation.set(0, 0, 0);
@@ -412,6 +416,7 @@ AFRAME.registerComponent('beat', {
 
 			this.endRotation = new THREE.Quaternion().setFromEuler(endRotation);
 			this.middleRotation = new THREE.Quaternion().setFromEuler(endRotation);
+			this.gravity = this.noteJumpGravityForLineLayer(data.verticalPosition, 0, pos.y);
 		} else {
 			this.startPos = new THREE.Vector3(
 				data.flip ? getHorizontalPosition(data.flipHorizontalPosition) : getHorizontalPosition(data.horizontalPosition),
@@ -438,6 +443,7 @@ AFRAME.registerComponent('beat', {
 
 			this.endRotation = new THREE.Quaternion().setFromEuler(endRotation);
 			this.middleRotation = new THREE.Quaternion().setFromEuler(middleRotation);
+			this.gravity = this.noteJumpGravityForLineLayer(data.verticalPosition, 0, 0);
 		}
 
 		if (data.spawnRotation) {
@@ -459,6 +465,7 @@ AFRAME.registerComponent('beat', {
 		} else {
 			this.yAvoidance = 0;
 		}
+		this.startVerticalVelocity = this.gravity * data.halfJumpDuration * 0.5;
 
 		// Reset the state properties.
 		this.returnToPoolTimeStart = undefined;
@@ -1248,6 +1255,21 @@ AFRAME.registerComponent('beat', {
 			//   this.superCutIdx = (this.superCutIdx + 1) % this.superCuts.length;
 			// }
 		}
+	},
+
+	highestJumpPosYForLineLayerWithoutJumpOffset: function (lineLayer) {
+		if (lineLayer == NoteLineLayer.Base) {
+			return 0.85;
+		}
+		return lineLayer == NoteLineLayer.Upper ? 1.4 : 1.9;
+	},
+
+	noteJumpGravityForLineLayer: function (lineLayer, beforeJumpLineLayer, offset) {
+		var num = (this.data.jumpDistance / this.data.speed) * 0.5;
+		return (
+			(2.0 * (this.highestJumpPosYForLineLayerWithoutJumpOffset(lineLayer) + offset - getVerticalPosition(beforeJumpLineLayer))) /
+			(num * num)
+		);
 	},
 
 	colorAndScaleForScore: (function () {

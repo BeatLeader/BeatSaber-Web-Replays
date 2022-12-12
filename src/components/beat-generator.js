@@ -439,8 +439,7 @@ AFRAME.registerComponent('beat-generator', {
 				}
 			}
 
-			beatObj.gravity = this.noteJumpGravityForLineLayer(beatObj.verticalPosition, 0);
-			beatObj.startVerticalVelocity = beatObj.gravity * this.halfJumpDuration * 0.5;
+			beatObj.jumpDistance = this.jumpDistance;
 			beatObj.flip = note._flipLineIndex !== undefined;
 			beatObj.flipHorizontalPosition = note._flipLineIndex;
 			beatObj.flipYSide = note._flipYSide;
@@ -644,9 +643,7 @@ AFRAME.registerComponent('beat-generator', {
 			beatObj.tailHorizontalPosition = note._tailLineIndex;
 			beatObj.tailVerticalPosition = note._tailLineLayer;
 
-			// sliderData.headLineIndex, sliderData.headLineLayer
-			beatObj.gravity = this.noteJumpGravityForLineLayer(beatObj.verticalPosition, 0);
-			beatObj.startVerticalVelocity = beatObj.gravity * this.halfJumpDuration * 0.5;
+			beatObj.jumpDistance = this.jumpDistance;
 			beatObj.flip = note._flipLineIndex !== undefined;
 			beatObj.flipHorizontalPosition = note._flipLineIndex;
 			beatObj.flipYSide = note._flipYSide;
@@ -790,18 +787,6 @@ AFRAME.registerComponent('beat-generator', {
 				child.components.wall.returnToPool();
 			}
 		}
-	},
-
-	highestJumpPosYForLineLayerWithoutJumpOffset: function (lineLayer) {
-		if (lineLayer == NoteLineLayer.Base) {
-			return 0.85;
-		}
-		return lineLayer == NoteLineLayer.Upper ? 1.4 : 1.9;
-	},
-
-	noteJumpGravityForLineLayer: function (lineLayer, beforeJumpLineLayer) {
-		var num = (this.jumpDistance / this.beatSpeed) * 0.5;
-		return (2.0 * (this.highestJumpPosYForLineLayerWithoutJumpOffset(lineLayer) - getVerticalPosition(beforeJumpLineLayer))) / (num * num);
 	},
 });
 

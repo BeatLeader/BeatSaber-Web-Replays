@@ -260,6 +260,12 @@ function DecodeNote(dataView) {
 	return result;
 }
 
+function DoubleToIEEE(f) {
+	var buf = new ArrayBuffer(4);
+	new Float32Array(buf)[0] = f;
+	return new Uint32Array(buf)[0];
+}
+
 function DecodeCutInfo(dataView) {
 	var result = {};
 
@@ -268,6 +274,8 @@ function DecodeCutInfo(dataView) {
 	result.saberTypeOK = DecodeBool(dataView);
 	result.wasCutTooSoon = DecodeBool(dataView);
 	result.saberSpeed = DecodeFloat(dataView);
+	result.cutDistanceToCenterPositive = DoubleToIEEE(result.saberSpeed) & 1;
+	console.log('' + result.saberSpeed + ' ' + result.cutDistanceToCenterPositive);
 	result.saberDir = DecodeVector3(dataView);
 	result.saberType = DecodeInt(dataView);
 	result.timeDeviation = DecodeFloat(dataView);

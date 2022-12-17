@@ -1129,7 +1129,9 @@ AFRAME.registerComponent('beat', {
 		} else {
 			const scoreEl = this.el.sceneEl.components['pool__beatscoreok'].requestEntity();
 			const colorAndScale = this.colorAndScaleForScore(this.replayNote);
-			scoreEl.setAttribute('text', 'value', '' + score);
+			const signForScore = this.replayNote.cutInfo.cutDistanceToCenterPositive ? 1 : -1;
+
+			scoreEl.setAttribute('text', 'value', '' + score * signForScore);
 
 			let duration = 500 / this.song.speed;
 			if (this.settings.settings.colorScores) {

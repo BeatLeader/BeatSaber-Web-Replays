@@ -58,6 +58,7 @@ AFRAME.registerComponent('replay-player', {
 			const currentTime = this.song.getCurrentTime();
 			for (let i = 0; i < replays.length; i++) {
 				const replay = replays[i];
+				if (!replay || !replay.frames) continue;
 
 				if (replay && !replay.headRotationOffset) {
 					this.calculateHeadRotationOffset(replay);

@@ -96,7 +96,7 @@ AFRAME.registerComponent('replay-loader', {
 						name: data.player.name,
 						avatar: data.player.avatar,
 						country: data.player.country,
-						countryIcon: `https://cdn.beatleader.xyz/flags/${data.player.country.toLowerCase()}.png`,
+						countryIcon: `assets/flags/${data.player.country.toLowerCase()}.png`,
 						profileLink: `https://beatleader.xyz/u/${data.player.id}`,
 						id: data.player.id,
 					};
@@ -156,7 +156,7 @@ AFRAME.registerComponent('replay-loader', {
 					name: data.name,
 					avatar: data.profilePicture.replace('https://cdn.scoresaber.com/', '/cors/score-saber-cdn/'),
 					country: data.country,
-					countryIcon: `https://cdn.beatleader.xyz/flags/${data.country.toLowerCase()}.png`,
+					countryIcon: `assets/flags/${data.country.toLowerCase()}.png`,
 					id: data.id,
 				};
 				this.users.push(user);
@@ -237,7 +237,7 @@ AFRAME.registerComponent('replay-loader', {
 						name: this.user.name,
 						avatar: this.user.profilePicture.replace('https://cdn.scoresaber.com/', '/cors/score-saber-cdn/'),
 						country: this.user.country,
-						countryIcon: `https://cdn.beatleader.xyz/flags/${this.user.country.toLowerCase()}.png`,
+						countryIcon: `assets/flags/${this.user.country.toLowerCase()}.png`,
 						profileLink: `https://scoresaber.com/u/${this.user.id}`,
 						id: this.user.id,
 					},

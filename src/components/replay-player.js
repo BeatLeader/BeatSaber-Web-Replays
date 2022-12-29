@@ -59,6 +59,11 @@ AFRAME.registerComponent('replay-player', {
 			for (let i = 0; i < replays.length; i++) {
 				const replay = replays[i];
 
+				if (replay && !replay.headRotationOffset) {
+					this.calculateHeadRotationOffset(replay);
+					replay.supports360 = replay.info.mode == '360Degree' || replay.info.mode == '90Degree';
+				}
+
 				const frames = replay.frames;
 				var frameIndex = 0;
 				while (frameIndex < frames.length - 2 && frames[frameIndex + 1].time < currentTime) {
@@ -90,14 +95,14 @@ AFRAME.registerComponent('replay-player', {
 				let slerpValue = (currentTime - frame.time) / Math.max(1e-6, nextFrame.time - frame.time);
 
 				if (replay.info.leftHanded) {
-					this.leftHandedTock(frame, nextFrame, height, slerpValue, delta / 1000, i, replays.length > 1, replay.headRotationOffset);
+					this.leftHandedTock(frame, nextFrame, height, slerpValue, delta / 1000, i, replays.length > 1, replay);
 				} else {
-					this.rightHandedTock(frame, nextFrame, height, slerpValue, delta / 1000, i, replays.length > 1, replay.headRotationOffset);
+					this.rightHandedTock(frame, nextFrame, height, slerpValue, delta / 1000, i, replays.length > 1, replay);
 				}
 			}
 		}
 	},
-	rightHandedTock: function (frame, nextFrame, height, slerpValue, delta, index, resetZ, headRotationOffset) {
+	rightHandedTock: function (frame, nextFrame, height, slerpValue, delta, index, resetZ, replay) {
 		const leftSaber = this.saberEls[index * 2].object3D;
 		const rightSaber = this.saberEls[index * 2 + 1].object3D;
 		const leftHitboxSaber = this.firstSaberControl.hitboxSaber;
@@ -114,13 +119,13 @@ AFRAME.registerComponent('replay-player', {
 
 		v1.set(frame.l.p.x, frame.l.p.y, frame.l.p.z);
 		v2.set(nextFrame.l.p.x, nextFrame.l.p.y, nextFrame.l.p.z);
-		if (index == 0) leftHitboxSaber.position.set(v1.x, v1.y - height, -v1.z + (resetZ ? hpostion.z : 0));
+		if (index == povReplayIndex) leftHitboxSaber.position.set(v1.x, v1.y - height, -v1.z + (resetZ ? hpostion.z : 0));
 		const lposition = v1.lerp(v2, slerpValue);
 		leftSaber.position.set(lposition.x, lposition.y - height, -lposition.z + (resetZ ? hpostion.z : 0));
 
 		v1.set(frame.r.p.x, frame.r.p.y, frame.r.p.z);
 		v2.set(nextFrame.r.p.x, nextFrame.r.p.y, nextFrame.r.p.z);
-		if (index == 0) rightHitboxSaber.position.set(v1.x, v1.y - height, -v1.z + (resetZ ? hpostion.z : 0));
+		if (index == povReplayIndex) rightHitboxSaber.position.set(v1.x, v1.y - height, -v1.z + (resetZ ? hpostion.z : 0));
 		const rposition = v1.lerp(v2, slerpValue);
 		rightSaber.position.set(rposition.x, rposition.y - height, -rposition.z + (resetZ ? hpostion.z : 0));
 
@@ -131,7 +136,7 @@ AFRAME.registerComponent('replay-player', {
 		q1.set(frame.l.r.w, frame.l.r.z, frame.l.r.y, frame.l.r.x);
 		q2.set(nextFrame.l.r.w, nextFrame.l.r.z, nextFrame.l.r.y, nextFrame.l.r.x);
 		let lrotation = euler.setFromQuaternion(q1);
-		if (index == 0) leftHitboxSaber.rotation.set(lrotation.x, lrotation.y + Math.PI, -lrotation.z);
+		if (index == povReplayIndex) leftHitboxSaber.rotation.set(lrotation.x, lrotation.y + Math.PI, -lrotation.z);
 
 		const lquat = q1.slerp(q2, slerpValue);
 		lrotation = euler.setFromQuaternion(lquat);
@@ -140,7 +145,7 @@ AFRAME.registerComponent('replay-player', {
 		q1.set(frame.r.r.w, frame.r.r.z, frame.r.r.y, frame.r.r.x);
 		q2.set(nextFrame.r.r.w, nextFrame.r.r.z, nextFrame.r.r.y, nextFrame.r.r.x);
 		let rrotation = euler.setFromQuaternion(q1);
-		if (index == 0) rightHitboxSaber.rotation.set(rrotation.x, rrotation.y + Math.PI, -rrotation.z);
+		if (index == povReplayIndex) rightHitboxSaber.rotation.set(rrotation.x, rrotation.y + Math.PI, -rrotation.z);
 
 		const rquat = q1.slerp(q2, slerpValue);
 		rrotation = euler.setFromQuaternion(rquat);
@@ -156,10 +161,18 @@ AFRAME.registerComponent('replay-player', {
 
 		if (index == povReplayIndex) {
 			this.v3.copy(headset.position);
-
 			const povCamera = this.povCameraRig.object3D;
-			povCamera.getWorldDirection(this.v1);
-			this.v3.add(this.v1.multiplyScalar(parseFloat(this.settings.settings.cameraZPosition)));
+
+			if (replay.supports360) {
+				povCamera.getWorldDirection(this.v1);
+				const offset = this.v1.multiplyScalar(parseFloat(this.settings.settings.cameraZPosition));
+
+				this.v3.z += offset.z;
+				this.v3.x += offset.x;
+			} else {
+				this.v3.z += parseFloat(this.settings.settings.cameraZPosition);
+			}
+
 			povCamera.position.copy(povCamera.position.lerp(this.v3, 5 * delta));
 
 			if (povCamera.hquat) {
@@ -170,7 +183,8 @@ AFRAME.registerComponent('replay-player', {
 			hrotation = euler.setFromQuaternion(hquat);
 
 			let forceForwardLookDirection = this.settings.settings.forceForwardLookDirection;
-			if (headRotationOffset && forceForwardLookDirection) {
+			let headRotationOffset = replay.headRotationOffset;
+			if (!replay.supports360 && headRotationOffset && forceForwardLookDirection) {
 				hrotation.x += headRotationOffset.x;
 				hrotation.z += headRotationOffset.z;
 				this.cameraXRotationSlider.disabled = true;
@@ -183,7 +197,7 @@ AFRAME.registerComponent('replay-player', {
 			povCamera.hquat = hquat;
 		}
 	},
-	leftHandedTock: function (frame, nextFrame, height, slerpValue, delta, index, resetZ, headRotationOffset) {
+	leftHandedTock: function (frame, nextFrame, height, slerpValue, delta, index, resetZ, replay) {
 		const leftSaber = this.saberEls[index * 2].object3D;
 		const rightSaber = this.saberEls[index * 2 + 1].object3D;
 		const leftHitboxSaber = this.firstSaberControl.hitboxSaber;
@@ -201,13 +215,13 @@ AFRAME.registerComponent('replay-player', {
 
 		v1.set(frame.l.p.x, frame.l.p.y, frame.l.p.z);
 		v2.set(nextFrame.l.p.x, nextFrame.l.p.y, nextFrame.l.p.z);
-		rightHitboxSaber.position.set(-v1.x, v1.y - height, -v1.z + (resetZ ? hpostion.z : 0));
+		if (index == povReplayIndex) rightHitboxSaber.position.set(-v1.x, v1.y - height, -v1.z + (resetZ ? hpostion.z : 0));
 		const lposition = v1.lerp(v2, slerpValue);
 		rightSaber.position.set(-lposition.x, lposition.y - height, -lposition.z + (resetZ ? hpostion.z : 0));
 
 		v1.set(frame.r.p.x, frame.r.p.y, frame.r.p.z);
 		v2.set(nextFrame.r.p.x, nextFrame.r.p.y, nextFrame.r.p.z);
-		leftHitboxSaber.position.set(-v1.x, v1.y - height, -v1.z + (resetZ ? hpostion.z : 0));
+		if (index == povReplayIndex) leftHitboxSaber.position.set(-v1.x, v1.y - height, -v1.z + (resetZ ? hpostion.z : 0));
 		const rposition = v1.lerp(v2, slerpValue);
 		leftSaber.position.set(-rposition.x, rposition.y - height, -rposition.z + (resetZ ? hpostion.z : 0));
 
@@ -218,7 +232,7 @@ AFRAME.registerComponent('replay-player', {
 		q1.set(frame.l.r.w, -frame.l.r.z, -frame.l.r.y, frame.l.r.x);
 		q2.set(nextFrame.l.r.w, -nextFrame.l.r.z, -nextFrame.l.r.y, nextFrame.l.r.x);
 		let lrotation = euler.setFromQuaternion(q1);
-		rightHitboxSaber.rotation.set(lrotation.x, lrotation.y + Math.PI, lrotation.z);
+		if (index == povReplayIndex) rightHitboxSaber.rotation.set(lrotation.x, lrotation.y + Math.PI, lrotation.z);
 
 		const lquat = q1.slerp(q2, slerpValue);
 		lrotation = euler.setFromQuaternion(lquat);
@@ -227,7 +241,7 @@ AFRAME.registerComponent('replay-player', {
 		q1.set(frame.r.r.w, -frame.r.r.z, -frame.r.r.y, frame.r.r.x);
 		q2.set(nextFrame.r.r.w, -nextFrame.r.r.z, -nextFrame.r.r.y, nextFrame.r.r.x);
 		let rrotation = euler.setFromQuaternion(q1);
-		leftHitboxSaber.rotation.set(rrotation.x, rrotation.y + Math.PI, -rrotation.z);
+		if (index == povReplayIndex) leftHitboxSaber.rotation.set(rrotation.x, rrotation.y + Math.PI, -rrotation.z);
 
 		const rquat = q1.slerp(q2, slerpValue);
 		rrotation = euler.setFromQuaternion(rquat);
@@ -243,7 +257,18 @@ AFRAME.registerComponent('replay-player', {
 
 		if (index == povReplayIndex) {
 			this.v3.copy(headset.position);
-			this.v3.z += parseFloat(this.settings.settings.cameraZPosition);
+			const povCamera = this.povCameraRig.object3D;
+
+			if (replay.supports360) {
+				povCamera.getWorldDirection(this.v1);
+				const offset = this.v1.multiplyScalar(parseFloat(this.settings.settings.cameraZPosition));
+
+				this.v3.z += offset.z;
+				this.v3.x += offset.x;
+			} else {
+				this.v3.z += parseFloat(this.settings.settings.cameraZPosition);
+			}
+
 			povCamera.position.copy(povCamera.position.lerp(this.v3, 5 * delta));
 
 			if (povCamera.hquat) {
@@ -254,7 +279,8 @@ AFRAME.registerComponent('replay-player', {
 			hrotation = euler.setFromQuaternion(hquat);
 
 			let forceForwardLookDirection = this.settings.settings.forceForwardLookDirection;
-			if (headRotationOffset && forceForwardLookDirection) {
+			let headRotationOffset = replay.headRotationOffset;
+			if (!replay.supports360 && headRotationOffset && forceForwardLookDirection) {
 				hrotation.x += headRotationOffset.x;
 				hrotation.z += headRotationOffset.z;
 				this.cameraXRotationSlider.disabled = true;
@@ -263,8 +289,24 @@ AFRAME.registerComponent('replay-player', {
 				this.cameraXRotationSlider.disabled = false;
 			}
 
-			povCamera.rotation.set(-hrotation.x, hrotation.y + Math.PI, -hrotation.z + Math.PI);
+			povCamera.rotation.set(hrotation.x, hrotation.y + Math.PI, -hrotation.z + Math.PI);
 			povCamera.hquat = hquat;
 		}
+	},
+	calculateHeadRotationOffset: function (replay) {
+		const headQ = new THREE.Quaternion(),
+			headEuler = new THREE.Euler();
+		var x = 0,
+			z = 0;
+		for (var i = 0; i < replay.frames.length; i++) {
+			var rotation = replay.frames[i].h.r;
+			headQ.set(rotation.x, rotation.y, rotation.z, rotation.w);
+			headEuler.setFromQuaternion(headQ);
+			x += headEuler.x;
+			z += headEuler.z;
+		}
+		x /= replay.frames.length;
+		z /= replay.frames.length;
+		this.headRotationOffset = {x: x, z: z};
 	},
 });

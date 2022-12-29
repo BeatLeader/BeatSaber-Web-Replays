@@ -329,6 +329,7 @@ AFRAME.registerComponent('replay-loader', {
 						replaynote.lineLayer = lineLayer;
 						replaynote.mapnote = mapnote;
 						replaynote.scoringType = scoringType - 2;
+						mapnote.found = true;
 						break;
 					}
 				}
@@ -364,7 +365,15 @@ AFRAME.registerComponent('replay-loader', {
 
 		for (var i = 0; i < noteStructs.length; i++) {
 			if (noteStructs[i].index == undefined) {
+				console.log("Couldn't find replay note " + i);
 				console.log(noteStructs[i]);
+			}
+		}
+
+		for (var i = 0; i < mapnotes.length; i++) {
+			if (!mapnotes[i].found) {
+				console.log("Couldn't find map note " + i);
+				console.log(mapnotes[i]);
 			}
 		}
 

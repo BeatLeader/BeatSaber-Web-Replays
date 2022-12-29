@@ -29,6 +29,7 @@ AFRAME.registerComponent('wall', {
 		warmupPosition: {default: 0},
 		width: {default: 1},
 		positionOffset: {default: 0},
+		spawnRotation: {default: 0},
 		time: {default: 0},
 		anticipationTime: {default: 0},
 		warmupTime: {default: 0},
@@ -46,7 +47,6 @@ AFRAME.registerComponent('wall', {
 	updatePosition: function () {
 		const data = this.data;
 		const halfDepth = (data.durationSeconds * data.speed) / 2;
-		const position = this.el.object3D.position;
 		const song = this.song;
 
 		// Move.
@@ -66,7 +66,9 @@ AFRAME.registerComponent('wall', {
 		}
 
 		newPosition += this.headset.object3D.position.z;
-		position.z = newPosition;
+
+		var direction = this.startPosition.clone().sub(this.origin).normalize();
+		this.el.object3D.position.copy(direction.multiplyScalar(-newPosition).add(this.origin));
 
 		if (this.hit && currentTime > this.hitWall.time) {
 			this.hit = false;
@@ -102,24 +104,38 @@ AFRAME.registerComponent('wall', {
 
 		const halfDepth = (data.durationSeconds * data.speed) / 2;
 
-		if (data.isCeiling) {
-			el.object3D.position.set(
-				getHorizontalPosition(data.horizontalPosition) + width / 2 - 0.25,
-				CEILING_HEIGHT,
-				data.anticipationPosition + data.warmupPosition - halfDepth
-			);
-			el.object3D.scale.set(width, CEILING_THICKNESS, data.durationSeconds * data.speed);
-			return;
+		var origin;
+		if (data.isV3) {
+			let y = Math.max(getVerticalPosition(data.verticalPosition) + RAISE_Y_OFFSET, 0.1);
+			origin = new THREE.Vector3(getHorizontalPosition(data.horizontalPosition) + width / 2 - 0.25, y, 0);
+
+			el.object3D.position.set(origin.x, origin.y, data.anticipationPosition + data.warmupPosition - halfDepth);
+			el.object3D.scale.set(width, Math.min(data.height * _noteLinesDistance, 3.1 - y), data.durationSeconds * data.speed);
+		} else {
+			if (data.isCeiling) {
+				origin = new THREE.Vector3(getHorizontalPosition(data.horizontalPosition) + width / 2 - 0.25, CEILING_HEIGHT, 0);
+
+				el.object3D.position.set(origin.x, origin.y, data.anticipationPosition + data.warmupPosition - halfDepth);
+				el.object3D.scale.set(width, CEILING_THICKNESS, data.durationSeconds * data.speed);
+			} else {
+				// Box geometry is constructed from the local 0,0,0 growing in the positive and negative
+				// x and z axis. We have to shift by half width and depth to be positioned correctly.
+				origin = new THREE.Vector3(getHorizontalPosition(data.horizontalPosition) + width / 2 - 0.25, data.height + RAISE_Y_OFFSET, 0);
+				el.object3D.position.set(origin.x, origin.y, data.anticipationPosition + data.warmupPosition - halfDepth);
+				el.object3D.scale.set(width, 2.5, data.durationSeconds * data.speed);
+			}
 		}
 
-		// Box geometry is constructed from the local 0,0,0 growing in the positive and negative
-		// x and z axis. We have to shift by half width and depth to be positioned correctly.
-		el.object3D.position.set(
-			getHorizontalPosition(data.horizontalPosition) + width / 2 - 0.25,
-			data.height + RAISE_Y_OFFSET,
-			data.anticipationPosition + data.warmupPosition - halfDepth
-		);
-		el.object3D.scale.set(width, 2.5, data.durationSeconds * data.speed);
+		let axis = new THREE.Vector3(0, 1, 0);
+		let theta = data.spawnRotation * 0.0175;
+
+		origin.applyAxisAngle(axis, theta);
+		this.origin = origin;
+
+		this.rotateAboutPoint(el.object3D, new THREE.Vector3(0, 0, this.headset.object3D.position.z), axis, theta, true);
+		el.object3D.lookAt(origin);
+
+		this.startPosition = el.object3D.position.clone();
 	},
 
 	setMappingExtensionsHeight: function (startHeight, height) {
@@ -140,6 +156,22 @@ AFRAME.registerComponent('wall', {
 	pause: function () {
 		this.el.object3D.visible = false;
 		this.el.removeAttribute('data-collidable-head');
+	},
+
+	rotateAboutPoint: function (obj, point, axis, theta, pointIsWorld) {
+		pointIsWorld = pointIsWorld === undefined ? false : pointIsWorld;
+
+		if (pointIsWorld) {
+			obj.parent.localToWorld(obj.position); // compensate for world coordinate
+		}
+
+		obj.position.sub(point); // remove the offset
+		obj.position.applyAxisAngle(axis, theta); // rotate the POSITION
+		obj.position.add(point); // re-add the offset
+
+		if (pointIsWorld) {
+			obj.parent.worldToLocal(obj.position); // undo world coordinates compensation
+		}
 	},
 
 	play: function () {

@@ -521,6 +521,15 @@ AFRAME.registerComponent('song-controls', {
 			}
 		});
 
+		this.el.addEventListener('spawnRotationChanged', event => {
+			['scoreContainer', 'lightFixture'].forEach(id => {
+				let scoreContainer = document.getElementById(id);
+				scoreContainer.setAttribute('animation__rotationY', 'from', event.detail.oldSpawnRotation);
+				scoreContainer.setAttribute('animation__rotationY', 'to', event.detail.spawnRotation);
+				scoreContainer.emit('spawnRotationStart', null, false);
+			});
+		});
+
 		const copyURL = (target, time) => {
 			let input = document.createElement('input');
 			target.appendChild(input);

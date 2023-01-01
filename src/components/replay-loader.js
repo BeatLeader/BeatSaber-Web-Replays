@@ -359,7 +359,7 @@ AFRAME.registerComponent('replay-loader', {
 					group = [];
 					break;
 				}
-				if (i > 0 && noteStructs[i + offset].spawnTime == noteStructs[i + offset - 1].spawnTime) {
+				if (i > 0 && noteStructs.length > mapnotes.length && noteStructs[i + offset].spawnTime == noteStructs[i + offset - 1].spawnTime) {
 					offset++;
 					i--;
 					continue;

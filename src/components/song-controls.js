@@ -319,8 +319,8 @@ AFRAME.registerComponent('song-controls', {
 			timelineHover.style.left = marginLeft - 17 + 'px';
 			var hoverText = formatSeconds(seconds);
 			if (note) {
-				hoverText += ' ' + note.accuracy + '%';
-				timelineHover.style.bottom = ((parseFloat(note.accuracy) - this.minAcc) / (this.maxAcc - this.minAcc)) * 40 + 5 + 'px';
+				hoverText += ' ' + note.accuracy.toFixed(2) + '%';
+				timelineHover.style.bottom = ((note.accuracy - this.minAcc) / (this.maxAcc - this.minAcc)) * 40 + 5 + 'px';
 			}
 			timelineHover.innerHTML = hoverText;
 

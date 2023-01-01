@@ -410,7 +410,7 @@ function updateScore(state, payload) {
 	state.score.scoreDescription = (note.totalScore + '').replace(/(\d)(?=(\d{3})+$)/g, '$1 ');
 	state.score.combo = note.combo;
 	state.score.multiplier = note.multiplier;
-	state.score.accuracy = note.accuracy;
+	state.score.accuracy = note.accuracy.toFixed(2);
 	state.score.misses = note.misses;
 	state.score.energy = note.energy;
 	state.lastNoteTime = note.time;

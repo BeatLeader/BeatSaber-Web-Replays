@@ -307,7 +307,7 @@ AFRAME.registerComponent('beat-generator', {
 		this.beatsTime = time;
 		this.isSeeking = true;
 
-		if (this.getRotation(time) != this.spawnRotation) {
+		if (this.getRotation(time) != this.spawnRotation.rotation) {
 			this.el.sceneEl.emit('spawnRotationChanged', {spawnRotation: this.getRotation(time), oldSpawnRotation: this.spawnRotation}, false);
 		}
 	},

@@ -465,7 +465,7 @@ AFRAME.registerComponent('replay-loader', {
 			note.maxScore = scoreForMaxScore;
 
 			if (note.isBlock) {
-				note.accuracy = ((note.totalScore / maxScore) * 100).toFixed(2);
+				note.accuracy = (note.totalScore / maxScore) * 100;
 			} else {
 				note.accuracy = i == 0 ? 0 : allStructs[i - 1].accuracy;
 			}

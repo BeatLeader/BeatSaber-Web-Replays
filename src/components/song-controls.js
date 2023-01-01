@@ -42,6 +42,8 @@ AFRAME.registerComponent('song-controls', {
 		this.settings = this.el.components.settings;
 		this.tick = AFRAME.utils.throttleTick(this.tick.bind(this), 100);
 		this.headsetStates = [];
+		this.switchParents = [];
+		this.colorInputs = [];
 
 		// Seek to ?time if specified.
 		if (queryParamTime !== undefined) {
@@ -158,6 +160,7 @@ AFRAME.registerComponent('song-controls', {
 
 		var updateDivs = false;
 		if (oldData.showColorInputs != data.showColorInputs) {
+			updateDivs = true;
 			const colorInputs = document.querySelectorAll('.colorInput');
 			colorInputs.forEach(element => {
 				element.style.display = data.showColorInputs ? 'block' : 'none';
@@ -165,16 +168,15 @@ AFRAME.registerComponent('song-controls', {
 		}
 
 		if (oldData.showPovs != data.showPovs) {
-			const colorInputs = document.querySelectorAll('.povswitch');
-			colorInputs.forEach(element => {
+			updateDivs = true;
+			this.colorInputs.forEach(element => {
 				element.style.display = data.showPovs ? 'block' : 'none';
 			});
 		}
 
 		if (updateDivs) {
-			const colorInputs = document.querySelectorAll('.colorpovswitchdiv');
-			colorInputs.forEach(element => {
-				element.style.display = data.showColorInputs || data.showColorInputs ? 'flex' : 'none';
+			this.switchParents.forEach(element => {
+				element.style.display = data.showColorInputs || data.showPovs ? 'flex' : 'none';
 			});
 		}
 	},
@@ -1152,12 +1154,15 @@ AFRAME.registerComponent('song-controls', {
 			div3.style.alignItems = 'center';
 			div3.className = 'colorpovswitchdiv';
 			div3.style.justifyContent = 'space-between';
+			this.switchParents.push(div3);
 
 			let povswitch = document.createElement('button');
 			povswitch.title = 'First person view (shift+f)';
 			povswitch.className = 'povswitch';
 			povswitch.style.display = this.data.showPovs ? 'block' : 'none';
 			povswitch.user = user;
+			this.colorInputs.push(povswitch);
+
 			povswitch.addEventListener('click', e => {
 				if (this.povUserIndex === undefined || this.povUserIndex == user.replay.index) {
 					cameraMover.togglePov();
@@ -1171,13 +1176,18 @@ AFRAME.registerComponent('song-controls', {
 				}
 
 				loader.povReplayIndex = user.replay.index;
+
 				if (this.lastpovswitch) {
-					this.lastpovswitch.classList.toggle('selected');
-					this.lastpovswitch = undefined;
+					if (this.povUserIndex !== undefined) {
+						this.lastpovswitch.classList.toggle('selected');
+						this.lastpovswitch = povswitch;
+					} else {
+						this.lastpovswitch = undefined;
+					}
 				} else if (this.lastpovswitch != povswitch) {
 					this.lastpovswitch = povswitch;
-					povswitch.classList.toggle('selected');
 				}
+				povswitch.classList.toggle('selected');
 			});
 
 			div3.style.display = this.data.showPovs || this.data.showColorInputs ? 'flex' : 'none';

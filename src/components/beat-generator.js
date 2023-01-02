@@ -440,6 +440,8 @@ AFRAME.registerComponent('beat-generator', {
 			}
 			beatObj.horizontalPosition = note._lineIndex;
 			beatObj.verticalPosition = note._lineLayer;
+			beatObj.noteId = note._id;
+			beatObj.noteIdWithScoring = note._idWithScoring;
 
 			if (this.noodleExtensions && note._customData) {
 				if (note._customData._position) {

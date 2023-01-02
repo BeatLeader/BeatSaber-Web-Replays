@@ -290,10 +290,21 @@ AFRAME.registerComponent('replay-loader', {
 				cutPoint: info.noteCutInfo ? info.noteCutInfo.cutPoint : null,
 			};
 
-			if (note.id == -1 || (note.id > 0 && note.id < 100000 && note.id % 10 == 9)) {
+			if (note.id == -1) {
 				note.eventType = NoteEventType.bomb;
-				note.id += 4;
+				note.id += 39;
 				note.score = -4;
+			}
+			if (note.id > 0 && note.id < 100000) {
+				if (note.id % 100 == 99) {
+					note.eventType = NoteEventType.bomb;
+					note.id += 39;
+					note.score = -4;
+				} else if (note.id % 10 == 9) {
+					note.eventType = NoteEventType.bomb;
+					note.id -= 1;
+					note.score = -4;
+				}
 			}
 			if (note.eventType == NoteEventType.bomb) {
 				bombStructs.push(note);
@@ -330,15 +341,13 @@ AFRAME.registerComponent('replay-loader', {
 				const mapnote = mapnotes[group[j]];
 				for (var m = 0; m < group.length; m++) {
 					const replaynote = noteStructs[groupIndex + offset + m];
-
 					const lineIndex = mapnote._lineIndex;
 					const colorType = mapnote._type;
 					const cutDirection = mapnote._cutDirection;
 					const lineLayer = mapnote._lineLayer;
 					const scoringType = mapnote._scoringType ? mapnote._scoringType + 2 : 3;
-					const id = lineIndex * 1000 + lineLayer * 100 + colorType * 10 + cutDirection;
 
-					if (replaynote.index == undefined && (replaynote.id == id || replaynote.id == id + scoringType * 10000)) {
+					if (replaynote.index == undefined && (replaynote.id == mapnote._id || replaynote.id == mapnote._idWithScoring)) {
 						replaynote.index = group[j];
 						replaynote.colorType = colorType;
 						replaynote.lineIndex = lineIndex;

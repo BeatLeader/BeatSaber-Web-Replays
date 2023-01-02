@@ -47,6 +47,8 @@ AFRAME.registerComponent('beat', {
 		verticalPosition: {default: 1},
 		warmupPosition: {default: 0},
 		time: {default: 0},
+		noteId: {default: 0},
+		noteIdWithScoring: {default: 0},
 		anticipationTime: {default: 0},
 		warmupTime: {default: 0},
 		warmupSpeed: {default: 0},
@@ -320,6 +322,14 @@ AFRAME.registerComponent('beat', {
 					this.missHit();
 				}
 			}
+
+			if (this.data.type === 'mine' && this.replayNote.totalScore != -1 && this.song.getCurrentTime() > this.replayNote.time) {
+				if (this.replayNote) {
+					this.postScoreEvent();
+				}
+
+				this.destroyMine();
+			}
 		}
 		if (this.hitboxObject) {
 			this.hitboxObject.visible = !this.destroyed && this.settings.settings.showHitboxes;
@@ -444,7 +454,11 @@ AFRAME.registerComponent('beat', {
 			const bombs = this.replayLoader.bombs;
 			if (bombs) {
 				for (var i = 0; i < bombs.length; i++) {
-					if (bombs[i].time < data.time + 0.08 && bombs[i].time > data.time - 0.08) {
+					if (
+						bombs[i].spawnTime < data.time + 0.01 &&
+						bombs[i].spawnTime > data.time - 0.01 &&
+						(!bombs[i].id || bombs[i].id == data.noteId || bombs[i].id == data.noteIdWithScoring)
+					) {
 						this.replayNote = bombs[i];
 						break;
 					}
@@ -983,11 +997,13 @@ AFRAME.registerComponent('beat', {
 				}
 
 				if (this.data.type === 'mine') {
-					if (this.replayNote) {
-						this.postScoreEvent();
-					}
+					if (this.replayNote.totalScore != -1) {
+						if (this.replayNote) {
+							this.postScoreEvent();
+						}
 
-					this.destroyMine();
+						this.destroyMine();
+					}
 
 					return true;
 				}

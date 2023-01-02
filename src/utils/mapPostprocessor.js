@@ -114,10 +114,11 @@ function upgrade(map) {
 function processNoodle(map) {
 	[...map._notes].forEach(note => {
 		if (note._customData && note._customData._cutDirection !== undefined) {
-			note._cutDirection = note._cutDirection !== 8 && note._customData && note._customData._cutDirection !== undefined ? 1 : note._cutDirection;
+			note._cutDirection =
+				note._cutDirection !== 8 && note._customData && note._customData._cutDirection !== undefined ? 1 : note._cutDirection;
 		}
-	} )
-	
+	});
+
 	return map;
 }
 
@@ -317,6 +318,19 @@ function calculateSongTimes(map, info) {
 	});
 }
 
+function setIds(map) {
+	[].concat(map._notes, map._chains).forEach((mapnote, i) => {
+		const lineIndex = mapnote._lineIndex;
+		const colorType = mapnote._type;
+		const cutDirection = colorType != 3 ? mapnote._cutDirection : NoteCutDirection.Any;
+		const lineLayer = mapnote._lineLayer;
+		const scoringType = mapnote._scoringType !== undefined ? mapnote._scoringType + 2 : colorType == 3 ? 2 : 3;
+
+		mapnote._id = lineIndex * 1000 + lineLayer * 100 + colorType * 10 + cutDirection;
+		mapnote._idWithScoring = mapnote._id + scoringType * 10000;
+	});
+}
+
 function postprocess(map, info) {
 	var result = upgrade(map);
 
@@ -325,6 +339,7 @@ function postprocess(map, info) {
 	filterFakeNotes(result);
 	indexNotes(result);
 	calculateSongTimes(result, info);
+	setIds(result);
 
 	return result;
 }

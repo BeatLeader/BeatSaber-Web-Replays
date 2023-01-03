@@ -275,6 +275,7 @@ AFRAME.registerComponent('replay-loader', {
 			.filter(a => a._type == 0 || a._type == 1);
 		this.applyLeftHanded(map, replay);
 		this.applyModifiers(map, replay);
+		this.setIds(map);
 
 		var noteStructs = new Array();
 		var bombStructs = new Array();
@@ -561,6 +562,19 @@ AFRAME.registerComponent('replay-loader', {
 		if (replay.info.modifiers.includes('NO')) {
 			map._obstacles = [];
 		}
+	},
+
+	setIds: function (map) {
+		[].concat(map._notes, map._chains).forEach((mapnote, i) => {
+			var lineIndex = mapnote._lineIndex;
+			var colorType = mapnote._type;
+			var cutDirection = colorType != 3 ? mapnote._cutDirection : NoteCutDirection.Any;
+			var lineLayer = mapnote._lineLayer;
+			var scoringType = mapnote._scoringType !== undefined ? mapnote._scoringType + 2 : colorType == 3 ? 2 : 3;
+
+			mapnote._id = lineIndex * 1000 + lineLayer * 100 + colorType * 10 + cutDirection;
+			mapnote._idWithScoring = mapnote._id + scoringType * 10000;
+		});
 	},
 });
 

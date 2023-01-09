@@ -492,7 +492,8 @@ AFRAME.registerComponent('beat', {
 			}
 		}
 
-		const modifiers = this.replayLoader.replay.info.modifiers;
+		const replay = this.replayLoader.replay;
+		const modifiers = replay.info.modifiers;
 
 		if (modifiers.includes('GN') && this.settings.settings.showNoteModifierVisuals) {
 			this.blockEl.setAttribute('material', 'visible: ' + (this.data.index == 0));
@@ -509,11 +510,30 @@ AFRAME.registerComponent('beat', {
 			signMaterial.uniforms.finish.value = 10000;
 		}
 
+		let smallCubes = modifiers.includes('SC');
+		let proMode = modifiers.includes('PM');
+		const SCScale = 0.5;
+		let noteScale = smallCubes ? SCScale : 1;
+
+		if (smallCubes && this.settings.settings.showNoteModifierVisuals) {
+			this.blockEl.object3D.scale.multiplyScalar(SCScale);
+		}
+		let gameVersion = replay.info.gameVersion.split('.');
+		let oldDots =
+			modifiers.includes('OD') || replay.info.mode.includes('OldDots') || (gameVersion.Length == 3 && parseInt(gameVersion[1]) < 20);
+
+		let boxSettings = {
+			scale: noteScale,
+			oldDots: oldDots,
+			proMode: proMode,
+			isDot: this.data.type == 'dot',
+		};
+
 		this.updatePosition();
 
 		if (!this.hitboxObject) {
 			let itsMine = this.data.type === 'mine';
-			const hitbox = new THREE.WireframeGeometry(itsMine ? new THREE.SphereGeometry(0.18, 16, 8) : new THREE.BoxGeometry(0.8, 0.5, 1.0));
+			const hitbox = new THREE.WireframeGeometry(itsMine ? new THREE.SphereGeometry(0.18, 16, 8) : this.toBigBox(boxSettings));
 			const material = new THREE.LineBasicMaterial({
 				color: 0xff0000,
 				linewidth: 1,
@@ -523,9 +543,9 @@ AFRAME.registerComponent('beat', {
 			line.visible = this.settings.settings.showHitboxes;
 			el.object3D.add(line);
 			if (!itsMine) {
-				line.position.z += 0.25;
+				if (!smallCubes && !proMode) line.position.z += 0.25;
 
-				const smallhitbox = new THREE.WireframeGeometry(new THREE.BoxGeometry(0.48, 0.48, 0.48));
+				const smallhitbox = new THREE.WireframeGeometry(this.toSmallBox(boxSettings));
 				const material2 = new THREE.LineBasicMaterial({
 					color: 0xff00ff,
 					linewidth: 1,
@@ -540,6 +560,21 @@ AFRAME.registerComponent('beat', {
 			}
 			this.hitboxObject = line;
 		}
+	},
+
+	toSmallBox: function (boxSettings) {
+		return this.toScaledBox(0.35, 0.35, 0.35, boxSettings);
+	},
+
+	toBigBox: function (boxSettings) {
+		let height = boxSettings.isDot && !boxSettings.oldDots ? 0.8 : 0.5;
+		return this.toScaledBox(0.8, height, 1.0, boxSettings);
+	},
+
+	toScaledBox: function (width, height, depth, boxSettings) {
+		let box = boxSettings.proMode ? new THREE.BoxGeometry(0.5, 0.5, 0.5) : new THREE.BoxGeometry(width, height, depth);
+		box.scale(boxSettings.scale, boxSettings.scale, boxSettings.scale);
+		return box;
 	},
 
 	initBlock: function () {

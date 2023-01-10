@@ -543,7 +543,7 @@ AFRAME.registerComponent('beat', {
 			line.visible = this.settings.settings.showHitboxes;
 			el.object3D.add(line);
 			if (!itsMine) {
-				if (!smallCubes && !proMode) line.position.z += 0.25;
+				if (!proMode) line.position.z += 0.25 * noteScale;
 
 				const smallhitbox = new THREE.WireframeGeometry(this.toSmallBox(boxSettings));
 				const material2 = new THREE.LineBasicMaterial({

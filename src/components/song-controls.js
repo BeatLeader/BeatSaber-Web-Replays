@@ -1114,13 +1114,13 @@ AFRAME.registerComponent('song-controls', {
 		document.addEventListener('keydown', e => {
 			if (e.keyCode === 38) {
 				// up
-				volumeSlider.valueAsNumber += 0.05;
+				volumeSlider.valueAsNumber += e.shiftKey ? 0.025 : 0.05;
 				masterVolumeHandler();
 			}
 
 			if (e.keyCode === 40) {
-				// up
-				volumeSlider.value -= 0.05;
+				// down
+				volumeSlider.value -= e.shiftKey ? 0.025 : 0.05;
 				masterVolumeHandler();
 			}
 

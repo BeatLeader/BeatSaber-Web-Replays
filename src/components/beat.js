@@ -520,7 +520,7 @@ AFRAME.registerComponent('beat', {
 		}
 		let gameVersion = replay.info.gameVersion.split('.');
 		let oldDots =
-			modifiers.includes('OD') || replay.info.mode.includes('OldDots') || (gameVersion.Length == 3 && parseInt(gameVersion[1]) < 20);
+			modifiers.includes('OD') || replay.info.mode.includes('OldDots') || (gameVersion.length == 3 && parseInt(gameVersion[1]) < 20);
 
 		let boxSettings = {
 			scale: noteScale,
@@ -543,7 +543,7 @@ AFRAME.registerComponent('beat', {
 			line.visible = this.settings.settings.showHitboxes;
 			el.object3D.add(line);
 			if (!itsMine) {
-				if (!smallCubes && !proMode) line.position.z += 0.25;
+				if (!proMode) line.position.z += 0.25 * noteScale;
 
 				const smallhitbox = new THREE.WireframeGeometry(this.toSmallBox(boxSettings));
 				const material2 = new THREE.LineBasicMaterial({

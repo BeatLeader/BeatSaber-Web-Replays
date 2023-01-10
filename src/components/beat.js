@@ -512,21 +512,21 @@ AFRAME.registerComponent('beat', {
 
 		let smallCubes = modifiers.includes('SC');
 		let proMode = modifiers.includes('PM');
-		let noteScale = smallCubes ? 0.5 : 1;
+		const SCScale = 0.5;
+		let noteScale = smallCubes ? SCScale : 1;
 
 		if (smallCubes && this.settings.settings.showNoteModifierVisuals) {
-			this.blockEl.object3D.scale.set(noteScale, noteScale, noteScale);
-		} else {
-			this.blockEl.object3D.scale.set(1, 1, 1);
+			this.blockEl.object3D.scale.multiplyScalar(SCScale);
 		}
-		let gameVersion = replay.info.gameVersion.split('\.');
-		let oldDots = modifiers.includes('OD') || replay.info.mode.includes("OldDots") || (gameVersion.length == 3 && parseInt(gameVersion[1]) < 20);
+		let gameVersion = replay.info.gameVersion.split('.');
+		let oldDots =
+			modifiers.includes('OD') || replay.info.mode.includes('OldDots') || (gameVersion.length == 3 && parseInt(gameVersion[1]) < 20);
 
 		let boxSettings = {
 			scale: noteScale,
 			oldDots: oldDots,
 			proMode: proMode,
-			isDot: this.data.type == 'dot'
+			isDot: this.data.type == 'dot',
 		};
 
 		this.updatePosition();
@@ -572,9 +572,7 @@ AFRAME.registerComponent('beat', {
 	},
 
 	toScaledBox: function (width, height, depth, boxSettings) {
-		let box = boxSettings.proMode
-			? new THREE.BoxGeometry(0.5, 0.5, 0.5)
-			: new THREE.BoxGeometry(width, height, depth);
+		let box = boxSettings.proMode ? new THREE.BoxGeometry(0.5, 0.5, 0.5) : new THREE.BoxGeometry(width, height, depth);
 		box.scale(boxSettings.scale, boxSettings.scale, boxSettings.scale);
 		return box;
 	},

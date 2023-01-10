@@ -3,7 +3,7 @@
 
   <div id="volumeSliderContainer">
     <button id="mixer" title="Volume mixer"><i class="fas fa-sliders-h"></i></button>
-    <input id="volumeSlider" title="Volume" type="range" min="0" max="1" step="0.01" value="0.3"></input>
+    <input id="volumeSlider" title="Volume" type="range" min="0" max="1" step="0.005" value="0.3"></input>
     <div id="mixerContainer" class="volumeHide" style="display: flex; flex-direction: row-reverse;">
       <div style="display: grid;">
         <i class="fas fa-music" style="color: white; transform: rotate(90deg);"></i>
@@ -11,8 +11,8 @@
       </div>
       
       <div style="display: grid;">
-        <input id="musicSlider" title="Music Volume" type="range" min="0" max="1" step="0.01" value="0.3"></input>
-        <input id="hitsoundSlider" title="Hitsound Volume" type="range" min="0" max="1" step="0.01" value="0.3"></input>
+        <input id="musicSlider" title="Music Volume" type="range" min="0" max="1" step="0.005" value="0.3"></input>
+        <input id="hitsoundSlider" title="Hitsound Volume" type="range" min="0" max="1" step="0.005" value="0.3"></input>
       </div>
     </div>
   </div>
@@ -272,14 +272,14 @@
         </label>
       </div>
 
-      <div class="toggleButton" title="Display GN/DA visual.">
+      <div class="toggleButton" title="Display note modifiers visuals.">
         <label class="switch">
           <input type="checkbox" id="showNoteModifierVisuals">
           <span class="slider round"></span>
         </label>
         <label class="toggleButtonLabel">
           <td>
-            <nobr>GN / DA effects</nobr>
+            <nobr>Modifiers visuals</nobr>
           </td>
         </label>
       </div>

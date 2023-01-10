@@ -520,7 +520,7 @@ AFRAME.registerComponent('beat', {
 			this.blockEl.object3D.scale.set(1, 1, 1);
 		}
 		let gameVersion = replay.info.gameVersion.split('\.');
-		let oldDots = modifiers.includes('OD') || replay.info.mode.includes("OldDots") || (gameVersion.Length == 3 && parseInt(gameVersion[1]) < 20);
+		let oldDots = modifiers.includes('OD') || replay.info.mode.includes("OldDots") || (gameVersion.length == 3 && parseInt(gameVersion[1]) < 20);
 
 		let boxSettings = {
 			scale: noteScale,

@@ -518,7 +518,7 @@ AFRAME.registerComponent('beat', {
 		if (smallCubes && this.settings.settings.showNoteModifierVisuals) {
 			this.blockEl.object3D.scale.multiplyScalar(SCScale);
 		}
-		let gameVersion = replay.info.gameVersion.split('.');
+		let gameVersion = (replay.info.gameVersion || "0.0.0").split('.'); // SS doesn't have a game version
 		let oldDots =
 			modifiers.includes('OD') || replay.info.mode.includes('OldDots') || (gameVersion.length == 3 && parseInt(gameVersion[1]) < 20);
 

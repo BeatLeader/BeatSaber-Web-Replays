@@ -30,45 +30,6 @@ function checkBSORFile(file, completion) {
 	reader.readAsArrayBuffer(file);
 }
 
-function ssReplayToBSOR(ssReplay) {
-	var result = {};
-
-	result.info = ssReplay.info;
-	if (ssReplay.dynamicHeight) {
-		result.heights = ssReplay.dynamicHeight.map(el => ({time: el.a, height: el.h}));
-	}
-
-	result.notes = [];
-	result.walls = [];
-	ssReplay.scores.forEach((score, i) => {
-		if (i < ssReplay.noteInfos.length) {
-			var note = {};
-			const info = ssReplay.noteInfos[i];
-			var noteType = parseInt(info[3]);
-			if (isNaN(noteType)) {
-				noteType = 3;
-			}
-			note.noteID = parseInt(info[0]) * 1000 + parseInt(info[1]) * 100 + noteType * 10 + parseInt(info[2]);
-			note.eventTime = ssReplay.noteTime[i];
-			note.spawnTime = i;
-			note.eventType = score > 0 ? NoteEventType.good : (score + 1) * -1;
-			note.score = score;
-			result.notes.push(note);
-		} else {
-			var wall = {};
-			wall.time = ssReplay.noteTime[i];
-			result.walls.push(wall);
-		}
-	});
-	result.frames = ssReplay.frames;
-	result.frames.forEach(frame => {
-		frame.time = frame.a;
-		frame.fps = frame.i;
-	});
-
-	return result;
-}
-
 const StructType = {
 	info: 0,
 	frames: 1,
@@ -373,5 +334,4 @@ function DecodeBool(dataView) {
 }
 
 module.exports.checkBSOR = checkBSOR;
-module.exports.ssReplayToBSOR = ssReplayToBSOR;
 module.exports.NoteEventType = NoteEventType;

@@ -1,8 +1,8 @@
 const dragDrop = require('drag-drop');
-import {checkBSOR, NoteEventType, ssReplayToBSOR} from '../open-replay-decoder';
+import {checkBSOR, NoteEventType} from '../open-replay-decoder';
+import {checkSS} from '../ss-replay-decoder';
 import {Mirror_Horizontal, Mirror_Horizontal_Note} from '../chirality-support';
 import {MultiplierCounter} from '../utils/MultiplierCounter';
-const DECODER_LINK = 'https://ssdecode.azurewebsites.net';
 
 import {NoteCutDirection, difficultyFromName, clamp, ScoringType} from '../utils';
 
@@ -144,28 +144,25 @@ AFRAME.registerComponent('replay-loader', {
 			referrer: 'https://www.beatlooser.com',
 		}).then(res => {
 			res.json().then(leaderbord => {
-				fetch(`${DECODER_LINK}/?playerID=${this.data.playerID}&songID=${leaderbord.id}`)
-					.then(res => res.json())
-					.then(replay => {
-						if (replay.frames) {
-							replay = ssReplayToBSOR(replay);
-							this.replay = replay;
-							this.el.sceneEl.emit(
-								'replayfetched',
-								{hash: replay.info.hash, difficulty: replay.info.difficulty, mode: replay.info.mode},
-								null
-							);
-							if (this.challenge) {
-								this.processScores();
-							}
-						} else {
-							if (replay.errorMessage && replay.errorMessage != 'Replay not found. Try better ranked play.') {
-								this.el.sceneEl.emit('replayloadfailed', {error: replay.errorMessage}, null);
-							} else {
-								this.downloadReplay(hash);
-							}
+				checkSS(`/cors/score-saber/game/replays/${leaderbord.id}-${this.data.playerID}.dat`, true, replay => {
+					if (replay.frames) {
+						this.replay = replay;
+						this.el.sceneEl.emit(
+							'replayfetched',
+							{hash: replay.info.hash, difficulty: replay.info.difficulty, mode: replay.info.mode},
+							null
+						);
+						if (this.challenge) {
+							this.processScores();
 						}
-					});
+					} else {
+						if (replay.errorMessage && replay.errorMessage != 'Replay not found. Try better ranked play.') {
+							this.el.sceneEl.emit('replayloadfailed', {error: replay.errorMessage}, null);
+						} else {
+							this.downloadReplay(hash);
+						}
+					}
+				});
 			});
 		});
 		this.fetchSSPlayer(this.data.playerID);
@@ -199,24 +196,18 @@ AFRAME.registerComponent('replay-loader', {
 			this.el.sceneEl.emit('replayloadfailed', {error: 'File is too big'}, null);
 			return;
 		}
-		(!itsLink ? fetch(DECODER_LINK, {method: 'POST', body: file}) : fetch(`${DECODER_LINK}/?link=${file}`))
-			.then(response => response.json())
-			.then(data => {
-				let replay = ssReplayToBSOR(data);
-				if (replay.frames) {
-					this.replay = replay;
-					this.cleanup && this.cleanup();
-					this.el.sceneEl.emit('replayfetched', {hash: replay.info.hash, difficulty: replay.info.difficulty, mode: replay.info.mode}, null);
-					if (this.challenge) {
-						this.processScores();
-					}
-				} else {
-					this.el.sceneEl.emit('replayloadfailed', {error: replay.errorMessage}, null);
+		checkSS(file, itsLink, replay => {
+			if (replay.frames) {
+				this.replay = replay;
+				this.cleanup && this.cleanup();
+				this.el.sceneEl.emit('replayfetched', {hash: replay.info.hash, difficulty: replay.info.difficulty, mode: replay.info.mode}, null);
+				if (this.challenge) {
+					this.processScores();
 				}
-			})
-			.catch(
-				error => this.el.sceneEl.emit('replayloadfailed', {error}, null) // Handle the error response object
-			);
+			} else {
+				this.el.sceneEl.emit('replayloadfailed', {error: replay.errorMessage}, null);
+			}
+		});
 		let playerId = (itsLink ? file : file.name).split(/\.|-|\//).find(el => (el.length == 16 || el.length == 17) && parseInt(el, 10));
 		if (playerId) {
 			this.fetchSSPlayer(playerId);

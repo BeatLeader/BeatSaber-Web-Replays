@@ -126,24 +126,8 @@ function DecodeFrames(dataView) {
 	var result = [];
 	for (var i = 0; i < length; i++) {
 		var frame = DecodeFrame(dataView);
-		if (frame.time != 0) {
+		if (frame.time != 0 && (result.length == 0 || frame.time != result[result.length - 1].time)) {
 			result.push(frame);
-		}
-	}
-	if (result.length > 2) {
-		var sameFramesCount = 0;
-		while (result[sameFramesCount].time == result[sameFramesCount + 1].time) {
-			sameFramesCount++;
-		}
-
-		if (sameFramesCount > 0) {
-			sameFramesCount++;
-
-			var newResult = [];
-			for (let index = 0; index < result.length; index += sameFramesCount) {
-				newResult.push(result[index]);
-			}
-			result = newResult;
 		}
 	}
 	return result;

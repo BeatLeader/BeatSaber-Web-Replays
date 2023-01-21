@@ -354,11 +354,15 @@ AFRAME.registerComponent('replay-loader', {
 			}
 		};
 
-		for (var i = 0; i < mapnotes.length && i < noteStructs.length; i++) {
+		for (var i = 0; i < mapnotes.length; i++) {
 			if (!group) {
 				if (i + offset == noteStructs.length) {
 					group = [];
 					break;
+				}
+				if (mapnotes[i]._songTime < noteStructs[i + offset].spawnTime - 0.0001) {
+					offset--;
+					continue
 				}
 				if (i > 0 && noteStructs.length > mapnotes.length && noteStructs[i + offset].spawnTime == noteStructs[i + offset - 1].spawnTime) {
 					offset++;

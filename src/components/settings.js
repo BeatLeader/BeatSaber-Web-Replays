@@ -25,10 +25,13 @@ AFRAME.registerComponent('settings', {
 			cameraXRotation: 0,
 			orthographicBackEnabled: document.body.clientWidth > 600,
 			orthographicBackFrustum: 1.4,
+			orthographicBackFar: 25,
 			orthographicRightEnabled: false,
 			orthographicRightFrustum: 2,
+			orthographicRightFar: 10,
 			orthographicTopEnabled: false,
 			orthographicTopFrustum: 2.4,
+			orthographicTopFar: 10,
 
 			// Volume
 			volume: 0.3,

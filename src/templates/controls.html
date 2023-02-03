@@ -71,7 +71,7 @@
       <div class="settingHeader">First person camera</div>
       <div class="toggleButton" title="First person camera field of view">
         <label>
-          <div>
+          <div class="toggleButtonContainer">
             <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Field of view:</nobr></td></label>
             <label id="fovLabel" class="toggleButtonLabel" style="margin-left: 33px;">60°</label>
           </div>
@@ -80,7 +80,7 @@
       </div>
       <div class="toggleButton" title="How far back would be camera relative to the player.">
         <label>
-          <div>
+          <div class="toggleButtonContainer">
             <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Z position offset:</nobr></td></label>
             <label id="cameraZPositionLabel" class="toggleButtonLabel" style="margin-left: 51px;">1m</label>
           </div>
@@ -89,7 +89,7 @@
       </div>
       <div class="toggleButton" title="Rotate camera higher or lower on X axis">
         <label>
-          <div>
+          <div class="toggleButtonContainer">
             <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>X rotation offset:</nobr></td></label>
             <label id="cameraXRotationLabel" class="toggleButtonLabel" style="margin-left: 51px;">0°</label>
           </div>
@@ -139,6 +139,15 @@
           <input id="orthographicBackFrustum" type="range" min="0.5" max="5" step="0.01" value="1.8">
         </label>
       </div>
+      <div class="toggleButton" title="How far camera will render">
+        <label>
+          <div class="toggleButtonContainer">
+            <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Render:</nobr></td></label>
+            <label id="orthographicBackFarLabel" class="toggleButtonLabel" style="margin-left: 15px;">10</label>
+          </div>
+          <input id="orthographicBackFar" type="range" min="0.1" max="50" step="0.1" value="10">
+        </label>
+      </div>
       <div class="toggleButton" title="Show right orthographic camera.">
         <label class="switch">
           <input type="checkbox" id="orthographicRightEnabled">
@@ -148,11 +157,20 @@
       </div>
       <div class="toggleButton" title="How far away from player camera would be">
         <label>
-          <div>
+          <div class="toggleButtonContainer">
             <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Viewport:</nobr></td></label>
             <label id="orthographicRightFrustumLabel" class="toggleButtonLabel" style="margin-left: 15px;">1.8</label>
           </div>
           <input id="orthographicRightFrustum" type="range" min="0.5" max="5" step="0.01" value="1.8">
+        </label>
+      </div>
+      <div class="toggleButton" title="How far camera will render">
+        <label>
+          <div class="toggleButtonContainer">
+            <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Render:</nobr></td></label>
+            <label id="orthographicRightFarLabel" class="toggleButtonLabel" style="margin-left: 15px;">10</label>
+          </div>
+          <input id="orthographicRightFar" type="range" min="0.1" max="50" step="0.1" value="10">
         </label>
       </div>
       <div class="toggleButton" title="Show top orthographic camera.">
@@ -164,11 +182,20 @@
       </div>
       <div class="toggleButton" title="How far away from player camera would be">
         <label>
-          <div>
+          <div class="toggleButtonContainer">
             <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Viewport:</nobr></td></label>
             <label id="orthographicTopFrustumLabel" class="toggleButtonLabel" style="margin-left: 15px;">1.8</label>
           </div>
           <input id="orthographicTopFrustum" type="range" min="0.5" max="5" step="0.01" value="1.8">
+        </label>
+      </div>
+      <div class="toggleButton" title="How far camera will render">
+        <label>
+          <div class="toggleButtonContainer">
+            <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Render:</nobr></td></label>
+            <label id="orthographicTopFarLabel" class="toggleButtonLabel" style="margin-left: 15px;">10</label>
+          </div>
+          <input id="orthographicTopFar" type="range" min="0.1" max="50" step="0.1" value="10">
         </label>
       </div>
     </div>
@@ -300,7 +327,7 @@
 
       <div class="toggleButton" title="Distance from player to note slowdown.">
         <label>
-          <div style="height: .9em">
+          <div class="toggleButtonContainer">
             <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Jump Distance:</nobr></td></label>
             <label id="jdLabel" class="toggleButtonLabel" style="margin-left: 40px;">18</label>
           </div>
@@ -320,7 +347,7 @@
 
       <div class="toggleButton" title="How wide sabers would be compared to normal.">
         <label>
-          <div style="height: .9em">
+          <div class="toggleButtonContainer">
             <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Saber width:</nobr></td></label>
             <label id="saberWidthLabel" class="toggleButtonLabel" style="margin-left: 28px;">100</label>
           </div>
@@ -330,7 +357,7 @@
 
       <div class="toggleButton" title="Custom z offset (visual only).">
         <label>
-          <div style="height: .9em">
+          <div class="toggleButtonContainer">
             <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Saber z offset:</nobr></td></label>
             <label id="saberOffsetLabel" class="toggleButtonLabel" style="margin-left: 40px;">0</label>
           </div>
@@ -340,7 +367,7 @@
 
       <div class="toggleButton" title="How saber trails will appear">
         <label>
-          <div style="height: .9em">
+          <div class="toggleButtonContainer">
             <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Trail type:</nobr></td></label>
           </div>
           <select name="trails" style="margin-left: 5px; margin-bottom: 5px; font-size: .7em" id="trailType">
@@ -354,7 +381,7 @@
 
       <div class="toggleButton" title="Trail length">
         <label>
-          <div style="height: .9em">
+          <div class="toggleButtonContainer">
             <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Trail length: </nobr></td></label>
             <label id="trailLengthLabel" class="toggleButtonLabel" style="margin-left: 28px;">20.0</label>
           </div>
@@ -364,7 +391,7 @@
 
       <div class="toggleButton" title="How many pixels would be rendered for point.">
         <label>
-          <div style="height: .9em">
+          <div class="toggleButtonContainer">
             <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Pixel ratio:</nobr></td></label>
             <label id="pixelRatioLabel" class="toggleButtonLabel" style="margin-left: 20px;">1.5</label>
           </div>

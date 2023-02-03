@@ -705,7 +705,7 @@ AFRAME.registerComponent('song-controls', {
 
 		document.addEventListener('keydown', e => {
 			if (e.key === ' ') {
-				if (this.song.isPlaying) {
+				if (this.song.data.isPlaying) {
 					this.el.sceneEl.emit('pausegame', null, false);
 				} else {
 					this.el.sceneEl.emit('usergesturereceive', null, false);

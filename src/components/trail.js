@@ -236,7 +236,7 @@ const TRAILS = {
 AFRAME.registerComponent('trail', {
 	schema: {
 		color: {type: 'color'},
-		enabled: {default: false},
+		enabled: {default: true},
 		hand: {type: 'string'},
 		trailType: {default: 'bright'},
 		lifetime: {default: 20}, //frames
@@ -399,7 +399,7 @@ AFRAME.registerComponent('trail', {
 		const positionsArray = this.geometry.attributes.position.array;
 		const dataArray = this.geometry.attributes.vertexData.array;
 
-		let setVertexData = function(positionsOffset, dataOffset, quadVertexIndex, node) {
+		let setVertexData = function (positionsOffset, dataOffset, quadVertexIndex, node) {
 			positionsArray[positionsOffset + quadVertexIndex * 3] = node.position.x;
 			positionsArray[positionsOffset + quadVertexIndex * 3 + 1] = node.position.y;
 			positionsArray[positionsOffset + quadVertexIndex * 3 + 2] = node.position.z;
@@ -407,7 +407,7 @@ AFRAME.registerComponent('trail', {
 			dataArray[dataOffset + quadVertexIndex * 4 + 1] = node.forward.y;
 			dataArray[dataOffset + quadVertexIndex * 4 + 2] = node.forward.z;
 			dataArray[dataOffset + quadVertexIndex * 4 + 3] = node.timeDependence;
-		}
+		};
 
 		for (let rowIndex = 0; rowIndex < this.rowsCount - 1; rowIndex++) {
 			const currentNode = rowNodes[rowIndex];
@@ -426,18 +426,18 @@ AFRAME.registerComponent('trail', {
 				//   V2---V3   <-- Next Node
 
 				//<------ T0 - V0 ------>
-				setVertexData(positionsOffset, dataOffset, 0, currentNode)
+				setVertexData(positionsOffset, dataOffset, 0, currentNode);
 				//<------ T0 - V2 ------>
-				setVertexData(positionsOffset, dataOffset, 1, nextNode)
+				setVertexData(positionsOffset, dataOffset, 1, nextNode);
 				//<------ T0 - V1 ------>
-				setVertexData(positionsOffset, dataOffset, 2, currentNode)
+				setVertexData(positionsOffset, dataOffset, 2, currentNode);
 
 				//<------ T1 - V1 ------>
-				setVertexData(positionsOffset, dataOffset, 3, currentNode)
+				setVertexData(positionsOffset, dataOffset, 3, currentNode);
 				//<------ T1 - V3 ------>
-				setVertexData(positionsOffset, dataOffset, 4, nextNode)
+				setVertexData(positionsOffset, dataOffset, 4, nextNode);
 				//<------ T1 - V2 ------>
-				setVertexData(positionsOffset, dataOffset, 5, nextNode)
+				setVertexData(positionsOffset, dataOffset, 5, nextNode);
 			}
 		}
 
@@ -522,7 +522,7 @@ AFRAME.registerComponent('trail', {
 		const splinesAmplitude = splinesWeight / totalWeight;
 
 		for (let i = 0; i < this.rowsCount; i++) {
-			const t = i / (this.verticalResolution);
+			const t = i / this.verticalResolution;
 
 			if (t <= linearAmplitude) {
 				const localT = 1 - t / linearAmplitude;

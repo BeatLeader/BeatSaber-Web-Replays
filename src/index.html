@@ -71,7 +71,7 @@
       bind__pixelRatio="settings.pixelRatio"
       precision="mediump"
       mixin="bgColorAnimation tunnelColorAnimation leftLaserColorAnimation rightLaserColorAnimation textGlowColorAnimation floorColorAnimation"
-      bind__beat-generator="difficulty: challenge.difficulty; mode: challenge.mode; isPlaying: isPlaying; beatSpeed: challenge.beatSpeed; noEffects: settings.noEffects"
+      bind__beat-generator="difficulty: challenge.difficulty; mode: challenge.mode; isPlaying: hasReceivedUserGesture; beatSpeed: challenge.beatSpeed; noEffects: settings.noEffects"
       bind__pauser="enabled: isPlaying"
       bind__song="audio: challenge.audio; difficulty: challenge.difficulty; mode: challenge.mode; isPaused: isPaused; isFinished: isFinished; isPlaying: isPlaying; hasReceivedUserGesture: hasReceivedUserGesture; isBeatsPreloaded: challenge.isBeatsPreloaded"
       bind__song-controls="difficulty: challenge.difficulty; mode: challenge.mode; isSafari: isSafari; isPlaying: isPlaying; songName: challenge.songName; songSubName: challenge.author; songImage: challenge.image; showControls: showControls; leaderboardId: challenge.leaderboardId; songId: challenge.id"
@@ -186,9 +186,8 @@
             render-order="wall"
             class="saber"
             bind__pauser="enabled: isPlaying"
-            bind__saber-controls="bladeEnabled: isPlaying; isPaused: isPaused; enabled: true"
             bind__saber-particles="enabled: isPlaying"
-            bind__trail="enabled: isPlaying; trailType: settings.trailType; lifetime: settings.trailLength"
+            bind__trail="trailType: settings.trailType; lifetime: settings.trailLength"
             bind__cut-plane="enabled: isPlaying"
             bind__raycaster="enabled: isPlaying && !settings.noEffects"
             raycaster="objects: [raycastable-game]; far: 1; interval: 50"
@@ -200,7 +199,6 @@
             <a-entity class="saberContainer" rotation="90 0 0">
               <a-entity
                 class="bladeContainer"
-                bind__visible="isPlaying"
                 animation="property: scale; from: 0 0 0; to: 1 1 1; dur: 750; easing: linear; startEvents: drawblade"
                 scale="0.001 0.001 0.001">
                 <a-entity
@@ -275,7 +273,7 @@
         id="head" 
         class="headset"
         obj-model="obj: #questObj"
-        bind__visible="isPlaying && settings.showHeadset && !pov"
+        bind__visible="hasReceivedUserGesture && settings.showHeadset && !pov"
         position="0 1.7 0.0">
         </a-entity>
       </a-entity>

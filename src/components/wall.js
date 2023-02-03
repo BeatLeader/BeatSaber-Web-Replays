@@ -146,11 +146,6 @@ AFRAME.registerComponent('wall', {
 		el.object3D.scale.set(data.width * 0.98, height * 0.3, data.durationSeconds * (data.speed * this.song.speed));
 	},
 
-	pause: function () {
-		this.el.object3D.visible = false;
-		this.el.removeAttribute('data-collidable-head');
-	},
-
 	rotateAboutPoint: function (obj, point, axis, theta, pointIsWorld) {
 		pointIsWorld = pointIsWorld === undefined ? false : pointIsWorld;
 

@@ -68,7 +68,9 @@
     <link rel="stylesheet" href="assets/img/all.css">
   </head>
   <body id="body" class="showControls">
-    {% include './animations.html' %}
+    
+    <div class="wrapper">
+      {% include './animations.html' %}
     <a-scene
       settings
       bind__pixelRatio="settings.pixelRatio"
@@ -320,7 +322,9 @@
 
     {% include './templates/controls.html' %}
     {% include './templates/ga.html' %}
-
     <span id="iframeUrl"></span>
+  </div>
+
+    
   </body>
 </html>

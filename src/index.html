@@ -186,12 +186,8 @@
             render-order="wall"
             class="saber"
             bind__pauser="enabled: isPlaying"
-            bind__saber-particles="enabled: isPlaying"
             bind__trail="trailType: settings.trailType; lifetime: settings.trailLength"
             bind__cut-plane="enabled: isPlaying"
-            bind__raycaster="enabled: isPlaying && !settings.noEffects"
-            raycaster="objects: [raycastable-game]; far: 1; interval: 50"
-            saber-particles="hand: {{ hand }}"
             saber-controls="hand: {{ hand }}"
             trail="color: {{ bladeColor }}; hand: {{ hand }}"
             cut-plane="hand: {{ hand }}">
@@ -301,18 +297,6 @@
         orthographic-camera="viewportPosition: 3; far: 10; aspect: 1.333"
         bind__orthographic-camera="active: settings.orthographicTopEnabled; far: settings.orthographicTopFar; frustum: settings.orthographicTopFrustum">
       </a-entity>
-
-      <a-entity
-        id="mouseCursor"
-        bind__raycaster="enabled: !inVR"
-        mixin="raycaster"
-        cursor="rayOrigin: mouse"
-        raycaster="objects: [raycastable]"></a-entity>
-      <a-entity
-        id="mouseCursorMesh"
-        mixin="cursorMesh"
-        cursor-mesh="cursorEl: #mouseCursor"
-        bind__cursor-mesh="active: menuActive"></a-entity>
     </a-scene>
 
     {% include './templates/controls.html' %}

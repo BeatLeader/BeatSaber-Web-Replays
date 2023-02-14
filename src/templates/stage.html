@@ -17,8 +17,8 @@
     <a-entity
       render-order="middle"
       id="leftStageLasers" 
-      bind__stage-lasers="enabled: isPlaying && !settings.noEffects"
-      bind__visible="!settings.noEffects">
+      bind__stage-lasers="rotating: isPlaying && !settings.noEffects"
+      >
       <a-entity obj-model="obj: #leftLaserObj" materials="name: stageAdditive" position="-6 2.3 -41"></a-entity>
       <a-entity obj-model="obj: #leftLaserObj" materials="name: stageAdditive" position="-10 0 -40"></a-entity>
       <a-entity obj-model="obj: #leftLaserObj" materials="name: stageAdditive" position="-14 -3 -39"></a-entity>
@@ -27,8 +27,8 @@
     <!-- Lasers right. -->
     <a-entity id="rightStageLasers"
       render-order="middle"
-      bind__stage-lasers="enabled: isPlaying && !settings.noEffects"
-      bind__visible="!settings.noEffects">
+      bind__stage-lasers="rotating: isPlaying && !settings.noEffects"
+      >
       <a-entity obj-model="obj: #rightLaserObj" materials="name: stageAdditive" position="6 4 -38"></a-entity>
       <a-entity obj-model="obj: #rightLaserObj" materials="name: stageAdditive" position="10 2 -37"></a-entity>
       <a-entity obj-model="obj: #rightLaserObj" materials="name: stageAdditive" position="14 -1.5 -36"></a-entity>
@@ -40,25 +40,14 @@
       obj-model="obj: #stageAdditiveObj"
       materials="name: stageAdditive"></a-entity>
   </a-entity>
-
-  <a-entity render-order="walls" id="beams" bind__beams="isPlaying: isPlaying"></a-entity>
-
-  <a-entity
-    id="smoke"
-    bind__visible="!settings.noEffects"
-    animation__rotate="property: rotation; to: 0 360 0; easing: linear; loop: true; dur: 200000"
-    obj-model="obj: #smokeObj"
-    material="src: #atlasImg; shader: flat; transparent: true; depthWrite: false"
-    position="0 1.4 0"></a-entity>
-
+  <a-entity 
+    id="lightFixture"
+    animation__rotationY="property: object3D.rotation.y; from: 0; to: 0; dur: 600; easing: easeInOutQuad; startEvents: spawnRotationStart">
     <a-entity 
-      id="lightFixture"
-      animation__rotationY="property: object3D.rotation.y; from: 0; to: 0; dur: 600; easing: easeInOutQuad; startEvents: spawnRotationStart">
-      <a-entity 
-        light="type: directional; intensity: 3" 
-        position="0 10 10">
-      </a-entity>
+      light="type: directional; intensity: 3" 
+      position="0 10 10">
     </a-entity>
+  </a-entity>
 
   <a-entity
     id="floor"

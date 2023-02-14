@@ -343,6 +343,14 @@ AFRAME.registerComponent('trail', {
 	},
 
 	update: function (oldData) {
+		if (this.data.trailType == 'none') {
+			if (this.mesh) {
+				this.mesh.visible = false;
+			}
+
+			return;
+		}
+
 		this.trailType = TRAILS[this.data.trailType];
 		this.lifetime = this.data.lifetime;
 
@@ -367,7 +375,7 @@ AFRAME.registerComponent('trail', {
 	},
 
 	tick: function (time, delta) {
-		if (!this.data.enabled) {
+		if (this.data.trailType == 'none' || !this.data.enabled) {
 			return;
 		}
 		// Delay before showing after enabled to prevent flash from old saber position.

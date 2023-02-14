@@ -1,6 +1,7 @@
 AFRAME.registerComponent('stage-lasers', {
 	schema: {
-		enabled: {default: true},
+		visible: {default: true},
+		rotating: {default: true},
 	},
 
 	init: function () {
@@ -13,18 +14,11 @@ AFRAME.registerComponent('stage-lasers', {
 	},
 
 	tick: function (time, delta) {
-		this.lasers[0].updateMatrix(true);
-		this.lasers[1].updateMatrix(true);
-		this.lasers[2].updateMatrix(true);
-		if (this.speed === 0) {
-			return;
-		}
 		delta /= 1000;
-		if (!this.data.enabled) {
+		if (!this.data.rotating) {
 			this.speed *= 0.97;
 			if (Math.abs(this.speed) < 0.01) {
 				this.speed = 0;
-				return;
 			}
 		}
 		this.lasers[0].rotation.z += this.speed * delta;

@@ -12,7 +12,6 @@ AFRAME.registerComponent('gpu-preloader', {
 
 		setTimeout(() => {
 			this.preloadAtlas();
-			// this.preloadBeamMap();
 			this.preloadBeatEnvMap();
 		}, 1000);
 	},
@@ -26,11 +25,6 @@ AFRAME.registerComponent('gpu-preloader', {
 		this.preloadTexture(document.querySelector('#wrongRight').object3D.children[0].material.map);
 		this.preloadTexture(document.querySelector('#missLeft').object3D.children[0].material.map);
 		this.preloadTexture(document.querySelector('#missRight').object3D.children[0].material.map);
-	},
-
-	preloadBeamMap: function () {
-		const beams = document.querySelector('[beams]');
-		this.preloadTexture(beams.components.beams.texture);
 	},
 
 	preloadBeatEnvMap: function () {

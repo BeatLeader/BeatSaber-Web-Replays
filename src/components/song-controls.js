@@ -375,9 +375,16 @@ AFRAME.registerComponent('song-controls', {
 		this.el.sceneEl.addEventListener('gamemenuresume', e => {
 			togglePause(true);
 		});
+		this.el.sceneEl.addEventListener('gamemenurestart', e => {
+			this.finished = false;
+			togglePause(true);
+		});
 		this.el.sceneEl.addEventListener('usergesturereceive', e => {
 			if (!this.song.data.isPaused) {
 				togglePause(true);
+			}
+			if (this.finished) {
+				this.el.sceneEl.emit('gamemenurestart', null, false);
 			}
 		});
 

@@ -119,7 +119,6 @@ AFRAME.registerComponent('beat', {
 		this.returnToPoolTimeStart = undefined;
 		this.rotationAxis = new THREE.Vector3();
 
-		this.beams = document.getElementById('beams').components.beams;
 		this.saberEls = this.el.sceneEl.querySelectorAll('[saber-controls]');
 		this.headset = this.el.sceneEl.querySelectorAll('.headset')[0];
 		this.replayLoader = this.el.sceneEl.components['replay-loader'];
@@ -214,9 +213,6 @@ AFRAME.registerComponent('beat', {
 			newPosition = data.anticipationPosition;
 			timeOffset += data.warmupTime;
 			newPosition += -timeOffset * data.speed;
-			if (!this.settings.settings.noEffects && Math.abs(timeOffset) < 1) {
-				this.beams.newBeam(data.color, data.anticipationPosition);
-			}
 		} else {
 			newPosition = data.anticipationPosition + data.warmupPosition + data.warmupSpeed * -timeOffset;
 		}

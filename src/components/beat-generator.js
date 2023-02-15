@@ -200,9 +200,6 @@ AFRAME.registerComponent('beat-generator', {
 
 		if (this.beatsPreloadTime === undefined) {
 			// Get current song time.
-			if (!song.isPlaying) {
-				return;
-			}
 			this.beatsTime = song.getCurrentTime() + this.beatAnticipationTime + this.data.beatWarmupTime;
 			this.eventsTime = song.getCurrentTime();
 		} else {

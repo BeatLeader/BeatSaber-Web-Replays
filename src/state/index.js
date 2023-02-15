@@ -52,6 +52,13 @@ if (isSafari) {
 	(window.AudioContext || window.webkitAudioContext).prototype.decodeOggData = decodeAudioData;
 }
 
+let queryParamTime = AFRAME.utils.getUrlParameter('time').trim();
+if (!queryParamTime || isNaN(queryParamTime)) {
+	queryParamTime = 0;
+} else {
+	queryParamTime = parseFloat(queryParamTime) / 1000;
+}
+
 let beatmaps;
 let difficulties;
 
@@ -91,10 +98,10 @@ AFRAME.registerState({
 		},
 		controllerType: '',
 		damage: 0,
-		hasReceivedUserGesture: false,
+		hasReceivedUserGesture: queryParamTime != 0,
 		inVR: false,
 		pov: false,
-		isPaused: false, // Playing, but paused.
+		isPaused: queryParamTime != 0, // Playing, but paused.
 		isPlaying: false, // Actively playing.
 		isFinished: false,
 		isSafari: isSafari,

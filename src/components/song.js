@@ -21,6 +21,13 @@ if (!!songSpeed) {
 	songSpeed = 1.0;
 }
 
+let queryParamTime = AFRAME.utils.getUrlParameter('time').trim();
+if (!queryParamTime || isNaN(queryParamTime)) {
+	queryParamTime = 0;
+} else {
+	queryParamTime = parseFloat(queryParamTime) / 1000;
+}
+
 /**
  * Active challenge song / audio.
  *
@@ -39,9 +46,8 @@ AFRAME.registerComponent('song', {
 		audio: {default: ''},
 		analyserEl: {type: 'selector', default: '#audioAnalyser'},
 		difficulty: {default: ''},
-		hasReceivedUserGesture: {default: false},
 		isBeatsPreloaded: {default: false},
-		isPaused: {default: false},
+		isPaused: {default: queryParamTime != 0},
 		isPlaying: {default: false},
 		isFinished: {default: false},
 		mode: {default: 'Standard'},
@@ -54,6 +60,7 @@ AFRAME.registerComponent('song', {
 		this.isPlaying = false;
 		this.songLoadingIndicator = document.getElementById('songLoadingIndicator');
 		this.speed = songSpeed;
+		this.hasReceivedUserGesture = false;
 
 		this.audioAnalyser.gainNode.gain.value = this.el.sceneEl.components.settings.settings.volume || BASE_VOLUME;
 
@@ -62,8 +69,13 @@ AFRAME.registerComponent('song', {
 		this.el.addEventListener('wallhitend', this.onWallHitEnd.bind(this));
 
 		const gestureListener = () => {
+			this.hasReceivedUserGesture = true;
 			this.audioAnalyser.suspendContext();
 			this.audioAnalyser.resumeContext();
+
+			if (this.data.isPaused) {
+				this.startAudio();
+			}
 
 			this.el.removeEventListener('usergesturereceive', gestureListener);
 		};
@@ -103,6 +115,10 @@ AFRAME.registerComponent('song', {
 		// Play if we have loaded and were waiting for beats to preload.
 		if (!oldData.isBeatsPreloaded && this.data.isBeatsPreloaded && this.source) {
 			this.startAudio();
+			if (data.isPaused) {
+				this.audioAnalyser.suspendContext();
+				this.isPlaying = false;
+			}
 		}
 
 		// Pause / stop.
@@ -207,7 +223,7 @@ AFRAME.registerComponent('song', {
 	},
 
 	getCurrentTime: function () {
-		if (this.songStartTime === undefined) return 0;
+		if (this.songStartTime === undefined) return queryParamTime;
 
 		let lastCurrentTime = this.lastCurrentTime;
 		const currentTime = this.context.currentTime;

@@ -383,6 +383,10 @@ AFRAME.registerComponent('song-controls', {
 			if (!this.song.data.isPaused) {
 				togglePause(true);
 			}
+			if (this.song.data.isPaused && !this.initialUnpause) {
+				this.initialUnpause = true;
+				this.el.sceneEl.emit('gamemenuresume', null, false);
+			}
 			if (this.finished) {
 				this.el.sceneEl.emit('gamemenurestart', null, false);
 			}

@@ -33,7 +33,6 @@ AFRAME.registerComponent('saber-particles', {
 	play: function () {
 		this.el.addEventListener('raycaster-intersection', this.saberEnter);
 		this.el.addEventListener('raycaster-intersection-cleared', this.saberLeave);
-		this.particlesDur = this.particles.getAttribute('particleplayer').dur;
 	},
 
 	saberEnter: function (evt) {

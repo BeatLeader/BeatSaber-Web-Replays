@@ -1055,7 +1055,7 @@ AFRAME.registerComponent('song-controls', {
 			this.settings.settings.hitSoundVolume = hitsoundSlider.value;
 
 			this.settings.sync();
-			document.getElementById('beatContainer').components['beat-hit-sound'].setVolume(hitsoundSlider.value);
+			// document.getElementById('beatContainer').components['beat-hit-sound'].setVolume(hitsoundSlider.value);
 		};
 
 		let masterVolumeHandler = () => {
@@ -1080,7 +1080,7 @@ AFRAME.registerComponent('song-controls', {
 		musicSlider.value = this.settings.settings.volume;
 		hitsoundSlider.value = this.settings.settings.hitSoundVolume;
 		this.soundKoeff = hitsoundSlider.value / Math.max(musicSlider.value, 0.01);
-		document.getElementById('beatContainer').components['beat-hit-sound'].setVolume(hitsoundSlider.value);
+		// document.getElementById('beatContainer').components['beat-hit-sound'].setVolume(hitsoundSlider.value);
 
 		[volumeSlider, hitsoundSlider, musicSlider].forEach(el => {
 			el.addEventListener('wheel', function (e) {

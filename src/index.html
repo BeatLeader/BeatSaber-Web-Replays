@@ -84,12 +84,7 @@
       bind__replay-loader="difficulty: challenge.difficulty; mode: challenge.mode"
       bind__intro-skip="difficulty: challenge.difficulty"
       bind__fps-counter="enabled: settings.showFps"
-      console-shortcuts
-      debug-controller
-      debug-song-time
-      debug-state
       hack
-      gpu-preloader
       {% if DEBUG_INSPECTOR %}
         inspector="url: http://localhost:3333/dist/aframe-inspector.js"
       {% else %}
@@ -106,9 +101,7 @@
       pool__beat-sliderchain-blue="mixin: blueChain; size: 50; container: #beatContainer; dynamic: true"
       pool__beat-sliderchain-red="mixin: redChain; size: 50; container: #beatContainer; dynamic: true"
       pool__beat-mine="mixin: mine; size: 50; container: #beatContainer; dynamic: true"
-      pool__beat-glow="mixin: beatGlow; size: 20; container: #glowContainer; dynamic: true"
       pool__beatscoreok="mixin: beatScoreOk; size: 30; container: #beatContainer; dynamic: true"
-      pool__beatscoresuper="mixin: beatScoreSuper; size: 10; container: #beatContainer; dynamic: true"
       pool__wall="mixin: wall; size: 30; container: #beatContainer"
       pool__slider-blue="mixin: slider; size: 50; container: #beatContainer; dynamic: true"
       pool__slider-red="mixin: slider; size: 50; container: #beatContainer; dynamic: true"
@@ -140,9 +133,7 @@
       <a-entity id="mineObjTemplate" obj-model="obj: #mineObj" visible="false"></a-entity>
 
       <a-entity 
-        id="beatContainer" 
-        bind__pause="isPaused: !isPlaying" 
-        beat-hit-sound></a-entity>
+        id="beatContainer"></a-entity>
 
       <a-entity
         id="audioAnalyser"
@@ -157,11 +148,6 @@
 
       <a-entity id="glowContainer"></a-entity>
 
-      <!-- super cut fx rings -->
-      {% for i in range(1, 5) %}
-        <a-entity render-order="wall" class="superCutFx" mixin="superCut"></a-entity>
-      {% endfor %}
-
       <!-- Wrong + miss beat visual indicators. -->
       <a-entity id="badContainer" bind__visible="isPlaying">
         <a-entity render-order="walls" id="wrongLeft" mixin='beatWrong'></a-entity>
@@ -169,19 +155,6 @@
         <a-entity render-order="walls" id="missLeft" mixin='beatMiss'></a-entity>
         <a-entity render-order="walls" id="missRight" mixin='beatMiss'></a-entity>
       </a-entity>
-
-      <a-entity
-        render-order="wall"
-        id="saberParticles"
-        particleplayer="src: #saberParticlesJSON; interpolate: true; pscale: 0.55; dur: 800; loop: false; on: explode; img: #sparkImg; count: 20%; animateScale: true; initialScale: 4 1 1; finalScale: 0.2 0.2 1"></a-entity>
-      <a-entity
-        render-order="wall"
-        id="mineParticles"
-        particleplayer="src: #mineParticlesJSON; pscale: 0.5; interpolate: true; scale: 1.4; loop: false; on: explode; img: #sparkImg; count: 20%; animateScale: true; initialScale: 3 1 1; finalScale: 0.2 0.2 1"></a-entity>
-      <a-entity
-        render-order="wall"
-        id="sparkParticles"
-        particleplayer="src: #sparksJSON; color: #fcc; pscale: 0.5; on: explode; scale: 0.12; loop: false; img: #spark2Img; dur: 700; count: 50%; animateScale: true; initialScale: 3 0.5 1; finalScale: 0.1 0.5 1"></a-entity>
 
       <a-entity
         id="controllerRig"

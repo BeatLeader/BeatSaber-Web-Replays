@@ -76,7 +76,9 @@ AFRAME.registerComponent('saber-controls', {
 
 	update: function (oldData) {
 		if (!oldData.bladeEnabled && this.data.bladeEnabled) {
-			this.bladeEl.emit('drawblade');
+			setTimeout(() => {
+				this.bladeEl.emit('drawblade');
+			}, 3000);
 		}
 	},
 

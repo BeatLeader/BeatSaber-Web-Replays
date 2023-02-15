@@ -195,8 +195,8 @@ AFRAME.registerComponent('beat-generator', {
 			return;
 		}
 
-		const prevBeatsTime = this.beatsTime + skipDebug;
-		const prevEventsTime = this.eventsTime + skipDebug;
+		var prevBeatsTime = this.beatsTime + skipDebug;
+		var prevEventsTime = this.eventsTime + skipDebug;
 
 		if (this.beatsPreloadTime === undefined) {
 			// Get current song time.
@@ -207,6 +207,11 @@ AFRAME.registerComponent('beat-generator', {
 			this.beatsTime = this.beatsPreloadTime;
 			this.eventsTime = song.getCurrentTime();
 		}
+
+		// if (!song.isPlaying) {
+		// 	prevBeatsTime = song.getCurrentTime();
+		// 	prevEventsTime = song.getCurrentTime();
+		// }
 
 		// Load in stuff scheduled between the last timestamp and current timestamp.
 		// Beats.

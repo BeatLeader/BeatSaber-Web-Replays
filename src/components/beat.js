@@ -153,16 +153,18 @@ AFRAME.registerComponent('beat', {
 		this.startStrokePosition = new THREE.Vector3();
 
 		this.initBlock();
-		if (this.data.type === 'mine') {
-			this.initMineFragments();
-		} else {
-			this.initFragments();
-		}
+		// if (this.data.type === 'mine') {
+		// 	this.initMineFragments();
+		// } else {
+		// 	this.initFragments();
+		// }
 	},
 
 	update: function (oldData) {
 		this.updateBlock();
-		this.updateFragments();
+		// if (this.settings.settings.reducedDebris) {
+		// 	this.updateFragments();
+		// }
 
 		if (this.data.type === 'mine') {
 			this.poolName = `pool__beat-mine`;
@@ -187,7 +189,6 @@ AFRAME.registerComponent('beat', {
 	},
 
 	play: function () {
-		// this.glow = this.el.sceneEl.components['pool__beat-glow'].requestEntity();
 		if (!this.hitSaberEl) {
 			this.blockEl.object3D.visible = true;
 			this.destroyed = false;
@@ -436,8 +437,8 @@ AFRAME.registerComponent('beat', {
 		this.replayNote = null;
 		if (data.type == 'mine') {
 			// Reset mine.
-			this.blockEl.getObject3D('mesh').material = this.el.sceneEl.systems.materials['mineMaterial' + this.data.color];
-			this.resetMineFragments();
+			// this.blockEl.getObject3D('mesh').material = this.el.sceneEl.systems.materials['mineMaterial' + this.data.color];
+			// this.resetMineFragments();
 
 			const bombs = this.replayLoader.bombs;
 			if (bombs) {
@@ -1015,9 +1016,9 @@ AFRAME.registerComponent('beat', {
 			) {
 				// Sound.
 
-				if (this.data.type !== 'sliderchain' && this.settings.realHitsounds) {
-					this.el.parentNode.components['beat-hit-sound'].playSound(this.el, this.data.cutDirection);
-				}
+				// if (this.data.type !== 'sliderchain' && this.settings.realHitsounds) {
+				// 	this.el.parentNode.components['beat-hit-sound'].playSound(this.el, this.data.cutDirection);
+				// }
 
 				if (this.data.type === 'mine') {
 					if (this.replayNote.totalScore != -1) {
@@ -1256,9 +1257,9 @@ AFRAME.registerComponent('beat', {
 		const noteTime = this.data.time - SWORD_OFFSET / this.data.speed;
 
 		if (currentTime > noteTime) {
-			if (this.data.type !== 'sliderchain') {
-				this.el.parentNode.components['beat-hit-sound'].playSound(this.el, this.data.cutDirection);
-			}
+			// if (this.data.type !== 'sliderchain') {
+			// 	this.el.parentNode.components['beat-hit-sound'].playSound(this.el, this.data.cutDirection);
+			// }
 
 			if (this.hitSoundState == SOUND_STATE.waitingForHitSound) {
 				this.returnToPool(true);

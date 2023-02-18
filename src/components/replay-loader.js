@@ -264,7 +264,7 @@ AFRAME.registerComponent('replay-loader', {
 				return a._time - b._time;
 			})
 			.filter(a => a._type == 0 || a._type == 1);
-		this.applyLeftHanded(map, replay);
+		var leftHanded = this.applyLeftHanded(map, replay);
 		this.applyModifiers(map, replay);
 		this.setIds(map);
 
@@ -362,7 +362,7 @@ AFRAME.registerComponent('replay-loader', {
 				}
 				if (mapnotes[i]._songTime < noteStructs[i + offset].spawnTime - 0.0001) {
 					offset--;
-					continue
+					continue;
 				}
 				if (i > 0 && noteStructs.length > mapnotes.length && noteStructs[i + offset].spawnTime == noteStructs[i + offset - 1].spawnTime) {
 					offset++;
@@ -480,7 +480,7 @@ AFRAME.registerComponent('replay-loader', {
 		this.bombs = bombStructs;
 		this.walls = wallStructs;
 
-		this.el.sceneEl.emit('replayloaded', {notes: allStructs, replay: replay}, null);
+		this.el.sceneEl.emit('replayloaded', {notes: allStructs, replay: replay, leftHanded}, null);
 	},
 
 	applyLeftHanded: function (map, replay) {
@@ -522,19 +522,22 @@ AFRAME.registerComponent('replay-loader', {
 					const scoringType = mirroredNote._scoringType ? mirroredNote._scoringType + 2 : 3;
 					if (!skip && (replayNoteId == mirroredNoteId || replayNoteId == mirroredNoteId + scoringType * 10000)) {
 						Mirror_Horizontal(mape, 4, true, false);
+						return true;
 					}
 
-					return true;
+					return false;
 				}
 
 				return false;
 			};
 
-			checkAndMirror(replayNotes ? replayNotes[unIndex] : null, mapnotes ? mapnotes[unIndex] : null, map, notFound);
+			var result = checkAndMirror(replayNotes ? replayNotes[unIndex] : null, mapnotes ? mapnotes[unIndex] : null, map, notFound);
 
 			if (notFound && mapnotes.length > 2) {
-				checkAndMirror(replayNotes ? replayNotes[unIndex + 2] : null, mapnotes ? mapnotes[unIndex + 2] : null, map, false);
+				result = checkAndMirror(replayNotes ? replayNotes[unIndex + 2] : null, mapnotes ? mapnotes[unIndex + 2] : null, map, false);
 			}
+
+			return result;
 		}
 	},
 

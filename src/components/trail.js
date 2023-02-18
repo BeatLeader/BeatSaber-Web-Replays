@@ -239,6 +239,7 @@ AFRAME.registerComponent('trail', {
 		enabled: {default: true},
 		hand: {type: 'string'},
 		trailType: {default: 'bright'},
+		hiddenSaber: {default: ''},
 		lifetime: {default: 20}, //frames
 	},
 
@@ -343,7 +344,7 @@ AFRAME.registerComponent('trail', {
 	},
 
 	update: function (oldData) {
-		if (this.data.trailType == 'none') {
+		if (this.data.trailType == 'none' || this.data.hand == this.data.hiddenSaber) {
 			if (this.mesh) {
 				this.mesh.visible = false;
 			}
@@ -375,7 +376,7 @@ AFRAME.registerComponent('trail', {
 	},
 
 	tick: function (time, delta) {
-		if (this.data.trailType == 'none' || !this.data.enabled) {
+		if (this.data.trailType == 'none' || !this.data.enabled || this.data.hand == this.data.hiddenSaber) {
 			return;
 		}
 		// Delay before showing after enabled to prevent flash from old saber position.

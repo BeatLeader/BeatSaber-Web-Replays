@@ -87,6 +87,8 @@ AFRAME.registerSystem('materials', {
 		this.splinematerialblue = new THREE.ShaderMaterial({
 			uniforms: {
 				mainColor: {value: new THREE.Color(COLORS.NEON_BLUE)},
+				start: {value: 100},
+				finish: {value: -100},
 			},
 			vertexShader: splineShaders.vertexShader,
 			fragmentShader: splineShaders.fragmentShader,

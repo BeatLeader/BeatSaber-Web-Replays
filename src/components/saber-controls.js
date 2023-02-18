@@ -9,6 +9,7 @@ AFRAME.registerComponent('saber-controls', {
 		isPaused: {default: false},
 		strokeMinSpeed: {default: 0.002},
 		strokeMinDuration: {default: 40},
+		hiddenSaber: {default: ''},
 	},
 
 	init: function () {
@@ -75,6 +76,9 @@ AFRAME.registerComponent('saber-controls', {
 	},
 
 	update: function (oldData) {
+		if (this.data.hiddenSaber == this.data.hand) {
+			this.el.object3D.visible = false;
+		}
 		if (!oldData.bladeEnabled && this.data.bladeEnabled) {
 			this.bladeEl.emit('drawblade');
 		}

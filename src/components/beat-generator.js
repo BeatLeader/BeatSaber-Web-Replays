@@ -503,7 +503,7 @@ AFRAME.registerComponent('beat-generator', {
 			wallObj.durationSeconds = durationSeconds;
 			wallObj.horizontalPosition = wall._lineIndex;
 			if (wall._lineLayer != undefined) {
-				wallObj.verticaltalPosition = wall._lineLayer;
+				wallObj.verticalPosition = wall._lineLayer;
 				wallObj.height = wall._height;
 				wallObj.isV3 = true;
 			} else {

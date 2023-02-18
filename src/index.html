@@ -186,9 +186,10 @@
             render-order="wall"
             class="saber"
             bind__pauser="enabled: isPlaying"
-            bind__trail="trailType: settings.trailType; lifetime: settings.trailLength"
+            bind__trail="trailType: settings.trailType; lifetime: settings.trailLength; hiddenSaber: hiddenSaber"
             bind__cut-plane="enabled: isPlaying"
             saber-controls="hand: {{ hand }}"
+            bind__saber-controls="hiddenSaber: hiddenSaber"
             trail="color: {{ bladeColor }}; hand: {{ hand }}"
             cut-plane="hand: {{ hand }}">
 

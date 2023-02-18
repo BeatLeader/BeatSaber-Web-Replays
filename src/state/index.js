@@ -114,6 +114,7 @@ AFRAME.registerState({
 		saberGlowScale: new THREE.Vector3(1, 1.1, 1),
 		settings: {showHeadset: false, volume: 0.0},
 		localReplay: !AFRAME.utils.getUrlParameter('id') && !AFRAME.utils.getUrlParameter('hash'),
+		hiddenSaber: '',
 	},
 
 	handlers: {
@@ -190,6 +191,10 @@ AFRAME.registerState({
 		replayloaded: (state, payload) => {
 			state.replay.isLoading = false;
 			state.notes = payload.notes;
+			console.log(state.challenge);
+			if (state.challenge.mode == 'OneSaber') {
+				state.hiddenSaber = payload.leftHanded ? 'right' : 'left';
+			}
 		},
 
 		replayloadfailed: (state, payload) => {

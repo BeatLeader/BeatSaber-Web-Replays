@@ -307,21 +307,31 @@ AFRAME.registerComponent('song-controls', {
 			}
 			const seconds = percent * this.song.source.buffer.duration;
 
+			var previousNote = null;
 			var note = null;
 			for (let index = 0; index < this.replayData.notes.length; index++) {
 				const element = this.replayData.notes[index];
 				if (element.time > seconds) {
 					note = element;
+					if (index > 0) {
+						previousNote = this.replayData.notes[index - 1];
+					}
 					break;
 				}
 			}
 
 			timelineHover.style.left = marginLeft - 17 + 'px';
-			var hoverText = formatSeconds(seconds);
+			var hoverText = formatSeconds(seconds, this.settings.settings.timeInBeats);
+
 			if (note) {
+				if (this.settings.settings.timeInBeats) {
+					hoverText += '\nBeat ' + note.mapnote._time.toFixed(3) + '\n';
+				}
+
 				hoverText += ' ' + note.accuracy.toFixed(2) + '%';
 				timelineHover.style.bottom = ((note.accuracy - this.minAcc) / (this.maxAcc - this.minAcc)) * 40 + 5 + 'px';
 			}
+
 			timelineHover.innerHTML = hoverText;
 
 			timelineCursor.style.left = marginLeft + 'px';
@@ -1232,7 +1242,7 @@ function setTimeQueryParam(time) {
 	window.history.pushState({path: url}, '', url);
 }
 
-function formatSeconds(time) {
+function formatSeconds(time, precise) {
 	// Hours, minutes, and seconds.
 	const hrs = ~~(time / 3600);
 	const mins = ~~((time % 3600) / 60);
@@ -1245,6 +1255,9 @@ function formatSeconds(time) {
 	}
 	ret += '' + mins + ':' + (secs < 10 ? '0' : '');
 	ret += '' + secs;
+	if (precise) {
+		ret += '.' + Math.round((time - Math.floor(time)) * 1000);
+	}
 	return ret;
 }
 

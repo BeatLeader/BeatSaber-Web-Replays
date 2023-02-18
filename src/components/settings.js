@@ -18,6 +18,8 @@ AFRAME.registerComponent('settings', {
 			trailType: 'bright',
 			trailLength: 20,
 
+			timeInBeats: false,
+
 			// Camera
 			cameraZPosition: 1,
 			fov: 60,

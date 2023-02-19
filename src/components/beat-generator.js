@@ -46,7 +46,6 @@ AFRAME.registerComponent('beat-generator', {
 		this.beatDataProcessed = false;
 		this.beatContainer = document.getElementById('beatContainer');
 		this.beatsTime = undefined;
-		this.beatsPreloadTime = 0;
 		this.bpm = undefined;
 		this.stageColors = this.el.components['stage-colors'];
 		// Beats arrive at sword stroke distance synced with the music.
@@ -73,7 +72,6 @@ AFRAME.registerComponent('beat-generator', {
 			// https://github.com/joshwcomeau/beatmapper/tree/master/src/helpers/obstacles.helpers.js
 			if (evt.detail.mappingExtensions && evt.detail.mappingExtensions.isEnabled) {
 				this.mappingExtensions = evt.detail.mappingExtensions;
-				console.log(this.mappingExtensions);
 			} else {
 				this.mappingExtensions = null;
 			}
@@ -81,9 +79,6 @@ AFRAME.registerComponent('beat-generator', {
 			if (this.customData && this.customData._requirements) {
 				this.noodleExtensions = this.customData._requirements.includes('Noodle Extensions');
 			}
-		});
-		this.el.addEventListener('songprocessingfinish', evt => {
-			this.beatsTime = 0;
 		});
 		this.el.addEventListener('replayfetched', evt => {
 			if (evt.detail.jd != null) {
@@ -150,7 +145,7 @@ AFRAME.registerComponent('beat-generator', {
 		// Reset variables used during playback.
 		// Beats spawn ahead of the song and get to the user in sync with the music.
 		this.beatsTime = 0;
-		this.beatsPreloadTime = 0;
+		this.beatsPreloadTime = this.el.components.song.getCurrentTime();
 		this.beatData._events.sort(lessThan);
 		this.beatData._obstacles.sort(lessThan);
 		this.beatData._notes.sort(lessThan);
@@ -159,11 +154,9 @@ AFRAME.registerComponent('beat-generator', {
 		this.bpm = this.info._beatsPerMinute;
 
 		this.updateJD(queryJD, true);
-		if (this.jdToSet) {
+		if (this.jdToSet && !queryJD) {
 			this.updateJD(this.jdToSet);
 		}
-
-		this.beatsPreloadTimeTotal = this.beatAnticipationTime + this.data.beatWarmupTime;
 
 		// Some events have negative time stamp to initialize the stage.
 		const events = this.beatData._events;
@@ -195,16 +188,22 @@ AFRAME.registerComponent('beat-generator', {
 			return;
 		}
 
-		const prevBeatsTime = this.beatsTime + skipDebug;
-		const prevEventsTime = this.eventsTime + skipDebug;
+		var prevBeatsTime;
+		var prevEventsTime;
 
 		if (this.beatsPreloadTime === undefined) {
+			prevBeatsTime = this.beatsTime + skipDebug;
+			prevEventsTime = this.eventsTime + skipDebug;
+
 			// Get current song time.
 			this.beatsTime = song.getCurrentTime() + this.beatAnticipationTime + this.data.beatWarmupTime;
 			this.eventsTime = song.getCurrentTime();
 		} else {
+			prevBeatsTime = this.beatsPreloadTime;
+			prevEventsTime = this.beatsPreloadTime;
+
 			// Song is not playing and is preloading beats, use maintained beat time.
-			this.beatsTime = this.beatsPreloadTime;
+			this.beatsTime = this.beatsPreloadTime + this.beatAnticipationTime + this.data.beatWarmupTime;
 			this.eventsTime = song.getCurrentTime();
 		}
 
@@ -287,15 +286,10 @@ AFRAME.registerComponent('beat-generator', {
 
 		if (this.beatsPreloadTime === undefined) {
 			return;
-		}
-
-		if (this.beatsPreloadTime >= this.beatsPreloadTimeTotal) {
+		} else {
 			// Finished preload.
 			this.el.sceneEl.emit('beatloaderpreloadfinish', null, false);
 			this.beatsPreloadTime = undefined;
-		} else {
-			// Continue preload.
-			this.beatsPreloadTime += delta / 1000;
 		}
 	},
 

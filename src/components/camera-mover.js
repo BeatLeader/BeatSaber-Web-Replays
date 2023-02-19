@@ -1,3 +1,16 @@
+var queryPosition = {};
+var queryPositionValid = false;
+
+['cpx', 'cpy', 'cpz', 'crx', 'cry'].forEach(key => {
+	const param = AFRAME.utils.getUrlParameter(key);
+	if (param && param.length) {
+		queryPosition[key] = parseFloat(param);
+		queryPositionValid = true;
+	} else {
+		queryPosition[key] = 0;
+	}
+});
+
 AFRAME.registerComponent('camera-mover', {
 	schema: {},
 
@@ -121,7 +134,9 @@ AFRAME.registerComponent('camera-mover', {
 		});
 
 		const settings = this.settings.settings;
-		if (settings.savedCameraDefault && settings.camera) {
+		if (queryPositionValid) {
+			this.restoreCameraFromQuery();
+		} else if (settings.savedCameraDefault && settings.camera) {
 			this.restoreCameraFromSettings();
 		} else {
 			this.defaultCamera.object3D.position.z = 2.0;
@@ -158,5 +173,33 @@ AFRAME.registerComponent('camera-mover', {
 
 		this.lookControls.pitchObject.rotation.x = camera.rx;
 		this.lookControls.yawObject.rotation.y = camera.ry;
+	},
+
+	restoreCameraFromQuery: function () {
+		const position = this.defaultCamera.object3D.position;
+
+		position.x = queryPosition.cpx;
+		position.y = queryPosition.cpy;
+		position.z = queryPosition.cpz;
+
+		this.lookControls.pitchObject.rotation.x = queryPosition.crx;
+		this.lookControls.yawObject.rotation.y = queryPosition.cry;
+	},
+
+	cameraPositionQuery: function () {
+		const position = this.defaultCamera.object3D.position;
+
+		return (
+			'cpx=' +
+			position.x.toFixed(3) +
+			'&cpy=' +
+			position.y.toFixed(3) +
+			'&cpz=' +
+			position.z.toFixed(3) +
+			'&crx=' +
+			this.lookControls.pitchObject.rotation.x.toFixed(3) +
+			'&cry=' +
+			this.lookControls.yawObject.rotation.y.toFixed(3)
+		);
 	},
 });

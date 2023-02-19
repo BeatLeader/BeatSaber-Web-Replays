@@ -542,7 +542,7 @@ AFRAME.registerComponent('song-controls', {
 			});
 		});
 
-		const copyURL = (target, time) => {
+		const copyURL = (target, time, camera) => {
 			let input = document.createElement('input');
 			target.appendChild(input);
 
@@ -570,6 +570,11 @@ AFRAME.registerComponent('song-controls', {
 					'difficulty'
 				)}${modeParam}${jdParam}`;
 			}
+
+			if (camera) {
+				baseParams += '&' + this.el.components['camera-mover'].cameraPositionQuery();
+			}
+
 			let base = location.protocol + '//' + location.host + '/' + baseParams;
 			input.value =
 				base + (time ? `&time=${Math.round(this.song.getCurrentTime() * 1000)}&speed=${Math.round(this.song.speed * 100)}` : '');
@@ -583,6 +588,9 @@ AFRAME.registerComponent('song-controls', {
 		});
 		document.getElementById('copyURLtime').addEventListener('click', evt => {
 			copyURL(evt.currentTarget, true);
+		});
+		document.getElementById('copyURLcamera').addEventListener('click', evt => {
+			copyURL(evt.currentTarget, true, true);
 		});
 
 		// Toggle volume slider.

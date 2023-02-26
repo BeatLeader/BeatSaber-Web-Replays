@@ -498,13 +498,14 @@ AFRAME.registerComponent('beat', {
 			signMaterial.uniforms.finish.value = 10000;
 		}
 
+		let itsMine = this.data.type === 'mine';
 		let smallCubes = modifiers.includes('SC');
 		let proMode = modifiers.includes('PM');
 		const SCScale = 0.5;
-		let noteScale = smallCubes ? SCScale : 1;
+		let noteScale = smallCubes && !itsMine ? SCScale : 1;
 
 		if (smallCubes && this.settings.settings.showNoteModifierVisuals) {
-			this.blockEl.object3D.scale.multiplyScalar(SCScale);
+			this.blockEl.object3D.scale.multiplyScalar(noteScale);
 		}
 		let gameVersion = (replay.info.gameVersion || '0.0.0').split('.'); // SS doesn't have a game version
 		let oldDots =
@@ -520,7 +521,6 @@ AFRAME.registerComponent('beat', {
 		this.updatePosition();
 
 		if (!this.hitboxObject) {
-			let itsMine = this.data.type === 'mine';
 			const hitbox = new THREE.WireframeGeometry(itsMine ? new THREE.SphereGeometry(0.18, 16, 8) : this.toBigBox(boxSettings));
 			const material = new THREE.LineBasicMaterial({
 				color: 0xff0000,

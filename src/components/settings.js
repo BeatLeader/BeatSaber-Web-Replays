@@ -1,3 +1,5 @@
+const defaultHitSound = require('../../assets/sounds/defaulthitsound.js');
+
 AFRAME.registerComponent('settings', {
 	schema: {},
 
@@ -37,8 +39,11 @@ AFRAME.registerComponent('settings', {
 
 			// Volume
 			volume: 0.3,
-			hitSoundVolume: 0.3 * 0.4,
+			hitSoundVolume: 0.08,
 			volumeMixed: false,
+
+			// HitSound
+			hitSound: defaultHitSound,
 		};
 
 		this.units = {

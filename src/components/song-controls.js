@@ -34,6 +34,7 @@ AFRAME.registerComponent('song-controls', {
 		this.customDifficultyLabels = {};
 		this.song = this.el.components.song;
 		this.settings = this.el.components.settings;
+		this.hitSound = this.el.components['beat-hit-sound'];
 		this.tick = AFRAME.utils.throttleTick(this.tick.bind(this), 100);
 
 		// Seek to ?time if specified.
@@ -125,7 +126,7 @@ AFRAME.registerComponent('song-controls', {
 
 		if (data.isPlaying) {
 			document.body.classList.add('isPlaying');
-		} else {
+		} else if (oldData.isPlaying) {
 			document.body.classList.remove('isPlaying');
 		}
 
@@ -135,15 +136,17 @@ AFRAME.registerComponent('song-controls', {
 			document.body.classList.remove('showControls');
 		}
 
-		document.getElementById('songImage').src = data.songImage;
-		document.getElementById('songName').innerHTML = data.songName;
-		document.getElementById('songName').setAttribute('title', data.songName);
-		document.getElementById('songSubName').innerHTML = data.songSubName;
-		document.getElementById('songSubName').setAttribute('title', data.songSubName);
-		if (data.leaderboardId.length) {
-			document.getElementById('songLink').setAttribute('href', 'https://beatleader.xyz/leaderboard/global/' + data.leaderboardId);
-		} else {
-			document.getElementById('songLink').setAttribute('href', 'https://beatsaver.com/maps/' + data.songId);
+		if (data.songImage != oldData.songImage) {
+			document.getElementById('songImage').src = data.songImage;
+			document.getElementById('songName').innerHTML = data.songName;
+			document.getElementById('songName').setAttribute('title', data.songName);
+			document.getElementById('songSubName').innerHTML = data.songSubName;
+			document.getElementById('songSubName').setAttribute('title', data.songSubName);
+			if (data.leaderboardId.length) {
+				document.getElementById('songLink').setAttribute('href', 'https://beatleader.xyz/leaderboard/global/' + data.leaderboardId);
+			} else {
+				document.getElementById('songLink').setAttribute('href', 'https://beatsaver.com/maps/' + data.songId);
+			}
 		}
 
 		// document.getElementById('controlsMode').innerHTML = data.mode;
@@ -831,6 +834,20 @@ AFRAME.registerComponent('song-controls', {
 		} else {
 			dcorner.style.display = 'block';
 		}
+
+		let hitSoundPicker = document.getElementById('hitSoundPicker');
+		hitSoundPicker.addEventListener('input', e => {
+			let sound = e.target.files[0];
+
+			const dataArrayReader = new FileReader();
+			dataArrayReader.onload = e => {
+				this.settings.settings.hitSound = Buffer.from(e.target.result).toString('base64');
+				this.settings.sync();
+
+				this.hitSound.refreshBuffer();
+			};
+			dataArrayReader.readAsArrayBuffer(sound);
+		});
 	},
 
 	getColors: completion => {
@@ -1073,7 +1090,7 @@ AFRAME.registerComponent('song-controls', {
 			this.settings.settings.hitSoundVolume = hitsoundSlider.value;
 
 			this.settings.sync();
-			document.getElementById('beatContainer').components['beat-hit-sound'].setVolume(hitsoundSlider.value);
+			this.hitSound.setVolume(hitsoundSlider.value);
 		};
 
 		let masterVolumeHandler = () => {
@@ -1098,7 +1115,6 @@ AFRAME.registerComponent('song-controls', {
 		musicSlider.value = this.settings.settings.volume;
 		hitsoundSlider.value = this.settings.settings.hitSoundVolume;
 		this.soundKoeff = hitsoundSlider.value / Math.max(musicSlider.value, 0.01);
-		document.getElementById('beatContainer').components['beat-hit-sound'].setVolume(hitsoundSlider.value);
 
 		[volumeSlider, hitsoundSlider, musicSlider].forEach(el => {
 			el.addEventListener('wheel', function (e) {

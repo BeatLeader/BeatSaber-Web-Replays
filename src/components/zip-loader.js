@@ -229,7 +229,7 @@ AFRAME.registerComponent('zip-loader', {
 					const desiredHash = byHash ? id : currentVersion.hash;
 
 					let callback = (hash, cover, zipUrl, fallbackUrl) => {
-						data.image = utils.beatsaverCdnCors(cover);
+						data.image = cover;
 						data.hash = hash;
 						data.leaderboardId = this.leaderboardId;
 						this.data.hash = hash;

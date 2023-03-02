@@ -11714,12 +11714,12 @@ module.exports = registerElement('a-mixin', {
 
 },{"../utils":158,"./a-node":84,"./a-register-element":85,"./component":86}],84:[function(require,module,exports){
 /* global CustomEvent */
-var registerElement = require('./a-register-element').registerElement;
-var isNode = require('./a-register-element').isNode;
-var utils = require('../utils/');
+var registerElement = require("./a-register-element").registerElement;
+var isNode = require("./a-register-element").isNode;
+var utils = require("../utils/");
 
-var warn = utils.debug('core:a-node:warn');
-var error = utils.debug('core:a-node:error');
+var warn = utils.debug("core:a-node:warn");
+var error = utils.debug("core:a-node:error");
 
 /**
  * Base class for A-Frame that manages loading of objects.
@@ -11727,16 +11727,16 @@ var error = utils.debug('core:a-node:error');
  * Nodes can be modified using mixins.
  * Nodes emit a `loaded` event when they and their children have initialized.
  */
-module.exports = registerElement('a-node', {
+module.exports = registerElement("a-node", {
   prototype: Object.create(window.HTMLElement.prototype, {
     createdCallback: {
       value: function () {
-        this.computedMixinStr = '';
+        this.computedMixinStr = "";
         this.hasLoaded = false;
         this.isNode = true;
         this.mixinEls = [];
       },
-      writable: window.debug
+      writable: window.debug,
     },
 
     attachedCallback: {
@@ -11745,19 +11745,25 @@ module.exports = registerElement('a-node', {
         this.sceneEl = this.closestScene();
 
         if (!this.sceneEl) {
-          warn('You are attempting to attach <' + this.tagName + '> outside of an A-Frame ' +
-               'scene. Append this element to `<a-scene>` instead.');
+          warn(
+            "You are attempting to attach <" +
+              this.tagName +
+              "> outside of an A-Frame " +
+              "scene. Append this element to `<a-scene>` instead."
+          );
         }
 
         this.hasLoaded = false;
-        this.emit('nodeready', undefined, false);
+        this.emit("nodeready", undefined, false);
 
         if (!this.isMixin) {
-          mixins = this.getAttribute('mixin');
-          if (mixins) { this.updateMixins(mixins); }
+          mixins = this.getAttribute("mixin");
+          if (mixins) {
+            this.updateMixins(mixins);
+          }
         }
       },
-      writable: window.debug
+      writable: window.debug,
     },
 
     /**
@@ -11766,27 +11772,31 @@ module.exports = registerElement('a-node', {
     attributeChangedCallback: {
       value: function (attr, oldVal, newVal) {
         // Ignore if `<a-node>` code is just updating computed mixin in the DOM.
-        if (newVal === this.computedMixinStr) { return; }
+        if (newVal === this.computedMixinStr) {
+          return;
+        }
 
-        if (attr === 'mixin' && !this.isMixin) {
+        if (attr === "mixin" && !this.isMixin) {
           this.updateMixins(newVal, oldVal);
         }
-      }
+      },
     },
 
-   /**
-    * Returns the first scene by traversing up the tree starting from and
-    * including receiver element.
-    */
+    /**
+     * Returns the first scene by traversing up the tree starting from and
+     * including receiver element.
+     */
     closestScene: {
-      value: function closest () {
+      value: function closest() {
         var element = this;
         while (element) {
-          if (element.isScene) { break; }
+          if (element.isScene) {
+            break;
+          }
           element = element.parentElement;
         }
         return element;
-      }
+      },
     },
 
     /**
@@ -11796,22 +11806,28 @@ module.exports = registerElement('a-node', {
      * @param {string} selector - Selector of element to find.
      */
     closest: {
-      value: function closest (selector) {
-        var matches = this.matches || this.mozMatchesSelector ||
-          this.msMatchesSelector || this.oMatchesSelector || this.webkitMatchesSelector;
+      value: function closest(selector) {
+        var matches =
+          this.matches ||
+          this.mozMatchesSelector ||
+          this.msMatchesSelector ||
+          this.oMatchesSelector ||
+          this.webkitMatchesSelector;
         var element = this;
         while (element) {
-          if (matches.call(element, selector)) { break; }
+          if (matches.call(element, selector)) {
+            break;
+          }
           element = element.parentElement;
         }
         return element;
-      }
+      },
     },
 
     detachedCallback: {
       value: function () {
         this.hasLoaded = false;
-      }
+      },
     },
 
     /**
@@ -11824,34 +11840,39 @@ module.exports = registerElement('a-node', {
         var childrenLoaded;
         var self = this;
 
-        if (this.hasLoaded) { return; }
+        if (this.hasLoaded) {
+          return;
+        }
 
         // Default to waiting for all nodes.
         childFilter = childFilter || isNode;
         // Wait for children to load (if any), then load.
         children = this.getChildren();
         childrenLoaded = children.filter(childFilter).map(function (child) {
-          return new Promise(function waitForLoaded (resolve) {
-            if (child.hasLoaded) { return resolve(); }
-            child.addEventListener('loaded', resolve);
+          return new Promise(function waitForLoaded(resolve) {
+            return resolve();
           });
         });
 
-        Promise.all(childrenLoaded).then(function emitLoaded () {
-          self.hasLoaded = true;
-          if (cb) { cb(); }
-          self.emit('loaded', undefined, false);
-        }).catch(function (err) {
-          error('Failure loading node: ', err);
-        });
+        Promise.all(childrenLoaded)
+          .then(function emitLoaded() {
+            self.hasLoaded = true;
+            if (cb) {
+              cb();
+            }
+            self.emit("loaded", undefined, false);
+          })
+          .catch(function (err) {
+            error("Failure loading node: ", err);
+          });
       },
-      writable: true
+      writable: true,
     },
 
     getChildren: {
       value: function () {
         return Array.prototype.slice.call(this.children, 0);
-      }
+      },
     },
 
     /**
@@ -11872,8 +11893,12 @@ module.exports = registerElement('a-node', {
 
           newMixinIdArray.length = 0;
           oldMixinIdArray.length = 0;
-          newMixinIds = newMixins ? utils.split(newMixins.trim(), /\s+/) : newMixinIdArray;
-          oldMixinIds = oldMixins ? utils.split(oldMixins.trim(), /\s+/) : oldMixinIdArray;
+          newMixinIds = newMixins
+            ? utils.split(newMixins.trim(), /\s+/)
+            : newMixinIdArray;
+          oldMixinIds = oldMixins
+            ? utils.split(oldMixins.trim(), /\s+/)
+            : oldMixinIdArray;
 
           mixinIds.newMixinIds = newMixinIds;
           mixinIds.oldMixinIds = oldMixinIds;
@@ -11886,7 +11911,7 @@ module.exports = registerElement('a-node', {
           }
 
           // Register new mixins.
-          this.computedMixinStr = '';
+          this.computedMixinStr = "";
           this.mixinEls.length = 0;
           for (i = 0; i < newMixinIds.length; i++) {
             this.registerMixin(document.getElementById(newMixinIds[i]));
@@ -11896,13 +11921,16 @@ module.exports = registerElement('a-node', {
           // update.
           if (this.computedMixinStr) {
             this.computedMixinStr = this.computedMixinStr.trim();
-            window.HTMLElement.prototype.setAttribute.call(this, 'mixin',
-                                                           this.computedMixinStr);
+            window.HTMLElement.prototype.setAttribute.call(
+              this,
+              "mixin",
+              this.computedMixinStr
+            );
           }
 
           return mixinIds;
         };
-      })()
+      })(),
     },
 
     /**
@@ -11916,10 +11944,12 @@ module.exports = registerElement('a-node', {
         var i;
         var mixin;
 
-        if (!mixinEl) { return; }
+        if (!mixinEl) {
+          return;
+        }
 
         // Register composited mixins (if mixin has mixins).
-        mixin = mixinEl.getAttribute('mixin');
+        mixin = mixinEl.getAttribute("mixin");
         if (mixin) {
           compositedMixinIds = utils.split(mixin.trim(), /\s+/);
           for (i = 0; i < compositedMixinIds.length; i++) {
@@ -11928,16 +11958,18 @@ module.exports = registerElement('a-node', {
         }
 
         // Register mixin.
-        this.computedMixinStr = this.computedMixinStr + ' ' + mixinEl.id;
+        this.computedMixinStr = this.computedMixinStr + " " + mixinEl.id;
         this.mixinEls.push(mixinEl);
-      }
+      },
     },
 
     setAttribute: {
       value: function (attr, newValue) {
-        if (attr === 'mixin') { this.updateMixins(newValue); }
+        if (attr === "mixin") {
+          this.updateMixins(newValue);
+        }
         window.HTMLElement.prototype.setAttribute.call(this, attr, newValue);
-      }
+      },
     },
 
     unregisterMixin: {
@@ -11952,7 +11984,7 @@ module.exports = registerElement('a-node', {
             break;
           }
         }
-      }
+      },
     },
 
     /**
@@ -11968,19 +12000,23 @@ module.exports = registerElement('a-node', {
         var data = {};
 
         return function (name, detail, bubbles, extraData) {
-          if (bubbles === undefined) { bubbles = true; }
+          if (bubbles === undefined) {
+            bubbles = true;
+          }
           data.bubbles = !!bubbles;
           data.detail = detail;
 
           // If extra data is present, we need to create a new object.
-          if (extraData) { data = utils.extend({}, extraData, data); }
+          if (extraData) {
+            data = utils.extend({}, extraData, data);
+          }
 
           this.dispatchEvent(new CustomEvent(name, data));
         };
       })(),
-      writable: window.debug
-    }
-  })
+      writable: window.debug,
+    },
+  }),
 });
 
 },{"../utils/":158,"./a-register-element":85}],85:[function(require,module,exports){
@@ -13304,24 +13340,24 @@ module.exports.isValidDefaultCoordinate = isValidDefaultCoordinate;
 
 },{"../utils/coordinates":153,"debug":8}],90:[function(require,module,exports){
 /* global Promise, screen */
-var initMetaTags = require('./metaTags').inject;
-var initWakelock = require('./wakelock');
-var loadingScreen = require('./loadingScreen');
-var re = require('../a-register-element');
-var scenes = require('./scenes');
-var systems = require('../system').systems;
-var THREE = require('../../lib/three');
-var utils = require('../../utils/');
+var initMetaTags = require("./metaTags").inject;
+var initWakelock = require("./wakelock");
+var loadingScreen = require("./loadingScreen");
+var re = require("../a-register-element");
+var scenes = require("./scenes");
+var systems = require("../system").systems;
+var THREE = require("../../lib/three");
+var utils = require("../../utils/");
 // Require after.
-var AEntity = require('../a-entity');
-var ANode = require('../a-node');
-var initPostMessageAPI = require('./postMessage');
+var AEntity = require("../a-entity");
+var ANode = require("../a-node");
+var initPostMessageAPI = require("./postMessage");
 
 var bind = utils.bind;
 var isIOS = utils.device.isIOS();
 var isMobile = utils.device.isMobile();
 var registerElement = re.registerElement;
-var warn = utils.debug('core:a-scene:warn');
+var warn = utils.debug("core:a-scene:warn");
 
 /**
  * Scene element, holds all entities.
@@ -13338,7 +13374,7 @@ var warn = utils.debug('core:a-scene:warn');
  * @member {object} systems - Registered instantiated systems.
  * @member {number} time
  */
-module.exports.AScene = registerElement('a-scene', {
+module.exports.AScene = registerElement("a-scene", {
   prototype: Object.create(AEntity.prototype, {
     createdCallback: {
       value: function () {
@@ -13352,7 +13388,7 @@ module.exports.AScene = registerElement('a-scene', {
         this.systemNames = [];
         this.time = this.delta = 0;
 
-        this.behaviors = {tick: [], tock: []};
+        this.behaviors = { tick: [], tock: [] };
         this.hasLoaded = false;
         this.isPlaying = false;
         this.originalHTML = this.innerHTML;
@@ -13363,19 +13399,19 @@ module.exports.AScene = registerElement('a-scene', {
         // this.setAttribute('keyboard-shortcuts', '');
         // this.setAttribute('screenshot', '');
         // this.setAttribute('vr-mode-ui', '');
-      }
+      },
     },
 
     addFullScreenStyles: {
       value: function () {
-        document.documentElement.classList.add('a-fullscreen');
-      }
+        document.documentElement.classList.add("a-fullscreen");
+      },
     },
 
     removeFullScreenStyles: {
       value: function () {
-        document.documentElement.classList.remove('a-fullscreen');
-      }
+        document.documentElement.classList.remove("a-fullscreen");
+      },
     },
 
     attachedCallback: {
@@ -13393,12 +13429,12 @@ module.exports.AScene = registerElement('a-scene', {
         initWakelock(this);
 
         // Camera set up by camera system.
-        this.addEventListener('cameraready', function () {
+        this.addEventListener("cameraready", function () {
           self.attachedCallbackPostCamera();
         });
 
         this.initSystems();
-      }
+      },
     },
 
     attachedCallbackPostCamera: {
@@ -13407,8 +13443,8 @@ module.exports.AScene = registerElement('a-scene', {
         var self = this;
 
         resize = bind(this.resize, this);
-        window.addEventListener('load', resize);
-        window.addEventListener('resize', function () {
+        window.addEventListener("load", resize);
+        window.addEventListener("resize", function () {
           // Workaround for a Webkit bug (https://bugs.webkit.org/show_bug.cgi?id=170595)
           // where the window does not contain the correct viewport size
           // after an orientation change. The window size is correct if the operation
@@ -13426,13 +13462,10 @@ module.exports.AScene = registerElement('a-scene', {
         scenes.push(this);
 
         // Handler to exit VR (e.g., Oculus Browser back button).
-        
 
         // bind functions
-        
-        
       },
-      writable: window.debug
+      writable: window.debug,
     },
 
     /**
@@ -13443,13 +13476,15 @@ module.exports.AScene = registerElement('a-scene', {
         var name;
 
         // Initialize camera system first.
-        this.initSystem('camera');
+        this.initSystem("camera");
 
         for (name in systems) {
-          if (name === 'camera') { continue; }
+          if (name === "camera") {
+            continue;
+          }
           this.initSystem(name);
         }
-      }
+      },
     },
 
     /**
@@ -13457,10 +13492,12 @@ module.exports.AScene = registerElement('a-scene', {
      */
     initSystem: {
       value: function (name) {
-        if (this.systems[name]) { return; }
+        if (this.systems[name]) {
+          return;
+        }
         this.systems[name] = new systems[name](this);
         this.systemNames.push(name);
-      }
+      },
     },
 
     /**
@@ -13471,9 +13508,7 @@ module.exports.AScene = registerElement('a-scene', {
         // Remove from scene index.
         var sceneIndex = scenes.indexOf(this);
         scenes.splice(sceneIndex, 1);
-
-        
-      }
+      },
     },
 
     /**
@@ -13489,13 +13524,15 @@ module.exports.AScene = registerElement('a-scene', {
 
         // Check if behavior has tick and/or tock and add the behavior to the appropriate list.
         for (behaviorType in behaviors) {
-          if (!behavior[behaviorType]) { continue; }
+          if (!behavior[behaviorType]) {
+            continue;
+          }
           behaviorArr = this.behaviors[behaviorType];
           if (behaviorArr.indexOf(behavior) === -1) {
             behaviorArr.push(behavior);
           }
         }
-      }
+      },
     },
 
     /**
@@ -13505,7 +13542,7 @@ module.exports.AScene = registerElement('a-scene', {
       value: function () {
         return document.pointerLockElement;
       },
-      writable: window.debug
+      writable: window.debug,
     },
 
     /**
@@ -13513,14 +13550,18 @@ module.exports.AScene = registerElement('a-scene', {
      */
     checkHeadsetConnected: {
       value: utils.device.checkHeadsetConnected,
-      writable: window.debug
+      writable: window.debug,
     },
 
     pointerRestricted: {
       value: function () {
         if (this.canvas) {
           var pointerLockElement = this.getPointerLockElement();
-          if (pointerLockElement && pointerLockElement !== this.canvas && document.exitPointerLock) {
+          if (
+            pointerLockElement &&
+            pointerLockElement !== this.canvas &&
+            document.exitPointerLock
+          ) {
             // Recreate pointer lock on the canvas, if taken on another element.
             document.exitPointerLock();
           }
@@ -13529,16 +13570,20 @@ module.exports.AScene = registerElement('a-scene', {
             this.canvas.requestPointerLock();
           }
         }
-      }
+      },
     },
 
     pointerUnrestricted: {
       value: function () {
         var pointerLockElement = this.getPointerLockElement();
-        if (pointerLockElement && pointerLockElement === this.canvas && document.exitPointerLock) {
+        if (
+          pointerLockElement &&
+          pointerLockElement === this.canvas &&
+          document.exitPointerLock
+        ) {
           document.exitPointerLock();
         }
-      }
+      },
     },
 
     /**
@@ -13548,9 +13593,11 @@ module.exports.AScene = registerElement('a-scene', {
     getAttribute: {
       value: function (attr) {
         var system = this.systems[attr];
-        if (system) { return system.data; }
+        if (system) {
+          return system.data;
+        }
         return AEntity.prototype.getAttribute.call(this, attr);
-      }
+      },
     },
 
     /**
@@ -13559,9 +13606,11 @@ module.exports.AScene = registerElement('a-scene', {
      */
     getComputedAttribute: {
       value: function (attr) {
-        warn('`getComputedAttribute` is deprecated. Use `getAttribute` instead.');
+        warn(
+          "`getComputedAttribute` is deprecated. Use `getAttribute` instead."
+        );
         this.getAttribute(attr);
-      }
+      },
     },
 
     /**
@@ -13571,9 +13620,11 @@ module.exports.AScene = registerElement('a-scene', {
     getDOMAttribute: {
       value: function (attr) {
         var system = this.systems[attr];
-        if (system) { return system.data; }
+        if (system) {
+          return system.data;
+        }
         return AEntity.prototype.getDOMAttribute.call(this, attr);
-      }
+      },
     },
 
     /**
@@ -13589,8 +13640,13 @@ module.exports.AScene = registerElement('a-scene', {
           system.updateProperties(value);
           return;
         }
-        AEntity.prototype.setAttribute.call(this, attr, value, componentPropValue);
-      }
+        AEntity.prototype.setAttribute.call(
+          this,
+          attr,
+          value,
+          componentPropValue
+        );
+      },
     },
 
     /**
@@ -13606,12 +13662,16 @@ module.exports.AScene = registerElement('a-scene', {
         // Check if behavior has tick and/or tock and remove the behavior from the appropriate
         // array.
         for (behaviorType in behaviors) {
-          if (!behavior[behaviorType]) { continue; }
+          if (!behavior[behaviorType]) {
+            continue;
+          }
           behaviorArr = this.behaviors[behaviorType];
           index = behaviorArr.indexOf(behavior);
-          if (index !== -1) { behaviorArr.splice(index, 1); }
+          if (index !== -1) {
+            behaviorArr.splice(index, 1);
+          }
         }
-      }
+      },
     },
 
     resize: {
@@ -13627,21 +13687,30 @@ module.exports.AScene = registerElement('a-scene', {
         // the getEyeParameters function of the WebVR API. These dimensions are independent of
         // the window size, therefore should not be overwritten with the window's width and
         // height, // except when in fullscreen mode.
-        if (!camera || !canvas || (this.is('vr-mode') && (this.isMobile || isVRPresenting))) {
+        if (
+          !camera ||
+          !canvas ||
+          (this.is("vr-mode") && (this.isMobile || isVRPresenting))
+        ) {
           return;
         }
 
         // Update camera.
-        embedded = this.getAttribute('embedded') && !this.is('vr-mode');
-        size = getCanvasSize(canvas, embedded, this.maxCanvasSize, this.is('vr-mode'));
+        embedded = this.getAttribute("embedded") && !this.is("vr-mode");
+        size = getCanvasSize(
+          canvas,
+          embedded,
+          this.maxCanvasSize,
+          this.is("vr-mode")
+        );
         camera.aspect = size.width / size.height;
         camera.updateProjectionMatrix();
 
         // Notify renderer of size change.
         this.renderer.setSize(size.width, size.height, false);
-        this.emit('rendererresize', null, false);
+        this.emit("rendererresize", null, false);
       },
-      writable: true
+      writable: true,
     },
 
     setupRenderer: {
@@ -13652,23 +13721,29 @@ module.exports.AScene = registerElement('a-scene', {
         var rendererAttrString;
         var rendererConfig;
 
-        rendererConfig = {alpha: true, antialias: !isMobile, canvas: this.canvas, logarithmicDepthBuffer: false};
-        if (this.hasAttribute('antialias')) {
-          rendererConfig.antialias = this.getAttribute('antialias') === 'true';
+        rendererConfig = {
+          alpha: true,
+          antialias: !isMobile,
+          canvas: this.canvas,
+          logarithmicDepthBuffer: false,
+        };
+        if (this.hasAttribute("antialias")) {
+          rendererConfig.antialias = this.getAttribute("antialias") === "true";
         }
 
-        if (this.hasAttribute('logarithmicDepthBuffer')) {
-          rendererConfig.logarithmicDepthBuffer = this.getAttribute('logarithmicDepthBuffer') === 'true';
+        if (this.hasAttribute("logarithmicDepthBuffer")) {
+          rendererConfig.logarithmicDepthBuffer =
+            this.getAttribute("logarithmicDepthBuffer") === "true";
         }
 
-        this.maxCanvasSize = {height: 1920, width: 1920};
+        this.maxCanvasSize = { height: 1920, width: 1920 };
 
-        if (this.hasAttribute('renderer')) {
-          rendererAttrString = this.getAttribute('renderer');
+        if (this.hasAttribute("renderer")) {
+          rendererAttrString = this.getAttribute("renderer");
           rendererAttr = utils.styleParser.parse(rendererAttrString);
 
-          if (rendererAttr.antialias && rendererAttr.antialias !== 'auto') {
-            rendererConfig.antialias = rendererAttr.antialias === 'true';
+          if (rendererAttr.antialias && rendererAttr.antialias !== "auto") {
+            rendererConfig.antialias = rendererAttr.antialias === "true";
           }
 
           this.maxCanvasSize = {
@@ -13677,7 +13752,7 @@ module.exports.AScene = registerElement('a-scene', {
               : this.maxCanvasSize.width,
             height: rendererAttr.maxCanvasHeight
               ? parseInt(rendererAttr.maxCanvasHeight)
-              : this.maxCanvasSize.height
+              : this.maxCanvasSize.height,
           };
         }
 
@@ -13687,7 +13762,7 @@ module.exports.AScene = registerElement('a-scene', {
         renderer.sortObjects = false;
         loadingScreen.setup(this, getCanvasSize);
       },
-      writable: window.debug
+      writable: window.debug,
     },
 
     /**
@@ -13704,34 +13779,35 @@ module.exports.AScene = registerElement('a-scene', {
           return;
         }
 
-        this.addEventListener('loaded', function () {
+        AEntity.prototype.play.call(this); // .play() *before* render.
 
-          AEntity.prototype.play.call(this);  // .play() *before* render.
+        if (sceneEl.renderStarted) {
+          return;
+        }
 
-          if (sceneEl.renderStarted) { return; }
+        sceneEl.resize();
 
-          sceneEl.resize();
-
-          // Kick off render loop.
-          if (sceneEl.renderer) {
-            if (window.performance) { window.performance.mark('render-started'); }
-            sceneEl.clock = new THREE.Clock();
-            loadingScreen.remove();
-            //sceneEl.calculate();
-            sceneEl.renderStarted = true;
-            sceneEl.render();
-            console.log("renderstart");
-            //sceneEl.calculate();
-            
-            sceneEl.emit('renderstart');
+        // Kick off render loop.
+        if (sceneEl.renderer) {
+          if (window.performance) {
+            window.performance.mark("render-started");
           }
-        });
+          sceneEl.clock = new THREE.Clock();
+          loadingScreen.remove();
+          //sceneEl.calculate();
+          sceneEl.renderStarted = true;
+          sceneEl.render();
+          console.log("renderstart");
+          //sceneEl.calculate();
+
+          sceneEl.emit("renderstart");
+        }
 
         // setTimeout to wait for all nodes to attach and run their callbacks.
         setTimeout(function () {
           AEntity.prototype.load.call(self);
         });
-      }
+      },
     },
 
     /**
@@ -13740,9 +13816,11 @@ module.exports.AScene = registerElement('a-scene', {
      */
     updateComponent: {
       value: function (componentName) {
-        if (componentName in systems) { return; }
+        if (componentName in systems) {
+          return;
+        }
         AEntity.prototype.updateComponent.apply(this, arguments);
-      }
+      },
     },
 
     /**
@@ -13757,16 +13835,20 @@ module.exports.AScene = registerElement('a-scene', {
 
         // Components.
         for (i = 0; i < this.behaviors.tick.length; i++) {
-          if (!this.behaviors.tick[i].el.isPlaying) { continue; }
+          if (!this.behaviors.tick[i].el.isPlaying) {
+            continue;
+          }
           this.behaviors.tick[i].tick(time, timeDelta);
         }
 
         // Systems.
         for (i = 0; i < this.systemNames.length; i++) {
-          if (!systems[this.systemNames[i]].tick) { continue; }
+          if (!systems[this.systemNames[i]].tick) {
+            continue;
+          }
           systems[this.systemNames[i]].tick(time, timeDelta);
         }
-      }
+      },
     },
 
     /**
@@ -13781,16 +13863,20 @@ module.exports.AScene = registerElement('a-scene', {
 
         // Components.
         for (i = 0; i < this.behaviors.tock.length; i++) {
-          if (!this.behaviors.tock[i].el.isPlaying) { continue; }
+          if (!this.behaviors.tock[i].el.isPlaying) {
+            continue;
+          }
           this.behaviors.tock[i].tock(time, timeDelta, camera);
         }
 
         // Systems.
         for (i = 0; i < this.systemNames.length; i++) {
-          if (!systems[this.systemNames[i]].tock) { continue; }
+          if (!systems[this.systemNames[i]].tock) {
+            continue;
+          }
           systems[this.systemNames[i]].tock(time, timeDelta, camera);
         }
-      }
+      },
     },
 
     /**
@@ -13808,30 +13894,47 @@ module.exports.AScene = registerElement('a-scene', {
         this.delta = this.clock.getDelta() * 1000;
         this.time = this.clock.elapsedTime * 1000;
 
-        if (this.isPlaying) { this.tick(this.time, this.delta); }
+        if (this.isPlaying) {
+          this.tick(this.time, this.delta);
+        }
 
-        if (this.hasAttribute('pixelRatio')) {
-          this.renderer.setPixelRatio(window.devicePixelRatio * this.getAttribute('pixelRatio'));
+        if (this.hasAttribute("pixelRatio")) {
+          this.renderer.setPixelRatio(
+            window.devicePixelRatio * this.getAttribute("pixelRatio")
+          );
         }
 
         mainRenderer.requestAnimationFrame(this.render);
         if (effectComposer) {
           effectComposer.render();
         } else {
-          mainRenderer.render(this.object3D, this.camera, this.renderTarget, false, this.camera.el.components.camera.data);
+          mainRenderer.render(
+            this.object3D,
+            this.camera,
+            this.renderTarget,
+            false,
+            this.camera.el.components.camera.data
+          );
           if (this.additiveCameras) {
-            
-            this.additiveCameras.forEach(element => {
-              mainRenderer.render(this.object3D, element.getObject3D('camera'), this.renderTarget, false, element.components["orthographic-camera"].data);
+            this.additiveCameras.forEach((element) => {
+              mainRenderer.render(
+                this.object3D,
+                element.getObject3D("camera"),
+                this.renderTarget,
+                false,
+                element.components["orthographic-camera"].data
+              );
             });
           }
         }
 
-        if (this.isPlaying) { this.tock(this.time, this.delta, this.camera); }
+        if (this.isPlaying) {
+          this.tock(this.time, this.delta, this.camera);
+        }
 
         // this.components.overlay && this.components.overlay.render();
       },
-      writable: true
+      writable: true,
     },
 
     calculate: {
@@ -13841,15 +13944,19 @@ module.exports.AScene = registerElement('a-scene', {
         this.delta = this.clock.getDelta() * 1000;
         this.time = this.clock.elapsedTime * 1000;
 
-        if (this.isPlaying) { this.tick(this.time, this.delta); }
+        if (this.isPlaying) {
+          this.tick(this.time, this.delta);
+        }
 
         mainRenderer.requestAnimationFrame(this.calculate);
 
-        if (this.isPlaying) { this.tock(this.time, this.delta, this.camera); }
+        if (this.isPlaying) {
+          this.tock(this.time, this.delta, this.camera);
+        }
       },
-      writable: true
-    }
-  })
+      writable: true,
+    },
+  }),
 });
 
 /**
@@ -13862,11 +13969,11 @@ module.exports.AScene = registerElement('a-scene', {
  * @param {object} max - Max size parameters
  * @param {boolean} isVR - If in VR
  */
-function getCanvasSize (canvasEl, embedded, maxSize, isVR) {
+function getCanvasSize(canvasEl, embedded, maxSize, isVR) {
   if (embedded) {
     return {
       height: canvasEl.parentElement.offsetHeight,
-      width: canvasEl.parentElement.offsetWidth
+      width: canvasEl.parentElement.offsetWidth,
     };
   }
   return getMaxSize(maxSize, isVR);
@@ -13881,72 +13988,81 @@ function getCanvasSize (canvasEl, embedded, maxSize, isVR) {
  * @param {boolean} isVR - If in VR.
  * @returns {object} Width and height.
  */
-function getMaxSize (maxSize, isVR) {
+function getMaxSize(maxSize, isVR) {
   var aspectRatio;
   var size;
   var pixelRatio = window.devicePixelRatio;
 
-  size = {height: document.body.offsetHeight, width: document.body.offsetWidth};
+  size = {
+    height: document.body.offsetHeight,
+    width: document.body.offsetWidth,
+  };
   if (!maxSize || isVR || (maxSize.width === -1 && maxSize.height === -1)) {
     return size;
   }
 
-  if (size.width * pixelRatio < maxSize.width &&
-    size.height * pixelRatio < maxSize.height) {
+  if (
+    size.width * pixelRatio < maxSize.width &&
+    size.height * pixelRatio < maxSize.height
+  ) {
     return size;
   }
 
   aspectRatio = size.width / size.height;
 
-  if ((size.width * pixelRatio) > maxSize.width && maxSize.width !== -1) {
+  if (size.width * pixelRatio > maxSize.width && maxSize.width !== -1) {
     size.width = Math.round(maxSize.width / pixelRatio);
     size.height = Math.round(maxSize.width / aspectRatio / pixelRatio);
   }
 
-  if ((size.height * pixelRatio) > maxSize.height && maxSize.height !== -1) {
+  if (size.height * pixelRatio > maxSize.height && maxSize.height !== -1) {
     size.height = Math.round(maxSize.height / pixelRatio);
-    size.width = Math.round(maxSize.height * aspectRatio / pixelRatio);
+    size.width = Math.round((maxSize.height * aspectRatio) / pixelRatio);
   }
 
   return size;
 }
 
-function setupCanvas (sceneEl) {
+function setupCanvas(sceneEl) {
   var canvasEl;
 
-  canvasEl = document.createElement('canvas');
-  canvasEl.classList.add('a-canvas');
-  canvasEl.classList.add('showControls');
+  canvasEl = document.createElement("canvas");
+  canvasEl.classList.add("a-canvas");
+  canvasEl.classList.add("showControls");
   // Mark canvas as provided/injected by A-Frame.
   canvasEl.dataset.aframeCanvas = true;
   sceneEl.appendChild(canvasEl);
 
-  document.addEventListener('fullscreenchange', onFullScreenChange);
-  document.addEventListener('mozfullscreenchange', onFullScreenChange);
-  document.addEventListener('webkitfullscreenchange', onFullScreenChange);
+  document.addEventListener("fullscreenchange", onFullScreenChange);
+  document.addEventListener("mozfullscreenchange", onFullScreenChange);
+  document.addEventListener("webkitfullscreenchange", onFullScreenChange);
 
   // Prevent overscroll on mobile.
-  canvasEl.addEventListener('touchmove', function (event) { event.preventDefault(); });
+  canvasEl.addEventListener("touchmove", function (event) {
+    event.preventDefault();
+  });
 
   // Set canvas on scene.
   sceneEl.canvas = canvasEl;
-  sceneEl.emit('render-target-loaded', {target: canvasEl});
+  sceneEl.emit("render-target-loaded", { target: canvasEl });
   // For unknown reasons a synchronous resize does not work on desktop when
   // entering/exiting fullscreen.
   setTimeout(bind(sceneEl.resize, sceneEl), 0);
 
-  function onFullScreenChange () {
+  function onFullScreenChange() {
     var fullscreenEl =
       document.fullscreenElement ||
       document.mozFullScreenElement ||
       document.webkitFullscreenElement;
     // No fullscren element === exit fullscreen
-    if (!fullscreenEl) { sceneEl.exitVR(); }
+    if (!fullscreenEl) {
+      sceneEl.exitVR();
+    }
     document.activeElement.blur();
     document.body.focus();
   }
 }
-module.exports.setupCanvas = setupCanvas;  // For testing.
+module.exports.setupCanvas = setupCanvas; // For testing.
 
 },{"../../lib/three":136,"../../utils/":158,"../a-entity":82,"../a-node":84,"../a-register-element":85,"../system":98,"./loadingScreen":91,"./metaTags":92,"./postMessage":93,"./scenes":94,"./wakelock":95}],91:[function(require,module,exports){
 /* global THREE */

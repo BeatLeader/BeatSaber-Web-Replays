@@ -123,6 +123,7 @@ AFRAME.registerComponent('beat', {
 		this.headset = this.el.sceneEl.querySelectorAll('.headset')[0];
 		this.replayLoader = this.el.sceneEl.components['replay-loader'];
 		this.settings = this.el.sceneEl.components['settings'];
+		this.hitSound = this.el.sceneEl.components['beat-hit-sound'];
 		this.song = this.el.sceneEl.components.song;
 
 		this.scoreEl = null;
@@ -153,16 +154,20 @@ AFRAME.registerComponent('beat', {
 		this.startStrokePosition = new THREE.Vector3();
 
 		this.initBlock();
-		if (this.data.type === 'mine') {
-			this.initMineFragments();
-		} else {
-			this.initFragments();
+		if (!this.data.loadingCube && !this.settings.settings.reducedDebris) {
+			if (this.data.type === 'mine') {
+				this.initMineFragments();
+			} else {
+				this.initFragments();
+			}
 		}
 	},
 
 	update: function (oldData) {
 		this.updateBlock();
-		this.updateFragments();
+		if (!this.data.loadingCube && !this.settings.settings.reducedDebris) {
+			this.updateFragments();
+		}
 
 		if (this.data.type === 'mine') {
 			this.poolName = `pool__beat-mine`;
@@ -187,7 +192,6 @@ AFRAME.registerComponent('beat', {
 	},
 
 	play: function () {
-		// this.glow = this.el.sceneEl.components['pool__beat-glow'].requestEntity();
 		if (!this.hitSaberEl) {
 			this.blockEl.object3D.visible = true;
 			this.destroyed = false;
@@ -284,7 +288,9 @@ AFRAME.registerComponent('beat', {
 		const position = el.object3D.position;
 
 		if (this.destroyed) {
-			this.tockDestroyed(timeDelta);
+			if (!this.settings.settings.reducedDebris) {
+				this.tockDestroyed(timeDelta);
+			}
 			// Check to remove score entity from pool.
 		} else {
 			if (!this.replayNote.cutPoint && this.currentPositionZ > collisionZThreshold) {
@@ -436,8 +442,8 @@ AFRAME.registerComponent('beat', {
 		this.replayNote = null;
 		if (data.type == 'mine') {
 			// Reset mine.
-			this.blockEl.getObject3D('mesh').material = this.el.sceneEl.systems.materials['mineMaterial' + this.data.color];
-			this.resetMineFragments();
+			// this.blockEl.getObject3D('mesh').material = this.el.sceneEl.systems.materials['mineMaterial' + this.data.color];
+			// this.resetMineFragments();
 
 			const bombs = this.replayLoader.bombs;
 			if (bombs) {
@@ -1016,7 +1022,7 @@ AFRAME.registerComponent('beat', {
 				// Sound.
 
 				if (this.data.type !== 'sliderchain' && this.settings.realHitsounds) {
-					this.el.parentNode.components['beat-hit-sound'].playSound(this.el, this.data.cutDirection);
+					this.hitSound.playSound();
 				}
 
 				if (this.data.type === 'mine') {
@@ -1257,7 +1263,7 @@ AFRAME.registerComponent('beat', {
 
 		if (currentTime > noteTime) {
 			if (this.data.type !== 'sliderchain') {
-				this.el.parentNode.components['beat-hit-sound'].playSound(this.el, this.data.cutDirection);
+				this.hitSound.playSound();
 			}
 
 			if (this.hitSoundState == SOUND_STATE.waitingForHitSound) {

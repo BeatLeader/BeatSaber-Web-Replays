@@ -307,7 +307,7 @@ AFRAME.registerComponent('beat', {
 					(this.settings.settings.reducedDebris || !this.checkCollisions())) ||
 					this.song.getCurrentTime() > this.replayNote.time)
 			) {
-				this.showScore();
+				// this.showScore();
 				this.destroyBeat(this.saberEls[this.replayNote.colorType]);
 				this.postScoreEvent();
 			} else {
@@ -757,7 +757,7 @@ AFRAME.registerComponent('beat', {
 		}
 
 		this.postScoreEvent();
-		this.showScore(hand);
+		// this.showScore(hand);
 
 		if (AFRAME.utils.getUrlParameter('synctest')) {
 			console.log(this.el.sceneEl.components.song.getCurrentTime());
@@ -765,16 +765,15 @@ AFRAME.registerComponent('beat', {
 	},
 
 	postScoreEvent: function () {
-		if (!this.replayNote.time) return;
-		const timeToScore = this.replayNote.time - this.song.getCurrentTime();
-
-		const payload = {index: this.replayNote.i};
-		const scoreChanged = () => this.el.emit('scoreChanged', payload, true);
-		if (timeToScore < 0) {
-			scoreChanged();
-		} else {
-			setTimeout(scoreChanged, timeToScore * 1000);
-		}
+		// if (!this.replayNote.time) return;
+		// const timeToScore = this.replayNote.time - this.song.getCurrentTime();
+		// const payload = {index: this.replayNote.i};
+		// const scoreChanged = () => this.el.emit('scoreChanged', payload, true);
+		// if (timeToScore < 0) {
+		// 	scoreChanged();
+		// } else {
+		// 	setTimeout(scoreChanged, timeToScore * 1000);
+		// }
 	},
 
 	destroyMine: function () {
@@ -1112,7 +1111,7 @@ AFRAME.registerComponent('beat', {
 		// this.superCutIdx = (this.superCutIdx + 1) % this.superCuts.length;
 		// }
 
-		this.showScore();
+		// this.showScore();
 	},
 
 	showScore: function (hand) {

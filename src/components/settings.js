@@ -39,7 +39,7 @@ AFRAME.registerComponent('settings', {
 
 			// Volume
 			volume: 0.3,
-			hitSoundVolume: 0.08,
+			hitSoundVolume: 0.05,
 			volumeMixed: false,
 
 			// HitSound

@@ -14,7 +14,7 @@ AFRAME.registerComponent('beat-hit-sound', {
 	},
 
 	setVolume: function (value) {
-		this.gainNode.gain.value = value;
+		this.gainNode.gain.value = value * 0.1;
 	},
 
 	refreshBuffer: function () {

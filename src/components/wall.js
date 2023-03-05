@@ -64,10 +64,10 @@ AFRAME.registerComponent('wall', {
 		var direction = this.startPosition.clone().sub(this.origin).normalize();
 		this.el.object3D.position.copy(direction.multiplyScalar(-newPosition).add(this.origin));
 
-		// if (this.hit && currentTime > this.hitWall.time) {
-		// 	this.hit = false;
-		// 	this.el.emit('scoreChanged', {index: this.hitWall.i}, true);
-		// }
+		if (this.hit && currentTime > this.hitWall.time) {
+			this.hit = false;
+			this.el.emit('scoreChanged', {index: this.hitWall.i}, true);
+		}
 	},
 
 	onGenerate: function () {
@@ -177,10 +177,10 @@ AFRAME.registerComponent('wall', {
 
 		this.updatePosition();
 
-		// if (this.hit && currentTime > this.hitWall.time) {
-		// 	this.hit = false;
-		// 	this.el.emit('scoreChanged', {index: this.hitWall.i}, true);
-		// }
+		if (this.hit && currentTime > this.hitWall.time) {
+			this.hit = false;
+			this.el.emit('scoreChanged', {index: this.hitWall.i}, true);
+		}
 
 		if (position.z > this.maxZ + halfDepth) {
 			this.returnToPool();

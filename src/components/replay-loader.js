@@ -333,18 +333,17 @@ AFRAME.registerComponent('replay-loader', {
 				const mapnote = mapnotes[group[j]];
 				for (var m = 0; m < group.length; m++) {
 					const replaynote = noteStructs[groupIndex + offset + m];
-					const lineIndex = mapnote._lineIndex;
-					const colorType = mapnote._type;
-					const cutDirection = mapnote._cutDirection;
-					const lineLayer = mapnote._lineLayer;
 					const scoringType = mapnote._scoringType ? mapnote._scoringType + 2 : 3;
 
-					if (replaynote.index == undefined && (replaynote.id == mapnote._id || replaynote.id == mapnote._idWithScoring)) {
+					if (
+						replaynote.index == undefined &&
+						(replaynote.id == mapnote._id || replaynote.id == mapnote._idWithScoring || replaynote.id == mapnote._idWithAlternativeScoring)
+					) {
 						replaynote.index = group[j];
-						replaynote.colorType = colorType;
-						replaynote.lineIndex = lineIndex;
-						replaynote.cutDirection = cutDirection;
-						replaynote.lineLayer = lineLayer;
+						replaynote.colorType = mapnote._type;
+						replaynote.lineIndex = mapnote._lineIndex;
+						replaynote.cutDirection = mapnote._cutDirection;
+						replaynote.lineLayer = mapnote._lineLayer;
 						replaynote.mapnote = mapnote;
 						replaynote.scoringType = scoringType - 2;
 						mapnote.found = true;
@@ -572,6 +571,14 @@ AFRAME.registerComponent('replay-loader', {
 
 			mapnote._id = lineIndex * 1000 + lineLayer * 100 + colorType * 10 + cutDirection;
 			mapnote._idWithScoring = mapnote._id + scoringType * 10000;
+
+			var altscoringType = scoringType;
+			if (mapnote._scoringType == ScoringType.BurstSliderHead) {
+				altscoringType = ScoringType.SliderHead + 2;
+			} else if (mapnote._scoringType == ScoringType.SliderHead) {
+				altscoringType = ScoringType.BurstSliderHead + 2;
+			}
+			mapnote._idWithAlternativeScoring = mapnote._id + altscoringType * 10000;
 		});
 	},
 });

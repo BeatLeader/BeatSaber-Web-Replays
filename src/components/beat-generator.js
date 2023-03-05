@@ -624,8 +624,12 @@ AFRAME.registerComponent('beat-generator', {
 			}
 
 			if (this.mappingExtensions) {
-				note._lineIndex = note._lineIndex < 0 ? note._lineIndex / 1000 + 1 : note._lineIndex / 1000 - 1;
-				note._lineLayer = note._lineLayer < 0 ? note._lineLayer / 1000 + 1 : note._lineLayer / 1000 - 1;
+				if (note._lineIndex <= -1000 || note._lineIndex >= 1000) {
+					note._lineIndex = note._lineIndex < 0 ? note._lineIndex / 1000 + 1 : note._lineIndex / 1000 - 1;
+				}
+				if (note._lineLayer <= -1000 || note._lineLayer >= 1000) {
+					note._lineLayer = note._lineLayer < 0 ? note._lineLayer / 1000 + 1 : note._lineLayer / 1000 - 1;
+				}
 				if (this.mappingExtensions.colWidth) {
 					beatObj.size *= this.mappingExtensions.colWidth;
 				}

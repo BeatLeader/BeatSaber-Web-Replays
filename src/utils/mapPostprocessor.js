@@ -290,9 +290,13 @@ function calculateSongTimes(map, info) {
 			bpmChangeDataList = [{bpmChangeStartTime: 0.0, bpmChangeStartBpmTime: 0.0, bpm: startBpm}];
 		}
 		for (var index = bpmEvents[0]._time == 0 ? 1 : 0; index < bpmEvents.length; ++index) {
-			const bpmChangeData = bpmChangeDataList[bpmChangeDataList.length - 1];
+			var bpmChangeData = bpmChangeDataList[bpmChangeDataList.length - 1];
 			const beat = bpmEvents[index]._time;
 			const bpm = bpmEvents[index]._bpm;
+
+			if (bpmChangeData == null) {
+				bpmChangeData = {bpmChangeStartTime: 0.0, bpmChangeStartBpmTime: 0.0, bpm: startBpm};
+			}
 
 			bpmChangeDataList.push({
 				bpmChangeStartTime: bpmChangeData.bpmChangeStartTime + ((beat - bpmChangeData.bpmChangeStartBpmTime) / bpmChangeData.bpm) * 60.0,

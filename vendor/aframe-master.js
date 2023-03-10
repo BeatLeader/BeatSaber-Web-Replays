@@ -13987,10 +13987,6 @@ module.exports.AScene = registerElement("a-scene", {
           rendererAttrString = this.getAttribute("renderer");
           rendererAttr = utils.styleParser.parse(rendererAttrString);
 
-          if (rendererAttr.antialias && rendererAttr.antialias !== "auto") {
-            rendererConfig.antialias = rendererAttr.antialias === "true";
-          }
-
           this.maxCanvasSize = {
             width: rendererAttr.maxCanvasWidth
               ? parseInt(rendererAttr.maxCanvasWidth)
@@ -14000,6 +13996,8 @@ module.exports.AScene = registerElement("a-scene", {
               : this.maxCanvasSize.height,
           };
         }
+
+        rendererConfig.antialias = true;
 
         renderer = this.renderer = new THREE.WebGLRenderer(rendererConfig);
         this.mainRenderer = new THREE.MainRenderer(renderer);

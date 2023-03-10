@@ -13,8 +13,16 @@ AFRAME.registerComponent('beat-hit-sound', {
 		this.refreshBuffer();
 	},
 
+	suspendContext: function () {
+		this.context.suspend();
+	},
+
+	resumeContext: function () {
+		this.context.resume();
+	},
+
 	setVolume: function (value) {
-		this.gainNode.gain.value = value * 0.1;
+		this.gainNode.gain.value = value * 0.2;
 	},
 
 	refreshBuffer: function () {

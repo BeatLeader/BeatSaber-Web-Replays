@@ -1,6 +1,6 @@
 module.exports = {
 	OFF: '#111',
-	RED: '#ff3a7b',
+	RED: '#9c2121',
 	BLUE: '#08a2bf',
 
 	UI_ACCENT: '#fff',
@@ -26,7 +26,7 @@ module.exports = {
 	TEXT_NORMAL: '#444',
 	TEXT_BOLD: '#888',
 
-	BEAT_RED: '#a82020',
+	BEAT_RED: '#9c2121',
 	BEAT_BLUE: '#2064a8',
 
 	MINE_RED: '#1c060e',

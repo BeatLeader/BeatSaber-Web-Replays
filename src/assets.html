@@ -68,24 +68,22 @@
 <a-mixin
   id="beatWrong"
   render-order="hud"
-  material="shader: flat; transparent: true; depthWrite: false;"
+  material="shader: flat; transparent: true; depthWrite: false"
   mixin="font"
-  text="value: X; wrapCount: 19; color: #FF0000; width: 1.5"
-  visible="false"
+  text="opacity: 0; value: X; wrapCount: 15; color: #FF0000; width: 1.5"
   animation__motionz="property: object3D.position.z; to: -8; startEvents: beatwrong; easing: easeOutQuart; dur: 4000"
   animation__motionx="property: object3D.position.x; to: -8; startEvents: beatwrong; easing: easeOutQuart; dur: 4000"
-  animation__alpha="property: components.material.material.opacity; from: 1; to: 0; startEvents: beatwrong; easing: easeOutQuart; dur: 4000"></a-mixin>
+  animation__alpha="property: components.text.material.uniforms.opacity.value; from: 1; to: 0; startEvents: beatwrong; easing: easeOutQuart; dur: 4000"></a-mixin>
 
 <a-mixin 
   id="beatMiss"
   render-order="hud"
-  material="shader: flat; transparent: true; depthWrite: false;"
+  material="shader: flat; transparent: true; depthWrite: false"
   mixin="font"
-  text="value: MISS; wrapCount: 19; color: #FF0000; width: 1.5"
-  visible="false"
+  text="opacity: 0; value: MISS; wrapCount: 15; color: #FF0000; width: 1.5"
   animation__motionz="property: object3D.position.z; to: -8; startEvents: beatmiss; easing: easeOutQuart; dur: 4000"
   animation__motionx="property: object3D.position.x; to: -8; startEvents: beatmiss; easing: easeOutQuart; dur: 4000"
-  animation__alpha="property: components.material.material.opacity; from: 1; to: 0; startEvents: beatmiss; easing: easeOutQuart; dur: 4000"></a-mixin>
+  animation__alpha="property: components.text.material.uniforms.opacity.value; from: 1; to: 0; startEvents: beatmiss; easing: easeOutQuart; dur: 4000"></a-mixin>
 
 <a-mixin
   id="beatGlow"

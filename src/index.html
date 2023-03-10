@@ -69,9 +69,7 @@
     <a-scene
       settings
       beat-hit-sound
-      bind__pixelRatio="settings.pixelRatio"
       precision="mediump"
-      antialias="true"
       mixin="bgColorAnimation tunnelColorAnimation leftLaserColorAnimation rightLaserColorAnimation textGlowColorAnimation floorColorAnimation"
       bind__beat-generator="difficulty: challenge.difficulty; mode: challenge.mode; isPlaying: isPlaying || isPaused; beatSpeed: challenge.beatSpeed; noEffects: settings.noEffects"
       bind__pauser="enabled: isPlaying"
@@ -218,7 +216,7 @@
             scale="1.3 1.3 1.3"></a-entity> -->
         {% endmacro %}
 
-        {{ saber('left', 'right', '#ff0000', 'pink') }}
+        {{ saber('left', 'right', '#9c2121', 'pink') }}
         {{ saber('right', 'left', '#335aff', 'cyan') }}
       </a-entity>
       <!-- <a-mixin

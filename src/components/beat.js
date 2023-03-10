@@ -156,22 +156,10 @@ AFRAME.registerComponent('beat', {
 		this.startStrokePosition = new THREE.Vector3();
 
 		this.initBlock();
-
-		if (!this.data.loadingCube && !settings.settings.reducedDebris) {
-			if (this.data.type === 'mine') {
-				this.initMineFragments();
-			} else {
-				this.initFragments();
-			}
-		}
 	},
 
 	update: function (oldData) {
 		this.updateBlock();
-
-		if (!this.data.loadingCube && !settings.settings.reducedDebris) {
-			this.updateFragments();
-		}
 
 		if (this.data.type === 'mine') {
 			this.poolName = `pool__beat-mine`;
@@ -293,11 +281,13 @@ AFRAME.registerComponent('beat', {
 		if (this.destroyed) {
 			if (!settings.settings.reducedDebris) {
 				this.tockDestroyed(timeDelta);
+			} else if (this.partRightEl) {
+				this.returnToPool(true);
 			}
 			// Check to remove score entity from pool.
 		} else {
 			if (!this.replayNote.cutPoint && this.currentPositionZ > collisionZThreshold) {
-				// this.checkCollisions();
+				this.checkCollisions();
 			}
 
 			this.updatePosition();
@@ -305,7 +295,9 @@ AFRAME.registerComponent('beat', {
 			if (
 				this.data.type != 'mine' &&
 				this.replayNote.score != NoteErrorType.Miss &&
-				((this.replayNote.cutPoint && this.currentPositionZ - -1 * this.replayNote.cutPoint.z > -0.05 && settings.settings.reducedDebris) ||
+				((this.replayNote.cutPoint &&
+					this.currentPositionZ - -1 * this.replayNote.cutPoint.z > -0.05 &&
+					(settings.settings.reducedDebris || !this.checkCollisions())) ||
 					song.getCurrentTime() > this.replayNote.time)
 			) {
 				this.showScore();
@@ -326,9 +318,9 @@ AFRAME.registerComponent('beat', {
 				this.destroyMine();
 			}
 		}
-		// if (this.hitboxObject) {
-		// 	this.hitboxObject.visible = !this.destroyed && settings.settings.showHitboxes;
-		// }
+		if (this.hitboxObject) {
+			this.hitboxObject.visible = !this.destroyed && settings.settings.showHitboxes;
+		}
 		if (this.smallHitObject) {
 			this.smallHitObject.visible = !this.destroyed && settings.settings.showHitboxes;
 		}
@@ -363,6 +355,18 @@ AFRAME.registerComponent('beat', {
 	onGenerate: function () {
 		const data = this.data;
 		const el = this.el;
+
+		if (!settings.settings.reducedDebris) {
+			if (this.data.type === 'mine' && !this.mineBroken) {
+				this.initMineFragments();
+			} else if (!this.partRightEl) {
+				this.initFragments();
+			}
+		}
+
+		if (this.mineBroken || this.partRightEl) {
+			this.updateFragments();
+		}
 
 		let origin = new THREE.Vector3(getHorizontalPosition(data.horizontalPosition), getVerticalPosition(data.verticalPosition), 0);
 		this.currentPosition = data.anticipationPosition + data.warmupPosition;
@@ -527,34 +531,34 @@ AFRAME.registerComponent('beat', {
 
 		this.updatePosition();
 
-		// if (!this.hitboxObject) {
-		// 	const hitbox = new THREE.WireframeGeometry(itsMine ? new THREE.SphereGeometry(0.18, 16, 8) : this.toBigBox(boxSettings));
-		// 	const material = new THREE.LineBasicMaterial({
-		// 		color: 0xff0000,
-		// 		linewidth: 1,
-		// 	});
-		// 	const line = new THREE.LineSegments(hitbox, material);
-		// 	line.geometry.computeBoundingBox();
-		// 	line.visible = settings.settings.showHitboxes;
-		// 	el.object3D.add(line);
-		// 	if (!itsMine) {
-		// 		if (!proMode) line.position.z += 0.25 * noteScale;
+		if (!this.hitboxObject && (!this.replayNote.cutPoint || settings.settings.showHitboxes || !settings.settings.reducedDebris)) {
+			const hitbox = new THREE.WireframeGeometry(itsMine ? new THREE.SphereGeometry(0.18, 16, 8) : this.toBigBox(boxSettings));
+			const material = new THREE.LineBasicMaterial({
+				color: 0xff0000,
+				linewidth: 1,
+			});
+			const line = new THREE.LineSegments(hitbox, material);
+			line.geometry.computeBoundingBox();
+			line.visible = settings.settings.showHitboxes;
+			el.object3D.add(line);
+			if (!itsMine) {
+				if (!proMode) line.position.z += 0.25 * noteScale;
 
-		// 		const smallhitbox = new THREE.WireframeGeometry(this.toSmallBox(boxSettings));
-		// 		const material2 = new THREE.LineBasicMaterial({
-		// 			color: 0xff00ff,
-		// 			linewidth: 1,
-		// 		});
-		// 		const line2 = new THREE.LineSegments(smallhitbox, material2);
-		// 		line2.geometry.computeBoundingBox();
-		// 		line2.visible = settings.settings.showHitboxes;
+				const smallhitbox = new THREE.WireframeGeometry(this.toSmallBox(boxSettings));
+				const material2 = new THREE.LineBasicMaterial({
+					color: 0xff00ff,
+					linewidth: 1,
+				});
+				const line2 = new THREE.LineSegments(smallhitbox, material2);
+				line2.geometry.computeBoundingBox();
+				line2.visible = settings.settings.showHitboxes;
 
-		// 		el.object3D.add(line2);
+				el.object3D.add(line2);
 
-		// 		this.smallHitObject = line2;
-		// 	}
-		// 	this.hitboxObject = line;
-		// }
+				this.smallHitObject = line2;
+			}
+			this.hitboxObject = line;
+		}
 	},
 
 	toSmallBox: function (boxSettings) {
@@ -810,7 +814,7 @@ AFRAME.registerComponent('beat', {
 		var point3 = new THREE.Vector3();
 
 		return function (saberEl) {
-			if (!settings.settings.reducedDebris) {
+			if (!settings.settings.reducedDebris && this.partRightEl) {
 				var coplanarPoint;
 				var cutThickness = (this.cutThickness = 0.02);
 				var direction = this.cutDirection;
@@ -987,6 +991,7 @@ AFRAME.registerComponent('beat', {
 	},
 
 	checkCollisions: function () {
+		if (!this.hitboxObject) return;
 		this.beatBigBoundingBox.copy(this.hitboxObject.geometry.boundingBox).applyMatrix4(this.hitboxObject.matrixWorld);
 		const beatBigBoundingBox = this.beatBigBoundingBox;
 
@@ -1292,6 +1297,7 @@ AFRAME.registerComponent('beat', {
 				return;
 			}
 
+			if (!this.partRightEl) return;
 			rightCutNormal.copy(this.rightCutPlane.normal).multiplyScalar(DESTROYED_SPEED * (timeDelta / 500) * song.speed);
 			rightCutNormal.y = 0; // Y handled by gravity.
 			this.partRightEl.object3D.position.add(rightCutNormal);

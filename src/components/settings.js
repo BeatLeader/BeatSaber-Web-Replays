@@ -9,7 +9,6 @@ AFRAME.registerComponent('settings', {
 			reducedDebris: true,
 			noEffects: false,
 			showHitboxes: false,
-			pixelRatio: 1.5,
 			saberWidth: 100,
 			showFps: false,
 			showNoteModifierVisuals: true,
@@ -39,7 +38,7 @@ AFRAME.registerComponent('settings', {
 
 			// Volume
 			volume: 0.3,
-			hitSoundVolume: 0.05,
+			hitSoundVolume: 0.3,
 			volumeMixed: false,
 
 			// HitSound

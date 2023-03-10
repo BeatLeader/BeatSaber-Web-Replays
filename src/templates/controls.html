@@ -320,18 +320,14 @@
       </div>
 
       <div class="toggleButton" title="Left saber color, will show for everyone.">
-        <input type="color" id="leftSaberColor" value="#ff0000">
+        <input type="color" id="leftSaberColor" value="#9c2121">
         <label class="toggleButtonLabel"><td><nobr>Left</nobr></td></label>
       </div>
 
-      <div class="toggleButton" title="Different note score color based on score value.">
+      <div class="toggleButton" title="Right saber color, will show for everyone.">
         <input type="color" id="rightSaberColor" value="#335aff">
         <label class="toggleButtonLabel"><td><nobr>Right</nobr></td></label>
       </div>
-
-      <input type="button" value="Change hitsound" onclick="document.getElementById('hitSoundPicker').click();" />
-      <input id="hitSoundPicker" style="display: none;" type="file" accept=".mp3, .wav, .ogg" />
-
     </div>
 
     <div class="sliders" style="display: flex; flex-direction: column; justify-content: space-between;">
@@ -401,15 +397,8 @@
         </label>
       </div>
 
-      <div class="toggleButton" title="How many pixels would be rendered for point.">
-        <label>
-          <div class="toggleButtonContainer">
-            <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Pixel ratio:</nobr></td></label>
-            <label id="pixelRatioLabel" class="toggleButtonLabel" style="margin-left: 20px;">1.5</label>
-          </div>
-          <input id="pixelRatio" type="range" min="0.1" max="3" step="0.1" value="1.5">
-        </label>
-      </div>
+      <input type="button" class="hitsounds-button" value="Change hitsounds" onclick="document.getElementById('hitSoundPicker').click();" />
+      <input id="hitSoundPicker" style="display: none;" type="file" accept=".mp3, .wav, .ogg" />
     </div>
   </div>
 </div>

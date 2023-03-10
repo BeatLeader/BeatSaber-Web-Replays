@@ -151,7 +151,6 @@ AFRAME.registerComponent('audioanalyser', {
 
 	resumeContext: function () {
 		this.context.resume();
-		console.log(this.context.sampleRate);
 	},
 
 	/**

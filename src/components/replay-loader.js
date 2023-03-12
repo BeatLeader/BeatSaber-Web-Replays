@@ -359,7 +359,7 @@ AFRAME.registerComponent('replay-loader', {
 					group = [];
 					break;
 				}
-				if (mapnotes[i]._songTime < noteStructs[i + offset].spawnTime - 0.0001) {
+				if (noteStructs[i].spawnTime < noteStructs[i + offset].spawnTime - 0.0001) {
 					offset--;
 					continue;
 				}
@@ -382,7 +382,9 @@ AFRAME.registerComponent('replay-loader', {
 				}
 			}
 		}
-		processGroup();
+		if (group) {
+			processGroup();
+		}
 
 		for (var i = 0; i < noteStructs.length; i++) {
 			if (noteStructs[i].index == undefined) {

@@ -13,7 +13,7 @@ function checkSS(file, isLink, completion) {
 			};
 			xhr.send();
 		} else {
-			completion(null);
+			completion({errorMessage: 'Wrong link format'});
 		}
 	} else {
 		checkSSFile(file, completion);
@@ -27,7 +27,7 @@ function checkSSFile(file, completion) {
 	};
 	reader.onerror = function (e) {
 		// error occurred
-		completion('Error: ' + e.type);
+		completion({errorMessage: 'Error: ' + e.type});
 	};
 	reader.readAsArrayBuffer(file);
 }
@@ -91,7 +91,7 @@ function decode(arrayBuffer, completion) {
 	}
 
 	if (!flag) {
-		completion(null);
+		completion({errorMessage: 'Old SS replays are not supported'});
 		return;
 	}
 
@@ -108,7 +108,7 @@ function decode(arrayBuffer, completion) {
 				dataView.pointer = 0;
 				continueDecode(dataView, completion);
 			} else {
-				completion(null);
+				completion({errorMessage: "Can't unzip the replay"});
 			}
 		},
 		percent => {

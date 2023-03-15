@@ -1,5 +1,4 @@
 const COLORS = require('../constants/colors.js');
-const flatShaders = require('../../assets/shaders/flat.js');
 const stageAdditiveShaders = require('../../assets/shaders/stageAdditive.js');
 const beatArrowShaders = require('../../assets/shaders/beatArrow.js');
 const stageNormalShaders = require('../../assets/shaders/stageNormal.js');
@@ -17,16 +16,17 @@ AFRAME.registerShader('energy', {
 
 AFRAME.registerSystem('materials', {
 	init: function () {
-		this.createMaterials();
+		const atlas = new THREE.TextureLoader().load('assets/img/atlas.png');
+		this.createMaterials(atlas);
 	},
 
-	createMaterials: function () {
+	createMaterials: function (atlas) {
 		this.stageNormal = new THREE.ShaderMaterial({
 			uniforms: {
 				skyColor: {value: new THREE.Color(COLORS.SKY_BLUE)},
 				backglowColor: {value: new THREE.Color(COLORS.BG_BLUE)},
 				src: {
-					value: new THREE.TextureLoader().load('assets/img/atlas.png'),
+					value: atlas,
 				},
 			},
 			vertexShader: stageNormalShaders.vertexShader,
@@ -43,7 +43,7 @@ AFRAME.registerSystem('materials', {
 				rightLaser: {value: new THREE.Color(COLORS.NEON_BLUE)},
 				textGlow: {value: new THREE.Color(COLORS.TEXT_OFF)},
 				src: {
-					value: new THREE.TextureLoader().load('assets/img/atlas.png'),
+					value: atlas,
 				},
 			},
 			vertexShader: stageAdditiveShaders.vertexShader,
@@ -57,7 +57,7 @@ AFRAME.registerSystem('materials', {
 		this.beatSignMaterial = new THREE.ShaderMaterial({
 			uniforms: {
 				src: {
-					value: new THREE.TextureLoader().load('assets/img/atlas.png'),
+					value: atlas,
 				},
 				start: {value: 10000},
 				finish: {value: 10000},

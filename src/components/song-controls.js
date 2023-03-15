@@ -835,18 +835,38 @@ AFRAME.registerComponent('song-controls', {
 			dcorner.style.display = 'block';
 		}
 
+		let hitSoundButton = document.getElementById('hitsounds-button');
+		let resetHitsounds = document.getElementById('resetHitsounds');
+
+		if (this.settings.settings.hitsoundName.length) {
+			hitSoundButton.innerText = this.settings.settings.hitsoundName;
+			resetHitsounds.style.display = 'block';
+		}
+
 		let hitSoundPicker = document.getElementById('hitSoundPicker');
 		hitSoundPicker.addEventListener('input', e => {
 			let sound = e.target.files[0];
+			if (!sound) return;
 
 			const dataArrayReader = new FileReader();
 			dataArrayReader.onload = e => {
+				this.settings.settings.hitsoundName = sound.name;
+				hitSoundButton.innerText = sound.name;
+				resetHitsounds.style.display = 'block';
 				this.settings.settings.hitSound = Buffer.from(e.target.result).toString('base64');
 				this.settings.sync();
 
 				this.hitSound.refreshBuffer();
 			};
 			dataArrayReader.readAsArrayBuffer(sound);
+		});
+
+		resetHitsounds.addEventListener('click', e => {
+			this.settings.resetHitsound();
+			this.hitSound.refreshBuffer();
+
+			hitSoundButton.innerText = 'Change hitsounds';
+			resetHitsounds.style.display = 'none';
 		});
 	},
 

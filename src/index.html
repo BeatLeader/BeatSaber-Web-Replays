@@ -69,6 +69,7 @@
     <a-scene
       settings
       beat-hit-sound
+      bind__pixelRatio="settings.pixelRatio"
       precision="mediump"
       mixin="bgColorAnimation tunnelColorAnimation leftLaserColorAnimation rightLaserColorAnimation textGlowColorAnimation floorColorAnimation"
       bind__beat-generator="difficulty: challenge.difficulty; mode: challenge.mode; isPlaying: isPlaying || isPaused; beatSpeed: challenge.beatSpeed; noEffects: settings.noEffects"

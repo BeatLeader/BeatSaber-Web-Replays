@@ -9,6 +9,7 @@ AFRAME.registerComponent('settings', {
 			reducedDebris: true,
 			noEffects: false,
 			showHitboxes: false,
+			pixelRatio: 1,
 			saberWidth: 100,
 			showFps: false,
 			showNoteModifierVisuals: true,
@@ -42,6 +43,7 @@ AFRAME.registerComponent('settings', {
 			volumeMixed: false,
 
 			// HitSound
+			hitsoundName: '',
 			hitSound: defaultHitSound,
 		};
 
@@ -94,5 +96,10 @@ AFRAME.registerComponent('settings', {
 	sync: function () {
 		localStorage.setItem('settings', JSON.stringify(this.settings));
 		this.el.sceneEl.emit('settingsChanged', {settings: this.settings}, false);
+	},
+	resetHitsound: function () {
+		this.settings.hitSound = defaultHitSound;
+		this.settings.hitsoundName = '';
+		this.sync();
 	},
 });

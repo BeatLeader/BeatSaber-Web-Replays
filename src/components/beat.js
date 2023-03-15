@@ -61,7 +61,7 @@ AFRAME.registerComponent('beat', {
 		type: {default: 'arrow', oneOf: ['arrow', 'dot', 'mine', 'spline']},
 		verticalPosition: {default: 1},
 		warmupPosition: {default: 0},
-		time: {default: 0},
+		time: {default: -1},
 		noteId: {default: 0},
 		noteIdWithScoring: {default: 0},
 		anticipationTime: {default: 0},
@@ -159,6 +159,8 @@ AFRAME.registerComponent('beat', {
 	},
 
 	update: function (oldData) {
+		if (this.data.time == -1 && !this.data.loadingCube) return;
+
 		this.updateBlock();
 
 		if (this.data.type === 'mine') {
@@ -977,7 +979,9 @@ AFRAME.registerComponent('beat', {
 			return;
 		}
 
-		this.el.sceneEl.components[this.poolName].returnEntity(this.el);
+		if (this.el.sceneEl.components[this.poolName]) {
+			this.el.sceneEl.components[this.poolName].returnEntity(this.el);
+		}
 	},
 
 	checkBigCollider: function (collider, hand, saberControls) {
@@ -1253,7 +1257,7 @@ AFRAME.registerComponent('beat', {
 		if (this.data.type === 'mine' || this.hitSoundState == SOUND_STATE.hitPlayed) return;
 
 		const currentTime = song.getCurrentTime();
-		const noteTime = this.data.time - (SWORD_OFFSET * 2) / this.data.speed;
+		const noteTime = this.data.time - SWORD_OFFSET / this.data.speed;
 
 		if (currentTime > noteTime) {
 			if (this.data.type !== 'sliderchain') {

@@ -276,7 +276,7 @@ function DecodeUint8(dataView) {
 
 function DecodeString(dataView) {
 	const length = dataView.getInt32(dataView.pointer, true);
-	if (length < 0 || length > 1000) {
+	if (length < 0 || length > 300) {
 		dataView.pointer += 1;
 		return DecodeString(dataView);
 	}

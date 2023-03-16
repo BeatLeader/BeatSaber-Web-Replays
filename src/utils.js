@@ -154,7 +154,7 @@ function BezierCurve(p0, p1, p2, t) {
 	const tangent = new THREE.Vector2()
 		.subVectors(p1, p0)
 		.multiplyScalar(2.0 * (1.0 - t))
-		.multiply(new THREE.Vector2().subVectors(p2, p1).multiplyScalar(2.0 * t));
+		.addScaledVector(new THREE.Vector2().subVectors(p2, p1), 2.0 * t);
 
 	return [pos, tangent];
 }

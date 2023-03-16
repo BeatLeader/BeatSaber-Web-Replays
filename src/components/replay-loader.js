@@ -371,9 +371,9 @@ AFRAME.registerComponent('replay-loader', {
 
 				group = [i];
 				groupIndex = i;
-				groupTime = mapnotes[i]._time;
+				groupTime = mapnotes[i]._tailTime || mapnotes[i]._time;
 			} else {
-				if (Math.abs(groupTime - mapnotes[i]._time) < 0.0001) {
+				if (Math.abs(groupTime - mapnotes[i]._time) < 0.0001 || Math.abs(groupTime - mapnotes[i]._tailTime) < 0.0001) {
 					group.push(i);
 				} else {
 					processGroup();
@@ -442,12 +442,20 @@ AFRAME.registerComponent('replay-loader', {
 				combo = 0;
 				misses++;
 				switch (note.score) {
-					case -2:
-						energy -= 0.1;
+					case -2: // badcut
+						if (note.scoringType == ScoringType.BurstSliderElement) {
+							energy -= 0.025;
+						} else {
+							energy -= 0.1;
+						}
 						break;
-					case -4:
-					case -3:
-						energy -= 0.15;
+					case -3: // miss
+					case -4: // bomb
+						if (note.scoringType == ScoringType.BurstSliderElement) {
+							energy -= 0.03;
+						} else {
+							energy -= 0.15;
+						}
 						break;
 
 					default:
@@ -456,7 +464,11 @@ AFRAME.registerComponent('replay-loader', {
 			} else {
 				normalCounter.Increase();
 				score += normalCounter.Multiplier * note.score;
-				energy += 0.01;
+				if (note.scoringType == ScoringType.BurstSliderElement) {
+					energy += 1 / 500;
+				} else {
+					energy += 0.01;
+				}
 				if (energy > 1) {
 					energy = 1;
 				}

@@ -362,7 +362,7 @@ AFRAME.registerComponent('beat', {
 		// Set position.
 
 		if (data.type == 'sliderchain' || data.type == 'sliderhead') {
-			var t = data.sliceIndex / data.sliceCount;
+			var t = (data.sliceIndex / (data.sliceCount - 1)) * data.squishAmount;
 
 			const headX = getHorizontalPosition(data.horizontalPosition);
 			const headY = getVerticalPosition(data.verticalPosition);
@@ -376,9 +376,9 @@ AFRAME.registerComponent('beat', {
 			const f = THREE.Math.degToRad(this.rotations[data.headCutDirection] + (this.data.rotationOffset ? this.data.rotationOffset : 0.0));
 			const p1 = new THREE.Vector2(Math.sin(f), -Math.cos(f)).multiplyScalar(0.5 * magnitude);
 
-			var curve = BezierCurve(new THREE.Vector2(0.0, 0.0), p1, p2, t * data.squishAmount);
+			var curve = BezierCurve(new THREE.Vector2(0.0, 0.0), p1, p2, t);
 			const pos = curve[0];
-			// const tangent = curve[1];
+			const tangent = curve[1];
 
 			const timeDiff = (data.tailTime - data.time) * t * data.speed;
 			this.chainOffset = timeDiff;
@@ -387,8 +387,8 @@ AFRAME.registerComponent('beat', {
 			el.object3D.rotation.set(
 				0,
 				0,
-				THREE.Math.degToRad(this.rotations[data.headCutDirection] + (this.data.rotationOffset ? this.data.rotationOffset : 0.0))
-			); // + signedAngle(new THREE.Vector2(0.0, -1), tangent)
+				Math.atan2(tangent.x, -tangent.y) + THREE.Math.degToRad(this.data.rotationOffset ? this.data.rotationOffset : 0.0)
+			);
 		} else {
 			if (data.spawnRotation != 0) {
 				el.object3D.rotation.order = 'YZX';
@@ -615,10 +615,8 @@ AFRAME.registerComponent('beat', {
 		}
 
 		if (this.data.type === 'sliderchain') {
-			const chainRatio = ((this.data.sliceCount - this.data.sliceIndex) / this.data.sliceCount) * 3.5;
-
-			blockEl.object3D.scale.set(1, chainRatio, 1);
-			signEl.object3D.scale.set(0.3, (1 / chainRatio) * 0.3, 1);
+			blockEl.object3D.scale.set(1, 1, 1);
+			signEl.object3D.scale.set(0.3, 0.3, 1);
 		} else {
 			// Model is 0.29 size. We make it 1.0 so we can easily scale based on 1m size.
 			blockEl.object3D.scale.set(1, 1, 1);

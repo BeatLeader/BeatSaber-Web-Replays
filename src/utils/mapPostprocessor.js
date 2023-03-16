@@ -237,12 +237,12 @@ function addScoringTypeAndChains(map) {
 			}
 			head.sliderhead = slider;
 		}
-		for (var i = 0; i < slider._sliceCount - 1; i++) {
+		for (var i = 1; i < slider._sliceCount; i++) {
 			let chain = clone(slider);
 			chain._headCutDirection = slider._cutDirection;
 			chain._cutDirection = ANY_CUT_DIRECTION;
 			chain._scoringType = ScoringType.BurstSliderElement;
-			chain._sliceIndex = i + 1;
+			chain._sliceIndex = i;
 
 			chains.push(chain);
 		}

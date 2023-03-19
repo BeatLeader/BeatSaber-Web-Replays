@@ -1,9 +1,9 @@
-import {getHorizontalPosition, getVerticalPosition, rotateAboutPoint} from '../utils';
+import {getHorizontalPosition, getVerticalPosition, rotateAboutPoint, SWORD_OFFSET} from '../utils';
 const COLORS = require('../constants/colors.js');
 
 AFRAME.registerComponent('slider', {
 	schema: {
-		anticipationPosition: {default: 0},
+		halfJumpPosition: {default: 0},
 		color: {default: 'red', oneOf: ['red', 'blue']},
 		cutDirection: {default: 'down'},
 		tailCutDirection: {default: 'down'},
@@ -19,7 +19,7 @@ AFRAME.registerComponent('slider', {
 		tailTime: {default: 0},
 		hasTailNote: {default: false},
 		halfJumpDuration: {default: 0},
-		warmupTime: {default: 0},
+		moveTime: {default: 0},
 		warmupSpeed: {default: 0},
 		blue: {default: COLORS.BEAT_BLUE},
 		red: {default: COLORS.BEAT_RED},
@@ -45,7 +45,7 @@ AFRAME.registerComponent('slider', {
 	},
 
 	init: function () {
-		this.currentRotationWarmupTime = 0;
+		this.currentRotationmoveTime = 0;
 
 		this.headset = this.el.sceneEl.querySelectorAll('.headset')[0];
 		this.song = this.el.sceneEl.components.song;
@@ -72,17 +72,17 @@ AFRAME.registerComponent('slider', {
 
 		var newPosition = 0;
 
-		var timeOffset = data.time - song.getCurrentTime() - data.halfJumpDuration - data.warmupTime;
+		var timeOffset = data.time - song.getCurrentTime() - data.halfJumpDuration - data.moveTime;
 
-		if (timeOffset <= -data.warmupTime) {
-			newPosition = data.anticipationPosition;
-			timeOffset += data.warmupTime;
+		if (timeOffset <= -data.moveTime) {
+			newPosition = data.halfJumpPosition;
+			timeOffset += data.moveTime;
 			newPosition += -timeOffset * data.speed;
 		} else {
-			newPosition = data.anticipationPosition + data.warmupPosition + data.warmupSpeed * -timeOffset;
+			newPosition = data.halfJumpPosition + data.warmupPosition + data.warmupSpeed * -timeOffset;
 		}
 
-		newPosition += this.headset.object3D.position.z;
+		newPosition += this.headset.object3D.position.z - SWORD_OFFSET;
 
 		if (data.spawnRotation == 0) {
 			position.z = newPosition;
@@ -93,7 +93,7 @@ AFRAME.registerComponent('slider', {
 
 		if (this.splineObject.material.uniforms.start) {
 			this.splineObject.material.uniforms.start.value = this.headset.object3D.position.z;
-			this.splineObject.material.uniforms.finish.value = data.anticipationPosition;
+			this.splineObject.material.uniforms.finish.value = data.halfJumpPosition;
 		}
 	},
 
@@ -115,7 +115,7 @@ AFRAME.registerComponent('slider', {
 		this.updateBlock();
 
 		// Set position.
-		el.object3D.position.set(0, 0, data.anticipationPosition + data.warmupPosition);
+		el.object3D.position.set(0, 0, data.halfJumpPosition + data.warmupPosition - SWORD_OFFSET);
 
 		if (data.spawnRotation) {
 			let axis = new THREE.Vector3(0, 1, 0);

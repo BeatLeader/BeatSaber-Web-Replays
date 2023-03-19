@@ -182,12 +182,31 @@ function SetNoteFlipToNote(thisNote, targetNote) {
 	thisNote._flipYSide *= -1;
 }
 
+var columns = {};
+
 function addRabbitJumps(currentTimeSlice, currentTimeSliceTime, previousTimeSlice) {
 	if (previousTimeSlice) {
 		previousTimeSlice.forEach(noteData => {
 			noteData._timeToNextColorNote = currentTimeSliceTime - noteData._time;
 		});
 	}
+
+	columns = {};
+	currentTimeSlice.forEach(element => {
+		if (columns[element._lineIndex]) {
+			columns[element._lineIndex].push(element);
+		} else {
+			columns[element._lineIndex] = [element];
+		}
+	});
+
+	Object.keys(columns).forEach(key => {
+		columns[key]
+			.sort(x => x._lineLayer)
+			.forEach((element, index) => {
+				element._beforeJumpLineLayer = index;
+			});
+	});
 
 	if (currentTimeSlice.length != 2) return;
 
@@ -206,9 +225,9 @@ function addRabbitJumps(currentTimeSlice, currentTimeSliceTime, previousTimeSlic
 		targetNote1._type == targetNote2._type ||
 		((targetNote1._type != 0 || targetNote1._lineIndex <= targetNote2._lineIndex) &&
 			(targetNote1._type != 1 || targetNote1._lineIndex >= targetNote2._lineIndex))
-	) {
+	)
 		return;
-	}
+	if (targetNote1._scoringType != ScoringType.Normal || targetNote2._scoringType != ScoringType.Normal) return;
 
 	SetNoteFlipToNote(targetNote1, targetNote2);
 	SetNoteFlipToNote(targetNote2, targetNote1);
@@ -216,8 +235,6 @@ function addRabbitJumps(currentTimeSlice, currentTimeSliceTime, previousTimeSlic
 
 function calculateRotationOffsets(map) {
 	var group, groupTime, previousGroup;
-
-	console.log(map);
 
 	const processGroup = () => {
 		var leftNotes = [];
@@ -383,8 +400,9 @@ function calculateSongTimes(map, info) {
 function postprocess(map, info) {
 	var result = upgrade(map);
 
-	calculateRotationOffsets(result);
 	addScoringTypeAndChains(result);
+	calculateRotationOffsets(result);
+
 	filterFakeNotes(result);
 	indexNotes(result);
 	calculateSongTimes(result, info);

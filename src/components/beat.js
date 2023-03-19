@@ -1,11 +1,13 @@
 import {
 	getHorizontalPosition,
 	getVerticalPosition,
+	getLowerVerticalPosition,
 	NoteErrorType,
 	SWORD_OFFSET,
 	BezierCurve,
 	rotateAboutPoint,
 	NoteLineLayer,
+	LerpUnclamped,
 } from '../utils';
 const COLORS = require('../constants/colors.js');
 
@@ -58,11 +60,12 @@ AFRAME.registerComponent('beat', {
 		// Z Movement
 		time: {default: 0},
 		speed: {default: 8.0},
-		anticipationPosition: {default: 0},
+		halfJumpPosition: {default: 0},
 		warmupPosition: {default: 0},
 		halfJumpDuration: {default: 0},
-		warmupTime: {default: 0},
+		moveTime: {default: 0},
 		warmupSpeed: {default: 0},
+		beforeJumpLineLayer: {default: 1},
 
 		// Colors
 		blue: {default: COLORS.BEAT_BLUE},
@@ -79,9 +82,6 @@ AFRAME.registerComponent('beat', {
 
 		// 90/360
 		spawnRotation: {default: 0},
-
-		// Jump animation
-		jumpDistance: {default: 0},
 
 		// Rabbit jump animation
 		flip: {default: false},
@@ -135,7 +135,7 @@ AFRAME.registerComponent('beat', {
 	init: function () {
 		this.beatBoundingBox = new THREE.Box3();
 		this.beatBigBoundingBox = new THREE.Box3();
-		this.currentRotationWarmupTime = 0;
+		this.currentRotationmoveTime = 0;
 		this.cutDirection = new THREE.Vector3();
 		this.destroyed = false;
 		this.gravityVelocity = 0;
@@ -221,37 +221,53 @@ AFRAME.registerComponent('beat', {
 		}
 	},
 
+	getZPos: function (start, end, headOffsetZ, t) {
+		return LerpUnclamped(start + headOffsetZ * Math.min(1, t * 2), end + headOffsetZ, t);
+	},
+
 	updatePosition: function () {
 		const el = this.el;
 		const data = this.data;
-		var position = el.object3D.position;
 		const song = this.song;
+		const disableJumps = this.settings.settings.disableJumps;
 
+		var position = el.object3D.position;
 		var newPosition = 0;
 
-		var timeOffset = data.time - song.getCurrentTime() - data.halfJumpDuration - data.warmupTime;
+		const songTime = song.getCurrentTime();
 
-		// var t = (timeOffset / -data.halfJumpDuration - data.warmupTime) / 2;
-		var num1 = song.getCurrentTime() - (data.time - data.halfJumpDuration);
+		var num1 = songTime - (data.time - data.halfJumpDuration);
 		var t = num1 / (data.halfJumpDuration * 2);
 
-		// var t = (timeOffset / -data.halfJumpDuration - data.warmupTime) / 2;
-		num1 = song.getCurrentTime() - (data.time - data.halfJumpDuration / 2);
+		var newX = t < 0 ? this.startPos.x : t >= 0.25 ? this.endPos.x : this.startPos.x + (this.endPos.x - this.startPos.x) * InOutQuad(t * 4);
+		var newY = 0;
 
-		if (timeOffset <= -data.warmupTime) {
-			newPosition = data.anticipationPosition;
-			timeOffset += data.warmupTime;
-			newPosition += -timeOffset * data.speed;
+		var timeOffset = data.time - songTime - data.halfJumpDuration - data.moveTime;
+		if (timeOffset <= -data.moveTime) {
+			newPosition = this.getZPos(
+				data.halfJumpPosition - SWORD_OFFSET,
+				-data.halfJumpPosition - SWORD_OFFSET,
+				this.headset.object3D.position.z,
+				t
+			);
+
+			newY = this.startPos.y + this.startVerticalVelocity * num1 - this.gravity * num1 * num1 * 0.5;
 		} else {
-			newPosition = data.anticipationPosition + data.warmupPosition + data.warmupSpeed * -timeOffset;
+			newY = this.startPos.y;
+			newPosition = data.halfJumpPosition + data.warmupPosition + data.warmupSpeed * -timeOffset;
 		}
 
-		newPosition += this.headset.object3D.position.z;
 		if (this.chainOffset) {
 			newPosition -= this.chainOffset;
 		}
 
-		const newX = t >= 0.25 ? this.endPos.x : this.startPos.x + (this.endPos.x - this.startPos.x) * InOutQuad(t * 4);
+		if (disableJumps) {
+			newX = this.endPos.x;
+			newY = this.endPos.y;
+		}
+
+		position.y = newY;
+
 		if (data.spawnRotation == 0) {
 			position.z = newPosition;
 			position.x = newX;
@@ -268,19 +284,18 @@ AFRAME.registerComponent('beat', {
 
 		this.currentPositionZ = newPosition;
 
-		//
-		position.y = this.endPos.y + this.startVerticalVelocity * num1 - this.gravity * num1 * num1 * 0.5 - data.verticalPosition * 0.13;
-
-		if (this.yAvoidance != 0 && t < 0.25) {
+		if (!disableJumps && this.yAvoidance != 0 && t > 0 && t < 0.25) {
 			position.y += (0.5 - Math.cos(t * 8.0 * Math.PI) * 0.5) * this.yAvoidance;
 		}
 
 		if (t >= 0 && t <= 0.5 && data.type != 'mine') {
-			var a;
-			if (t >= 0.125) {
-				a = this.middleRotation.clone().slerp(this.endRotation, Math.sin((t - 0.125) * Math.PI * 2.0));
-			} else {
-				a = this.startRotation.clone().slerp(this.middleRotation, Math.sin(t * Math.PI * 4.0));
+			var a = this.endRotation.clone();
+			if (!disableJumps) {
+				if (t >= 0.125) {
+					a = this.middleRotation.clone().slerp(this.endRotation, Math.sin((t - 0.125) * Math.PI * 2.0));
+				} else {
+					a = this.startRotation.clone().slerp(this.middleRotation, Math.sin(t * Math.PI * 4.0));
+				}
 			}
 
 			var headPseudoLocalPos = this.headset.object3D.position.clone();
@@ -300,6 +315,8 @@ AFRAME.registerComponent('beat', {
 				let rotation = new THREE.Euler().setFromQuaternion(a);
 				el.object3D.rotation.set(rotation.x, rotation.y, rotation.z);
 			}
+		} else if (disableJumps) {
+			el.object3D.rotation.set(this.endRotationEuler.x, this.endRotationEuler.y, this.endRotationEuler.z);
 		}
 	},
 
@@ -405,8 +422,12 @@ AFRAME.registerComponent('beat', {
 			const timeDiff = (data.tailTime - data.time) * t * data.speed;
 			this.chainOffset = timeDiff;
 
-			this.startPos = new THREE.Vector3(headX, getVerticalPosition(0), data.anticipationPosition + data.warmupPosition - timeDiff);
-			this.endPos = new THREE.Vector3(pos.x + headX, pos.y + headY, 0);
+			this.startPos = new THREE.Vector3(
+				headX,
+				getVerticalPosition(0),
+				data.halfJumpPosition + data.warmupPosition - timeDiff - SWORD_OFFSET
+			);
+			this.endPos = new THREE.Vector3(pos.x + headX, pos.y + headY, -SWORD_OFFSET);
 
 			el.object3D.position.copy(this.startPos);
 			el.object3D.rotation.set(0, 0, 0);
@@ -414,17 +435,22 @@ AFRAME.registerComponent('beat', {
 			this.zRotation = Math.atan2(tangent.x, -tangent.y) + THREE.Math.degToRad(this.data.rotationOffset ? this.data.rotationOffset : 0.0);
 			const endRotation = new THREE.Euler(0, data.spawnRotation * 0.0175, this.zRotation, data.spawnRotation != 0 ? 'YZX' : 'YXZ');
 
+			this.endRotationEuler = endRotation;
 			this.endRotation = new THREE.Quaternion().setFromEuler(endRotation);
 			this.middleRotation = new THREE.Quaternion().setFromEuler(endRotation);
 			this.gravity = this.noteJumpGravityForLineLayer(data.verticalPosition, 0, pos.y);
 		} else {
 			this.startPos = new THREE.Vector3(
 				data.flip ? getHorizontalPosition(data.flipHorizontalPosition) : getHorizontalPosition(data.horizontalPosition),
-				getVerticalPosition(0),
-				data.anticipationPosition + data.warmupPosition
+				getVerticalPosition(data.beforeJumpLineLayer),
+				data.halfJumpPosition + data.warmupPosition - SWORD_OFFSET
 			);
 
-			this.endPos = new THREE.Vector3(getHorizontalPosition(data.horizontalPosition), getVerticalPosition(data.verticalPosition), 0);
+			this.endPos = new THREE.Vector3(
+				getHorizontalPosition(data.horizontalPosition),
+				getVerticalPosition(data.verticalPosition),
+				-SWORD_OFFSET
+			);
 
 			el.object3D.position.copy(this.startPos);
 			el.object3D.rotation.set(0, 0, 0);
@@ -441,9 +467,10 @@ AFRAME.registerComponent('beat', {
 				data.spawnRotation != 0 ? 'YZX' : 'YXZ'
 			);
 
+			this.endRotationEuler = endRotation;
 			this.endRotation = new THREE.Quaternion().setFromEuler(endRotation);
 			this.middleRotation = new THREE.Quaternion().setFromEuler(middleRotation);
-			this.gravity = this.noteJumpGravityForLineLayer(data.verticalPosition, 0, 0);
+			this.gravity = this.noteJumpGravityForLineLayer(data.verticalPosition, data.beforeJumpLineLayer, 0);
 		}
 
 		if (data.spawnRotation) {
@@ -465,7 +492,7 @@ AFRAME.registerComponent('beat', {
 		} else {
 			this.yAvoidance = 0;
 		}
-		this.startVerticalVelocity = this.gravity * data.halfJumpDuration * 0.5;
+		this.startVerticalVelocity = this.gravity * data.halfJumpDuration;
 
 		// Reset the state properties.
 		this.returnToPoolTimeStart = undefined;
@@ -530,8 +557,8 @@ AFRAME.registerComponent('beat', {
 		}
 		if ((modifiers.includes('GN') || modifiers.includes('DA')) && this.settings.settings.showNoteModifierVisuals) {
 			const signMaterial = this.el.sceneEl.systems.materials.beatSignMaterial;
-			signMaterial.uniforms.start.value = data.anticipationPosition + (this.headset.object3D.position.z - data.anticipationPosition) * 0.3;
-			signMaterial.uniforms.finish.value = data.anticipationPosition + (this.headset.object3D.position.z - data.anticipationPosition) * 0.7;
+			signMaterial.uniforms.start.value = data.halfJumpPosition + (this.headset.object3D.position.z - data.halfJumpPosition) * 0.3;
+			signMaterial.uniforms.finish.value = data.halfJumpPosition + (this.headset.object3D.position.z - data.halfJumpPosition) * 0.7;
 		} else {
 			const signMaterial = this.el.sceneEl.systems.materials.beatSignMaterial;
 			signMaterial.uniforms.start.value = 10000;
@@ -1265,11 +1292,8 @@ AFRAME.registerComponent('beat', {
 	},
 
 	noteJumpGravityForLineLayer: function (lineLayer, beforeJumpLineLayer, offset) {
-		var num = (this.data.jumpDistance / this.data.speed) * 0.5;
-		return (
-			(2.0 * (this.highestJumpPosYForLineLayerWithoutJumpOffset(lineLayer) + offset - getVerticalPosition(beforeJumpLineLayer))) /
-			(num * num)
-		);
+		var num = ((-2 * this.data.halfJumpPosition) / this.data.speed) * 0.5;
+		return (2.0 * (getVerticalPosition(lineLayer) + offset - getLowerVerticalPosition(beforeJumpLineLayer))) / (num * num);
 	},
 
 	colorAndScaleForScore: (function () {

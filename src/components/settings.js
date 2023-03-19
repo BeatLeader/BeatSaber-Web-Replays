@@ -17,6 +17,7 @@ AFRAME.registerComponent('settings', {
 			realHitsounds: false,
 			trailType: 'bright',
 			trailLength: 20,
+			disableJumps: false,
 
 			timeInBeats: false,
 

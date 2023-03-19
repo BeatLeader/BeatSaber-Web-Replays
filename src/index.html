@@ -68,23 +68,19 @@
     {% include './animations.html' %}
     <a-scene
       settings
+      beat-hit-sound
       bind__pixelRatio="settings.pixelRatio"
       precision="mediump"
       mixin="bgColorAnimation tunnelColorAnimation leftLaserColorAnimation rightLaserColorAnimation textGlowColorAnimation floorColorAnimation"
       bind__beat-generator="difficulty: challenge.difficulty; mode: challenge.mode; isPlaying: isPlaying || isPaused; beatSpeed: challenge.beatSpeed; noEffects: settings.noEffects"
       bind__pauser="enabled: isPlaying"
-      bind__song="audio: challenge.audio; difficulty: challenge.difficulty; mode: challenge.mode; isPaused: isPaused; isFinished: isFinished; isPlaying: isPlaying; hasReceivedUserGesture: hasReceivedUserGesture; isBeatsPreloaded: challenge.isBeatsPreloaded"
+      bind__song="audio: challenge.audio; difficulty: challenge.difficulty; mode: challenge.mode; isPaused: isPaused; isFinished: isFinished; isPlaying: isPlaying; isBeatsPreloaded: challenge.isBeatsPreloaded"
       bind__song-controls="difficulty: challenge.difficulty; mode: challenge.mode; isSafari: isSafari; isPlaying: isPlaying; songName: challenge.songName; songSubName: challenge.author; songImage: challenge.image; showControls: showControls; leaderboardId: challenge.leaderboardId; songId: challenge.id"
       bind__zip-loader="difficulty: challenge.difficulty; id: challenge.id; mode: challenge.mode"
       bind__replay-loader="difficulty: challenge.difficulty; mode: challenge.mode"
       bind__intro-skip="difficulty: challenge.difficulty"
       bind__fps-counter="enabled: settings.showFps"
-      console-shortcuts
-      debug-controller
-      debug-song-time
-      debug-state
       hack
-      gpu-preloader
       {% if DEBUG_INSPECTOR %}
         inspector="url: http://localhost:3333/dist/aframe-inspector.js"
       {% else %}
@@ -101,9 +97,7 @@
       pool__beat-sliderchain-blue="mixin: blueChain; size: 50; container: #beatContainer; dynamic: true"
       pool__beat-sliderchain-red="mixin: redChain; size: 50; container: #beatContainer; dynamic: true"
       pool__beat-mine="mixin: mine; size: 50; container: #beatContainer; dynamic: true"
-      pool__beat-glow="mixin: beatGlow; size: 20; container: #glowContainer; dynamic: true"
       pool__beatscoreok="mixin: beatScoreOk; size: 30; container: #beatContainer; dynamic: true"
-      pool__beatscoresuper="mixin: beatScoreSuper; size: 10; container: #beatContainer; dynamic: true"
       pool__wall="mixin: wall; size: 30; container: #beatContainer"
       pool__slider-blue="mixin: slider; size: 50; container: #beatContainer; dynamic: true"
       pool__slider-red="mixin: slider; size: 50; container: #beatContainer; dynamic: true"
@@ -135,15 +129,12 @@
       <a-entity id="mineObjTemplate" obj-model="obj: #mineObj" visible="false"></a-entity>
 
       <a-entity 
-        id="beatContainer" 
-        bind__pause="isPaused: !isPlaying" 
-        beat-hit-sound></a-entity>
+        id="beatContainer"></a-entity>
 
       <a-entity
         id="audioAnalyser"
-        audioanalyser="src: #introSong; fftSize: 64; enableBeatDetection: true; enableLevels: false; enableWaveform: false; beatDetectionThrottle: 5000; unique: true"
-        bind__audioanalyser="beatDetectionThrottle: menuActive && 5000 || 1000; isSafari: isSafari"
-        proxy-event="event: audioanalyserbeat; to: #logolight"></a-entity>
+        audioanalyser="fftSize: 64; enableBeatDetection: true; enableLevels: false; enableWaveform: false; beatDetectionThrottle: 5000; unique: true"
+        bind__audioanalyser="beatDetectionThrottle: menuActive && 5000 || 1000; isSafari: isSafari"></a-entity>
 
       {% include './templates/stage.html' %}
       {% include './templates/gameMenu.html' %}
@@ -152,11 +143,6 @@
 
       <a-entity id="glowContainer"></a-entity>
 
-      <!-- super cut fx rings -->
-      {% for i in range(1, 5) %}
-        <a-entity render-order="wall" class="superCutFx" mixin="superCut"></a-entity>
-      {% endfor %}
-
       <!-- Wrong + miss beat visual indicators. -->
       <a-entity id="badContainer" bind__visible="isPlaying">
         <a-entity render-order="walls" id="wrongLeft" mixin='beatWrong'></a-entity>
@@ -164,19 +150,6 @@
         <a-entity render-order="walls" id="missLeft" mixin='beatMiss'></a-entity>
         <a-entity render-order="walls" id="missRight" mixin='beatMiss'></a-entity>
       </a-entity>
-
-      <a-entity
-        render-order="wall"
-        id="saberParticles"
-        particleplayer="src: #saberParticlesJSON; interpolate: true; pscale: 0.55; dur: 800; loop: false; on: explode; img: #sparkImg; count: 20%; animateScale: true; initialScale: 4 1 1; finalScale: 0.2 0.2 1"></a-entity>
-      <a-entity
-        render-order="wall"
-        id="mineParticles"
-        particleplayer="src: #mineParticlesJSON; pscale: 0.5; interpolate: true; scale: 1.4; loop: false; on: explode; img: #sparkImg; count: 20%; animateScale: true; initialScale: 3 1 1; finalScale: 0.2 0.2 1"></a-entity>
-      <a-entity
-        render-order="wall"
-        id="sparkParticles"
-        particleplayer="src: #sparksJSON; color: #fcc; pscale: 0.5; on: explode; scale: 0.12; loop: false; img: #spark2Img; dur: 700; count: 50%; animateScale: true; initialScale: 3 0.5 1; finalScale: 0.1 0.5 1"></a-entity>
 
       <a-entity
         id="controllerRig"
@@ -244,7 +217,7 @@
             scale="1.3 1.3 1.3"></a-entity> -->
         {% endmacro %}
 
-        {{ saber('left', 'right', '#ff0000', 'pink') }}
+        {{ saber('left', 'right', '#9c2121', 'pink') }}
         {{ saber('right', 'left', '#335aff', 'cyan') }}
       </a-entity>
       <!-- <a-mixin
@@ -301,7 +274,6 @@
     </a-scene>
 
     {% include './templates/controls.html' %}
-    {% include './templates/ga.html' %}
 
     <span id="iframeUrl"></span>
   </body>

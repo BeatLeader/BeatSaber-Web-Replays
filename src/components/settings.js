@@ -1,3 +1,5 @@
+const defaultHitSound = require('../../assets/sounds/defaulthitsound.js');
+
 AFRAME.registerComponent('settings', {
 	schema: {},
 
@@ -7,7 +9,7 @@ AFRAME.registerComponent('settings', {
 			reducedDebris: true,
 			noEffects: false,
 			showHitboxes: false,
-			pixelRatio: 1.5,
+			pixelRatio: 1,
 			saberWidth: 100,
 			showFps: false,
 			showNoteModifierVisuals: true,
@@ -38,8 +40,12 @@ AFRAME.registerComponent('settings', {
 
 			// Volume
 			volume: 0.3,
-			hitSoundVolume: 0.3 * 0.4,
+			hitSoundVolume: 0.3,
 			volumeMixed: false,
+
+			// HitSound
+			hitsoundName: '',
+			hitSound: defaultHitSound,
 		};
 
 		this.units = {
@@ -91,5 +97,10 @@ AFRAME.registerComponent('settings', {
 	sync: function () {
 		localStorage.setItem('settings', JSON.stringify(this.settings));
 		this.el.sceneEl.emit('settingsChanged', {settings: this.settings}, false);
+	},
+	resetHitsound: function () {
+		this.settings.hitSound = defaultHitSound;
+		this.settings.hitsoundName = '';
+		this.sync();
 	},
 });

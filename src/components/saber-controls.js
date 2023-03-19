@@ -80,7 +80,9 @@ AFRAME.registerComponent('saber-controls', {
 			this.el.object3D.visible = false;
 		}
 		if (!oldData.bladeEnabled && this.data.bladeEnabled) {
-			this.bladeEl.emit('drawblade');
+			setTimeout(() => {
+				this.bladeEl.emit('drawblade');
+			}, 3000);
 		}
 	},
 

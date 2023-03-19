@@ -14,31 +14,31 @@ AFRAME.registerComponent('audio-columns', {
 	},
 
 	init: function () {
-		var objData = document.getElementById('audiocolumnObj').data;
-		var loader = new THREE.OBJLoader();
-		var columnGeometry = loader.parse(objData).children[0].geometry;
+		new THREE.OBJLoader().load('assets/models/audiocolumn.obj', object => {
+			const columnGeometry = object.children[0].geometry;
 
-		this.analyser = this.data.analyser.components.audioanalyser;
+			this.analyser = this.data.analyser.components.audioanalyser;
 
-		// Number of levels is half the FFT size.
-		this.frequencyBinCount = this.analyser.data.fftSize / 2;
+			// Number of levels is half the FFT size.
+			this.frequencyBinCount = this.analyser.data.fftSize / 2;
 
-		// Create boxes (one row on each side per level).
-		const geometries = [];
-		let zPosition = 0;
-		for (let i = 0; i < this.frequencyBinCount; i++) {
-			for (let side = 0; side < 2; side++) {
-				const box = columnGeometry.clone();
-				this.initBox(box, side === 0 ? 1 : -1, zPosition);
-				geometries.push(box);
-				// Move Z back.
-				zPosition -= this.data.separation;
+			// Create boxes (one row on each side per level).
+			const geometries = [];
+			let zPosition = 0;
+			for (let i = 0; i < this.frequencyBinCount; i++) {
+				for (let side = 0; side < 2; side++) {
+					const box = columnGeometry.clone();
+					this.initBox(box, side === 0 ? 1 : -1, zPosition);
+					geometries.push(box);
+					// Move Z back.
+					zPosition -= this.data.separation;
+				}
 			}
-		}
 
-		this.geometry = THREE.BufferGeometryUtils.mergeBufferGeometries(geometries);
-		const mesh = new THREE.Mesh(this.geometry, this.el.sceneEl.systems.materials.stageNormal);
-		this.el.setObject3D('mesh', mesh);
+			this.geometry = THREE.BufferGeometryUtils.mergeBufferGeometries(geometries);
+			const mesh = new THREE.Mesh(this.geometry, this.el.sceneEl.systems.materials.stageNormal);
+			this.el.setObject3D('mesh', mesh);
+		});
 	},
 
 	tick: function () {

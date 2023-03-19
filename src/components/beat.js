@@ -35,6 +35,34 @@ const RandomRotations = [
 	new THREE.Vector3(0.1306983, -0.2508438, -0.9591639),
 ];
 
+var saberEls;
+var headset;
+var replayLoader;
+var settings;
+var song;
+
+var mineParticles;
+var wrongElLeft;
+var wrongElRight;
+var missElLeft;
+var missElRight;
+var hitSound;
+
+function initStatic(sceneEl) {
+	saberEls = sceneEl.querySelectorAll('[saber-controls]');
+	headset = sceneEl.querySelectorAll('.headset')[0];
+	replayLoader = sceneEl.components['replay-loader'];
+	settings = sceneEl.components['settings'];
+	song = sceneEl.components.song;
+	hitSound = sceneEl.components['beat-hit-sound'];
+
+	mineParticles = document.getElementById('mineParticles');
+	wrongElLeft = document.getElementById('wrongLeft');
+	wrongElRight = document.getElementById('wrongRight');
+	missElLeft = document.getElementById('missLeft');
+	missElRight = document.getElementById('missRight');
+}
+
 function InOutQuad(t) {
 	return t >= 0.5 ? (4.0 - 2.0 * t) * t - 1.0 : 2 * t * t;
 }
@@ -53,7 +81,8 @@ AFRAME.registerComponent('beat', {
 		horizontalPosition: {default: 1},
 		verticalPosition: {default: 1},
 		size: {default: 0.4},
-
+		warmupPosition: {default: 0},
+		time: {default: -1},
 		noteId: {default: 0},
 		noteIdWithScoring: {default: 0},
 
@@ -147,25 +176,13 @@ AFRAME.registerComponent('beat', {
 		this.returnToPoolTimeStart = undefined;
 		this.rotationAxis = new THREE.Vector3();
 
-		this.saberEls = this.el.sceneEl.querySelectorAll('[saber-controls]');
-		this.headset = this.el.sceneEl.querySelectorAll('.headset')[0];
-		this.replayLoader = this.el.sceneEl.components['replay-loader'];
-		this.settings = this.el.sceneEl.components['settings'];
-		this.song = this.el.sceneEl.components.song;
-
 		this.scoreEl = null;
 		this.rightCutPlanePoints = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
 		this.leftCutPlanePoints = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
 
-		this.mineParticles = document.getElementById('mineParticles');
-		this.wrongElLeft = document.getElementById('wrongLeft');
-		this.wrongElRight = document.getElementById('wrongRight');
-		this.missElLeft = document.getElementById('missLeft');
-		this.missElRight = document.getElementById('missRight');
-		this.particles = document.getElementById('saberParticles');
-
-		this.superCuts = document.querySelectorAll('.superCutFx');
-		this.superCutIdx = 0;
+		if (!replayLoader) {
+			initStatic(this.el.sceneEl);
+		}
 
 		this.explodeEventDetail = {position: new THREE.Vector3(), rotation: new THREE.Euler()};
 		this.saberColors = {right: 'blue', left: 'red'};
@@ -179,16 +196,12 @@ AFRAME.registerComponent('beat', {
 		this.startRotation = new THREE.Quaternion(0, 0, 0, 1);
 
 		this.initBlock();
-		if (this.data.type === 'mine') {
-			this.initMineFragments();
-		} else {
-			this.initFragments();
-		}
 	},
 
 	update: function (oldData) {
+		if (this.data.time == -1 && !this.data.loadingCube) return;
+
 		this.updateBlock();
-		this.updateFragments();
 
 		if (this.data.type === 'mine') {
 			this.poolName = `pool__beat-mine`;
@@ -213,7 +226,6 @@ AFRAME.registerComponent('beat', {
 	},
 
 	play: function () {
-		// this.glow = this.el.sceneEl.components['pool__beat-glow'].requestEntity();
 		if (!this.hitSaberEl) {
 			this.blockEl.object3D.visible = true;
 			this.destroyed = false;
@@ -228,8 +240,7 @@ AFRAME.registerComponent('beat', {
 	updatePosition: function () {
 		const el = this.el;
 		const data = this.data;
-		const song = this.song;
-		const disableJumps = this.settings.settings.disableJumps;
+		const disableJumps = settings.settings.disableJumps;
 
 		var position = el.object3D.position;
 		var newPosition = 0;
@@ -247,7 +258,7 @@ AFRAME.registerComponent('beat', {
 			newPosition = this.getZPos(
 				data.halfJumpPosition - SWORD_OFFSET,
 				-data.halfJumpPosition - SWORD_OFFSET,
-				this.headset.object3D.position.z,
+				headset.object3D.position.z,
 				t
 			);
 
@@ -298,7 +309,7 @@ AFRAME.registerComponent('beat', {
 				}
 			}
 
-			var headPseudoLocalPos = this.headset.object3D.position.clone();
+			var headPseudoLocalPos = headset.object3D.position.clone();
 			var localPosition = position.clone();
 
 			headPseudoLocalPos.y = THREE.Math.lerp(headPseudoLocalPos.y, localPosition.y, 0.8);
@@ -337,7 +348,7 @@ AFRAME.registerComponent('beat', {
 			return;
 		}
 
-		if (!this.settings.realHitsounds) {
+		if (!settings.realHitsounds) {
 			this.checkStaticHitsound();
 			if (this.hitSoundState == SOUND_STATE.waitingForHitSound) {
 				return;
@@ -346,7 +357,11 @@ AFRAME.registerComponent('beat', {
 		const el = this.el;
 
 		if (this.destroyed) {
-			this.tockDestroyed(timeDelta);
+			if (!settings.settings.reducedDebris) {
+				this.tockDestroyed(timeDelta);
+			} else if (this.partRightEl) {
+				this.returnToPool(true);
+			}
 			// Check to remove score entity from pool.
 		} else {
 			if (!this.replayNote.cutPoint && this.currentPositionZ > collisionZThreshold) {
@@ -360,11 +375,11 @@ AFRAME.registerComponent('beat', {
 				this.replayNote.score != NoteErrorType.Miss &&
 				((this.replayNote.cutPoint &&
 					this.currentPositionZ - -1 * this.replayNote.cutPoint.z > -0.05 &&
-					(this.settings.settings.reducedDebris || !this.checkCollisions())) ||
-					this.song.getCurrentTime() > this.replayNote.time)
+					(settings.settings.reducedDebris || !this.checkCollisions())) ||
+					song.getCurrentTime() > this.replayNote.time)
 			) {
 				this.showScore();
-				this.destroyBeat(this.saberEls[this.replayNote.colorType]);
+				this.destroyBeat(saberEls[this.replayNote.colorType]);
 				this.postScoreEvent();
 			} else {
 				this.backToPool = this.currentPositionZ >= 2;
@@ -373,7 +388,7 @@ AFRAME.registerComponent('beat', {
 				}
 			}
 
-			if (this.data.type === 'mine' && this.replayNote.totalScore != -1 && this.song.getCurrentTime() > this.replayNote.time) {
+			if (this.data.type === 'mine' && this.replayNote.totalScore != -1 && song.getCurrentTime() > this.replayNote.time) {
 				if (this.replayNote) {
 					this.postScoreEvent();
 				}
@@ -382,10 +397,10 @@ AFRAME.registerComponent('beat', {
 			}
 		}
 		if (this.hitboxObject) {
-			this.hitboxObject.visible = !this.destroyed && this.settings.settings.showHitboxes;
+			this.hitboxObject.visible = !this.destroyed && settings.settings.showHitboxes;
 		}
 		if (this.smallHitObject) {
-			this.smallHitObject.visible = !this.destroyed && this.settings.settings.showHitboxes;
+			this.smallHitObject.visible = !this.destroyed && settings.settings.showHitboxes;
 		}
 
 		this.returnToPool();
@@ -398,6 +413,20 @@ AFRAME.registerComponent('beat', {
 		const data = this.data;
 		const el = this.el;
 
+		if (!settings.settings.reducedDebris) {
+			if (this.data.type === 'mine' && !this.mineBroken) {
+				this.initMineFragments();
+			} else if (!this.partRightEl) {
+				this.initFragments();
+			}
+		}
+
+		if (this.mineBroken || this.partRightEl) {
+			this.updateFragments();
+		}
+
+		let origin = new THREE.Vector3(getHorizontalPosition(data.horizontalPosition), getVerticalPosition(data.verticalPosition), 0);
+		this.currentPosition = data.anticipationPosition + data.warmupPosition;
 		// Set position.
 
 		if (data.type == 'sliderchain' || data.type == 'sliderhead') {
@@ -481,7 +510,8 @@ AFRAME.registerComponent('beat', {
 			origin.applyAxisAngle(axis, theta);
 			this.origin = origin;
 
-			rotateAboutPoint(el.object3D, new THREE.Vector3(0, 0, this.headset.object3D.position.z), axis, theta, true);
+			rotateAboutPoint(el.object3D, new THREE.Vector3(0, 0, headset.object3D.position.z), axis, theta, true);
+
 			el.object3D.lookAt(origin);
 			this.startPosition = el.object3D.position.clone();
 			this.startRotation = el.object3D.quaternion.clone();
@@ -503,10 +533,10 @@ AFRAME.registerComponent('beat', {
 		this.replayNote = null;
 		if (data.type == 'mine') {
 			// Reset mine.
-			this.blockEl.getObject3D('mesh').material = this.el.sceneEl.systems.materials['mineMaterial' + this.data.color];
-			this.resetMineFragments();
+			// this.blockEl.getObject3D('mesh').material = this.el.sceneEl.systems.materials['mineMaterial' + this.data.color];
+			// this.resetMineFragments();
 
-			const bombs = this.replayLoader.bombs;
+			const bombs = replayLoader.bombs;
 			if (bombs) {
 				for (var i = 0; i < bombs.length; i++) {
 					if (
@@ -520,7 +550,7 @@ AFRAME.registerComponent('beat', {
 				}
 			}
 		} else {
-			const notes = this.replayLoader.allStructs;
+			const notes = replayLoader.allStructs;
 			const index = this.data.index;
 			var result;
 			for (var i = 0; i < notes.length; i++) {
@@ -539,7 +569,7 @@ AFRAME.registerComponent('beat', {
 			};
 		}
 
-		if (this.settings.settings.highlightErrors && this.replayNote && this.replayNote.score < 0) {
+		if (settings.settings.highlightErrors && this.replayNote && this.replayNote.score < 0) {
 			if (data.type == 'mine') {
 				this.blockEl.getObject3D('mesh').material = this.el.sceneEl.systems.materials['mineMaterialyellow'];
 			} else {
@@ -547,18 +577,18 @@ AFRAME.registerComponent('beat', {
 			}
 		}
 
-		const replay = this.replayLoader.replay;
+		const replay = replayLoader.replay;
 		const modifiers = replay.info.modifiers;
 
-		if (modifiers.includes('GN') && this.settings.settings.showNoteModifierVisuals) {
+		if (modifiers.includes('GN') && settings.settings.showNoteModifierVisuals) {
 			this.blockEl.setAttribute('material', 'visible: ' + (this.data.index == 0));
 		} else {
 			this.blockEl.setAttribute('material', 'visible: true');
 		}
-		if ((modifiers.includes('GN') || modifiers.includes('DA')) && this.settings.settings.showNoteModifierVisuals) {
+		if ((modifiers.includes('GN') || modifiers.includes('DA')) && settings.settings.showNoteModifierVisuals) {
 			const signMaterial = this.el.sceneEl.systems.materials.beatSignMaterial;
-			signMaterial.uniforms.start.value = data.halfJumpPosition + (this.headset.object3D.position.z - data.halfJumpPosition) * 0.3;
-			signMaterial.uniforms.finish.value = data.halfJumpPosition + (this.headset.object3D.position.z - data.halfJumpPosition) * 0.7;
+			signMaterial.uniforms.start.value = data.halfJumpPosition + (headset.object3D.position.z - data.halfJumpPosition) * 0.3;
+			signMaterial.uniforms.finish.value = data.halfJumpPosition + (headset.object3D.position.z - data.halfJumpPosition) * 0.7;
 		} else {
 			const signMaterial = this.el.sceneEl.systems.materials.beatSignMaterial;
 			signMaterial.uniforms.start.value = 10000;
@@ -571,7 +601,7 @@ AFRAME.registerComponent('beat', {
 		const SCScale = 0.5;
 		let noteScale = smallCubes && !itsMine ? SCScale : 1;
 
-		if (smallCubes && this.settings.settings.showNoteModifierVisuals) {
+		if (smallCubes && settings.settings.showNoteModifierVisuals) {
 			this.blockEl.object3D.scale.multiplyScalar(noteScale);
 		}
 		let gameVersion = (replay.info.gameVersion || '0.0.0').split('.'); // SS doesn't have a game version
@@ -587,7 +617,7 @@ AFRAME.registerComponent('beat', {
 
 		this.updatePosition();
 
-		if (!this.hitboxObject) {
+		if (!this.hitboxObject && (!this.replayNote.cutPoint || settings.settings.showHitboxes || !settings.settings.reducedDebris)) {
 			const hitbox = new THREE.WireframeGeometry(itsMine ? new THREE.SphereGeometry(0.18, 16, 8) : this.toBigBox(boxSettings));
 			const material = new THREE.LineBasicMaterial({
 				color: 0xff0000,
@@ -595,7 +625,7 @@ AFRAME.registerComponent('beat', {
 			});
 			const line = new THREE.LineSegments(hitbox, material);
 			line.geometry.computeBoundingBox();
-			line.visible = this.settings.settings.showHitboxes;
+			line.visible = settings.settings.showHitboxes;
 			el.object3D.add(line);
 			if (!itsMine) {
 				if (!proMode) line.position.z += 0.25 * noteScale;
@@ -607,7 +637,7 @@ AFRAME.registerComponent('beat', {
 				});
 				const line2 = new THREE.LineSegments(smallhitbox, material2);
 				line2.geometry.computeBoundingBox();
-				line2.visible = this.settings.settings.showHitboxes;
+				line2.visible = settings.settings.showHitboxes;
 
 				el.object3D.add(line2);
 
@@ -825,8 +855,7 @@ AFRAME.registerComponent('beat', {
 
 	postScoreEvent: function () {
 		if (!this.replayNote.time) return;
-		const timeToScore = this.replayNote.time - this.song.getCurrentTime();
-
+		const timeToScore = this.replayNote.time - song.getCurrentTime();
 		const payload = {index: this.replayNote.i};
 		const scoreChanged = () => this.el.emit('scoreChanged', payload, true);
 		if (timeToScore < 0) {
@@ -837,7 +866,7 @@ AFRAME.registerComponent('beat', {
 	},
 
 	destroyMine: function () {
-		if (!this.settings.settings.reducedDebris) {
+		if (!settings.settings.reducedDebris) {
 			for (let i = 0; i < this.mineFragments.length; i++) {
 				this.mineFragments[i].visible = true;
 			}
@@ -851,10 +880,10 @@ AFRAME.registerComponent('beat', {
 			this.returnToPool(true);
 		}
 
-		if (!this.settings.settings.noEffects) {
+		if (!settings.settings.noEffects) {
 			this.explodeEventDetail.position.copy(this.el.object3D.position);
 			this.explodeEventDetail.rotation.copy(this.randVec);
-			this.mineParticles.emit('explode', this.explodeEventDetail, false);
+			mineParticles.emit('explode', this.explodeEventDetail, false);
 		}
 	},
 
@@ -869,7 +898,7 @@ AFRAME.registerComponent('beat', {
 		var point3 = new THREE.Vector3();
 
 		return function (saberEl) {
-			if (!this.settings.settings.reducedDebris) {
+			if (!settings.settings.reducedDebris && this.partRightEl) {
 				var coplanarPoint;
 				var cutThickness = (this.cutThickness = 0.02);
 				var direction = this.cutDirection;
@@ -966,7 +995,7 @@ AFRAME.registerComponent('beat', {
 				auxObj3D.lookAt(direction);
 			} else {
 				this.destroyed = true;
-				if (!this.settings.realHitsounds && this.hitSoundState != SOUND_STATE.hitPlayed) {
+				if (!settings.realHitsounds && this.hitSoundState != SOUND_STATE.hitPlayed) {
 					this.el.object3D.visible = false;
 					this.hitSoundState = SOUND_STATE.waitingForHitSound;
 				} else {
@@ -974,7 +1003,7 @@ AFRAME.registerComponent('beat', {
 				}
 			}
 
-			// if (!this.settings.settings.noEffects) {
+			// if (!settings.settings.noEffects) {
 			//   this.explodeEventDetail.position = this.el.object3D.position;
 			//   this.explodeEventDetail.rotation = auxObj3D.rotation;
 			//   this.particles.emit('explode', this.explodeEventDetail, false);
@@ -1032,7 +1061,9 @@ AFRAME.registerComponent('beat', {
 			return;
 		}
 
-		this.el.sceneEl.components[this.poolName].returnEntity(this.el);
+		if (this.el.sceneEl.components[this.poolName]) {
+			this.el.sceneEl.components[this.poolName].returnEntity(this.el);
+		}
 	},
 
 	checkBigCollider: function (collider, hand, saberControls) {
@@ -1046,9 +1077,7 @@ AFRAME.registerComponent('beat', {
 	},
 
 	checkCollisions: function () {
-		// const cutDirection = this.data.cutDirection;
-		const saberEls = this.saberEls;
-
+		if (!this.hitboxObject) return;
 		this.beatBigBoundingBox.copy(this.hitboxObject.geometry.boundingBox).applyMatrix4(this.hitboxObject.matrixWorld);
 		const beatBigBoundingBox = this.beatBigBoundingBox;
 
@@ -1080,8 +1109,8 @@ AFRAME.registerComponent('beat', {
 			) {
 				// Sound.
 
-				if (this.data.type !== 'sliderchain' && this.settings.realHitsounds) {
-					this.el.parentNode.components['beat-hit-sound'].playSound(this.el, this.data.cutDirection);
+				if (this.data.type !== 'sliderchain' && settings.realHitsounds) {
+					hitSound.playSound();
 				}
 
 				if (this.data.type === 'mine') {
@@ -1100,7 +1129,7 @@ AFRAME.registerComponent('beat', {
 				this.destroyBeat(saberEls[i]);
 
 				this.hitSaberEl = saberEls[i];
-				if (this.settings.settings.reducedDebris) {
+				if (settings.settings.reducedDebris) {
 					this.onEndStroke();
 				} else {
 					this.hitSaberEl.addEventListener('strokeend', this.onEndStroke, ONCE);
@@ -1166,9 +1195,6 @@ AFRAME.registerComponent('beat', {
 		// else if (score < 100) { beatScorePool = SCORE_POOL.GREAT; }
 		// else {
 		//   beatScorePool = SCORE_POOL.SUPER;
-
-		// this.superCuts[this.superCutIdx].components.supercutfx.createSuperCut(this.el.object3D.position);
-		// this.superCutIdx = (this.superCutIdx + 1) % this.superCuts.length;
 		// }
 
 		this.showScore();
@@ -1179,7 +1205,7 @@ AFRAME.registerComponent('beat', {
 		let data = this.data;
 		if (score < 0) {
 			if (score == -3) {
-				var missEl = hand === 'left' ? this.missElLeft : this.missElRight;
+				var missEl = hand === 'left' ? missElLeft : missElRight;
 				if (!missEl) {
 					return;
 				}
@@ -1205,7 +1231,7 @@ AFRAME.registerComponent('beat', {
 
 				missEl.emit('beatmiss', null, true);
 			} else if (score == -2) {
-				var wrongEl = hand === 'left' ? this.wrongElLeft : this.wrongElRight;
+				var wrongEl = hand === 'left' ? wrongElLeft : wrongElRight;
 				if (!wrongEl) {
 					return;
 				}
@@ -1235,8 +1261,8 @@ AFRAME.registerComponent('beat', {
 			const colorAndScale = this.colorAndScaleForScore(this.replayNote);
 			scoreEl.setAttribute('text', 'value', '' + score);
 
-			let duration = 500 / this.song.speed;
-			if (this.settings.settings.colorScores) {
+			let duration = 500 / song.speed;
+			if (settings.settings.colorScores) {
 				scoreEl.setAttribute('text', 'color', colorAndScale.color);
 				scoreEl.setAttribute('text', 'wrapCount', 33 - colorAndScale.scale * 15);
 				scoreEl.setAttribute('animation__motionz', 'dur', duration * 3);
@@ -1276,11 +1302,6 @@ AFRAME.registerComponent('beat', {
 			}
 			scoreEl.play();
 			scoreEl.emit('beatscorestart', null, false);
-
-			// if (score == 115 && !this.settings.settings.noEffects) {
-			//   this.superCuts[this.superCutIdx].components.supercutfx.createSuperCut(this.el.object3D.position);
-			//   this.superCutIdx = (this.superCutIdx + 1) % this.superCuts.length;
-			// }
 		}
 	},
 
@@ -1329,12 +1350,12 @@ AFRAME.registerComponent('beat', {
 	checkStaticHitsound: function () {
 		if (this.data.type === 'mine' || this.hitSoundState == SOUND_STATE.hitPlayed) return;
 
-		const currentTime = this.song.getCurrentTime();
-		const noteTime = this.data.time - SWORD_OFFSET / this.data.speed;
+		const currentTime = song.getCurrentTime();
+		const noteTime = this.data.time - 0.2;
 
 		if (currentTime > noteTime) {
 			if (this.data.type !== 'sliderchain') {
-				this.el.parentNode.components['beat-hit-sound'].playSound(this.el, this.data.cutDirection);
+				hitSound.playSound();
 			}
 
 			if (this.hitSoundState == SOUND_STATE.waitingForHitSound) {
@@ -1355,7 +1376,7 @@ AFRAME.registerComponent('beat', {
 		return function (timeDelta) {
 			// Update gravity velocity.
 			this.gravityVelocity = getGravityVelocity(this.gravityVelocity, timeDelta);
-			this.el.object3D.position.y += this.gravityVelocity * (timeDelta / 1000) * this.song.speed;
+			this.el.object3D.position.y += this.gravityVelocity * (timeDelta / 1000) * song.speed;
 
 			if (this.data.type == 'mine') {
 				for (var i = 0; i < this.mineFragments.length; i++) {
@@ -1363,8 +1384,8 @@ AFRAME.registerComponent('beat', {
 					if (!fragment.visible) {
 						continue;
 					}
-					fragment.position.addScaledVector(fragment.speed, (timeDelta / 1000) * this.song.speed);
-					fragment.scale.multiplyScalar(1 - 0.03 * this.song.speed);
+					fragment.position.addScaledVector(fragment.speed, (timeDelta / 1000) * song.speed);
+					fragment.scale.multiplyScalar(1 - 0.03 * song.speed);
 
 					if (fragment.scale.y < 0.1 || this.el.object3D.position.y < -1) {
 						fragment.visible = false;
@@ -1374,21 +1395,22 @@ AFRAME.registerComponent('beat', {
 				return;
 			}
 
-			rightCutNormal.copy(this.rightCutPlane.normal).multiplyScalar(DESTROYED_SPEED * (timeDelta / 500) * this.song.speed);
+			if (!this.partRightEl) return;
+			rightCutNormal.copy(this.rightCutPlane.normal).multiplyScalar(DESTROYED_SPEED * (timeDelta / 500) * song.speed);
 			rightCutNormal.y = 0; // Y handled by gravity.
 			this.partRightEl.object3D.position.add(rightCutNormal);
 			this.partRightEl.object3D.setRotationFromAxisAngle(this.rotationAxis, rightRotation);
-			rightRotation = rightRotation >= 2 * Math.PI ? 0 : rightRotation + rotationStep * this.song.speed;
+			rightRotation = rightRotation >= 2 * Math.PI ? 0 : rightRotation + rotationStep * song.speed;
 
-			leftCutNormal.copy(this.leftCutPlane.normal).multiplyScalar(DESTROYED_SPEED * (timeDelta / 500) * this.song.speed);
+			leftCutNormal.copy(this.leftCutPlane.normal).multiplyScalar(DESTROYED_SPEED * (timeDelta / 500) * song.speed);
 			leftCutNormal.y = 0; // Y handled by gravity.
 			this.partLeftEl.object3D.position.add(leftCutNormal);
 			this.partLeftEl.object3D.setRotationFromAxisAngle(this.rotationAxis, leftRotation);
-			leftRotation = leftRotation >= 2 * Math.PI ? 0 : leftRotation + rotationStep * this.song.speed;
+			leftRotation = leftRotation >= 2 * Math.PI ? 0 : leftRotation + rotationStep * song.speed;
 
 			this.generateCutClippingPlanes();
 
-			this.returnToPoolTimer -= timeDelta * this.song.speed;
+			this.returnToPoolTimer -= timeDelta * song.speed;
 			this.backToPool = this.returnToPoolTimer <= 0 || this.el.object3D.position.y < -1;
 		};
 	})(),

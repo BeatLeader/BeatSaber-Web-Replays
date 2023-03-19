@@ -10704,19 +10704,19 @@ module.exports = registerElement('a-cubemap', {
 });
 
 },{"../utils/debug":154,"./a-register-element":85}],82:[function(require,module,exports){
-var ANode = require('./a-node');
-var COMPONENTS = require('./component').components;
-var registerElement = require('./a-register-element').registerElement;
-var THREE = require('../lib/three');
-var utils = require('../utils/');
+var ANode = require("./a-node");
+var COMPONENTS = require("./component").components;
+var registerElement = require("./a-register-element").registerElement;
+var THREE = require("../lib/three");
+var utils = require("../utils/");
 
 var AEntity;
-var debug = utils.debug('core:a-entity:debug');
-var warn = utils.debug('core:a-entity:warn');
+var debug = utils.debug("core:a-entity:debug");
+var warn = utils.debug("core:a-entity:warn");
 
-var MULTIPLE_COMPONENT_DELIMITER = '__';
-var OBJECT3D_COMPONENTS = ['position', 'rotation', 'scale', 'visible'];
-var ONCE = {once: true};
+var MULTIPLE_COMPONENT_DELIMITER = "__";
+var OBJECT3D_COMPONENTS = ["position", "rotation", "scale", "visible"];
+var ONCE = { once: true };
 
 /**
  * Entity is a container object that components are plugged into to comprise everything in
@@ -10744,7 +10744,7 @@ var proto = Object.create(ANode.prototype, {
       this.parentEl = null;
       this.rotationObj = {};
       this.states = [];
-    }
+    },
   },
 
   /**
@@ -10755,14 +10755,16 @@ var proto = Object.create(ANode.prototype, {
       var component = this.components[attr];
       // If the empty string is passed by the component initialization
       // logic we ignore the component update.
-      if (component && component.justInitialized && newVal === '') {
+      if (component && component.justInitialized && newVal === "") {
         delete component.justInitialized;
         return;
       }
       // When a component is removed after calling el.removeAttribute('material')
-      if (!component && newVal === null) { return; }
+      if (!component && newVal === null) {
+        return;
+      }
       this.setEntityAttribute(attr, oldVal, newVal);
-    }
+    },
   },
 
   /**
@@ -10770,14 +10772,16 @@ var proto = Object.create(ANode.prototype, {
    */
   attachedCallback: {
     value: function () {
-      var assetsEl;  // Asset management system element.
+      var assetsEl; // Asset management system element.
       var sceneEl = this.sceneEl;
-      var self = this;  // Component.
+      var self = this; // Component.
 
       this.addToParent();
 
       // Don't .load() scene on attachedCallback.
-      if (this.isScene) { return; }
+      if (this.isScene) {
+        return;
+      }
 
       // Gracefully not error when outside of <a-scene> (e.g., tests).
       if (!sceneEl) {
@@ -10786,13 +10790,15 @@ var proto = Object.create(ANode.prototype, {
       }
 
       // Wait for asset management system to finish before loading.
-      assetsEl = sceneEl.querySelector('a-assets');
+      assetsEl = sceneEl.querySelector("a-assets");
       if (assetsEl && !assetsEl.hasLoaded) {
-        assetsEl.addEventListener('loaded', function () { self.load(); });
+        assetsEl.addEventListener("loaded", function () {
+          self.load();
+        });
         return;
       }
       this.load();
-    }
+    },
   },
 
   /**
@@ -10803,25 +10809,31 @@ var proto = Object.create(ANode.prototype, {
     value: function () {
       var componentName;
 
-      if (!this.parentEl) { return; }
+      if (!this.parentEl) {
+        return;
+      }
 
       // Remove components.
-      for (componentName in this.components) { this.removeComponent(componentName); }
+      for (componentName in this.components) {
+        this.removeComponent(componentName);
+      }
 
-      if (this.isScene) { return; }
+      if (this.isScene) {
+        return;
+      }
 
       this.removeFromParent();
       ANode.prototype.detachedCallback.call(this);
 
       // Remove cyclic reference.
       this.object3D.el = null;
-    }
+    },
   },
 
   getObject3D: {
     value: function (type) {
       return this.object3DMap[type];
-    }
+    },
   },
 
   /**
@@ -10837,19 +10849,21 @@ var proto = Object.create(ANode.prototype, {
 
       if (!(obj instanceof THREE.Object3D)) {
         throw new Error(
-          '`Entity.setObject3D` was called with an object that was not an instance of ' +
-          'THREE.Object3D.'
+          "`Entity.setObject3D` was called with an object that was not an instance of " +
+            "THREE.Object3D."
         );
       }
 
       // Remove existing object of the type.
       oldObj = this.getObject3D(type);
-      if (oldObj) { this.object3D.remove(oldObj); }
+      if (oldObj) {
+        this.object3D.remove(oldObj);
+      }
 
       // Set references to A-Frame entity.
       obj.el = this;
       if (obj.children.length) {
-        obj.traverse(function bindEl (child) {
+        obj.traverse(function bindEl(child) {
           child.el = self;
         });
       }
@@ -10857,8 +10871,8 @@ var proto = Object.create(ANode.prototype, {
       // Add.
       this.object3D.add(obj);
       this.object3DMap[type] = obj;
-      this.emit('object3dset', {object: obj, type: type});
-    }
+      this.emit("object3dset", { object: obj, type: type });
+    },
   },
 
   /**
@@ -10868,13 +10882,17 @@ var proto = Object.create(ANode.prototype, {
     value: function (type) {
       var obj = this.getObject3D(type);
       if (!obj) {
-        warn('Tried to remove `Object3D` of type:', type, 'which was not defined.');
+        warn(
+          "Tried to remove `Object3D` of type:",
+          type,
+          "which was not defined."
+        );
         return;
       }
       this.object3D.remove(obj);
       delete this.object3DMap[type];
-      this.emit('object3dremove', {type: type});
-    }
+      this.emit("object3dremove", { type: type });
+    },
   },
 
   /**
@@ -10891,10 +10909,12 @@ var proto = Object.create(ANode.prototype, {
         object3D = new Constructor();
         this.setObject3D(type, object3D);
       }
-      warn('`getOrCreateObject3D` has been deprecated. Use `setObject3D()` ' +
-           'and `object3dset` event instead.');
+      warn(
+        "`getOrCreateObject3D` has been deprecated. Use `setObject3D()` " +
+          "and `object3dset` event instead."
+      );
       return object3D;
-    }
+    },
   },
 
   /**
@@ -10905,12 +10925,14 @@ var proto = Object.create(ANode.prototype, {
   add: {
     value: function (el) {
       if (!el.object3D) {
-        throw new Error("Trying to add an element that doesn't have an `object3D`");
+        throw new Error(
+          "Trying to add an element that doesn't have an `object3D`"
+        );
       }
       this.object3D.add(el.object3D);
-      this.object3D.updateMatrixWorld(true);
-      this.emit('child-attached', {el: el});
-    }
+      // this.object3D.updateMatrixWorld(true);
+      // this.emit('child-attached', {el: el});
+    },
   },
 
   /**
@@ -10918,14 +10940,16 @@ var proto = Object.create(ANode.prototype, {
    */
   addToParent: {
     value: function () {
-      var parentNode = this.parentEl = this.parentNode;
+      var parentNode = (this.parentEl = this.parentNode);
 
       // `!parentNode` check primarily for unit tests.
-      if (!parentNode || !parentNode.add || this.attachedToParent) { return; }
+      if (!parentNode || !parentNode.add || this.attachedToParent) {
+        return;
+      }
 
       parentNode.add(this);
-      this.attachedToParent = true;  // To prevent multiple attachments to same parent.
-    }
+      this.attachedToParent = true; // To prevent multiple attachments to same parent.
+    },
   },
 
   /**
@@ -10937,25 +10961,31 @@ var proto = Object.create(ANode.prototype, {
       this.parentEl.remove(this);
       this.attachedToParent = false;
       this.parentEl = null;
-      parentEl.emit('child-detached', {el: this});
-    }
+      parentEl.emit("child-detached", { el: this });
+    },
   },
 
   load: {
     value: function () {
       var self = this;
 
-      if (this.hasLoaded || !this.parentEl) { return; }
+      if (this.hasLoaded || !this.parentEl) {
+        return;
+      }
 
-      ANode.prototype.load.call(this, function entityLoadCallback () {
+      ANode.prototype.load.call(this, function entityLoadCallback() {
         // Check if entity was detached while it was waiting to load.
-        if (!self.parentEl) { return; }
+        if (!self.parentEl) {
+          return;
+        }
 
         self.updateComponents();
-        if (self.isScene || self.parentEl.isPlaying) { self.play(); }
+        if (self.isScene || self.parentEl.isPlaying) {
+          self.play();
+        }
       });
     },
-    writable: window.debug
+    writable: window.debug,
   },
 
   /**
@@ -10966,7 +10996,7 @@ var proto = Object.create(ANode.prototype, {
   remove: {
     value: function (el) {
       this.object3D.remove(el.object3D);
-    }
+    },
   },
 
   /**
@@ -10985,7 +11015,7 @@ var proto = Object.create(ANode.prototype, {
       }
 
       return childEntities;
-    }
+    },
   },
 
   /**
@@ -11005,33 +11035,49 @@ var proto = Object.create(ANode.prototype, {
 
       componentInfo = utils.split(attrName, MULTIPLE_COMPONENT_DELIMITER);
       componentName = componentInfo[0];
-      componentId = componentInfo.length > 2
-        ? componentInfo.slice(1).join('__')
-        : componentInfo[1];
+      componentId =
+        componentInfo.length > 2
+          ? componentInfo.slice(1).join("__")
+          : componentInfo[1];
 
       // Not a registered component.
-      if (!COMPONENTS[componentName]) { return; }
+      if (!COMPONENTS[componentName]) {
+        return;
+      }
 
       // Component is not a dependency and is undefined.
       // If a component is a dependency, then it is okay to have no data.
-      isComponentDefined = checkComponentDefined(this, attrName) ||
-                           data !== undefined;
-      if (!isComponentDefined && !isDependency) { return; }
+      isComponentDefined =
+        checkComponentDefined(this, attrName) || data !== undefined;
+      if (!isComponentDefined && !isDependency) {
+        return;
+      }
 
       // Component already initialized.
-      if (attrName in this.components) { return; }
+      if (attrName in this.components) {
+        return;
+      }
 
       // Initialize dependencies first
       this.initComponentDependencies(componentName);
 
       // If component name has an id we check component type multiplic
       if (componentId && !COMPONENTS[componentName].multiple) {
-        throw new Error('Trying to initialize multiple ' +
-                        'components of type `' + componentName +
-                        '`. There can only be one component of this type per entity.');
+        throw new Error(
+          "Trying to initialize multiple " +
+            "components of type `" +
+            componentName +
+            "`. There can only be one component of this type per entity."
+        );
       }
-      component = new COMPONENTS[componentName].Component(this, data, componentId);
-      if (this.isPlaying) { component.play(); }
+      component = new COMPONENTS[componentName].Component(
+        this,
+        data,
+        componentId
+      );
+      if (this.isPlaying) {
+        component.play();
+      }
 
       // Components are reflected in the DOM as attributes but the state is not shown
       // hence we set the attribute to empty string.
@@ -11039,12 +11085,12 @@ var proto = Object.create(ANode.prototype, {
       // the component with the empty string.
       if (!this.hasAttribute(attrName)) {
         component.justInitialized = true;
-        window.HTMLElement.prototype.setAttribute.call(this, attrName, '');
+        window.HTMLElement.prototype.setAttribute.call(this, attrName, "");
       }
 
-      debug('Component initialized: %s', attrName);
+      debug("Component initialized: %s", attrName);
     },
-    writable: window.debug
+    writable: window.debug,
   },
 
   /**
@@ -11060,23 +11106,30 @@ var proto = Object.create(ANode.prototype, {
       var i;
 
       // Not a component.
-      if (!component) { return; }
+      if (!component) {
+        return;
+      }
 
       // No dependencies.
       dependencies = COMPONENTS[name].dependencies;
 
-      if (!dependencies) { return; }
+      if (!dependencies) {
+        return;
+      }
 
       // Initialize dependencies.
       for (i = 0; i < dependencies.length; i++) {
         // Call getAttribute to initialize the data from the DOM.
         self.initComponent(
           dependencies[i],
-          window.HTMLElement.prototype.getAttribute.call(self, dependencies[i]) || undefined,
+          window.HTMLElement.prototype.getAttribute.call(
+            self,
+            dependencies[i]
+          ) || undefined,
           true
         );
       }
-    }
+    },
   },
 
   removeComponent: {
@@ -11084,24 +11137,31 @@ var proto = Object.create(ANode.prototype, {
       var component;
 
       component = this.components[name];
-      if (!component) { return; }
+      if (!component) {
+        return;
+      }
 
       // Wait for component to initialize.
       if (!component.initialized) {
-        this.addEventListener('componentinitialized', function tryRemoveLater (evt) {
-          if (evt.detail.name !== name) { return; }
-          this.removeComponent(name);
-          this.removeEventListener('componentinitialized', tryRemoveLater);
-        });
+        this.addEventListener(
+          "componentinitialized",
+          function tryRemoveLater(evt) {
+            if (evt.detail.name !== name) {
+              return;
+            }
+            this.removeComponent(name);
+            this.removeEventListener("componentinitialized", tryRemoveLater);
+          }
+        );
         return;
       }
 
       component.pause();
       component.remove();
       delete this.components[name];
-      this.emit('componentremoved', component.evtDetail);
+      this.emit("componentremoved", component.evtDetail);
     },
-    writable: window.debug
+    writable: window.debug,
   },
 
   /**
@@ -11120,12 +11180,16 @@ var proto = Object.create(ANode.prototype, {
       var name;
       var componentsToUpdate = this.componentsToUpdate;
 
-      if (!this.hasLoaded) { return; }
+      if (!this.hasLoaded) {
+        return;
+      }
 
       // Gather mixin-defined components.
       for (i = 0; i < this.mixinEls.length; i++) {
         for (name in this.mixinEls[i].componentCache) {
-          if (isComponent(name)) { componentsToUpdate[name] = true; }
+          if (isComponent(name)) {
+            componentsToUpdate[name] = true;
+          }
         }
       }
 
@@ -11133,33 +11197,43 @@ var proto = Object.create(ANode.prototype, {
       if (this.getExtraComponents) {
         extraComponents = this.getExtraComponents();
         for (name in extraComponents) {
-          if (isComponent(name)) { componentsToUpdate[name] = true; }
+          if (isComponent(name)) {
+            componentsToUpdate[name] = true;
+          }
         }
       }
 
       // Gather entity-defined components.
       for (i = 0; i < this.attributes.length; ++i) {
         name = this.attributes[i].name;
-        if (OBJECT3D_COMPONENTS.indexOf(name) !== -1) { continue; }
-        if (isComponent(name)) { componentsToUpdate[name] = true; }
+        if (OBJECT3D_COMPONENTS.indexOf(name) !== -1) {
+          continue;
+        }
+        if (isComponent(name)) {
+          componentsToUpdate[name] = true;
+        }
       }
 
       // object3D components first (position, rotation, scale, visible).
       for (i = 0; i < OBJECT3D_COMPONENTS.length; i++) {
         name = OBJECT3D_COMPONENTS[i];
-        if (!this.hasAttribute(name)) { continue; }
+        if (!this.hasAttribute(name)) {
+          continue;
+        }
         this.updateComponent(name, this.getDOMAttribute(name));
       }
 
       // Initialize or update rest of components.
       for (name in componentsToUpdate) {
-        data = mergeComponentData(this.getDOMAttribute(name),
-                                  extraComponents && extraComponents[name]);
+        data = mergeComponentData(
+          this.getDOMAttribute(name),
+          extraComponents && extraComponents[name]
+        );
         this.updateComponent(name, data);
         delete componentsToUpdate[name];
       }
     },
-    writable: window.debug
+    writable: window.debug,
   },
 
   /**
@@ -11188,7 +11262,7 @@ var proto = Object.create(ANode.prototype, {
 
       // Component not yet initialized. Initialize component.
       this.initComponent(attr, attrValue, false);
-    }
+    },
   },
 
   /**
@@ -11215,12 +11289,12 @@ var proto = Object.create(ANode.prototype, {
       }
 
       // Remove mixins.
-      if (attr === 'mixin') {
-        this.mixinUpdate('');
+      if (attr === "mixin") {
+        this.mixinUpdate("");
       }
 
       window.HTMLElement.prototype.removeAttribute.call(this, attr);
-    }
+    },
   },
 
   /**
@@ -11234,19 +11308,25 @@ var proto = Object.create(ANode.prototype, {
       var key;
 
       // Already playing.
-      if (this.isPlaying || !this.hasLoaded) { return; }
+      if (this.isPlaying || !this.hasLoaded) {
+        return;
+      }
       this.isPlaying = true;
 
       // Wake up all components.
-      for (key in this.components) { this.components[key].play(); }
+      for (key in this.components) {
+        this.components[key].play();
+      }
 
       // Tell all child entities to play.
       entities = this.getChildEntities();
-      for (i = 0; i < entities.length; i++) { entities[i].play(); }
+      for (i = 0; i < entities.length; i++) {
+        entities[i].play();
+      }
 
-      this.emit('play');
+      this.emit("play");
     },
-    writable: true
+    writable: true,
   },
 
   /**
@@ -11259,19 +11339,25 @@ var proto = Object.create(ANode.prototype, {
       var i;
       var key;
 
-      if (!this.isPlaying) { return; }
+      if (!this.isPlaying) {
+        return;
+      }
       this.isPlaying = false;
 
       // Sleep all components.
-      for (key in this.components) { this.components[key].pause(); }
+      for (key in this.components) {
+        this.components[key].pause();
+      }
 
       // Tell all child entities to pause.
       entities = this.getChildEntities();
-      for (i = 0; i < entities.length; i++) { entities[i].pause(); }
+      for (i = 0; i < entities.length; i++) {
+        entities[i].pause();
+      }
 
-      this.emit('pause');
+      this.emit("pause");
     },
-    writable: true
+    writable: true,
   },
 
   /**
@@ -11287,12 +11373,14 @@ var proto = Object.create(ANode.prototype, {
         this.updateComponent(attr, newVal);
         return;
       }
-      if (attr === 'mixin') {
+      if (attr === "mixin") {
         // Ignore if `<a-node>` code is just updating computed mixin in the DOM.
-        if (newVal === this.computedMixinStr) { return; }
+        if (newVal === this.computedMixinStr) {
+          return;
+        }
         this.mixinUpdate(newVal, oldVal);
       }
-    }
+    },
   },
 
   /**
@@ -11310,13 +11398,17 @@ var proto = Object.create(ANode.prototype, {
         var self = this;
 
         if (!this.hasLoaded) {
-          this.addEventListener('loaded', function () {
-            self.mixinUpdate(newMixins, oldMixins);
-          }, ONCE);
+          this.addEventListener(
+            "loaded",
+            function () {
+              self.mixinUpdate(newMixins, oldMixins);
+            },
+            ONCE
+          );
           return;
         }
 
-        oldMixins = oldMixins || this.getAttribute('mixin');
+        oldMixins = oldMixins || this.getAttribute("mixin");
         mixinIds = this.updateMixins(newMixins, oldMixins);
 
         // Loop over current mixins.
@@ -11339,7 +11431,9 @@ var proto = Object.create(ANode.prototype, {
         // Loop over old mixins to call for data rebuild.
         for (i = 0; i < mixinIds.oldMixinIds.length; i++) {
           mixinEl = document.getElementById(mixinIds.oldMixinIds[i]);
-          if (!mixinEl) { continue; }
+          if (!mixinEl) {
+            continue;
+          }
           for (component in mixinEl.componentCache) {
             if (componentsUpdated.indexOf(component) === -1) {
               if (this.components[component]) {
@@ -11350,7 +11444,7 @@ var proto = Object.create(ANode.prototype, {
           }
         }
       };
-    })()
+    })(),
   },
 
   /**
@@ -11380,11 +11474,14 @@ var proto = Object.create(ANode.prototype, {
         var key;
 
         delimiterIndex = attrName.indexOf(MULTIPLE_COMPONENT_DELIMITER);
-        componentName = delimiterIndex > 0 ? attrName.substring(0, delimiterIndex) : attrName;
+        componentName =
+          delimiterIndex > 0 ? attrName.substring(0, delimiterIndex) : attrName;
 
         // Not a component. Normal set attribute.
         if (!COMPONENTS[componentName]) {
-          if (attrName === 'mixin') { this.mixinUpdate(arg1); }
+          if (attrName === "mixin") {
+            this.mixinUpdate(arg1);
+          }
           ANode.prototype.setAttribute.call(this, attrName, arg1);
           return;
         }
@@ -11393,16 +11490,21 @@ var proto = Object.create(ANode.prototype, {
         if (!this.components[attrName] && this.hasAttribute(attrName)) {
           this.updateComponent(
             attrName,
-            window.HTMLElement.prototype.getAttribute.call(this, attrName));
+            window.HTMLElement.prototype.getAttribute.call(this, attrName)
+          );
         }
 
         // Determine new attributes from the arguments
-        if (typeof arg2 !== 'undefined' &&
-            typeof arg1 === 'string' &&
-            arg1.length > 0 &&
-            typeof utils.styleParser.parse(arg1) === 'string') {
+        if (
+          typeof arg2 !== "undefined" &&
+          typeof arg1 === "string" &&
+          arg1.length > 0 &&
+          typeof utils.styleParser.parse(arg1) === "string"
+        ) {
           // Update a single property of a multi-property component
-          for (key in singlePropUpdate) { delete singlePropUpdate[key]; }
+          for (key in singlePropUpdate) {
+            delete singlePropUpdate[key];
+          }
           newAttrValue = singlePropUpdate;
           newAttrValue[arg1] = arg2;
           clobber = false;
@@ -11410,18 +11512,20 @@ var proto = Object.create(ANode.prototype, {
           // Update with a value, object, or CSS-style property string, with the possiblity
           // of clobbering previous values.
           newAttrValue = arg1;
-          clobber = (arg2 === true);
+          clobber = arg2 === true;
         }
 
         // Update component
         this.updateComponent(attrName, newAttrValue, clobber);
 
         // In debug mode, write component data up to the DOM.
-        isDebugMode = this.sceneEl && this.sceneEl.getAttribute('debug');
-        if (isDebugMode) { this.components[attrName].flushToDOM(); }
+        isDebugMode = this.sceneEl && this.sceneEl.getAttribute("debug");
+        if (isDebugMode) {
+          this.components[attrName].flushToDOM();
+        }
       };
     })(),
-    writable: window.debug
+    writable: window.debug,
   },
 
   /**
@@ -11443,13 +11547,17 @@ var proto = Object.create(ANode.prototype, {
       }
 
       // Recurse.
-      if (!recursive) { return; }
+      if (!recursive) {
+        return;
+      }
       for (i = 0; i < children.length; ++i) {
         child = children[i];
-        if (!child.flushToDOM) { continue; }
+        if (!child.flushToDOM) {
+          continue;
+        }
         child.flushToDOM(recursive);
       }
-    }
+    },
   },
 
   /**
@@ -11465,15 +11573,25 @@ var proto = Object.create(ANode.prototype, {
     value: function (attr) {
       // If component, return component data.
       var component;
-      if (attr === 'position') { return this.object3D.position; }
-      if (attr === 'rotation') { return getRotation(this); }
-      if (attr === 'scale') { return this.object3D.scale; }
-      if (attr === 'visible') { return this.object3D.visible; }
+      if (attr === "position") {
+        return this.object3D.position;
+      }
+      if (attr === "rotation") {
+        return getRotation(this);
+      }
+      if (attr === "scale") {
+        return this.object3D.scale;
+      }
+      if (attr === "visible") {
+        return this.object3D.visible;
+      }
       component = this.components[attr];
-      if (component) { return component.data; }
+      if (component) {
+        return component.data;
+      }
       return window.HTMLElement.prototype.getAttribute.call(this, attr);
     },
-    writable: window.debug
+    writable: window.debug,
   },
 
   /**
@@ -11490,27 +11608,33 @@ var proto = Object.create(ANode.prototype, {
     value: function (attr) {
       // If cached value exists, return partial component data.
       var component = this.components[attr];
-      if (component) { return component.attrValue; }
+      if (component) {
+        return component.attrValue;
+      }
       return window.HTMLElement.prototype.getAttribute.call(this, attr);
     },
-    writable: window.debug
+    writable: window.debug,
   },
 
   addState: {
     value: function (state) {
-      if (this.is(state)) { return; }
+      if (this.is(state)) {
+        return;
+      }
       this.states.push(state);
-      this.emit('stateadded', state);
-    }
+      this.emit("stateadded", state);
+    },
   },
 
   removeState: {
     value: function (state) {
       var stateIndex = this.states.indexOf(state);
-      if (stateIndex === -1) { return; }
+      if (stateIndex === -1) {
+        return;
+      }
       this.states.splice(stateIndex, 1);
-      this.emit('stateremoved', state);
-    }
+      this.emit("stateremoved", state);
+    },
   },
 
   /**
@@ -11520,8 +11644,8 @@ var proto = Object.create(ANode.prototype, {
   is: {
     value: function (state) {
       return this.states.indexOf(state) !== -1;
-    }
-  }
+    },
+  },
 });
 
 /**
@@ -11532,9 +11656,11 @@ var proto = Object.create(ANode.prototype, {
  * @param {string} name - Component name.
  * @returns {boolean}
  */
-function checkComponentDefined (el, name) {
+function checkComponentDefined(el, name) {
   // Check if element contains the component.
-  if (el.components[name] && el.components[name].attrValue) { return true; }
+  if (el.components[name] && el.components[name].attrValue) {
+    return true;
+  }
 
   return isComponentMixedIn(name, el.mixinEls);
 }
@@ -11545,12 +11671,14 @@ function checkComponentDefined (el, name) {
  * @param {string} name - Component name.
  * @param {array} mixinEls - Array of <a-mixin>s.
  */
-function isComponentMixedIn (name, mixinEls) {
+function isComponentMixedIn(name, mixinEls) {
   var i;
   var inMixin = false;
   for (i = 0; i < mixinEls.length; ++i) {
     inMixin = mixinEls[i].hasAttribute(name);
-    if (inMixin) { break; }
+    if (inMixin) {
+      break;
+    }
   }
   return inMixin;
 }
@@ -11562,9 +11690,11 @@ function isComponentMixedIn (name, mixinEls) {
  * @param {string} attrValue - Entity data.
  * @param extraData - Entity data from another source to merge in.
  */
-function mergeComponentData (attrValue, extraData) {
+function mergeComponentData(attrValue, extraData) {
   // Extra data not defined, just return attrValue.
-  if (!extraData) { return attrValue; }
+  if (!extraData) {
+    return attrValue;
+  }
 
   // Merge multi-property data.
   if (extraData.constructor === Object) {
@@ -11575,15 +11705,17 @@ function mergeComponentData (attrValue, extraData) {
   return attrValue || extraData;
 }
 
-function isComponent (componentName) {
+function isComponent(componentName) {
   if (componentName.indexOf(MULTIPLE_COMPONENT_DELIMITER) !== -1) {
     componentName = utils.split(componentName, MULTIPLE_COMPONENT_DELIMITER)[0];
   }
-  if (!COMPONENTS[componentName]) { return false; }
+  if (!COMPONENTS[componentName]) {
+    return false;
+  }
   return true;
 }
 
-function getRotation (entityEl) {
+function getRotation(entityEl) {
   var radToDeg = THREE.Math.radToDeg;
   var rotation = entityEl.object3D.rotation;
   var rotationObj = entityEl.rotationObj;
@@ -11593,7 +11725,7 @@ function getRotation (entityEl) {
   return rotationObj;
 }
 
-AEntity = registerElement('a-entity', {prototype: proto});
+AEntity = registerElement("a-entity", { prototype: proto });
 module.exports = AEntity;
 
 },{"../lib/three":136,"../utils/":158,"./a-node":84,"./a-register-element":85,"./component":86}],83:[function(require,module,exports){
@@ -11714,12 +11846,12 @@ module.exports = registerElement('a-mixin', {
 
 },{"../utils":158,"./a-node":84,"./a-register-element":85,"./component":86}],84:[function(require,module,exports){
 /* global CustomEvent */
-var registerElement = require('./a-register-element').registerElement;
-var isNode = require('./a-register-element').isNode;
-var utils = require('../utils/');
+var registerElement = require("./a-register-element").registerElement;
+var isNode = require("./a-register-element").isNode;
+var utils = require("../utils/");
 
-var warn = utils.debug('core:a-node:warn');
-var error = utils.debug('core:a-node:error');
+var warn = utils.debug("core:a-node:warn");
+var error = utils.debug("core:a-node:error");
 
 /**
  * Base class for A-Frame that manages loading of objects.
@@ -11727,16 +11859,16 @@ var error = utils.debug('core:a-node:error');
  * Nodes can be modified using mixins.
  * Nodes emit a `loaded` event when they and their children have initialized.
  */
-module.exports = registerElement('a-node', {
+module.exports = registerElement("a-node", {
   prototype: Object.create(window.HTMLElement.prototype, {
     createdCallback: {
       value: function () {
-        this.computedMixinStr = '';
+        this.computedMixinStr = "";
         this.hasLoaded = false;
         this.isNode = true;
         this.mixinEls = [];
       },
-      writable: window.debug
+      writable: window.debug,
     },
 
     attachedCallback: {
@@ -11745,19 +11877,25 @@ module.exports = registerElement('a-node', {
         this.sceneEl = this.closestScene();
 
         if (!this.sceneEl) {
-          warn('You are attempting to attach <' + this.tagName + '> outside of an A-Frame ' +
-               'scene. Append this element to `<a-scene>` instead.');
+          warn(
+            "You are attempting to attach <" +
+              this.tagName +
+              "> outside of an A-Frame " +
+              "scene. Append this element to `<a-scene>` instead."
+          );
         }
 
         this.hasLoaded = false;
-        this.emit('nodeready', undefined, false);
+        // this.emit("nodeready", undefined, false);
 
         if (!this.isMixin) {
-          mixins = this.getAttribute('mixin');
-          if (mixins) { this.updateMixins(mixins); }
+          mixins = this.getAttribute("mixin");
+          if (mixins) {
+            this.updateMixins(mixins);
+          }
         }
       },
-      writable: window.debug
+      writable: window.debug,
     },
 
     /**
@@ -11766,27 +11904,31 @@ module.exports = registerElement('a-node', {
     attributeChangedCallback: {
       value: function (attr, oldVal, newVal) {
         // Ignore if `<a-node>` code is just updating computed mixin in the DOM.
-        if (newVal === this.computedMixinStr) { return; }
+        if (newVal === this.computedMixinStr) {
+          return;
+        }
 
-        if (attr === 'mixin' && !this.isMixin) {
+        if (attr === "mixin" && !this.isMixin) {
           this.updateMixins(newVal, oldVal);
         }
-      }
+      },
     },
 
-   /**
-    * Returns the first scene by traversing up the tree starting from and
-    * including receiver element.
-    */
+    /**
+     * Returns the first scene by traversing up the tree starting from and
+     * including receiver element.
+     */
     closestScene: {
-      value: function closest () {
+      value: function closest() {
         var element = this;
         while (element) {
-          if (element.isScene) { break; }
+          if (element.isScene) {
+            break;
+          }
           element = element.parentElement;
         }
         return element;
-      }
+      },
     },
 
     /**
@@ -11796,22 +11938,28 @@ module.exports = registerElement('a-node', {
      * @param {string} selector - Selector of element to find.
      */
     closest: {
-      value: function closest (selector) {
-        var matches = this.matches || this.mozMatchesSelector ||
-          this.msMatchesSelector || this.oMatchesSelector || this.webkitMatchesSelector;
+      value: function closest(selector) {
+        var matches =
+          this.matches ||
+          this.mozMatchesSelector ||
+          this.msMatchesSelector ||
+          this.oMatchesSelector ||
+          this.webkitMatchesSelector;
         var element = this;
         while (element) {
-          if (matches.call(element, selector)) { break; }
+          if (matches.call(element, selector)) {
+            break;
+          }
           element = element.parentElement;
         }
         return element;
-      }
+      },
     },
 
     detachedCallback: {
       value: function () {
         this.hasLoaded = false;
-      }
+      },
     },
 
     /**
@@ -11824,34 +11972,39 @@ module.exports = registerElement('a-node', {
         var childrenLoaded;
         var self = this;
 
-        if (this.hasLoaded) { return; }
+        if (this.hasLoaded) {
+          return;
+        }
 
         // Default to waiting for all nodes.
         childFilter = childFilter || isNode;
         // Wait for children to load (if any), then load.
         children = this.getChildren();
         childrenLoaded = children.filter(childFilter).map(function (child) {
-          return new Promise(function waitForLoaded (resolve) {
-            if (child.hasLoaded) { return resolve(); }
-            child.addEventListener('loaded', resolve);
+          return new Promise(function waitForLoaded(resolve) {
+            return resolve();
           });
         });
 
-        Promise.all(childrenLoaded).then(function emitLoaded () {
-          self.hasLoaded = true;
-          if (cb) { cb(); }
-          self.emit('loaded', undefined, false);
-        }).catch(function (err) {
-          error('Failure loading node: ', err);
-        });
+        Promise.all(childrenLoaded)
+          .then(function emitLoaded() {
+            self.hasLoaded = true;
+            if (cb) {
+              cb();
+            }
+            self.emit("loaded", undefined, false);
+          })
+          .catch(function (err) {
+            error("Failure loading node: ", err);
+          });
       },
-      writable: true
+      writable: true,
     },
 
     getChildren: {
       value: function () {
         return Array.prototype.slice.call(this.children, 0);
-      }
+      },
     },
 
     /**
@@ -11872,8 +12025,12 @@ module.exports = registerElement('a-node', {
 
           newMixinIdArray.length = 0;
           oldMixinIdArray.length = 0;
-          newMixinIds = newMixins ? utils.split(newMixins.trim(), /\s+/) : newMixinIdArray;
-          oldMixinIds = oldMixins ? utils.split(oldMixins.trim(), /\s+/) : oldMixinIdArray;
+          newMixinIds = newMixins
+            ? utils.split(newMixins.trim(), /\s+/)
+            : newMixinIdArray;
+          oldMixinIds = oldMixins
+            ? utils.split(oldMixins.trim(), /\s+/)
+            : oldMixinIdArray;
 
           mixinIds.newMixinIds = newMixinIds;
           mixinIds.oldMixinIds = oldMixinIds;
@@ -11886,7 +12043,7 @@ module.exports = registerElement('a-node', {
           }
 
           // Register new mixins.
-          this.computedMixinStr = '';
+          this.computedMixinStr = "";
           this.mixinEls.length = 0;
           for (i = 0; i < newMixinIds.length; i++) {
             this.registerMixin(document.getElementById(newMixinIds[i]));
@@ -11896,13 +12053,16 @@ module.exports = registerElement('a-node', {
           // update.
           if (this.computedMixinStr) {
             this.computedMixinStr = this.computedMixinStr.trim();
-            window.HTMLElement.prototype.setAttribute.call(this, 'mixin',
-                                                           this.computedMixinStr);
+            window.HTMLElement.prototype.setAttribute.call(
+              this,
+              "mixin",
+              this.computedMixinStr
+            );
           }
 
           return mixinIds;
         };
-      })()
+      })(),
     },
 
     /**
@@ -11916,10 +12076,12 @@ module.exports = registerElement('a-node', {
         var i;
         var mixin;
 
-        if (!mixinEl) { return; }
+        if (!mixinEl) {
+          return;
+        }
 
         // Register composited mixins (if mixin has mixins).
-        mixin = mixinEl.getAttribute('mixin');
+        mixin = mixinEl.getAttribute("mixin");
         if (mixin) {
           compositedMixinIds = utils.split(mixin.trim(), /\s+/);
           for (i = 0; i < compositedMixinIds.length; i++) {
@@ -11928,16 +12090,18 @@ module.exports = registerElement('a-node', {
         }
 
         // Register mixin.
-        this.computedMixinStr = this.computedMixinStr + ' ' + mixinEl.id;
+        this.computedMixinStr = this.computedMixinStr + " " + mixinEl.id;
         this.mixinEls.push(mixinEl);
-      }
+      },
     },
 
     setAttribute: {
       value: function (attr, newValue) {
-        if (attr === 'mixin') { this.updateMixins(newValue); }
+        if (attr === "mixin") {
+          this.updateMixins(newValue);
+        }
         window.HTMLElement.prototype.setAttribute.call(this, attr, newValue);
-      }
+      },
     },
 
     unregisterMixin: {
@@ -11952,7 +12116,7 @@ module.exports = registerElement('a-node', {
             break;
           }
         }
-      }
+      },
     },
 
     /**
@@ -11968,19 +12132,23 @@ module.exports = registerElement('a-node', {
         var data = {};
 
         return function (name, detail, bubbles, extraData) {
-          if (bubbles === undefined) { bubbles = true; }
+          if (bubbles === undefined) {
+            bubbles = true;
+          }
           data.bubbles = !!bubbles;
           data.detail = detail;
 
           // If extra data is present, we need to create a new object.
-          if (extraData) { data = utils.extend({}, extraData, data); }
+          if (extraData) {
+            data = utils.extend({}, extraData, data);
+          }
 
           this.dispatchEvent(new CustomEvent(name, data));
         };
       })(),
-      writable: window.debug
-    }
-  })
+      writable: window.debug,
+    },
+  }),
 });
 
 },{"../utils/":158,"./a-register-element":85}],85:[function(require,module,exports){
@@ -12172,12 +12340,12 @@ AEntity = require('./a-entity');
 
 },{"./a-entity":82,"./a-node":84,"document-register-element":11}],86:[function(require,module,exports){
 /* global Node */
-var schema = require('./schema');
-var scenes = require('./scene/scenes');
-var systems = require('./system');
-var utils = require('../utils/');
+var schema = require("./schema");
+var scenes = require("./scene/scenes");
+var systems = require("./system");
+var utils = require("../utils/");
 
-var components = module.exports.components = {};  // Keep track of registered components.
+var components = (module.exports.components = {}); // Keep track of registered components.
 var parseProperties = schema.parseProperties;
 var parseProperty = schema.parseProperty;
 var processSchema = schema.process;
@@ -12185,10 +12353,10 @@ var isSingleProp = schema.isSingleProperty;
 var stringifyProperties = schema.stringifyProperties;
 var stringifyProperty = schema.stringifyProperty;
 var styleParser = utils.styleParser;
-var warn = utils.debug('core:component:warn');
+var warn = utils.debug("core:component:warn");
 
 var aframeScript = document.currentScript;
-var upperCaseRegExp = new RegExp('[A-Z]+');
+var upperCaseRegExp = new RegExp("[A-Z]+");
 
 // Object pools by component, created upon registration.
 var objectPools = {};
@@ -12206,16 +12374,16 @@ var objectPools = {};
  * @member {object} data - Component data populated by parsing the
  *         mapped attribute of the component plus applying defaults and mixins.
  */
-var Component = module.exports.Component = function (el, attrValue, id) {
+var Component = (module.exports.Component = function (el, attrValue, id) {
   var self = this;
   this.el = el;
   this.id = id;
-  this.attrName = this.name + (id ? '__' + id : '');
-  this.evtDetail = {id: this.id, name: this.name};
+  this.attrName = this.name + (id ? "__" + id : "");
+  this.evtDetail = { id: this.id, name: this.name };
   this.initialized = false;
   this.isSingleProperty = isSingleProp(this.schema);
-  this.isSinglePropertyObject = this.isSingleProperty &&
-                                isObject(parseProperty(undefined, this.schema));
+  this.isSinglePropertyObject =
+    this.isSingleProperty && isObject(parseProperty(undefined, this.schema));
   this.isObjectBased = !this.isSingleProperty || this.isSinglePropertyObject;
   this.el.components[this.attrName] = this;
   this.objectPool = objectPools[this.name];
@@ -12225,14 +12393,16 @@ var Component = module.exports.Component = function (el, attrValue, id) {
   this.nextData = this.isObjectBased ? this.objectPool.use() : undefined;
   this.oldData = this.isObjectBased ? this.objectPool.use() : undefined;
   this.previousOldData = this.isObjectBased ? this.objectPool.use() : undefined;
-  this.parsingAttrValue = this.isObjectBased ? this.objectPool.use() : undefined;
+  this.parsingAttrValue = this.isObjectBased
+    ? this.objectPool.use()
+    : undefined;
 
   // Last value passed to updateProperties.
-  this.throttledEmitComponentChanged = utils.throttle(function emitChange () {
-    el.emit('componentchanged', self.evtDetail, false);
-  }, 200);
+  // this.throttledEmitComponentChanged = utils.throttle(function emitChange() {
+  //   el.emit("componentchanged", self.evtDetail, false);
+  // }, 200);
   this.updateProperties(attrValue);
-};
+});
 
 Component.prototype = {
   /**
@@ -12246,7 +12416,9 @@ Component.prototype = {
    * Called during component initialization and is only run once.
    * Components can use this to set initial state.
    */
-  init: function () { /* no-op */ },
+  init: function () {
+    /* no-op */
+  },
 
   /**
    * Update handler. Similar to attributeChangedCallback.
@@ -12255,7 +12427,9 @@ Component.prototype = {
    *
    * @param {object} prevData - Previous attributes of the component.
    */
-  update: function (prevData) { /* no-op */ },
+  update: function (prevData) {
+    /* no-op */
+  },
 
   updateSchema: undefined,
 
@@ -12283,19 +12457,25 @@ Component.prototype = {
   /**
    * Called to start any dynamic behavior (e.g., animation, AI, events, physics).
    */
-  play: function () { /* no-op */ },
+  play: function () {
+    /* no-op */
+  },
 
   /**
    * Called to stop any dynamic behavior (e.g., animation, AI, events, physics).
    */
-  pause: function () { /* no-op */ },
+  pause: function () {
+    /* no-op */
+  },
 
   /**
    * Remove handler. Similar to detachedCallback.
    * Called whenever component is removed from the entity (i.e., removeAttribute).
    * Components can use this to reset behavior on the entity.
    */
-  remove: function () { /* no-op */ },
+  remove: function () {
+    /* no-op */
+  },
 
   /**
    * Parses each property based on property type.
@@ -12307,8 +12487,16 @@ Component.prototype = {
    */
   parse: function (value, silent) {
     var schema = this.schema;
-    if (this.isSingleProperty) { return parseProperty(value, schema); }
-    return parseProperties(styleParser.parse(value), schema, true, this.name, silent);
+    if (this.isSingleProperty) {
+      return parseProperty(value, schema);
+    }
+    return parseProperties(
+      styleParser.parse(value),
+      schema,
+      true,
+      this.name,
+      silent
+    );
   },
 
   /**
@@ -12322,8 +12510,12 @@ Component.prototype = {
    */
   stringify: function (data) {
     var schema = this.schema;
-    if (typeof data === 'string') { return data; }
-    if (this.isSingleProperty) { return stringifyProperty(data, schema); }
+    if (typeof data === "string") {
+      return data;
+    }
+    if (this.isSingleProperty) {
+      return stringifyProperty(data, schema);
+    }
     data = stringifyProperties(data, schema);
     return styleParser.stringify(data);
   },
@@ -12339,7 +12531,9 @@ Component.prototype = {
     var tempObject;
     var property;
 
-    if (value === undefined) { return; }
+    if (value === undefined) {
+      return;
+    }
 
     // If null value is the new attribute value, make the attribute value falsy.
     if (value === null) {
@@ -12373,7 +12567,11 @@ Component.prototype = {
       this.attrValue = this.objectPool.use();
     }
     utils.objectPool.clearObject(this.attrValue);
-    this.attrValue = extendProperties(this.attrValue, newAttrValue, this.isObjectBased);
+    this.attrValue = extendProperties(
+      this.attrValue,
+      newAttrValue,
+      this.isObjectBased
+    );
     utils.objectPool.clearObject(tempObject);
   },
 
@@ -12386,7 +12584,9 @@ Component.prototype = {
    */
   parseAttrValueForCache: function (value) {
     var parsedValue;
-    if (typeof value !== 'string') { return value; }
+    if (typeof value !== "string") {
+      return value;
+    }
     if (this.isSingleProperty) {
       parsedValue = this.schema.parse(value);
       /**
@@ -12395,7 +12595,9 @@ Component.prototype = {
        * original string and not the parsed one (#monster -> models/monster.dae)
        * so when building data we parse the expected value.
        */
-      if (typeof parsedValue === 'string') { parsedValue = value; }
+      if (typeof parsedValue === "string") {
+        parsedValue = value;
+      }
     } else {
       // Parse using the style parser to avoid double parsing of individual properties.
       utils.objectPool.clearObject(this.parsingAttrValue);
@@ -12412,9 +12614,14 @@ Component.prototype = {
    */
   flushToDOM: function (isDefault) {
     var attrValue = isDefault ? this.data : this.attrValue;
-    if (!attrValue) { return; }
-    window.HTMLElement.prototype.setAttribute.call(this.el, this.attrName,
-                                                   this.stringify(attrValue));
+    if (!attrValue) {
+      return;
+    }
+    window.HTMLElement.prototype.setAttribute.call(
+      this.el,
+      this.attrName,
+      this.stringify(attrValue)
+    );
   },
 
   /**
@@ -12457,11 +12664,15 @@ Component.prototype = {
     var initialOldData;
 
     // Build data.
-    if (this.updateSchema) { this.updateSchema(this.buildData(this.attrValue, false, true)); }
+    if (this.updateSchema) {
+      this.updateSchema(this.buildData(this.attrValue, false, true));
+    }
     this.data = this.buildData(this.attrValue);
 
     // Component is being already initialized.
-    if (el.initializingComponents[this.name]) { return; }
+    if (el.initializingComponents[this.name]) {
+      return;
+    }
 
     // Prevent infinite loop in case of init method setting same component on the entity.
     el.initializingComponents[this.name] = true;
@@ -12471,17 +12682,25 @@ Component.prototype = {
     delete el.initializingComponents[this.name];
 
     // Store current data as previous data for future updates.
-    this.oldData = extendProperties(this.oldData, this.data, this.isObjectBased);
+    this.oldData = extendProperties(
+      this.oldData,
+      this.data,
+      this.isObjectBased
+    );
 
     // For oldData, pass empty object to multiple-prop schemas or object single-prop schema.
     // Pass undefined to rest of types.
     initialOldData = this.isObjectBased ? this.objectPool.use() : undefined;
     this.update(initialOldData);
-    if (this.isObjectBased) { this.objectPool.recycle(initialOldData); }
+    if (this.isObjectBased) {
+      this.objectPool.recycle(initialOldData);
+    }
 
     // Play the component if the entity is playing.
-    if (el.isPlaying) { this.play(); }
-    el.emit('componentinitialized', this.evtDetail, false);
+    if (el.isPlaying) {
+      this.play();
+    }
+    // el.emit('componentinitialized', this.evtDetail, false);
   },
 
   /**
@@ -12529,7 +12748,9 @@ Component.prototype = {
 
     // Normal update.
     for (key in attrValue) {
-      if (attrValue[key] === undefined) { continue; }
+      if (attrValue[key] === undefined) {
+        continue;
+      }
       this.data[key] = attrValue[key];
     }
   },
@@ -12554,17 +12775,25 @@ Component.prototype = {
 
     // Don't update if properties haven't changed.
     // Always update rotation, position, scale.
-    if (!this.isPositionRotationScale && !hasComponentChanged) { return; }
+    if (!this.isPositionRotationScale && !hasComponentChanged) {
+      return;
+    }
 
     // Store current data as previous data for future updates.
     // Reuse `this.oldData` object to try not to allocate another one.
-    if (this.oldData instanceof Object) { utils.objectPool.clearObject(this.oldData); }
-    this.oldData = extendProperties(this.oldData, this.data, this.isObjectBased);
+    if (this.oldData instanceof Object) {
+      utils.objectPool.clearObject(this.oldData);
+    }
+    this.oldData = extendProperties(
+      this.oldData,
+      this.data,
+      this.isObjectBased
+    );
 
     // Update component with the previous old data.
     this.update(this.previousOldData);
 
-    this.throttledEmitComponentChanged();
+    // this.throttledEmitComponentChanged();
   },
 
   handleMixinUpdate: function () {
@@ -12580,7 +12809,9 @@ Component.prototype = {
    */
   resetProperty: function (propertyName) {
     if (this.isObjectBased) {
-      if (!(propertyName in this.attrValue)) { return; }
+      if (!(propertyName in this.attrValue)) {
+        return;
+      }
       delete this.attrValue[propertyName];
       this.data[propertyName] = this.schema[propertyName].default;
     } else {
@@ -12606,7 +12837,7 @@ Component.prototype = {
     // Extend base schema with new schema chunk.
     utils.extend(extendedSchema, schemaAddon);
     this.schema = processSchema(extendedSchema);
-    this.el.emit('schemachanged', this.evtDetail);
+    // this.el.emit('schemachanged', this.evtDetail);
   },
 
   /**
@@ -12637,11 +12868,14 @@ Component.prototype = {
     var previousData;
 
     // Whether component has a defined value. For arrays, treat empty as not defined.
-    componentDefined = newData && newData.constructor === Array
-      ? newData.length
-      : newData !== undefined && newData !== null;
+    componentDefined =
+      newData && newData.constructor === Array
+        ? newData.length
+        : newData !== undefined && newData !== null;
 
-    if (this.isObjectBased) { utils.objectPool.clearObject(nextData); }
+    if (this.isObjectBased) {
+      utils.objectPool.clearObject(nextData);
+    }
 
     // 1. Gather default values (lowest precendence).
     if (this.isSingleProperty) {
@@ -12659,14 +12893,17 @@ Component.prototype = {
       previousData = !clobber && this.attrValue;
 
       // Clone default value if object so components don't share object
-      data = previousData instanceof Object
-        ? copyData(nextData, previousData)
-        : nextData;
+      data =
+        previousData instanceof Object
+          ? copyData(nextData, previousData)
+          : nextData;
 
       // Apply defaults.
       for (key in schema) {
         defaultValue = schema[key].default;
-        if (data[key] !== undefined) { continue; }
+        if (data[key] !== undefined) {
+          continue;
+        }
         // Clone default value if object so components don't share object
         data[key] = isObjectOrArray(defaultValue)
           ? utils.clone(defaultValue)
@@ -12677,7 +12914,9 @@ Component.prototype = {
     // 2. Gather mixin values.
     for (i = 0; i < mixinEls.length; i++) {
       mixinData = mixinEls[i].getAttribute(this.attrName);
-      if (!mixinData) { continue; }
+      if (!mixinData) {
+        continue;
+      }
       data = extendProperties(data, mixinData, this.isObjectBased);
     }
 
@@ -12694,16 +12933,19 @@ Component.prototype = {
       data = extendProperties(data, newData, this.isObjectBased);
     } else {
       // Parse and coerce using the schema.
-      if (this.isSingleProperty) { return parseProperty(data, schema); }
+      if (this.isSingleProperty) {
+        return parseProperty(data, schema);
+      }
     }
 
     return parseProperties(data, schema, undefined, this.name, silent);
-  }
+  },
 };
 
 // For testing.
 if (window.debug) {
-  var registrationOrderWarnings = module.exports.registrationOrderWarnings = {};
+  var registrationOrderWarnings = (module.exports.registrationOrderWarnings =
+    {});
 }
 
 /**
@@ -12722,47 +12964,73 @@ module.exports.registerComponent = function (name, definition) {
 
   // Warning if component is statically registered after the scene.
   if (document.currentScript && document.currentScript !== aframeScript) {
-    scenes.forEach(function checkPosition (sceneEl) {
+    scenes.forEach(function checkPosition(sceneEl) {
       // Okay to register component after the scene at runtime.
-      if (sceneEl.hasLoaded) { return; }
+      if (sceneEl.hasLoaded) {
+        return;
+      }
 
       // Check that component is declared before the scene.
-      if (document.currentScript.compareDocumentPosition(sceneEl) ===
-          Node.DOCUMENT_POSITION_FOLLOWING) { return; }
+      if (
+        document.currentScript.compareDocumentPosition(sceneEl) ===
+        Node.DOCUMENT_POSITION_FOLLOWING
+      ) {
+        return;
+      }
 
-      warn('The component `' + name + '` was registered in a <script> tag after the scene. ' +
-           'Component <script> tags in an HTML file should be declared *before* the scene ' +
-           'such that the component is available to entities during scene initialization.');
+      warn(
+        "The component `" +
+          name +
+          "` was registered in a <script> tag after the scene. " +
+          "Component <script> tags in an HTML file should be declared *before* the scene " +
+          "such that the component is available to entities during scene initialization."
+      );
 
       // For testing.
-      if (window.debug) { registrationOrderWarnings[name] = true; }
+      if (window.debug) {
+        registrationOrderWarnings[name] = true;
+      }
     });
   }
 
   if (upperCaseRegExp.test(name) === true) {
-    warn('The component name `' + name + '` contains uppercase characters, but ' +
-         'HTML will ignore the capitalization of attribute names. ' +
-         'Change the name to be lowercase: `' + name.toLowerCase() + '`');
+    warn(
+      "The component name `" +
+        name +
+        "` contains uppercase characters, but " +
+        "HTML will ignore the capitalization of attribute names. " +
+        "Change the name to be lowercase: `" +
+        name.toLowerCase() +
+        "`"
+    );
   }
 
-  if (name.indexOf('__') !== -1) {
-    throw new Error('The component name `' + name + '` is not allowed. ' +
-                    'The sequence __ (double underscore) is reserved to specify an id' +
-                    ' for multiple components of the same type');
+  if (name.indexOf("__") !== -1) {
+    throw new Error(
+      "The component name `" +
+        name +
+        "` is not allowed. " +
+        "The sequence __ (double underscore) is reserved to specify an id" +
+        " for multiple components of the same type"
+    );
   }
 
   // Format definition object to prototype object.
   Object.keys(definition).forEach(function (key) {
     proto[key] = {
       value: definition[key],
-      writable: true
+      writable: true,
     };
   });
 
   if (components[name]) {
-    throw new Error('The component `' + name + '` has been already registered. ' +
-                    'Check that you are not loading two versions of the same component ' +
-                    'or two different components of the same name.');
+    throw new Error(
+      "The component `" +
+        name +
+        "` has been already registered. " +
+        "Check that you are not loading two versions of the same component " +
+        "or two different components of the same name."
+    );
   }
 
   NewComponent = function (el, attr, id) {
@@ -12772,15 +13040,16 @@ module.exports.registerComponent = function (name, definition) {
   NewComponent.prototype = Object.create(Component.prototype, proto);
   NewComponent.prototype.name = name;
   NewComponent.prototype.isPositionRotationScale =
-    name === 'position' || name === 'rotation' || name === 'scale';
+    name === "position" || name === "rotation" || name === "scale";
   NewComponent.prototype.constructor = NewComponent;
   NewComponent.prototype.system = systems && systems.systems[name];
   NewComponent.prototype.play = wrapPlay(NewComponent.prototype.play);
   NewComponent.prototype.pause = wrapPause(NewComponent.prototype.pause);
   NewComponent.prototype.remove = wrapRemove(NewComponent.prototype.remove);
 
-  schema = utils.extend(processSchema(NewComponent.prototype.schema,
-                                      NewComponent.prototype.name));
+  schema = utils.extend(
+    processSchema(NewComponent.prototype.schema, NewComponent.prototype.name)
+  );
   schemaIsSingleProp = isSingleProp(NewComponent.prototype.schema);
 
   // Keep track of keys that may potentially change the schema.
@@ -12806,23 +13075,25 @@ module.exports.registerComponent = function (name, definition) {
     parseAttrValueForCache: NewComponent.prototype.parseAttrValueForCache,
     schema: schema,
     stringify: NewComponent.prototype.stringify,
-    type: NewComponent.prototype.type
+    type: NewComponent.prototype.type,
   };
   return NewComponent;
 };
 
 /**
-* Clone component data.
-* Clone only the properties that are plain objects while keeping a reference for the rest.
-*
-* @param data - Component data to clone.
-* @returns Cloned data.
-*/
-function copyData (dest, sourceData) {
+ * Clone component data.
+ * Clone only the properties that are plain objects while keeping a reference for the rest.
+ *
+ * @param data - Component data to clone.
+ * @returns Cloned data.
+ */
+function copyData(dest, sourceData) {
   var parsedProperty;
   var key;
   for (key in sourceData) {
-    if (sourceData[key] === undefined) { continue; }
+    if (sourceData[key] === undefined) {
+      continue;
+    }
     parsedProperty = sourceData[key];
     dest[key] = isObjectOrArray(parsedProperty)
       ? utils.clone(parsedProperty)
@@ -12832,18 +13103,20 @@ function copyData (dest, sourceData) {
 }
 
 /**
-* Object extending with checking for single-property schema.
-*
-* @param dest - Destination object or value.
-* @param source - Source object or value
-* @param {boolean} isObjectBased - Whether values are objects.
-* @returns Overridden object or value.
-*/
-function extendProperties (dest, source, isObjectBased) {
+ * Object extending with checking for single-property schema.
+ *
+ * @param dest - Destination object or value.
+ * @param source - Source object or value
+ * @param {boolean} isObjectBased - Whether values are objects.
+ * @returns Overridden object or value.
+ */
+function extendProperties(dest, source, isObjectBased) {
   var key;
   if (isObjectBased && source.constructor === Object) {
     for (key in source) {
-      if (source[key] === undefined) { continue; }
+      if (source[key] === undefined) {
+        continue;
+      }
       if (source[key] && source[key].constructor === Object) {
         dest[key] = utils.clone(source[key]);
       } else {
@@ -12858,7 +13131,7 @@ function extendProperties (dest, source, isObjectBased) {
 /**
  * Checks if a component has defined a method that needs to run every frame.
  */
-function hasBehavior (component) {
+function hasBehavior(component) {
   return component.tick || component.tock;
 }
 
@@ -12868,14 +13141,18 @@ function hasBehavior (component) {
  *
  * @param pauseMethod {function}
  */
-function wrapPause (pauseMethod) {
-  return function pause () {
+function wrapPause(pauseMethod) {
+  return function pause() {
     var sceneEl = this.el.sceneEl;
-    if (!this.isPlaying) { return; }
+    if (!this.isPlaying) {
+      return;
+    }
     pauseMethod.call(this);
     this.isPlaying = false;
     // Remove tick behavior.
-    if (!hasBehavior(this)) { return; }
+    if (!hasBehavior(this)) {
+      return;
+    }
     sceneEl.removeBehavior(this);
   };
 }
@@ -12886,15 +13163,19 @@ function wrapPause (pauseMethod) {
  *
  * @param playMethod {function}
  */
-function wrapPlay (playMethod) {
-  return function play () {
+function wrapPlay(playMethod) {
+  return function play() {
     var sceneEl = this.el.sceneEl;
     var shouldPlay = this.el.isPlaying && !this.isPlaying;
-    if (!this.initialized || !shouldPlay) { return; }
+    if (!this.initialized || !shouldPlay) {
+      return;
+    }
     playMethod.call(this);
     this.isPlaying = true;
     // Add tick behavior.
-    if (!hasBehavior(this)) { return; }
+    if (!hasBehavior(this)) {
+      return;
+    }
     sceneEl.addBehavior(this);
   };
 }
@@ -12905,8 +13186,8 @@ function wrapPlay (playMethod) {
  *
  * @param removeMethod {function} - Defined remove method.
  */
-function wrapRemove (removeMethod) {
-  return function remove () {
+function wrapRemove(removeMethod) {
+  return function remove() {
     removeMethod.call(this);
     this.objectPool.recycle(this.attrValue);
     this.objectPool.recycle(this.oldData);
@@ -12916,11 +13197,11 @@ function wrapRemove (removeMethod) {
   };
 }
 
-function isObject (value) {
+function isObject(value) {
   return value && value.constructor === Object;
 }
 
-function isObjectOrArray (value) {
+function isObjectOrArray(value) {
   return value && (value.constructor === Object || value.constructor === Array);
 }
 
@@ -13304,24 +13585,24 @@ module.exports.isValidDefaultCoordinate = isValidDefaultCoordinate;
 
 },{"../utils/coordinates":153,"debug":8}],90:[function(require,module,exports){
 /* global Promise, screen */
-var initMetaTags = require('./metaTags').inject;
-var initWakelock = require('./wakelock');
-var loadingScreen = require('./loadingScreen');
-var re = require('../a-register-element');
-var scenes = require('./scenes');
-var systems = require('../system').systems;
-var THREE = require('../../lib/three');
-var utils = require('../../utils/');
+var initMetaTags = require("./metaTags").inject;
+var initWakelock = require("./wakelock");
+var loadingScreen = require("./loadingScreen");
+var re = require("../a-register-element");
+var scenes = require("./scenes");
+var systems = require("../system").systems;
+var THREE = require("../../lib/three");
+var utils = require("../../utils/");
 // Require after.
-var AEntity = require('../a-entity');
-var ANode = require('../a-node');
-var initPostMessageAPI = require('./postMessage');
+var AEntity = require("../a-entity");
+var ANode = require("../a-node");
+var initPostMessageAPI = require("./postMessage");
 
 var bind = utils.bind;
 var isIOS = utils.device.isIOS();
 var isMobile = utils.device.isMobile();
 var registerElement = re.registerElement;
-var warn = utils.debug('core:a-scene:warn');
+var warn = utils.debug("core:a-scene:warn");
 
 /**
  * Scene element, holds all entities.
@@ -13338,7 +13619,7 @@ var warn = utils.debug('core:a-scene:warn');
  * @member {object} systems - Registered instantiated systems.
  * @member {number} time
  */
-module.exports.AScene = registerElement('a-scene', {
+module.exports.AScene = registerElement("a-scene", {
   prototype: Object.create(AEntity.prototype, {
     createdCallback: {
       value: function () {
@@ -13352,7 +13633,7 @@ module.exports.AScene = registerElement('a-scene', {
         this.systemNames = [];
         this.time = this.delta = 0;
 
-        this.behaviors = {tick: [], tock: []};
+        this.behaviors = { tick: [], tock: [] };
         this.hasLoaded = false;
         this.isPlaying = false;
         this.originalHTML = this.innerHTML;
@@ -13363,19 +13644,19 @@ module.exports.AScene = registerElement('a-scene', {
         // this.setAttribute('keyboard-shortcuts', '');
         // this.setAttribute('screenshot', '');
         // this.setAttribute('vr-mode-ui', '');
-      }
+      },
     },
 
     addFullScreenStyles: {
       value: function () {
-        document.documentElement.classList.add('a-fullscreen');
-      }
+        document.documentElement.classList.add("a-fullscreen");
+      },
     },
 
     removeFullScreenStyles: {
       value: function () {
-        document.documentElement.classList.remove('a-fullscreen');
-      }
+        document.documentElement.classList.remove("a-fullscreen");
+      },
     },
 
     attachedCallback: {
@@ -13393,12 +13674,12 @@ module.exports.AScene = registerElement('a-scene', {
         initWakelock(this);
 
         // Camera set up by camera system.
-        this.addEventListener('cameraready', function () {
+        this.addEventListener("cameraready", function () {
           self.attachedCallbackPostCamera();
         });
 
         this.initSystems();
-      }
+      },
     },
 
     attachedCallbackPostCamera: {
@@ -13407,8 +13688,8 @@ module.exports.AScene = registerElement('a-scene', {
         var self = this;
 
         resize = bind(this.resize, this);
-        window.addEventListener('load', resize);
-        window.addEventListener('resize', function () {
+        window.addEventListener("load", resize);
+        window.addEventListener("resize", function () {
           // Workaround for a Webkit bug (https://bugs.webkit.org/show_bug.cgi?id=170595)
           // where the window does not contain the correct viewport size
           // after an orientation change. The window size is correct if the operation
@@ -13426,13 +13707,10 @@ module.exports.AScene = registerElement('a-scene', {
         scenes.push(this);
 
         // Handler to exit VR (e.g., Oculus Browser back button).
-        
 
         // bind functions
-        
-        
       },
-      writable: window.debug
+      writable: window.debug,
     },
 
     /**
@@ -13443,13 +13721,15 @@ module.exports.AScene = registerElement('a-scene', {
         var name;
 
         // Initialize camera system first.
-        this.initSystem('camera');
+        this.initSystem("camera");
 
         for (name in systems) {
-          if (name === 'camera') { continue; }
+          if (name === "camera") {
+            continue;
+          }
           this.initSystem(name);
         }
-      }
+      },
     },
 
     /**
@@ -13457,10 +13737,12 @@ module.exports.AScene = registerElement('a-scene', {
      */
     initSystem: {
       value: function (name) {
-        if (this.systems[name]) { return; }
+        if (this.systems[name]) {
+          return;
+        }
         this.systems[name] = new systems[name](this);
         this.systemNames.push(name);
-      }
+      },
     },
 
     /**
@@ -13471,9 +13753,7 @@ module.exports.AScene = registerElement('a-scene', {
         // Remove from scene index.
         var sceneIndex = scenes.indexOf(this);
         scenes.splice(sceneIndex, 1);
-
-        
-      }
+      },
     },
 
     /**
@@ -13489,13 +13769,15 @@ module.exports.AScene = registerElement('a-scene', {
 
         // Check if behavior has tick and/or tock and add the behavior to the appropriate list.
         for (behaviorType in behaviors) {
-          if (!behavior[behaviorType]) { continue; }
+          if (!behavior[behaviorType]) {
+            continue;
+          }
           behaviorArr = this.behaviors[behaviorType];
           if (behaviorArr.indexOf(behavior) === -1) {
             behaviorArr.push(behavior);
           }
         }
-      }
+      },
     },
 
     /**
@@ -13505,7 +13787,7 @@ module.exports.AScene = registerElement('a-scene', {
       value: function () {
         return document.pointerLockElement;
       },
-      writable: window.debug
+      writable: window.debug,
     },
 
     /**
@@ -13513,14 +13795,18 @@ module.exports.AScene = registerElement('a-scene', {
      */
     checkHeadsetConnected: {
       value: utils.device.checkHeadsetConnected,
-      writable: window.debug
+      writable: window.debug,
     },
 
     pointerRestricted: {
       value: function () {
         if (this.canvas) {
           var pointerLockElement = this.getPointerLockElement();
-          if (pointerLockElement && pointerLockElement !== this.canvas && document.exitPointerLock) {
+          if (
+            pointerLockElement &&
+            pointerLockElement !== this.canvas &&
+            document.exitPointerLock
+          ) {
             // Recreate pointer lock on the canvas, if taken on another element.
             document.exitPointerLock();
           }
@@ -13529,16 +13815,20 @@ module.exports.AScene = registerElement('a-scene', {
             this.canvas.requestPointerLock();
           }
         }
-      }
+      },
     },
 
     pointerUnrestricted: {
       value: function () {
         var pointerLockElement = this.getPointerLockElement();
-        if (pointerLockElement && pointerLockElement === this.canvas && document.exitPointerLock) {
+        if (
+          pointerLockElement &&
+          pointerLockElement === this.canvas &&
+          document.exitPointerLock
+        ) {
           document.exitPointerLock();
         }
-      }
+      },
     },
 
     /**
@@ -13548,9 +13838,11 @@ module.exports.AScene = registerElement('a-scene', {
     getAttribute: {
       value: function (attr) {
         var system = this.systems[attr];
-        if (system) { return system.data; }
+        if (system) {
+          return system.data;
+        }
         return AEntity.prototype.getAttribute.call(this, attr);
-      }
+      },
     },
 
     /**
@@ -13559,9 +13851,11 @@ module.exports.AScene = registerElement('a-scene', {
      */
     getComputedAttribute: {
       value: function (attr) {
-        warn('`getComputedAttribute` is deprecated. Use `getAttribute` instead.');
+        warn(
+          "`getComputedAttribute` is deprecated. Use `getAttribute` instead."
+        );
         this.getAttribute(attr);
-      }
+      },
     },
 
     /**
@@ -13571,9 +13865,11 @@ module.exports.AScene = registerElement('a-scene', {
     getDOMAttribute: {
       value: function (attr) {
         var system = this.systems[attr];
-        if (system) { return system.data; }
+        if (system) {
+          return system.data;
+        }
         return AEntity.prototype.getDOMAttribute.call(this, attr);
-      }
+      },
     },
 
     /**
@@ -13589,8 +13885,13 @@ module.exports.AScene = registerElement('a-scene', {
           system.updateProperties(value);
           return;
         }
-        AEntity.prototype.setAttribute.call(this, attr, value, componentPropValue);
-      }
+        AEntity.prototype.setAttribute.call(
+          this,
+          attr,
+          value,
+          componentPropValue
+        );
+      },
     },
 
     /**
@@ -13606,12 +13907,16 @@ module.exports.AScene = registerElement('a-scene', {
         // Check if behavior has tick and/or tock and remove the behavior from the appropriate
         // array.
         for (behaviorType in behaviors) {
-          if (!behavior[behaviorType]) { continue; }
+          if (!behavior[behaviorType]) {
+            continue;
+          }
           behaviorArr = this.behaviors[behaviorType];
           index = behaviorArr.indexOf(behavior);
-          if (index !== -1) { behaviorArr.splice(index, 1); }
+          if (index !== -1) {
+            behaviorArr.splice(index, 1);
+          }
         }
-      }
+      },
     },
 
     resize: {
@@ -13627,21 +13932,30 @@ module.exports.AScene = registerElement('a-scene', {
         // the getEyeParameters function of the WebVR API. These dimensions are independent of
         // the window size, therefore should not be overwritten with the window's width and
         // height, // except when in fullscreen mode.
-        if (!camera || !canvas || (this.is('vr-mode') && (this.isMobile || isVRPresenting))) {
+        if (
+          !camera ||
+          !canvas ||
+          (this.is("vr-mode") && (this.isMobile || isVRPresenting))
+        ) {
           return;
         }
 
         // Update camera.
-        embedded = this.getAttribute('embedded') && !this.is('vr-mode');
-        size = getCanvasSize(canvas, embedded, this.maxCanvasSize, this.is('vr-mode'));
+        embedded = this.getAttribute("embedded") && !this.is("vr-mode");
+        size = getCanvasSize(
+          canvas,
+          embedded,
+          this.maxCanvasSize,
+          this.is("vr-mode")
+        );
         camera.aspect = size.width / size.height;
         camera.updateProjectionMatrix();
 
         // Notify renderer of size change.
         this.renderer.setSize(size.width, size.height, false);
-        this.emit('rendererresize', null, false);
+        this.emit("rendererresize", null, false);
       },
-      writable: true
+      writable: true,
     },
 
     setupRenderer: {
@@ -13652,24 +13966,26 @@ module.exports.AScene = registerElement('a-scene', {
         var rendererAttrString;
         var rendererConfig;
 
-        rendererConfig = {alpha: true, antialias: !isMobile, canvas: this.canvas, logarithmicDepthBuffer: false};
-        if (this.hasAttribute('antialias')) {
-          rendererConfig.antialias = this.getAttribute('antialias') === 'true';
+        rendererConfig = {
+          alpha: true,
+          antialias: !isMobile,
+          canvas: this.canvas,
+          logarithmicDepthBuffer: false,
+        };
+        if (this.hasAttribute("antialias")) {
+          rendererConfig.antialias = this.getAttribute("antialias") === "true";
         }
 
-        if (this.hasAttribute('logarithmicDepthBuffer')) {
-          rendererConfig.logarithmicDepthBuffer = this.getAttribute('logarithmicDepthBuffer') === 'true';
+        if (this.hasAttribute("logarithmicDepthBuffer")) {
+          rendererConfig.logarithmicDepthBuffer =
+            this.getAttribute("logarithmicDepthBuffer") === "true";
         }
 
-        this.maxCanvasSize = {height: 1920, width: 1920};
+        this.maxCanvasSize = { height: 1920, width: 1920 };
 
-        if (this.hasAttribute('renderer')) {
-          rendererAttrString = this.getAttribute('renderer');
+        if (this.hasAttribute("renderer")) {
+          rendererAttrString = this.getAttribute("renderer");
           rendererAttr = utils.styleParser.parse(rendererAttrString);
-
-          if (rendererAttr.antialias && rendererAttr.antialias !== 'auto') {
-            rendererConfig.antialias = rendererAttr.antialias === 'true';
-          }
 
           this.maxCanvasSize = {
             width: rendererAttr.maxCanvasWidth
@@ -13677,7 +13993,7 @@ module.exports.AScene = registerElement('a-scene', {
               : this.maxCanvasSize.width,
             height: rendererAttr.maxCanvasHeight
               ? parseInt(rendererAttr.maxCanvasHeight)
-              : this.maxCanvasSize.height
+              : this.maxCanvasSize.height,
           };
         }
 
@@ -13687,7 +14003,7 @@ module.exports.AScene = registerElement('a-scene', {
         renderer.sortObjects = false;
         loadingScreen.setup(this, getCanvasSize);
       },
-      writable: window.debug
+      writable: window.debug,
     },
 
     /**
@@ -13704,34 +14020,35 @@ module.exports.AScene = registerElement('a-scene', {
           return;
         }
 
-        this.addEventListener('loaded', function () {
+        AEntity.prototype.play.call(this); // .play() *before* render.
 
-          AEntity.prototype.play.call(this);  // .play() *before* render.
+        if (sceneEl.renderStarted) {
+          return;
+        }
 
-          if (sceneEl.renderStarted) { return; }
+        sceneEl.resize();
 
-          sceneEl.resize();
-
-          // Kick off render loop.
-          if (sceneEl.renderer) {
-            if (window.performance) { window.performance.mark('render-started'); }
-            sceneEl.clock = new THREE.Clock();
-            loadingScreen.remove();
-            //sceneEl.calculate();
-            sceneEl.renderStarted = true;
-            sceneEl.render();
-            console.log("renderstart");
-            //sceneEl.calculate();
-            
-            sceneEl.emit('renderstart');
+        // Kick off render loop.
+        if (sceneEl.renderer) {
+          if (window.performance) {
+            window.performance.mark("render-started");
           }
-        });
+          sceneEl.clock = new THREE.Clock();
+          loadingScreen.remove();
+          //sceneEl.calculate();
+          sceneEl.renderStarted = true;
+          sceneEl.render();
+          console.log("renderstart");
+          //sceneEl.calculate();
+
+          sceneEl.emit("renderstart");
+        }
 
         // setTimeout to wait for all nodes to attach and run their callbacks.
         setTimeout(function () {
           AEntity.prototype.load.call(self);
         });
-      }
+      },
     },
 
     /**
@@ -13740,9 +14057,11 @@ module.exports.AScene = registerElement('a-scene', {
      */
     updateComponent: {
       value: function (componentName) {
-        if (componentName in systems) { return; }
+        if (componentName in systems) {
+          return;
+        }
         AEntity.prototype.updateComponent.apply(this, arguments);
-      }
+      },
     },
 
     /**
@@ -13757,16 +14076,20 @@ module.exports.AScene = registerElement('a-scene', {
 
         // Components.
         for (i = 0; i < this.behaviors.tick.length; i++) {
-          if (!this.behaviors.tick[i].el.isPlaying) { continue; }
+          if (!this.behaviors.tick[i].el.isPlaying) {
+            continue;
+          }
           this.behaviors.tick[i].tick(time, timeDelta);
         }
 
         // Systems.
         for (i = 0; i < this.systemNames.length; i++) {
-          if (!systems[this.systemNames[i]].tick) { continue; }
+          if (!systems[this.systemNames[i]].tick) {
+            continue;
+          }
           systems[this.systemNames[i]].tick(time, timeDelta);
         }
-      }
+      },
     },
 
     /**
@@ -13781,16 +14104,20 @@ module.exports.AScene = registerElement('a-scene', {
 
         // Components.
         for (i = 0; i < this.behaviors.tock.length; i++) {
-          if (!this.behaviors.tock[i].el.isPlaying) { continue; }
+          if (!this.behaviors.tock[i].el.isPlaying) {
+            continue;
+          }
           this.behaviors.tock[i].tock(time, timeDelta, camera);
         }
 
         // Systems.
         for (i = 0; i < this.systemNames.length; i++) {
-          if (!systems[this.systemNames[i]].tock) { continue; }
+          if (!systems[this.systemNames[i]].tock) {
+            continue;
+          }
           systems[this.systemNames[i]].tock(time, timeDelta, camera);
         }
-      }
+      },
     },
 
     /**
@@ -13808,30 +14135,51 @@ module.exports.AScene = registerElement('a-scene', {
         this.delta = this.clock.getDelta() * 1000;
         this.time = this.clock.elapsedTime * 1000;
 
-        if (this.isPlaying) { this.tick(this.time, this.delta); }
+        if (
+          this.hasAttribute("pixelRatio") &&
+          this.pixelRatio != this.getAttribute("pixelRatio")
+        ) {
+          this.pixelRatio = this.getAttribute("pixelRatio");
+          this.renderer.setPixelRatio(
+            window.devicePixelRatio * this.getAttribute("pixelRatio")
+          );
+        }
 
-        if (this.hasAttribute('pixelRatio')) {
-          this.renderer.setPixelRatio(window.devicePixelRatio * this.getAttribute('pixelRatio'));
+        if (this.isPlaying) {
+          this.tick(this.time, this.delta);
         }
 
         mainRenderer.requestAnimationFrame(this.render);
         if (effectComposer) {
           effectComposer.render();
         } else {
-          mainRenderer.render(this.object3D, this.camera, this.renderTarget, false, this.camera.el.components.camera.data);
+          mainRenderer.render(
+            this.object3D,
+            this.camera,
+            this.renderTarget,
+            false,
+            this.camera.el.components.camera.data
+          );
           if (this.additiveCameras) {
-            
-            this.additiveCameras.forEach(element => {
-              mainRenderer.render(this.object3D, element.getObject3D('camera'), this.renderTarget, false, element.components["orthographic-camera"].data);
+            this.additiveCameras.forEach((element) => {
+              mainRenderer.render(
+                this.object3D,
+                element.getObject3D("camera"),
+                this.renderTarget,
+                false,
+                element.components["orthographic-camera"].data
+              );
             });
           }
         }
 
-        if (this.isPlaying) { this.tock(this.time, this.delta, this.camera); }
+        if (this.isPlaying) {
+          this.tock(this.time, this.delta, this.camera);
+        }
 
         // this.components.overlay && this.components.overlay.render();
       },
-      writable: true
+      writable: true,
     },
 
     calculate: {
@@ -13841,15 +14189,19 @@ module.exports.AScene = registerElement('a-scene', {
         this.delta = this.clock.getDelta() * 1000;
         this.time = this.clock.elapsedTime * 1000;
 
-        if (this.isPlaying) { this.tick(this.time, this.delta); }
+        if (this.isPlaying) {
+          this.tick(this.time, this.delta);
+        }
 
         mainRenderer.requestAnimationFrame(this.calculate);
 
-        if (this.isPlaying) { this.tock(this.time, this.delta, this.camera); }
+        if (this.isPlaying) {
+          this.tock(this.time, this.delta, this.camera);
+        }
       },
-      writable: true
-    }
-  })
+      writable: true,
+    },
+  }),
 });
 
 /**
@@ -13862,14 +14214,15 @@ module.exports.AScene = registerElement('a-scene', {
  * @param {object} max - Max size parameters
  * @param {boolean} isVR - If in VR
  */
-function getCanvasSize (canvasEl, embedded, maxSize, isVR) {
+function getCanvasSize(canvasEl, embedded, maxSize, isVR) {
   if (embedded) {
     return {
       height: canvasEl.parentElement.offsetHeight,
-      width: canvasEl.parentElement.offsetWidth
+      width: canvasEl.parentElement.offsetWidth,
     };
   }
-  return getMaxSize(maxSize, isVR);
+  const result = getMaxSize(maxSize, isVR);
+  return result;
 }
 
 /**
@@ -13881,72 +14234,81 @@ function getCanvasSize (canvasEl, embedded, maxSize, isVR) {
  * @param {boolean} isVR - If in VR.
  * @returns {object} Width and height.
  */
-function getMaxSize (maxSize, isVR) {
+function getMaxSize(maxSize, isVR) {
   var aspectRatio;
   var size;
   var pixelRatio = window.devicePixelRatio;
 
-  size = {height: document.body.offsetHeight, width: document.body.offsetWidth};
+  size = {
+    height: document.body.offsetHeight,
+    width: document.body.offsetWidth,
+  };
   if (!maxSize || isVR || (maxSize.width === -1 && maxSize.height === -1)) {
     return size;
   }
 
-  if (size.width * pixelRatio < maxSize.width &&
-    size.height * pixelRatio < maxSize.height) {
+  if (
+    size.width * pixelRatio < maxSize.width &&
+    size.height * pixelRatio < maxSize.height
+  ) {
     return size;
   }
 
   aspectRatio = size.width / size.height;
 
-  if ((size.width * pixelRatio) > maxSize.width && maxSize.width !== -1) {
+  if (size.width * pixelRatio > maxSize.width && maxSize.width !== -1) {
     size.width = Math.round(maxSize.width / pixelRatio);
     size.height = Math.round(maxSize.width / aspectRatio / pixelRatio);
   }
 
-  if ((size.height * pixelRatio) > maxSize.height && maxSize.height !== -1) {
+  if (size.height * pixelRatio > maxSize.height && maxSize.height !== -1) {
     size.height = Math.round(maxSize.height / pixelRatio);
-    size.width = Math.round(maxSize.height * aspectRatio / pixelRatio);
+    size.width = Math.round((maxSize.height * aspectRatio) / pixelRatio);
   }
 
   return size;
 }
 
-function setupCanvas (sceneEl) {
+function setupCanvas(sceneEl) {
   var canvasEl;
 
-  canvasEl = document.createElement('canvas');
-  canvasEl.classList.add('a-canvas');
-  canvasEl.classList.add('showControls');
+  canvasEl = document.createElement("canvas");
+  canvasEl.classList.add("a-canvas");
+  canvasEl.classList.add("showControls");
   // Mark canvas as provided/injected by A-Frame.
   canvasEl.dataset.aframeCanvas = true;
   sceneEl.appendChild(canvasEl);
 
-  document.addEventListener('fullscreenchange', onFullScreenChange);
-  document.addEventListener('mozfullscreenchange', onFullScreenChange);
-  document.addEventListener('webkitfullscreenchange', onFullScreenChange);
+  document.addEventListener("fullscreenchange", onFullScreenChange);
+  document.addEventListener("mozfullscreenchange", onFullScreenChange);
+  document.addEventListener("webkitfullscreenchange", onFullScreenChange);
 
   // Prevent overscroll on mobile.
-  canvasEl.addEventListener('touchmove', function (event) { event.preventDefault(); });
+  canvasEl.addEventListener("touchmove", function (event) {
+    event.preventDefault();
+  });
 
   // Set canvas on scene.
   sceneEl.canvas = canvasEl;
-  sceneEl.emit('render-target-loaded', {target: canvasEl});
+  sceneEl.emit("render-target-loaded", { target: canvasEl });
   // For unknown reasons a synchronous resize does not work on desktop when
   // entering/exiting fullscreen.
   setTimeout(bind(sceneEl.resize, sceneEl), 0);
 
-  function onFullScreenChange () {
+  function onFullScreenChange() {
     var fullscreenEl =
       document.fullscreenElement ||
       document.mozFullScreenElement ||
       document.webkitFullscreenElement;
     // No fullscren element === exit fullscreen
-    if (!fullscreenEl) { sceneEl.exitVR(); }
+    if (!fullscreenEl) {
+      sceneEl.exitVR();
+    }
     document.activeElement.blur();
     document.body.focus();
   }
 }
-module.exports.setupCanvas = setupCanvas;  // For testing.
+module.exports.setupCanvas = setupCanvas; // For testing.
 
 },{"../../lib/three":136,"../../utils/":158,"../a-entity":82,"../a-node":84,"../a-register-element":85,"../system":98,"./loadingScreen":91,"./metaTags":92,"./postMessage":93,"./scenes":94,"./wakelock":95}],91:[function(require,module,exports){
 /* global THREE */
@@ -46164,720 +46526,683 @@ if (typeof module === 'object') {
 
 	var programIdCount = 0;
 
-	function getEncodingComponents( encoding ) {
-
-		switch ( encoding ) {
-
-			case LinearEncoding:
-				return [ 'Linear', '( value )' ];
-			case sRGBEncoding:
-				return [ 'sRGB', '( value )' ];
-			case RGBEEncoding:
-				return [ 'RGBE', '( value )' ];
-			case RGBM7Encoding:
-				return [ 'RGBM', '( value, 7.0 )' ];
-			case RGBM16Encoding:
-				return [ 'RGBM', '( value, 16.0 )' ];
-			case RGBDEncoding:
-				return [ 'RGBD', '( value, 256.0 )' ];
-			case GammaEncoding:
-				return [ 'Gamma', '( value, float( GAMMA_FACTOR ) )' ];
-			default:
-				throw new Error( 'unsupported encoding: ' + encoding );
-
-		}
-
+	function getEncodingComponents(encoding) {
+	  switch (encoding) {
+	    case LinearEncoding:
+	      return ["Linear", "( value )"];
+	    case sRGBEncoding:
+	      return ["sRGB", "( value )"];
+	    case RGBEEncoding:
+	      return ["RGBE", "( value )"];
+	    case RGBM7Encoding:
+	      return ["RGBM", "( value, 7.0 )"];
+	    case RGBM16Encoding:
+	      return ["RGBM", "( value, 16.0 )"];
+	    case RGBDEncoding:
+	      return ["RGBD", "( value, 256.0 )"];
+	    case GammaEncoding:
+	      return ["Gamma", "( value, float( GAMMA_FACTOR ) )"];
+	    default:
+	      throw new Error("unsupported encoding: " + encoding);
+	  }
 	}
 
-	function getTexelDecodingFunction( functionName, encoding ) {
-
-		var components = getEncodingComponents( encoding );
-		return 'vec4 ' + functionName + '( vec4 value ) { return ' + components[ 0 ] + 'ToLinear' + components[ 1 ] + '; }';
-
+	function getTexelDecodingFunction(functionName, encoding) {
+	  var components = getEncodingComponents(encoding);
+	  return (
+	    "vec4 " +
+	    functionName +
+	    "( vec4 value ) { return " +
+	    components[0] +
+	    "ToLinear" +
+	    components[1] +
+	    "; }"
+	  );
 	}
 
-	function getTexelEncodingFunction( functionName, encoding ) {
-
-		var components = getEncodingComponents( encoding );
-		return 'vec4 ' + functionName + '( vec4 value ) { return LinearTo' + components[ 0 ] + components[ 1 ] + '; }';
-
+	function getTexelEncodingFunction(functionName, encoding) {
+	  var components = getEncodingComponents(encoding);
+	  return (
+	    "vec4 " +
+	    functionName +
+	    "( vec4 value ) { return LinearTo" +
+	    components[0] +
+	    components[1] +
+	    "; }"
+	  );
 	}
 
-	function getToneMappingFunction( functionName, toneMapping ) {
+	function getToneMappingFunction(functionName, toneMapping) {
+	  var toneMappingName;
 
-		var toneMappingName;
+	  switch (toneMapping) {
+	    case LinearToneMapping:
+	      toneMappingName = "Linear";
+	      break;
 
-		switch ( toneMapping ) {
+	    case ReinhardToneMapping:
+	      toneMappingName = "Reinhard";
+	      break;
 
-			case LinearToneMapping:
-				toneMappingName = 'Linear';
-				break;
+	    case Uncharted2ToneMapping:
+	      toneMappingName = "Uncharted2";
+	      break;
 
-			case ReinhardToneMapping:
-				toneMappingName = 'Reinhard';
-				break;
+	    case CineonToneMapping:
+	      toneMappingName = "OptimizedCineon";
+	      break;
 
-			case Uncharted2ToneMapping:
-				toneMappingName = 'Uncharted2';
-				break;
+	    default:
+	      throw new Error("unsupported toneMapping: " + toneMapping);
+	  }
 
-			case CineonToneMapping:
-				toneMappingName = 'OptimizedCineon';
-				break;
-
-			default:
-				throw new Error( 'unsupported toneMapping: ' + toneMapping );
-
-		}
-
-		return 'vec3 ' + functionName + '( vec3 color ) { return ' + toneMappingName + 'ToneMapping( color ); }';
-
+	  return (
+	    "vec3 " +
+	    functionName +
+	    "( vec3 color ) { return " +
+	    toneMappingName +
+	    "ToneMapping( color ); }"
+	  );
 	}
 
-	function generateExtensions( extensions, parameters, rendererExtensions ) {
+	function generateExtensions(extensions, parameters, rendererExtensions) {
+	  extensions = extensions || {};
 
-		extensions = extensions || {};
+	  var chunks = [
+	    extensions.derivatives ||
+	    parameters.envMapCubeUV ||
+	    parameters.bumpMap ||
+	    (parameters.normalMap && !parameters.objectSpaceNormalMap) ||
+	    parameters.flatShading
+	      ? "#extension GL_OES_standard_derivatives : enable"
+	      : "",
+	    (extensions.fragDepth || parameters.logarithmicDepthBuffer) &&
+	    rendererExtensions.get("EXT_frag_depth")
+	      ? "#extension GL_EXT_frag_depth : enable"
+	      : "",
+	    extensions.drawBuffers && rendererExtensions.get("WEBGL_draw_buffers")
+	      ? "#extension GL_EXT_draw_buffers : require"
+	      : "",
+	    (extensions.shaderTextureLOD || parameters.envMap) &&
+	    rendererExtensions.get("EXT_shader_texture_lod")
+	      ? "#extension GL_EXT_shader_texture_lod : enable"
+	      : "",
+	  ];
 
-		var chunks = [
-			( extensions.derivatives || parameters.envMapCubeUV || parameters.bumpMap || ( parameters.normalMap && ! parameters.objectSpaceNormalMap ) || parameters.flatShading ) ? '#extension GL_OES_standard_derivatives : enable' : '',
-			( extensions.fragDepth || parameters.logarithmicDepthBuffer ) && rendererExtensions.get( 'EXT_frag_depth' ) ? '#extension GL_EXT_frag_depth : enable' : '',
-			( extensions.drawBuffers ) && rendererExtensions.get( 'WEBGL_draw_buffers' ) ? '#extension GL_EXT_draw_buffers : require' : '',
-			( extensions.shaderTextureLOD || parameters.envMap ) && rendererExtensions.get( 'EXT_shader_texture_lod' ) ? '#extension GL_EXT_shader_texture_lod : enable' : ''
-		];
-
-		return chunks.filter( filterEmptyLine ).join( '\n' );
-
+	  return chunks.filter(filterEmptyLine).join("\n");
 	}
 
-	function generateDefines( defines ) {
+	function generateDefines(defines) {
+	  var chunks = [];
 
-		var chunks = [];
+	  for (var name in defines) {
+	    var value = defines[name];
 
-		for ( var name in defines ) {
+	    if (value === false) continue;
 
-			var value = defines[ name ];
+	    chunks.push("#define " + name + " " + value);
+	  }
 
-			if ( value === false ) continue;
-
-			chunks.push( '#define ' + name + ' ' + value );
-
-		}
-
-		return chunks.join( '\n' );
-
+	  return chunks.join("\n");
 	}
 
-	function fetchAttributeLocations( gl, program ) {
+	function fetchAttributeLocations(gl, program) {
+	  var attributes = {};
 
-		var attributes = {};
+	  var n = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
 
-		var n = gl.getProgramParameter( program, gl.ACTIVE_ATTRIBUTES );
+	  for (var i = 0; i < n; i++) {
+	    var info = gl.getActiveAttrib(program, i);
+	    var name = info.name;
 
-		for ( var i = 0; i < n; i ++ ) {
+	    // console.log( 'THREE.WebGLProgram: ACTIVE VERTEX ATTRIBUTE:', name, i );
 
-			var info = gl.getActiveAttrib( program, i );
-			var name = info.name;
+	    attributes[name] = gl.getAttribLocation(program, name);
+	  }
 
-			// console.log( 'THREE.WebGLProgram: ACTIVE VERTEX ATTRIBUTE:', name, i );
-
-			attributes[ name ] = gl.getAttribLocation( program, name );
-
-		}
-
-		return attributes;
-
+	  return attributes;
 	}
 
-	function filterEmptyLine( string ) {
-
-		return string !== '';
-
+	function filterEmptyLine(string) {
+	  return string !== "";
 	}
 
-	function replaceLightNums( string, parameters ) {
-
-		return string
-			.replace( /NUM_DIR_LIGHTS/g, parameters.numDirLights )
-			.replace( /NUM_SPOT_LIGHTS/g, parameters.numSpotLights )
-			.replace( /NUM_RECT_AREA_LIGHTS/g, parameters.numRectAreaLights )
-			.replace( /NUM_POINT_LIGHTS/g, parameters.numPointLights )
-			.replace( /NUM_HEMI_LIGHTS/g, parameters.numHemiLights );
-
+	function replaceLightNums(string, parameters) {
+	  return string
+	    .replace(/NUM_DIR_LIGHTS/g, parameters.numDirLights)
+	    .replace(/NUM_SPOT_LIGHTS/g, parameters.numSpotLights)
+	    .replace(/NUM_RECT_AREA_LIGHTS/g, parameters.numRectAreaLights)
+	    .replace(/NUM_POINT_LIGHTS/g, parameters.numPointLights)
+	    .replace(/NUM_HEMI_LIGHTS/g, parameters.numHemiLights);
 	}
 
-	function replaceClippingPlaneNums( string, parameters ) {
-
-		return string
-			.replace( /NUM_CLIPPING_PLANES/g, parameters.numClippingPlanes )
-			.replace( /UNION_CLIPPING_PLANES/g, ( parameters.numClippingPlanes - parameters.numClipIntersection ) );
-
+	function replaceClippingPlaneNums(string, parameters) {
+	  return string
+	    .replace(/NUM_CLIPPING_PLANES/g, parameters.numClippingPlanes)
+	    .replace(
+	      /UNION_CLIPPING_PLANES/g,
+	      parameters.numClippingPlanes - parameters.numClipIntersection
+	    );
 	}
 
-	function parseIncludes( string ) {
+	function parseIncludes(string) {
+	  var pattern = /^[ \t]*#include +<([\w\d./]+)>/gm;
 
-		var pattern = /^[ \t]*#include +<([\w\d./]+)>/gm;
+	  function replace(match, include) {
+	    var replace = ShaderChunk[include];
 
-		function replace( match, include ) {
+	    if (replace === undefined) {
+	      throw new Error("Can not resolve #include <" + include + ">");
+	    }
 
-			var replace = ShaderChunk[ include ];
+	    return parseIncludes(replace);
+	  }
 
-			if ( replace === undefined ) {
-
-				throw new Error( 'Can not resolve #include <' + include + '>' );
-
-			}
-
-			return parseIncludes( replace );
-
-		}
-
-		return string.replace( pattern, replace );
-
+	  return string.replace(pattern, replace);
 	}
 
-	function unrollLoops( string ) {
+	function unrollLoops(string) {
+	  var pattern =
+	    /#pragma unroll_loop[\s]+?for \( int i \= (\d+)\; i < (\d+)\; i \+\+ \) \{([\s\S]+?)(?=\})\}/g;
 
-		var pattern = /#pragma unroll_loop[\s]+?for \( int i \= (\d+)\; i < (\d+)\; i \+\+ \) \{([\s\S]+?)(?=\})\}/g;
+	  function replace(match, start, end, snippet) {
+	    var unroll = "";
 
-		function replace( match, start, end, snippet ) {
+	    for (var i = parseInt(start); i < parseInt(end); i++) {
+	      unroll += snippet.replace(/\[ i \]/g, "[ " + i + " ]");
+	    }
 
-			var unroll = '';
+	    return unroll;
+	  }
 
-			for ( var i = parseInt( start ); i < parseInt( end ); i ++ ) {
-
-				unroll += snippet.replace( /\[ i \]/g, '[ ' + i + ' ]' );
-
-			}
-
-			return unroll;
-
-		}
-
-		return string.replace( pattern, replace );
-
+	  return string.replace(pattern, replace);
 	}
 
-	function WebGLProgram( renderer, extensions, code, material, shader, parameters, capabilities ) {
+	function WebGLProgram(
+	  renderer,
+	  extensions,
+	  code,
+	  material,
+	  shader,
+	  parameters,
+	  capabilities
+	) {
+	  var gl = renderer.context;
+
+	  var defines = material.defines;
+
+	  var vertexShader = shader.vertexShader;
+	  var fragmentShader = shader.fragmentShader;
 
-		var gl = renderer.context;
+	  var shadowMapTypeDefine = "SHADOWMAP_TYPE_BASIC";
 
-		var defines = material.defines;
+	  if (parameters.shadowMapType === PCFShadowMap) {
+	    shadowMapTypeDefine = "SHADOWMAP_TYPE_PCF";
+	  } else if (parameters.shadowMapType === PCFSoftShadowMap) {
+	    shadowMapTypeDefine = "SHADOWMAP_TYPE_PCF_SOFT";
+	  }
 
-		var vertexShader = shader.vertexShader;
-		var fragmentShader = shader.fragmentShader;
+	  var envMapTypeDefine = "ENVMAP_TYPE_CUBE";
+	  var envMapModeDefine = "ENVMAP_MODE_REFLECTION";
+	  var envMapBlendingDefine = "ENVMAP_BLENDING_MULTIPLY";
+
+	  if (parameters.envMap) {
+	    switch (material.envMap.mapping) {
+	      case CubeReflectionMapping:
+	      case CubeRefractionMapping:
+	        envMapTypeDefine = "ENVMAP_TYPE_CUBE";
+	        break;
+
+	      case CubeUVReflectionMapping:
+	      case CubeUVRefractionMapping:
+	        envMapTypeDefine = "ENVMAP_TYPE_CUBE_UV";
+	        break;
+
+	      case EquirectangularReflectionMapping:
+	      case EquirectangularRefractionMapping:
+	        envMapTypeDefine = "ENVMAP_TYPE_EQUIREC";
+	        break;
+
+	      case SphericalReflectionMapping:
+	        envMapTypeDefine = "ENVMAP_TYPE_SPHERE";
+	        break;
+	    }
+
+	    switch (material.envMap.mapping) {
+	      case CubeRefractionMapping:
+	      case EquirectangularRefractionMapping:
+	        envMapModeDefine = "ENVMAP_MODE_REFRACTION";
+	        break;
+	    }
+
+	    switch (material.combine) {
+	      case MultiplyOperation:
+	        envMapBlendingDefine = "ENVMAP_BLENDING_MULTIPLY";
+	        break;
+
+	      case MixOperation:
+	        envMapBlendingDefine = "ENVMAP_BLENDING_MIX";
+	        break;
+
+	      case AddOperation:
+	        envMapBlendingDefine = "ENVMAP_BLENDING_ADD";
+	        break;
+	    }
+	  }
+
+	  var gammaFactorDefine = renderer.gammaFactor > 0 ? renderer.gammaFactor : 1.0;
+
+	  // console.log( 'building new program ' );
+
+	  //
+
+	  var customExtensions = capabilities.isWebGL2
+	    ? ""
+	    : generateExtensions(material.extensions, parameters, extensions);
+
+	  var customDefines = generateDefines(defines);
+
+	  //
+
+	  var program = gl.createProgram();
+
+	  var prefixVertex, prefixFragment;
+
+	  if (material.isRawShaderMaterial) {
+	    prefixVertex = [customDefines].filter(filterEmptyLine).join("\n");
+
+	    if (prefixVertex.length > 0) {
+	      prefixVertex += "\n";
+	    }
+
+	    prefixFragment = [customExtensions, customDefines]
+	      .filter(filterEmptyLine)
+	      .join("\n");
+
+	    if (prefixFragment.length > 0) {
+	      prefixFragment += "\n";
+	    }
+	  } else {
+	    prefixVertex = [
+	      "precision " + parameters.precision + " float;",
+	      "precision " + parameters.precision + " int;",
 
-		var shadowMapTypeDefine = 'SHADOWMAP_TYPE_BASIC';
+	      "#define SHADER_NAME " + shader.name,
 
-		if ( parameters.shadowMapType === PCFShadowMap ) {
+	      customDefines,
 
-			shadowMapTypeDefine = 'SHADOWMAP_TYPE_PCF';
+	      parameters.supportsVertexTextures ? "#define VERTEX_TEXTURES" : "",
 
-		} else if ( parameters.shadowMapType === PCFSoftShadowMap ) {
+	      "#define GAMMA_FACTOR " + gammaFactorDefine,
 
-			shadowMapTypeDefine = 'SHADOWMAP_TYPE_PCF_SOFT';
+	      "#define MAX_BONES " + parameters.maxBones,
+	      parameters.useFog && parameters.fog ? "#define USE_FOG" : "",
+	      parameters.useFog && parameters.fogExp ? "#define FOG_EXP2" : "",
 
-		}
+	      parameters.map ? "#define USE_MAP" : "",
+	      parameters.envMap ? "#define USE_ENVMAP" : "",
+	      parameters.envMap ? "#define " + envMapModeDefine : "",
+	      parameters.lightMap ? "#define USE_LIGHTMAP" : "",
+	      parameters.aoMap ? "#define USE_AOMAP" : "",
+	      parameters.emissiveMap ? "#define USE_EMISSIVEMAP" : "",
+	      parameters.bumpMap ? "#define USE_BUMPMAP" : "",
+	      parameters.normalMap ? "#define USE_NORMALMAP" : "",
+	      parameters.normalMap && parameters.objectSpaceNormalMap
+	        ? "#define OBJECTSPACE_NORMALMAP"
+	        : "",
+	      parameters.displacementMap && parameters.supportsVertexTextures
+	        ? "#define USE_DISPLACEMENTMAP"
+	        : "",
+	      parameters.specularMap ? "#define USE_SPECULARMAP" : "",
+	      parameters.roughnessMap ? "#define USE_ROUGHNESSMAP" : "",
+	      parameters.metalnessMap ? "#define USE_METALNESSMAP" : "",
+	      parameters.alphaMap ? "#define USE_ALPHAMAP" : "",
+	      parameters.vertexColors ? "#define USE_COLOR" : "",
 
-		var envMapTypeDefine = 'ENVMAP_TYPE_CUBE';
-		var envMapModeDefine = 'ENVMAP_MODE_REFLECTION';
-		var envMapBlendingDefine = 'ENVMAP_BLENDING_MULTIPLY';
+	      parameters.flatShading ? "#define FLAT_SHADED" : "",
 
-		if ( parameters.envMap ) {
+	      parameters.skinning ? "#define USE_SKINNING" : "",
+	      parameters.useVertexTexture ? "#define BONE_TEXTURE" : "",
 
-			switch ( material.envMap.mapping ) {
+	      parameters.morphTargets ? "#define USE_MORPHTARGETS" : "",
+	      parameters.morphNormals && parameters.flatShading === false
+	        ? "#define USE_MORPHNORMALS"
+	        : "",
+	      parameters.doubleSided ? "#define DOUBLE_SIDED" : "",
+	      parameters.flipSided ? "#define FLIP_SIDED" : "",
 
-				case CubeReflectionMapping:
-				case CubeRefractionMapping:
-					envMapTypeDefine = 'ENVMAP_TYPE_CUBE';
-					break;
+	      parameters.shadowMapEnabled ? "#define USE_SHADOWMAP" : "",
+	      parameters.shadowMapEnabled ? "#define " + shadowMapTypeDefine : "",
+
+	      parameters.sizeAttenuation ? "#define USE_SIZEATTENUATION" : "",
+
+	      parameters.logarithmicDepthBuffer ? "#define USE_LOGDEPTHBUF" : "",
+	      parameters.logarithmicDepthBuffer &&
+	      (capabilities.isWebGL2 || extensions.get("EXT_frag_depth"))
+	        ? "#define USE_LOGDEPTHBUF_EXT"
+	        : "",
 
-				case CubeUVReflectionMapping:
-				case CubeUVRefractionMapping:
-					envMapTypeDefine = 'ENVMAP_TYPE_CUBE_UV';
-					break;
+	      "uniform mat4 modelMatrix;",
+	      "uniform mat4 modelViewMatrix;",
+	      "uniform mat4 projectionMatrix;",
+	      "uniform mat4 viewMatrix;",
+	      "uniform mat3 normalMatrix;",
+	      "uniform vec3 cameraPosition;",
 
-				case EquirectangularReflectionMapping:
-				case EquirectangularRefractionMapping:
-					envMapTypeDefine = 'ENVMAP_TYPE_EQUIREC';
-					break;
+	      "attribute vec3 position;",
+	      "attribute vec3 normal;",
+	      "attribute vec2 uv;",
 
-				case SphericalReflectionMapping:
-					envMapTypeDefine = 'ENVMAP_TYPE_SPHERE';
-					break;
+	      "#ifdef USE_COLOR",
 
-			}
+	      "	attribute vec3 color;",
 
-			switch ( material.envMap.mapping ) {
+	      "#endif",
 
-				case CubeRefractionMapping:
-				case EquirectangularRefractionMapping:
-					envMapModeDefine = 'ENVMAP_MODE_REFRACTION';
-					break;
+	      "#ifdef USE_MORPHTARGETS",
 
-			}
+	      "	attribute vec3 morphTarget0;",
+	      "	attribute vec3 morphTarget1;",
+	      "	attribute vec3 morphTarget2;",
+	      "	attribute vec3 morphTarget3;",
 
-			switch ( material.combine ) {
+	      "	#ifdef USE_MORPHNORMALS",
 
-				case MultiplyOperation:
-					envMapBlendingDefine = 'ENVMAP_BLENDING_MULTIPLY';
-					break;
+	      "		attribute vec3 morphNormal0;",
+	      "		attribute vec3 morphNormal1;",
+	      "		attribute vec3 morphNormal2;",
+	      "		attribute vec3 morphNormal3;",
+
+	      "	#else",
 
-				case MixOperation:
-					envMapBlendingDefine = 'ENVMAP_BLENDING_MIX';
-					break;
-
-				case AddOperation:
-					envMapBlendingDefine = 'ENVMAP_BLENDING_ADD';
-					break;
-
-			}
-
-		}
-
-		var gammaFactorDefine = ( renderer.gammaFactor > 0 ) ? renderer.gammaFactor : 1.0;
-
-		// console.log( 'building new program ' );
-
-		//
-
-		var customExtensions = capabilities.isWebGL2 ? '' : generateExtensions( material.extensions, parameters, extensions );
-
-		var customDefines = generateDefines( defines );
-
-		//
-
-		var program = gl.createProgram();
-
-		var prefixVertex, prefixFragment;
-
-		if ( material.isRawShaderMaterial ) {
-
-			prefixVertex = [
-
-				customDefines
-
-			].filter( filterEmptyLine ).join( '\n' );
-
-			if ( prefixVertex.length > 0 ) {
-
-				prefixVertex += '\n';
-
-			}
-
-			prefixFragment = [
-
-				customExtensions,
-				customDefines
-
-			].filter( filterEmptyLine ).join( '\n' );
-
-			if ( prefixFragment.length > 0 ) {
-
-				prefixFragment += '\n';
-
-			}
-
-		} else {
-
-			prefixVertex = [
-
-				'precision ' + parameters.precision + ' float;',
-				'precision ' + parameters.precision + ' int;',
-
-				'#define SHADER_NAME ' + shader.name,
-
-				customDefines,
-
-				parameters.supportsVertexTextures ? '#define VERTEX_TEXTURES' : '',
-
-				'#define GAMMA_FACTOR ' + gammaFactorDefine,
-
-				'#define MAX_BONES ' + parameters.maxBones,
-				( parameters.useFog && parameters.fog ) ? '#define USE_FOG' : '',
-				( parameters.useFog && parameters.fogExp ) ? '#define FOG_EXP2' : '',
-
-				parameters.map ? '#define USE_MAP' : '',
-				parameters.envMap ? '#define USE_ENVMAP' : '',
-				parameters.envMap ? '#define ' + envMapModeDefine : '',
-				parameters.lightMap ? '#define USE_LIGHTMAP' : '',
-				parameters.aoMap ? '#define USE_AOMAP' : '',
-				parameters.emissiveMap ? '#define USE_EMISSIVEMAP' : '',
-				parameters.bumpMap ? '#define USE_BUMPMAP' : '',
-				parameters.normalMap ? '#define USE_NORMALMAP' : '',
-				( parameters.normalMap && parameters.objectSpaceNormalMap ) ? '#define OBJECTSPACE_NORMALMAP' : '',
-				parameters.displacementMap && parameters.supportsVertexTextures ? '#define USE_DISPLACEMENTMAP' : '',
-				parameters.specularMap ? '#define USE_SPECULARMAP' : '',
-				parameters.roughnessMap ? '#define USE_ROUGHNESSMAP' : '',
-				parameters.metalnessMap ? '#define USE_METALNESSMAP' : '',
-				parameters.alphaMap ? '#define USE_ALPHAMAP' : '',
-				parameters.vertexColors ? '#define USE_COLOR' : '',
-
-				parameters.flatShading ? '#define FLAT_SHADED' : '',
-
-				parameters.skinning ? '#define USE_SKINNING' : '',
-				parameters.useVertexTexture ? '#define BONE_TEXTURE' : '',
-
-				parameters.morphTargets ? '#define USE_MORPHTARGETS' : '',
-				parameters.morphNormals && parameters.flatShading === false ? '#define USE_MORPHNORMALS' : '',
-				parameters.doubleSided ? '#define DOUBLE_SIDED' : '',
-				parameters.flipSided ? '#define FLIP_SIDED' : '',
-
-				parameters.shadowMapEnabled ? '#define USE_SHADOWMAP' : '',
-				parameters.shadowMapEnabled ? '#define ' + shadowMapTypeDefine : '',
-
-				parameters.sizeAttenuation ? '#define USE_SIZEATTENUATION' : '',
-
-				parameters.logarithmicDepthBuffer ? '#define USE_LOGDEPTHBUF' : '',
-				parameters.logarithmicDepthBuffer && ( capabilities.isWebGL2 || extensions.get( 'EXT_frag_depth' ) ) ? '#define USE_LOGDEPTHBUF_EXT' : '',
-
-				'uniform mat4 modelMatrix;',
-				'uniform mat4 modelViewMatrix;',
-				'uniform mat4 projectionMatrix;',
-				'uniform mat4 viewMatrix;',
-				'uniform mat3 normalMatrix;',
-				'uniform vec3 cameraPosition;',
-
-				'attribute vec3 position;',
-				'attribute vec3 normal;',
-				'attribute vec2 uv;',
-
-				'#ifdef USE_COLOR',
-
-				'	attribute vec3 color;',
-
-				'#endif',
-
-				'#ifdef USE_MORPHTARGETS',
-
-				'	attribute vec3 morphTarget0;',
-				'	attribute vec3 morphTarget1;',
-				'	attribute vec3 morphTarget2;',
-				'	attribute vec3 morphTarget3;',
-
-				'	#ifdef USE_MORPHNORMALS',
-
-				'		attribute vec3 morphNormal0;',
-				'		attribute vec3 morphNormal1;',
-				'		attribute vec3 morphNormal2;',
-				'		attribute vec3 morphNormal3;',
-
-				'	#else',
-
-				'		attribute vec3 morphTarget4;',
-				'		attribute vec3 morphTarget5;',
-				'		attribute vec3 morphTarget6;',
-				'		attribute vec3 morphTarget7;',
-
-				'	#endif',
-
-				'#endif',
-
-				'#ifdef USE_SKINNING',
-
-				'	attribute vec4 skinIndex;',
-				'	attribute vec4 skinWeight;',
-
-				'#endif',
-
-				'\n'
-
-			].filter( filterEmptyLine ).join( '\n' );
-
-			prefixFragment = [
-
-				customExtensions,
-
-				'precision ' + parameters.precision + ' float;',
-				'precision ' + parameters.precision + ' int;',
-
-				'#define SHADER_NAME ' + shader.name,
-
-				customDefines,
-
-				parameters.alphaTest ? '#define ALPHATEST ' + parameters.alphaTest + ( parameters.alphaTest % 1 ? '' : '.0' ) : '', // add '.0' if integer
-
-				'#define GAMMA_FACTOR ' + gammaFactorDefine,
-
-				( parameters.useFog && parameters.fog ) ? '#define USE_FOG' : '',
-				( parameters.useFog && parameters.fogExp ) ? '#define FOG_EXP2' : '',
-
-				parameters.map ? '#define USE_MAP' : '',
-				parameters.envMap ? '#define USE_ENVMAP' : '',
-				parameters.envMap ? '#define ' + envMapTypeDefine : '',
-				parameters.envMap ? '#define ' + envMapModeDefine : '',
-				parameters.envMap ? '#define ' + envMapBlendingDefine : '',
-				parameters.lightMap ? '#define USE_LIGHTMAP' : '',
-				parameters.aoMap ? '#define USE_AOMAP' : '',
-				parameters.emissiveMap ? '#define USE_EMISSIVEMAP' : '',
-				parameters.bumpMap ? '#define USE_BUMPMAP' : '',
-				parameters.normalMap ? '#define USE_NORMALMAP' : '',
-				( parameters.normalMap && parameters.objectSpaceNormalMap ) ? '#define OBJECTSPACE_NORMALMAP' : '',
-				parameters.specularMap ? '#define USE_SPECULARMAP' : '',
-				parameters.roughnessMap ? '#define USE_ROUGHNESSMAP' : '',
-				parameters.metalnessMap ? '#define USE_METALNESSMAP' : '',
-				parameters.alphaMap ? '#define USE_ALPHAMAP' : '',
-				parameters.vertexColors ? '#define USE_COLOR' : '',
-
-				parameters.gradientMap ? '#define USE_GRADIENTMAP' : '',
-
-				parameters.flatShading ? '#define FLAT_SHADED' : '',
-
-				parameters.doubleSided ? '#define DOUBLE_SIDED' : '',
-				parameters.flipSided ? '#define FLIP_SIDED' : '',
-
-				parameters.shadowMapEnabled ? '#define USE_SHADOWMAP' : '',
-				parameters.shadowMapEnabled ? '#define ' + shadowMapTypeDefine : '',
-
-				parameters.premultipliedAlpha ? '#define PREMULTIPLIED_ALPHA' : '',
-
-				parameters.physicallyCorrectLights ? '#define PHYSICALLY_CORRECT_LIGHTS' : '',
-
-				parameters.logarithmicDepthBuffer ? '#define USE_LOGDEPTHBUF' : '',
-				parameters.logarithmicDepthBuffer && ( capabilities.isWebGL2 || extensions.get( 'EXT_frag_depth' ) ) ? '#define USE_LOGDEPTHBUF_EXT' : '',
-
-				parameters.envMap && ( capabilities.isWebGL2 || extensions.get( 'EXT_shader_texture_lod' ) ) ? '#define TEXTURE_LOD_EXT' : '',
-
-				'uniform mat4 viewMatrix;',
-				'uniform vec3 cameraPosition;',
-
-				( parameters.toneMapping !== NoToneMapping ) ? '#define TONE_MAPPING' : '',
-				( parameters.toneMapping !== NoToneMapping ) ? ShaderChunk[ 'tonemapping_pars_fragment' ] : '', // this code is required here because it is used by the toneMapping() function defined below
-				( parameters.toneMapping !== NoToneMapping ) ? getToneMappingFunction( 'toneMapping', parameters.toneMapping ) : '',
-
-				parameters.dithering ? '#define DITHERING' : '',
-
-				( parameters.outputEncoding || parameters.mapEncoding || parameters.envMapEncoding || parameters.emissiveMapEncoding ) ? ShaderChunk[ 'encodings_pars_fragment' ] : '', // this code is required here because it is used by the various encoding/decoding function defined below
-				parameters.mapEncoding ? getTexelDecodingFunction( 'mapTexelToLinear', parameters.mapEncoding ) : '',
-				parameters.envMapEncoding ? getTexelDecodingFunction( 'envMapTexelToLinear', parameters.envMapEncoding ) : '',
-				parameters.emissiveMapEncoding ? getTexelDecodingFunction( 'emissiveMapTexelToLinear', parameters.emissiveMapEncoding ) : '',
-				parameters.outputEncoding ? getTexelEncodingFunction( 'linearToOutputTexel', parameters.outputEncoding ) : '',
-
-				parameters.depthPacking ? '#define DEPTH_PACKING ' + material.depthPacking : '',
-
-				'\n'
-
-			].filter( filterEmptyLine ).join( '\n' );
-
-		}
-
-		vertexShader = parseIncludes( vertexShader );
-		vertexShader = replaceLightNums( vertexShader, parameters );
-		vertexShader = replaceClippingPlaneNums( vertexShader, parameters );
-
-		fragmentShader = parseIncludes( fragmentShader );
-		fragmentShader = replaceLightNums( fragmentShader, parameters );
-		fragmentShader = replaceClippingPlaneNums( fragmentShader, parameters );
-
-		vertexShader = unrollLoops( vertexShader );
-		fragmentShader = unrollLoops( fragmentShader );
-
-		if ( capabilities.isWebGL2 && ! material.isRawShaderMaterial ) {
-
-			var isGLSL3ShaderMaterial = false;
-
-			var versionRegex = /^\s*#version\s+300\s+es\s*\n/;
-
-			if ( material.isShaderMaterial &&
-				vertexShader.match( versionRegex ) !== null &&
-				fragmentShader.match( versionRegex ) !== null ) {
-
-				isGLSL3ShaderMaterial = true;
-
-				vertexShader = vertexShader.replace( versionRegex, '' );
-				fragmentShader = fragmentShader.replace( versionRegex, '' );
-
-			}
-
-			// GLSL 3.0 conversion
-			prefixVertex = [
-				'#version 300 es\n',
-				'#define attribute in',
-				'#define varying out',
-				'#define texture2D texture'
-			].join( '\n' ) + '\n' + prefixVertex;
-
-			prefixFragment = [
-				'#version 300 es\n',
-				'#define varying in',
-				isGLSL3ShaderMaterial ? '' : 'out highp vec4 pc_fragColor;',
-				isGLSL3ShaderMaterial ? '' : '#define gl_FragColor pc_fragColor',
-				'#define gl_FragDepthEXT gl_FragDepth',
-				'#define texture2D texture',
-				'#define textureCube texture',
-				'#define texture2DProj textureProj',
-				'#define texture2DLodEXT textureLod',
-				'#define texture2DProjLodEXT textureProjLod',
-				'#define textureCubeLodEXT textureLod',
-				'#define texture2DGradEXT textureGrad',
-				'#define texture2DProjGradEXT textureProjGrad',
-				'#define textureCubeGradEXT textureGrad'
-			].join( '\n' ) + '\n' + prefixFragment;
-
-		}
-
-		var vertexGlsl = prefixVertex + vertexShader;
-		var fragmentGlsl = prefixFragment + fragmentShader;
-
-		// console.log( '*VERTEX*', vertexGlsl );
-		// console.log( '*FRAGMENT*', fragmentGlsl );
-
-		var glVertexShader = WebGLShader( gl, gl.VERTEX_SHADER, vertexGlsl );
-		var glFragmentShader = WebGLShader( gl, gl.FRAGMENT_SHADER, fragmentGlsl );
-
-		gl.attachShader( program, glVertexShader );
-		gl.attachShader( program, glFragmentShader );
-
-		// Force a particular attribute to index 0.
-
-		if ( material.index0AttributeName !== undefined ) {
-
-			gl.bindAttribLocation( program, 0, material.index0AttributeName );
-
-		} else if ( parameters.morphTargets === true ) {
-
-			// programs with morphTargets displace position out of attribute 0
-			gl.bindAttribLocation( program, 0, 'position' );
-
-		}
-
-		gl.linkProgram( program );
-
-		var programLog = gl.getProgramInfoLog( program ).trim();
-		var vertexLog = gl.getShaderInfoLog( glVertexShader ).trim();
-		var fragmentLog = gl.getShaderInfoLog( glFragmentShader ).trim();
-
-		var runnable = true;
-		var haveDiagnostics = true;
-
-		// console.log( '**VERTEX**', gl.getExtension( 'WEBGL_debug_shaders' ).getTranslatedShaderSource( glVertexShader ) );
-		// console.log( '**FRAGMENT**', gl.getExtension( 'WEBGL_debug_shaders' ).getTranslatedShaderSource( glFragmentShader ) );
-
-		if ( gl.getProgramParameter( program, gl.LINK_STATUS ) === false ) {
-
-			runnable = false;
-
-			console.error( 'THREE.WebGLProgram: shader error: ', gl.getError(), 'gl.VALIDATE_STATUS', gl.getProgramParameter( program, gl.VALIDATE_STATUS ), 'gl.getProgramInfoLog', programLog, vertexLog, fragmentLog );
-
-		} else if ( programLog !== '' ) {
-
-			console.warn( 'THREE.WebGLProgram: gl.getProgramInfoLog()', programLog );
-
-		} else if ( vertexLog === '' || fragmentLog === '' ) {
-
-			haveDiagnostics = false;
-
-		}
-
-		if ( haveDiagnostics ) {
-
-			this.diagnostics = {
-
-				runnable: runnable,
-				material: material,
-
-				programLog: programLog,
-
-				vertexShader: {
-
-					log: vertexLog,
-					prefix: prefixVertex
-
-				},
-
-				fragmentShader: {
-
-					log: fragmentLog,
-					prefix: prefixFragment
-
-				}
-
-			};
-
-		}
-
-		// clean up
-
-		gl.deleteShader( glVertexShader );
-		gl.deleteShader( glFragmentShader );
-
-		// set up caching for uniform locations
-
-		var cachedUniforms;
-
-		this.getUniforms = function () {
-
-			if ( cachedUniforms === undefined ) {
-
-				cachedUniforms = new WebGLUniforms( gl, program, renderer );
-
-			}
-
-			return cachedUniforms;
-
-		};
-
-		// set up caching for attribute locations
-
-		var cachedAttributes;
-
-		this.getAttributes = function () {
-
-			if ( cachedAttributes === undefined ) {
-
-				cachedAttributes = fetchAttributeLocations( gl, program );
-
-			}
-
-			return cachedAttributes;
-
-		};
-
-		// free resource
-
-		this.destroy = function () {
-
-			gl.deleteProgram( program );
-			this.program = undefined;
-
-		};
-
-		// DEPRECATED
-
-		Object.defineProperties( this, {
-
-			uniforms: {
-				get: function () {
-
-					console.warn( 'THREE.WebGLProgram: .uniforms is now .getUniforms().' );
-					return this.getUniforms();
-
-				}
-			},
-
-			attributes: {
-				get: function () {
-
-					console.warn( 'THREE.WebGLProgram: .attributes is now .getAttributes().' );
-					return this.getAttributes();
-
-				}
-			}
-
-		} );
-
-
-		//
-
-		this.name = shader.name;
-		this.id = programIdCount ++;
-		this.code = code;
-		this.usedTimes = 1;
-		this.program = program;
-		this.vertexShader = glVertexShader;
-		this.fragmentShader = glFragmentShader;
-
-		return this;
-
+	      "		attribute vec3 morphTarget4;",
+	      "		attribute vec3 morphTarget5;",
+	      "		attribute vec3 morphTarget6;",
+	      "		attribute vec3 morphTarget7;",
+
+	      "	#endif",
+
+	      "#endif",
+
+	      "#ifdef USE_SKINNING",
+
+	      "	attribute vec4 skinIndex;",
+	      "	attribute vec4 skinWeight;",
+
+	      "#endif",
+
+	      "\n",
+	    ]
+	      .filter(filterEmptyLine)
+	      .join("\n");
+
+	    prefixFragment = [
+	      customExtensions,
+
+	      "precision " + parameters.precision + " float;",
+	      "precision " + parameters.precision + " int;",
+
+	      "#define SHADER_NAME " + shader.name,
+
+	      customDefines,
+
+	      parameters.alphaTest
+	        ? "#define ALPHATEST " +
+	          parameters.alphaTest +
+	          (parameters.alphaTest % 1 ? "" : ".0")
+	        : "", // add '.0' if integer
+
+	      "#define GAMMA_FACTOR " + gammaFactorDefine,
+
+	      parameters.useFog && parameters.fog ? "#define USE_FOG" : "",
+	      parameters.useFog && parameters.fogExp ? "#define FOG_EXP2" : "",
+
+	      parameters.map ? "#define USE_MAP" : "",
+	      parameters.envMap ? "#define USE_ENVMAP" : "",
+	      parameters.envMap ? "#define " + envMapTypeDefine : "",
+	      parameters.envMap ? "#define " + envMapModeDefine : "",
+	      parameters.envMap ? "#define " + envMapBlendingDefine : "",
+	      parameters.lightMap ? "#define USE_LIGHTMAP" : "",
+	      parameters.aoMap ? "#define USE_AOMAP" : "",
+	      parameters.emissiveMap ? "#define USE_EMISSIVEMAP" : "",
+	      parameters.bumpMap ? "#define USE_BUMPMAP" : "",
+	      parameters.normalMap ? "#define USE_NORMALMAP" : "",
+	      parameters.normalMap && parameters.objectSpaceNormalMap
+	        ? "#define OBJECTSPACE_NORMALMAP"
+	        : "",
+	      parameters.specularMap ? "#define USE_SPECULARMAP" : "",
+	      parameters.roughnessMap ? "#define USE_ROUGHNESSMAP" : "",
+	      parameters.metalnessMap ? "#define USE_METALNESSMAP" : "",
+	      parameters.alphaMap ? "#define USE_ALPHAMAP" : "",
+	      parameters.vertexColors ? "#define USE_COLOR" : "",
+
+	      parameters.gradientMap ? "#define USE_GRADIENTMAP" : "",
+
+	      parameters.flatShading ? "#define FLAT_SHADED" : "",
+
+	      parameters.doubleSided ? "#define DOUBLE_SIDED" : "",
+	      parameters.flipSided ? "#define FLIP_SIDED" : "",
+
+	      parameters.shadowMapEnabled ? "#define USE_SHADOWMAP" : "",
+	      parameters.shadowMapEnabled ? "#define " + shadowMapTypeDefine : "",
+
+	      parameters.premultipliedAlpha ? "#define PREMULTIPLIED_ALPHA" : "",
+
+	      parameters.physicallyCorrectLights
+	        ? "#define PHYSICALLY_CORRECT_LIGHTS"
+	        : "",
+
+	      parameters.logarithmicDepthBuffer ? "#define USE_LOGDEPTHBUF" : "",
+	      parameters.logarithmicDepthBuffer &&
+	      (capabilities.isWebGL2 || extensions.get("EXT_frag_depth"))
+	        ? "#define USE_LOGDEPTHBUF_EXT"
+	        : "",
+
+	      parameters.envMap &&
+	      (capabilities.isWebGL2 || extensions.get("EXT_shader_texture_lod"))
+	        ? "#define TEXTURE_LOD_EXT"
+	        : "",
+
+	      "uniform mat4 viewMatrix;",
+	      "uniform vec3 cameraPosition;",
+
+	      parameters.toneMapping !== NoToneMapping ? "#define TONE_MAPPING" : "",
+	      parameters.toneMapping !== NoToneMapping
+	        ? ShaderChunk["tonemapping_pars_fragment"]
+	        : "", // this code is required here because it is used by the toneMapping() function defined below
+	      parameters.toneMapping !== NoToneMapping
+	        ? getToneMappingFunction("toneMapping", parameters.toneMapping)
+	        : "",
+
+	      parameters.dithering ? "#define DITHERING" : "",
+
+	      parameters.outputEncoding ||
+	      parameters.mapEncoding ||
+	      parameters.envMapEncoding ||
+	      parameters.emissiveMapEncoding
+	        ? ShaderChunk["encodings_pars_fragment"]
+	        : "", // this code is required here because it is used by the various encoding/decoding function defined below
+	      parameters.mapEncoding
+	        ? getTexelDecodingFunction("mapTexelToLinear", parameters.mapEncoding)
+	        : "",
+	      parameters.envMapEncoding
+	        ? getTexelDecodingFunction(
+	            "envMapTexelToLinear",
+	            parameters.envMapEncoding
+	          )
+	        : "",
+	      parameters.emissiveMapEncoding
+	        ? getTexelDecodingFunction(
+	            "emissiveMapTexelToLinear",
+	            parameters.emissiveMapEncoding
+	          )
+	        : "",
+	      parameters.outputEncoding
+	        ? getTexelEncodingFunction(
+	            "linearToOutputTexel",
+	            parameters.outputEncoding
+	          )
+	        : "",
+
+	      parameters.depthPacking
+	        ? "#define DEPTH_PACKING " + material.depthPacking
+	        : "",
+
+	      "\n",
+	    ]
+	      .filter(filterEmptyLine)
+	      .join("\n");
+	  }
+
+	  vertexShader = parseIncludes(vertexShader);
+	  vertexShader = replaceLightNums(vertexShader, parameters);
+	  vertexShader = replaceClippingPlaneNums(vertexShader, parameters);
+
+	  fragmentShader = parseIncludes(fragmentShader);
+	  fragmentShader = replaceLightNums(fragmentShader, parameters);
+	  fragmentShader = replaceClippingPlaneNums(fragmentShader, parameters);
+
+	  vertexShader = unrollLoops(vertexShader);
+	  fragmentShader = unrollLoops(fragmentShader);
+
+	  if (capabilities.isWebGL2 && !material.isRawShaderMaterial) {
+	    var isGLSL3ShaderMaterial = false;
+
+	    var versionRegex = /^\s*#version\s+300\s+es\s*\n/;
+
+	    if (
+	      material.isShaderMaterial &&
+	      vertexShader.match(versionRegex) !== null &&
+	      fragmentShader.match(versionRegex) !== null
+	    ) {
+	      isGLSL3ShaderMaterial = true;
+
+	      vertexShader = vertexShader.replace(versionRegex, "");
+	      fragmentShader = fragmentShader.replace(versionRegex, "");
+	    }
+
+	    // GLSL 3.0 conversion
+	    prefixVertex =
+	      [
+	        "#version 300 es\n",
+	        "#define attribute in",
+	        "#define varying out",
+	        "#define texture2D texture",
+	      ].join("\n") +
+	      "\n" +
+	      prefixVertex;
+
+	    prefixFragment =
+	      [
+	        "#version 300 es\n",
+	        "#define varying in",
+	        isGLSL3ShaderMaterial ? "" : "out highp vec4 pc_fragColor;",
+	        isGLSL3ShaderMaterial ? "" : "#define gl_FragColor pc_fragColor",
+	        "#define gl_FragDepthEXT gl_FragDepth",
+	        "#define texture2D texture",
+	        "#define textureCube texture",
+	        "#define texture2DProj textureProj",
+	        "#define texture2DLodEXT textureLod",
+	        "#define texture2DProjLodEXT textureProjLod",
+	        "#define textureCubeLodEXT textureLod",
+	        "#define texture2DGradEXT textureGrad",
+	        "#define texture2DProjGradEXT textureProjGrad",
+	        "#define textureCubeGradEXT textureGrad",
+	      ].join("\n") +
+	      "\n" +
+	      prefixFragment;
+	  }
+
+	  var vertexGlsl = prefixVertex + vertexShader;
+	  var fragmentGlsl = prefixFragment + fragmentShader;
+
+	  // console.log( '*VERTEX*', vertexGlsl );
+	  // console.log( '*FRAGMENT*', fragmentGlsl );
+
+	  var glVertexShader = WebGLShader(gl, gl.VERTEX_SHADER, vertexGlsl);
+	  var glFragmentShader = WebGLShader(gl, gl.FRAGMENT_SHADER, fragmentGlsl);
+
+	  gl.attachShader(program, glVertexShader);
+	  gl.attachShader(program, glFragmentShader);
+
+	  // Force a particular attribute to index 0.
+
+	  if (material.index0AttributeName !== undefined) {
+	    gl.bindAttribLocation(program, 0, material.index0AttributeName);
+	  } else if (parameters.morphTargets === true) {
+	    // programs with morphTargets displace position out of attribute 0
+	    gl.bindAttribLocation(program, 0, "position");
+	  }
+
+	  gl.linkProgram(program);
+
+	  // clean up
+
+	  gl.deleteShader(glVertexShader);
+	  gl.deleteShader(glFragmentShader);
+
+	  // set up caching for uniform locations
+
+	  var cachedUniforms;
+
+	  this.getUniforms = function () {
+	    if (cachedUniforms === undefined) {
+	      cachedUniforms = new WebGLUniforms(gl, program, renderer);
+	    }
+
+	    return cachedUniforms;
+	  };
+
+	  // set up caching for attribute locations
+
+	  var cachedAttributes;
+
+	  this.getAttributes = function () {
+	    if (cachedAttributes === undefined) {
+	      cachedAttributes = fetchAttributeLocations(gl, program);
+	    }
+
+	    return cachedAttributes;
+	  };
+
+	  // free resource
+
+	  this.destroy = function () {
+	    gl.deleteProgram(program);
+	    this.program = undefined;
+	  };
+
+	  // DEPRECATED
+
+	  Object.defineProperties(this, {
+	    uniforms: {
+	      get: function () {
+	        console.warn("THREE.WebGLProgram: .uniforms is now .getUniforms().");
+	        return this.getUniforms();
+	      },
+	    },
+
+	    attributes: {
+	      get: function () {
+	        console.warn(
+	          "THREE.WebGLProgram: .attributes is now .getAttributes()."
+	        );
+	        return this.getAttributes();
+	      },
+	    },
+	  });
+
+	  //
+
+	  this.name = shader.name;
+	  this.id = programIdCount++;
+	  this.code = code;
+	  this.usedTimes = 1;
+	  this.program = program;
+	  this.vertexShader = glVertexShader;
+	  this.fragmentShader = glFragmentShader;
+
+	  return this;
 	}
 
 	/**

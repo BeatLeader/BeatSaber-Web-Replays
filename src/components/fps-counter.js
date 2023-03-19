@@ -1,3 +1,6 @@
+var times = [];
+var captureThis = this;
+
 AFRAME.registerComponent('fps-counter', {
 	schema: {
 		enabled: {default: false},
@@ -10,9 +13,6 @@ AFRAME.registerComponent('fps-counter', {
 	},
 
 	setupFps: function () {
-		const times = [];
-		let captureThis = this;
-
 		function refreshLoop() {
 			window.requestAnimationFrame(() => {
 				const now = performance.now();
@@ -20,17 +20,21 @@ AFRAME.registerComponent('fps-counter', {
 					times.shift();
 				}
 				times.push(now);
-				fps = times.length;
-				captureThis.showFps(times.length, captureThis);
 				refreshLoop();
 			});
 		}
 
+		captureThis = this;
+
 		refreshLoop();
+		this.showFps();
 	},
-	showFps: function (fps, captureThis) {
+
+	showFps: function () {
 		if (captureThis.data.enabled) {
-			captureThis.label.setAttribute('text', 'value', 'Your: ' + fps + '\nReplay: ' + captureThis.replayFps);
+			captureThis.label.setAttribute('text', 'value', 'FPS\nyour: ' + times.length + '\nreplay: ' + captureThis.replayFps);
 		}
+
+		setTimeout(captureThis.showFps, 100);
 	},
 });

@@ -1,7 +1,3 @@
-function beatsaverCdnCors(url) {
-	return url.replace('https://eu.cdn.beatsaver.com/', '/cors/beat-saver-cdn/');
-}
-
 // From game
 const _noteLinesCount = 4;
 const _noteLinesDistance = 0.6;
@@ -194,7 +190,6 @@ function rotateAboutPoint(obj, point, axis, theta, pointIsWorld) {
 	}
 }
 
-module.exports.beatsaverCdnCors = beatsaverCdnCors;
 module.exports.getHorizontalPosition = getHorizontalPosition;
 module.exports.getVerticalPosition = getVerticalPosition;
 module.exports.getLowerVerticalPosition = getLowerVerticalPosition;

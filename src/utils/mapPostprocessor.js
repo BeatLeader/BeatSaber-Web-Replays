@@ -201,11 +201,11 @@ function addRabbitJumps(currentTimeSlice, currentTimeSliceTime, previousTimeSlic
 	});
 
 	Object.keys(columns).forEach(key => {
-		columns[key]
-			.sort(x => x._lineLayer)
-			.forEach((element, index) => {
-				element._beforeJumpLineLayer = index;
-			});
+		var column = columns[key];
+		column.sort(x => (a, b) => a._lineLayer - b._lineLayer);
+		column.forEach((element, index) => {
+			element._beforeJumpLineLayer = index;
+		});
 	});
 
 	if (currentTimeSlice.length != 2) return;

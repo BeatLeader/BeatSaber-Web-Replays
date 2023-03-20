@@ -44,7 +44,7 @@ AFRAME.registerComponent('song-controls', {
 				() => {
 					setTimeout(() => {
 						if (queryParamTime >= 0 && queryParamTime <= this.song.source.buffer.duration) {
-							this.seek(queryParamTime);
+							this.seek(queryParamTime, false);
 							queryParamTime = undefined;
 						}
 					}, 100);
@@ -391,6 +391,7 @@ AFRAME.registerComponent('song-controls', {
 		this.el.sceneEl.addEventListener('gamemenurestart', e => {
 			this.finished = false;
 			togglePause(true);
+			this.el.components['beat-generator'].seek(0);
 		});
 		this.el.sceneEl.addEventListener('usergesturereceive', e => {
 			if (!this.song.data.isPaused) {
@@ -1011,7 +1012,7 @@ AFRAME.registerComponent('song-controls', {
 		this.songProgress.innerHTML = formatSeconds(this.song.getCurrentTime());
 	},
 
-	seek: function (time) {
+	seek: function (time, clearBeats = true) {
 		this.song.stopAudio();
 
 		// Get new audio buffer source (needed every time audio is stopped).
@@ -1023,8 +1024,10 @@ AFRAME.registerComponent('song-controls', {
 
 				this.song.startAudio(time);
 
-				// Tell beat generator about seek.
-				this.el.components['beat-generator'].seek(time);
+				if (clearBeats) {
+					// Tell beat generator about seek.
+					this.el.components['beat-generator'].seek(time);
+				}
 
 				this.updatePlayhead(true);
 			},

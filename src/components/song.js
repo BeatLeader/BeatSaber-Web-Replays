@@ -78,7 +78,7 @@ AFRAME.registerComponent('song', {
 			this.hitSound.suspendContext();
 			this.hitSound.resumeContext();
 
-			if (this.data.isPaused) {
+			if (this.data.isPaused && this.data.isBeatsPreloaded) {
 				this.startAudio();
 			}
 

@@ -7,6 +7,9 @@ AFRAME.registerComponent('stage-lasers', {
 	init: function () {
 		this.speed = 0;
 		this.lasers = [this.el.children[0].object3D, this.el.children[1].object3D, this.el.children[2].object3D];
+		this.lasers.forEach(element => {
+			element.visible = false;
+		});
 	},
 
 	pulse: function (speed) {
@@ -14,6 +17,12 @@ AFRAME.registerComponent('stage-lasers', {
 	},
 
 	tick: function (time, delta) {
+		if (!this.loaded) {
+			this.lasers.forEach(element => {
+				element.visible = true;
+			});
+			this.loaded = true;
+		}
 		delta /= 1000;
 		if (!this.data.rotating) {
 			this.speed *= 0.97;

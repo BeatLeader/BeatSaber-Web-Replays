@@ -196,8 +196,14 @@ AFRAME.registerComponent('beat-generator', {
 			prevEventsTime = this.beatsPreloadTime;
 
 			// Song is not playing and is preloading beats, use maintained beat time.
-			this.beatsTime = this.beatsPreloadTime + this.beatAnticipationTime + this.data.moveTime;
+			this.beatsTime = this.beatsPreloadTime + this.halfJumpDuration + this.data.moveTime;
 			this.eventsTime = song.getCurrentTime();
+		}
+
+		if (!this.isSeeking && this.beatsTime <= prevBeatsTime) {
+			this.beatsTime = prevBeatsTime;
+			this.eventsTime = prevEventsTime;
+			return;
 		}
 
 		// Load in stuff scheduled between the last timestamp and current timestamp.

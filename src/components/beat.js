@@ -289,8 +289,6 @@ AFRAME.registerComponent('beat', {
 			const xDiff = newX - this.endPos.x;
 			position.z -= xDiff * Math.cos((90 - data.spawnRotation) * 0.0175);
 			position.x += xDiff * Math.sin((90 - data.spawnRotation) * 0.0175);
-
-			this.currentPosition = newPosition;
 		}
 
 		this.currentPositionZ = newPosition;
@@ -425,9 +423,7 @@ AFRAME.registerComponent('beat', {
 			this.updateFragments();
 		}
 
-		this.currentPosition = data.anticipationPosition + data.warmupPosition;
 		// Set position.
-
 		if (data.type == 'sliderchain' || data.type == 'sliderhead') {
 			var t = (data.sliceIndex / (data.sliceCount - 1)) * data.squishAmount;
 

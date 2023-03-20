@@ -94,7 +94,7 @@ AFRAME.registerComponent('beat', {
 		halfJumpDuration: {default: 0},
 		moveTime: {default: 0},
 		warmupSpeed: {default: 0},
-		beforeJumpLineLayer: {default: 1},
+		beforeJumpLineLayer: {default: 0},
 
 		// Colors
 		blue: {default: COLORS.BEAT_BLUE},
@@ -265,7 +265,7 @@ AFRAME.registerComponent('beat', {
 			newY = this.startPos.y + this.startVerticalVelocity * num1 - this.gravity * num1 * num1 * 0.5;
 		} else {
 			newY = this.startPos.y;
-			newPosition = data.halfJumpPosition + data.warmupPosition + data.warmupSpeed * -timeOffset;
+			newPosition = data.halfJumpPosition + data.warmupPosition + data.warmupSpeed * -timeOffset - SWORD_OFFSET;
 		}
 
 		if (this.chainOffset) {
@@ -453,7 +453,7 @@ AFRAME.registerComponent('beat', {
 
 			this.startPos = new THREE.Vector3(
 				headX,
-				getVerticalPosition(0),
+				getVerticalPosition(0) + pos.y,
 				data.halfJumpPosition + data.warmupPosition - timeDiff - SWORD_OFFSET
 			);
 			this.endPos = new THREE.Vector3(pos.x + headX, pos.y + headY, -SWORD_OFFSET);
@@ -467,7 +467,7 @@ AFRAME.registerComponent('beat', {
 			this.endRotationEuler = endRotation;
 			this.endRotation = new THREE.Quaternion().setFromEuler(endRotation);
 			this.middleRotation = new THREE.Quaternion().setFromEuler(endRotation);
-			this.gravity = this.noteJumpGravityForLineLayer(data.verticalPosition, 0, pos.y);
+			this.gravity = this.noteJumpGravityForLineLayer(data.verticalPosition, 0);
 		} else {
 			this.startPos = new THREE.Vector3(
 				data.flip ? getHorizontalPosition(data.flipHorizontalPosition) : getHorizontalPosition(data.horizontalPosition),
@@ -499,7 +499,7 @@ AFRAME.registerComponent('beat', {
 			this.endRotationEuler = endRotation;
 			this.endRotation = new THREE.Quaternion().setFromEuler(endRotation);
 			this.middleRotation = new THREE.Quaternion().setFromEuler(middleRotation);
-			this.gravity = this.noteJumpGravityForLineLayer(data.verticalPosition, data.beforeJumpLineLayer, 0);
+			this.gravity = this.noteJumpGravityForLineLayer(data.verticalPosition, data.beforeJumpLineLayer);
 		}
 
 		if (data.spawnRotation) {
@@ -1305,16 +1305,9 @@ AFRAME.registerComponent('beat', {
 		}
 	},
 
-	highestJumpPosYForLineLayerWithoutJumpOffset: function (lineLayer) {
-		if (lineLayer == NoteLineLayer.Base) {
-			return 0.85;
-		}
-		return lineLayer == NoteLineLayer.Upper ? 1.4 : 1.9;
-	},
-
-	noteJumpGravityForLineLayer: function (lineLayer, beforeJumpLineLayer, offset) {
+	noteJumpGravityForLineLayer: function (lineLayer, beforeJumpLineLayer) {
 		var num = ((-2 * this.data.halfJumpPosition) / this.data.speed) * 0.5;
-		return (2.0 * (getVerticalPosition(lineLayer) + offset - getLowerVerticalPosition(beforeJumpLineLayer))) / (num * num);
+		return (2.0 * (getVerticalPosition(lineLayer) - getLowerVerticalPosition(beforeJumpLineLayer))) / (num * num);
 	},
 
 	colorAndScaleForScore: (function () {

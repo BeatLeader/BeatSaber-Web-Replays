@@ -11,7 +11,7 @@ function getVerticalPosition(lineLayer) {
 }
 
 function getLowerVerticalPosition(lineLayer) {
-	return getVerticalPosition(lineLayer > 0 ? lineLayer - 1 : 0);
+	return 0.25 + 0.6 * (lineLayer + 1) - lineLayer * 0.05 - (lineLayer > 1 ? (lineLayer - 1) * 0.05 : 0);
 }
 
 function get2DNoteOffset(noteLineIndex, noteLineLayer) {

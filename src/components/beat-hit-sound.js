@@ -1,10 +1,8 @@
 var sourceCreatedCallback;
 
-AFRAME.registerComponent('beat-hit-sound', {
-	schema: {
-		isSafari: {default: false},
-	},
+const isSafari = navigator.userAgent.toLowerCase().indexOf('safari') !== -1 && navigator.userAgent.toLowerCase().indexOf('chrome') === -1;
 
+AFRAME.registerComponent('beat-hit-sound', {
 	init: function () {
 		this.context = new (window.webkitAudioContext || window.AudioContext)();
 		this.settings = this.el.sceneEl.components['settings'];
@@ -33,7 +31,7 @@ AFRAME.registerComponent('beat-hit-sound', {
 		var buffer = Buffer.from(this.settings.settings.hitSound, 'base64');
 		const captureThis = this;
 
-		this.context[this.data.isSafari ? 'decodeOggData' : 'decodeAudioData'](buffer.buffer, function (buffer) {
+		this.context[isSafari ? 'decodeOggData' : 'decodeAudioData'](buffer.buffer, function (buffer) {
 			captureThis.sources = [];
 			for (let index = 0; index < 100; index++) {
 				var source = captureThis.context.createBufferSource();

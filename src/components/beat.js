@@ -1,7 +1,7 @@
 import {
 	getHorizontalPosition,
 	getVerticalPosition,
-	getLowerVerticalPosition,
+	highestJumpPosYForLineLayer,
 	NoteErrorType,
 	SWORD_OFFSET,
 	BezierCurve,
@@ -425,7 +425,6 @@ AFRAME.registerComponent('beat', {
 			this.updateFragments();
 		}
 
-		let origin = new THREE.Vector3(getHorizontalPosition(data.horizontalPosition), getVerticalPosition(data.verticalPosition), 0);
 		this.currentPosition = data.anticipationPosition + data.warmupPosition;
 		// Set position.
 
@@ -433,10 +432,10 @@ AFRAME.registerComponent('beat', {
 			var t = (data.sliceIndex / (data.sliceCount - 1)) * data.squishAmount;
 
 			const headX = getHorizontalPosition(data.horizontalPosition);
-			const headY = getVerticalPosition(data.verticalPosition);
+			const headY = highestJumpPosYForLineLayer(data.verticalPosition);
 
 			const tailX = getHorizontalPosition(data.tailHorizontalPosition);
-			const tailY = getVerticalPosition(data.tailVerticalPosition);
+			const tailY = highestJumpPosYForLineLayer(data.tailVerticalPosition);
 
 			const p2 = new THREE.Vector2(tailX - headX, tailY - headY);
 			const magnitude = p2.length();
@@ -477,7 +476,7 @@ AFRAME.registerComponent('beat', {
 
 			this.endPos = new THREE.Vector3(
 				getHorizontalPosition(data.horizontalPosition),
-				getVerticalPosition(data.verticalPosition),
+				highestJumpPosYForLineLayer(data.verticalPosition),
 				-SWORD_OFFSET
 			);
 
@@ -1307,7 +1306,7 @@ AFRAME.registerComponent('beat', {
 
 	noteJumpGravityForLineLayer: function (lineLayer, beforeJumpLineLayer) {
 		var num = ((-2 * this.data.halfJumpPosition) / this.data.speed) * 0.5;
-		return (2.0 * (getVerticalPosition(lineLayer) - getLowerVerticalPosition(beforeJumpLineLayer))) / (num * num);
+		return (2.0 * (highestJumpPosYForLineLayer(lineLayer) - getVerticalPosition(beforeJumpLineLayer))) / (num * num);
 	},
 
 	colorAndScaleForScore: (function () {

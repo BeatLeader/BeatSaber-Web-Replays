@@ -6,12 +6,13 @@ function getHorizontalPosition(lineIndex) {
 	return (-(_noteLinesCount - 1) * 0.5 + lineIndex) * _noteLinesDistance;
 }
 
-function getVerticalPosition(lineLayer) {
-	return 0.25 + 0.6 * (lineLayer + 1) - lineLayer * 0.05;
+// 0.85 1.4 1.9
+function highestJumpPosYForLineLayer(lineLayer) {
+	return 0.6 * (lineLayer + 1) + 0.05 * (5 - lineLayer - (lineLayer > 1 ? 1 : 0));
 }
-
-function getLowerVerticalPosition(lineLayer) {
-	return 0.25 + 0.6 * (lineLayer + 1) - lineLayer * 0.05 - (lineLayer > 1 ? (lineLayer - 1) * 0.05 : 0);
+// 0.25 0.85 1.45
+function getVerticalPosition(lineLayer) {
+	return 0.25 + 0.6 * lineLayer;
 }
 
 function get2DNoteOffset(noteLineIndex, noteLineLayer) {
@@ -192,7 +193,7 @@ function rotateAboutPoint(obj, point, axis, theta, pointIsWorld) {
 
 module.exports.getHorizontalPosition = getHorizontalPosition;
 module.exports.getVerticalPosition = getVerticalPosition;
-module.exports.getLowerVerticalPosition = getLowerVerticalPosition;
+module.exports.highestJumpPosYForLineLayer = highestJumpPosYForLineLayer;
 module.exports.get2DNoteOffset = get2DNoteOffset;
 module.exports.directionVector = directionVector;
 module.exports.NoteCutDirection = NoteCutDirection;

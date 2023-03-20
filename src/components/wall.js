@@ -1,4 +1,4 @@
-import {getHorizontalPosition, getVerticalPosition, rotateAboutPoint, SWORD_OFFSET} from '../utils';
+import {getHorizontalPosition, highestJumpPosYForLineLayer, rotateAboutPoint, SWORD_OFFSET} from '../utils';
 
 // So wall does not clip the stage ground.
 const RAISE_Y_OFFSET = 0.15;
@@ -99,7 +99,7 @@ AFRAME.registerComponent('wall', {
 		const halfDepth = (data.durationSeconds * data.speed) / 2;
 		var origin;
 		if (data.isV3) {
-			let y = Math.max(getVerticalPosition(data.verticalPosition) + RAISE_Y_OFFSET, 0.1);
+			let y = Math.max(highestJumpPosYForLineLayer(data.verticalPosition) + RAISE_Y_OFFSET, 0.1);
 			origin = new THREE.Vector3(getHorizontalPosition(data.horizontalPosition) + width / 2 - 0.25, y, -SWORD_OFFSET);
 
 			el.object3D.position.set(origin.x, origin.y, origin.z + data.halfJumpPosition + data.warmupPosition - halfDepth);

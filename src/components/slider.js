@@ -1,4 +1,4 @@
-import {getHorizontalPosition, getVerticalPosition, rotateAboutPoint, SWORD_OFFSET} from '../utils';
+import {getHorizontalPosition, highestJumpPosYForLineLayer, rotateAboutPoint, SWORD_OFFSET} from '../utils';
 const COLORS = require('../constants/colors.js');
 
 AFRAME.registerComponent('slider', {
@@ -156,11 +156,11 @@ AFRAME.registerComponent('slider', {
 		const data = this.data;
 
 		const headX = getHorizontalPosition(data.horizontalPosition);
-		const headY = getVerticalPosition(data.verticalPosition);
+		const headY = highestJumpPosYForLineLayer(data.verticalPosition);
 		const headAngle = THREE.Math.degToRad(this.rotations[data.cutDirection] + (this.data.rotationOffset ? this.data.rotationOffset : 0.0));
 
 		const tailX = getHorizontalPosition(data.tailHorizontalPosition);
-		const tailY = getVerticalPosition(data.tailVerticalPosition);
+		const tailY = highestJumpPosYForLineLayer(data.tailVerticalPosition);
 		const tailZ = -data.speed * (data.tailTime - data.time);
 		const tailAngle =
 			Math.PI + THREE.Math.degToRad(this.rotations[data.tailCutDirection] + (this.data.rotationOffset ? this.data.rotationOffset : 0.0));

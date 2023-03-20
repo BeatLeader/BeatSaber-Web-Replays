@@ -276,6 +276,14 @@ function calculateRotationOffsets(map) {
 function addScoringTypeAndChains(map) {
 	const mapnotes = map._notes;
 
+	mapnotes.forEach(note => {
+		if (note._type == 1 || note._type == 0) {
+			note._scoringType = ScoringType.Normal;
+		} else {
+			note._scoringType = ScoringType.Ignore;
+		}
+	});
+
 	map._sliders.forEach(slider => {
 		var head = mapnotes.find(n => n._time == slider._time && n._lineIndex == slider._lineIndex && n._lineLayer == slider._lineLayer);
 		if (head && head._scoringType == ScoringType.Normal) {

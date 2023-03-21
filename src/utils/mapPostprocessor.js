@@ -184,13 +184,7 @@ function SetNoteFlipToNote(thisNote, targetNote) {
 
 var columns = {};
 
-function addRabbitJumps(currentTimeSlice, currentTimeSliceTime, previousTimeSlice) {
-	if (previousTimeSlice) {
-		previousTimeSlice.forEach(noteData => {
-			noteData._timeToNextColorNote = currentTimeSliceTime - noteData._time;
-		});
-	}
-
+function addBeforeJumpLineLayer(currentTimeSlice) {
 	columns = {};
 	currentTimeSlice.forEach(element => {
 		if (columns[element._lineIndex]) {
@@ -202,11 +196,19 @@ function addRabbitJumps(currentTimeSlice, currentTimeSliceTime, previousTimeSlic
 
 	Object.keys(columns).forEach(key => {
 		var column = columns[key];
-		column.sort(x => (a, b) => a._lineLayer - b._lineLayer);
+		column.sort((a, b) => a._lineLayer - b._lineLayer);
 		column.forEach((element, index) => {
 			element._beforeJumpLineLayer = index;
 		});
 	});
+}
+
+function addRabbitJumps(currentTimeSlice, currentTimeSliceTime, previousTimeSlice) {
+	if (previousTimeSlice) {
+		previousTimeSlice.forEach(noteData => {
+			noteData._timeToNextColorNote = currentTimeSliceTime - noteData._time;
+		});
+	}
 
 	if (currentTimeSlice.length != 2) return;
 
@@ -271,6 +273,24 @@ function calculateRotationOffsets(map) {
 		}
 	}
 	processGroup();
+
+	group = null;
+	for (var i = 0; i < notes.length; i++) {
+		const note = notes[i];
+		if (!group) {
+			group = [note];
+			groupTime = note._time;
+		} else {
+			if (Math.abs(groupTime - note._time) < 0.0001) {
+				group.push(note);
+			} else {
+				addBeforeJumpLineLayer(group);
+				group = null;
+				i--;
+			}
+		}
+	}
+	addBeforeJumpLineLayer(group);
 }
 
 function addScoringTypeAndChains(map) {

@@ -290,7 +290,9 @@ function calculateRotationOffsets(map) {
 			}
 		}
 	}
-	addBeforeJumpLineLayer(group);
+	if (group) {
+		addBeforeJumpLineLayer(group);
+	}
 }
 
 function addScoringTypeAndChains(map) {

@@ -235,7 +235,7 @@ function addRabbitJumps(currentTimeSlice, currentTimeSliceTime, previousTimeSlic
 	SetNoteFlipToNote(targetNote2, targetNote1);
 }
 
-function calculateRotationOffsets(map) {
+function processTimingGroups(map) {
 	var group, groupTime, previousGroup;
 
 	const processGroup = () => {
@@ -431,7 +431,7 @@ function postprocess(map, info) {
 	var result = upgrade(map);
 
 	addScoringTypeAndChains(result);
-	calculateRotationOffsets(result);
+	processTimingGroups(result);
 
 	filterFakeNotes(result);
 	indexNotes(result);

@@ -148,16 +148,6 @@ AFRAME.registerComponent('song-controls', {
 				document.getElementById('songLink').setAttribute('href', 'https://beatsaver.com/maps/' + data.songId);
 			}
 		}
-
-		// document.getElementById('controlsMode').innerHTML = data.mode;
-
-		if ((oldData.difficulty && oldData.difficulty !== data.difficulty) || (oldData.mode && oldData.mode !== data.mode)) {
-			removeTimeQueryParam();
-		}
-
-		if (oldData.mode && oldData.mode !== data.mode) {
-			this.updateDifficultyOptions();
-		}
 	},
 
 	play: function () {
@@ -1271,35 +1261,6 @@ AFRAME.registerComponent('song-controls', {
 	},
 });
 
-function truncate(str, length) {
-	if (!str) {
-		return '';
-	}
-	if (str.length >= length) {
-		return str.substring(0, length - 2) + '..';
-	}
-	return str;
-}
-
-const timeRe = /time=\d+/;
-function setTimeQueryParam(time) {
-	time = parseInt(time);
-	let search = window.location.search.toString();
-	if (search) {
-		if (search.match(timeRe)) {
-			search = search.replace(timeRe, `time=${time}`);
-		} else {
-			search += `&time=${time}`;
-		}
-	} else {
-		search = `?time=${time}`;
-	}
-
-	let url = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
-	url += search;
-	window.history.pushState({path: url}, '', url);
-}
-
 function formatSeconds(time, precise) {
 	// Hours, minutes, and seconds.
 	const hrs = ~~(time / 3600);
@@ -1317,14 +1278,6 @@ function formatSeconds(time, precise) {
 		ret += '.' + Math.round((time - Math.floor(time)) * 1000);
 	}
 	return ret;
-}
-
-function removeTimeQueryParam() {
-	let search = window.location.search.toString();
-	search = search.replace(timeRe, '');
-	let url = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
-	url += search;
-	window.history.pushState({path: url}, '', url);
 }
 
 const diffColors = {

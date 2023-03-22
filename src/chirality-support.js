@@ -109,8 +109,20 @@ function Mirror_Horizontal_Note(note, numberOfLines, flip_lines) {
 		color = note._type;
 	}
 
+	if (note._flipLineIndex !== undefined) {
+		let h_flip_line;
+		if (flip_lines) {
+			h_flip_line = numberOfLines - 1 - note._flipLineIndex;
+		} else {
+			h_flip_line = note._flipLineIndex;
+		}
+
+		note._flipLineIndex = h_flip_line;
+	}
+
 	note._type = color;
 	note._lineIndex = h_line;
+
 	note._cutDirection = horizontal_cut_transform(note._cutDirection);
 
 	if (note.cutDirectionAngleOffset) {

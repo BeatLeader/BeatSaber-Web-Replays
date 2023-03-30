@@ -66,6 +66,9 @@
   </head>
   <body id="body" class="showControls">
     {% include './animations.html' %}
+    
+    <canvas id="main-canvas"></canvas>
+    {% include './templates/controls.html' %}
     <a-scene
       settings
       beat-hit-sound
@@ -272,8 +275,9 @@
         bind__orthographic-camera="active: settings.orthographicTopEnabled; far: settings.orthographicTopFar; frustum: settings.orthographicTopFrustum">
       </a-entity>
     </a-scene>
-
-    {% include './templates/controls.html' %}
+    
+    
+    
 
     <span id="iframeUrl"></span>
   </body>

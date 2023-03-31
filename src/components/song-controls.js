@@ -491,7 +491,7 @@ AFRAME.registerComponent('song-controls', {
 			ctxMenu.style.top = event.pageY - (touch ? 100 : 10) + 'px';
 		};
 
-		this.el.sceneEl.addEventListener(
+		document.getElementById('main-canvas').addEventListener(
 			'contextmenu',
 			function (event) {
 				event.preventDefault();

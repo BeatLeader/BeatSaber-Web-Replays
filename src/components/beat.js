@@ -1312,13 +1312,11 @@ AFRAME.registerComponent('beat', {
 		return function (replayNote) {
 			const judgments = HSVConfig['judgments'];
 			let judgment;
-			let fadeJudgment;
 			const score = (replayNote.score / replayNote.maxScore) * 115;
 
-			for (var i = judgments.length - 1; i >= 0; i--) {
-				if (judgments[i].threshold >= score) {
+			for (var i = 0; i <= judgments.length - 1; i++) {
+				if (judgments[i].threshold <= score) {
 					judgment = judgments[i];
-					fadeJudgment = judgments[i + 1];
 					break;
 				}
 			}
@@ -1326,12 +1324,8 @@ AFRAME.registerComponent('beat', {
 			if (!judgment) return {color: '#fff', scale: 0};
 
 			color.setRGB(judgment.color[0], judgment.color[1], judgment.color[2]);
-			fadeColor.setRGB(fadeJudgment.color[0], fadeJudgment.color[1], fadeJudgment.color[2]);
 
-			const resultColor = fadeColor.lerp(color, (score - fadeJudgment.threshold) / (judgment.threshold - fadeJudgment.threshold));
-			const resultScale = 1.4 - (115 - score) / 115;
-
-			return {color: '#' + resultColor.getHexString(), scale: Math.max(0.7, resultScale)};
+			return {color: '#' + color.getHexString(), scale: 1.4};
 		};
 	})(),
 
@@ -1446,52 +1440,58 @@ const HSVConfig = {
 	judgments: [
 		{
 			threshold: 115,
-			text: '<size=115%>%s</size>%n%n%B %C %A',
+			text: '<size=200%>%s</size>',
 			color: [1.0, 1.0, 1.0, 1.0],
-			fade: false,
 		},
 		{
 			threshold: 113,
-			text: '<size=115%>%s</size>%n%n%B %C %A',
-			color: [0.5, 0.0, 0.85, 1.0],
-			fade: false,
+			text: '<size=200%>%s</size>',
+			color: [
+				0.5215,
+				0.0,
+				1.0,
+				1.0
+			],
 		},
-
 		{
 			threshold: 110,
-			text: '<size=115%>%s</size>%n%n%B %C %A',
-			color: [0.0, 1.0, 1.0, 1.0],
-			fade: false,
+			text: '<size=200%>%s</size>',
+			color: [
+                0.0,
+                0.6392,
+                1.0,
+                1.0
+            ],
 		},
 		{
-			threshold: 105,
-			text: '<size=115%>%s</size>%n%n%B %C %A',
-			color: [0.0, 1.0, 0.0, 1.0],
-			fade: false,
+			threshold: 106,
+			text: '<size=200%>%s</size>',
+			color: [
+                0.0,
+                1.0,
+                0.0,
+                1.0
+            ],
 		},
 		{
 			threshold: 100,
-			text: '<size=115%>%s</size>%n%n%B %C %A',
-			color: [1.0, 0.980392158, 0.0, 1.0],
-			fade: false,
-		},
-		{
-			threshold: 70,
-			text: '<size=115%>%s</size>%n%n%B %C %A',
-			color: [1.0, 0.6, 0.0, 1.0],
-			fade: false,
-		},
-		{
-			threshold: 50,
-			text: '<size=115%>%s</size>%n%n%B %C %A',
-			color: [1.0, 0.0, 0.0, 1.0],
-			fade: false,
+			text: '<size=200%>%s</size>',
+			color: [
+                1.0,
+                1.0,
+                0.0,
+                1.0
+            ],
 		},
 		{
 			threshold: -1,
-			text: '<size=115%>%s</size>%n%n%B %C %A',
-			color: [0.3, 0.0, 0.0, 1.0],
-			fade: false,
+			text: '<size=200%>%s</size>',
+			color: [
+                1.0,
+                0.0,
+                0.22,
+                1.0
+            ],
 		},
 	],
 };

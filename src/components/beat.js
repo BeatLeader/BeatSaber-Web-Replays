@@ -1307,7 +1307,6 @@ AFRAME.registerComponent('beat', {
 
 	colorAndScaleForScore: (function () {
 		var color = new THREE.Color();
-		var fadeColor = new THREE.Color();
 
 		return function (replayNote) {
 			const judgments = HSVConfig['judgments'];
@@ -1446,52 +1445,27 @@ const HSVConfig = {
 		{
 			threshold: 113,
 			text: '<size=200%>%s</size>',
-			color: [
-				0.5215,
-				0.0,
-				1.0,
-				1.0
-			],
+			color: [0.5215, 0.0, 1.0, 1.0],
 		},
 		{
 			threshold: 110,
 			text: '<size=200%>%s</size>',
-			color: [
-                0.0,
-                0.6392,
-                1.0,
-                1.0
-            ],
+			color: [0.0, 0.6392, 1.0, 1.0],
 		},
 		{
 			threshold: 106,
 			text: '<size=200%>%s</size>',
-			color: [
-                0.0,
-                1.0,
-                0.0,
-                1.0
-            ],
+			color: [0.0, 1.0, 0.0, 1.0],
 		},
 		{
 			threshold: 100,
 			text: '<size=200%>%s</size>',
-			color: [
-                1.0,
-                1.0,
-                0.0,
-                1.0
-            ],
+			color: [1.0, 1.0, 0.0, 1.0],
 		},
 		{
 			threshold: -1,
 			text: '<size=200%>%s</size>',
-			color: [
-                1.0,
-                0.0,
-                0.22,
-                1.0
-            ],
+			color: [1.0, 0.0, 0.22, 1.0],
 		},
 	],
 };

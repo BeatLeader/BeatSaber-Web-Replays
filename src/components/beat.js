@@ -565,11 +565,7 @@ AFRAME.registerComponent('beat', {
 		}
 
 		if (settings.settings.highlightErrors && this.replayNote && this.replayNote.score < 0) {
-			if (data.type == 'mine') {
-				this.blockEl.getObject3D('mesh').material = this.el.sceneEl.systems.materials['mineMaterialyellow'];
-			} else {
-				this.blockEl.setAttribute('material', 'color: yellow');
-			}
+			this.blockEl.setAttribute('material', 'emissive: #4b4d00; emissiveIntensity: 0.9');
 		}
 
 		const replay = replayLoader.replay;
@@ -741,8 +737,6 @@ AFRAME.registerComponent('beat', {
 		var fragments = this.el.sceneEl.systems['mine-fragments-loader'].fragments.children;
 		var material = this.el.sceneEl.systems.materials['mineMaterial' + this.data.color];
 
-		this.randVec = new THREE.Vector3(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
-
 		this.mineFragments = [];
 		this.mineBroken = document.createElement('a-entity');
 		this.el.appendChild(this.mineBroken);
@@ -877,7 +871,7 @@ AFRAME.registerComponent('beat', {
 
 		if (!settings.settings.noEffects) {
 			this.explodeEventDetail.position.copy(this.el.object3D.position);
-			this.explodeEventDetail.rotation.copy(this.randVec);
+			this.explodeEventDetail.rotation.copy(new THREE.Vector3(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI));
 			mineParticles.emit('explode', this.explodeEventDetail, false);
 		}
 	},

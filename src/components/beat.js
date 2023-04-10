@@ -566,11 +566,7 @@ AFRAME.registerComponent('beat', {
 		}
 
 		if (settings.settings.highlightErrors && this.replayNote && this.replayNote.score < 0) {
-			if (data.type == 'mine') {
-				this.blockEl.getObject3D('mesh').material = this.el.sceneEl.systems.materials['mineMaterialyellow'];
-			} else {
-				this.blockEl.setAttribute('material', 'color: yellow');
-			}
+			this.blockEl.setAttribute('material', 'emissive: yellow; emissiveIntensity: 0.6');
 		}
 
 		const replay = replayLoader.replay;

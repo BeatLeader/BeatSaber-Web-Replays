@@ -113,14 +113,6 @@ AFRAME.registerSystem('materials', {
 			emissive: new THREE.Color(COLORS.MINE_BLUE_EMISSION),
 			envMap: new THREE.TextureLoader().load('assets/img/mineenviro-blue.jpg'),
 		});
-
-		this.mineMaterialyellow = new THREE.MeshStandardMaterial({
-			roughness: 0.38,
-			metalness: 0.48,
-			color: new THREE.Color('yellow'),
-			emissive: new THREE.Color('yellow'),
-			envMap: new THREE.TextureLoader().load('assets/img/mineenviro-blue.jpg'),
-		});
 	},
 });
 

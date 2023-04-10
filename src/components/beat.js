@@ -537,8 +537,7 @@ AFRAME.registerComponent('beat', {
 					if (
 						bombs[i].spawnTime < data.time + 0.01 &&
 						bombs[i].spawnTime > data.time - 0.01 &&
-						// We only care about matching lineIndex*1000 and noteLineLayer*100 from the ID
-						(!bombs[i].id || Math.floor((bombs[i].id % 10000) / 100) == Math.floor((data.noteId % 10000) / 100))
+						(!bombs[i].id || bombs[i].id == data.noteId || bombs[i].id == data.noteIdWithScoring)
 					) {
 						this.replayNote = bombs[i];
 						break;
@@ -566,7 +565,7 @@ AFRAME.registerComponent('beat', {
 		}
 
 		if (settings.settings.highlightErrors && this.replayNote && this.replayNote.score < 0) {
-			this.blockEl.setAttribute('material', 'emissive: yellow; emissiveIntensity: 0.6');
+			this.blockEl.setAttribute('material', 'emissive: #4b4d00; emissiveIntensity: 0.9');
 		}
 
 		const replay = replayLoader.replay;
@@ -738,8 +737,6 @@ AFRAME.registerComponent('beat', {
 		var fragments = this.el.sceneEl.systems['mine-fragments-loader'].fragments.children;
 		var material = this.el.sceneEl.systems.materials['mineMaterial' + this.data.color];
 
-		this.randVec = new THREE.Vector3(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
-
 		this.mineFragments = [];
 		this.mineBroken = document.createElement('a-entity');
 		this.el.appendChild(this.mineBroken);
@@ -872,11 +869,11 @@ AFRAME.registerComponent('beat', {
 			this.returnToPool(true);
 		}
 
-		// if (!settings.settings.noEffects) {
-		// 	this.explodeEventDetail.position.copy(this.el.object3D.position);
-		// 	this.explodeEventDetail.rotation.copy(this.randVec);
-		// 	mineParticles.emit('explode', this.explodeEventDetail, false);
-		// }
+		if (!settings.settings.noEffects) {
+			this.explodeEventDetail.position.copy(this.el.object3D.position);
+			this.explodeEventDetail.rotation.copy(new THREE.Vector3(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI));
+			mineParticles.emit('explode', this.explodeEventDetail, false);
+		}
 	},
 
 	destroyBeat: (function () {

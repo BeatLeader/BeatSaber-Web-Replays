@@ -302,7 +302,7 @@ function addScoringTypeAndChains(map) {
 		if (note._type == 1 || note._type == 0) {
 			note._scoringType = ScoringType.Normal;
 		} else {
-			note._scoringType = ScoringType.Ignore;
+			note._scoringType = ScoringType.NoScore;
 		}
 	});
 

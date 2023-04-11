@@ -34,7 +34,7 @@ AFRAME.registerComponent('pauser', {
 		}
 
 		const replay = this.el.sceneEl.components['replay-loader'].replay;
-		if (replay && song.getCurrentTime() >= replay.info.failTime) {
+		if (replay && replay.info.failTime && song.getCurrentTime() >= replay.info.failTime) {
 			this.el.sceneEl.emit('finishgame', null, false);
 		}
 	},

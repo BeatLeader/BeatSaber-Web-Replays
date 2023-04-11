@@ -423,6 +423,7 @@ function updateScore(state, payload) {
 	state.score.combo = note.combo;
 	state.score.multiplier = note.multiplier;
 	state.score.accuracy = note.accuracy.toFixed(2);
+	state.score.fcAccuracy = note.fcAccuracy.toFixed(2);
 	state.score.misses = note.misses;
 	state.score.energy = note.energy;
 	state.lastNoteTime = note.time;

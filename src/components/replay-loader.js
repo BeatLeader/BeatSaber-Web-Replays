@@ -425,6 +425,7 @@ AFRAME.registerComponent('replay-loader', {
 		var energy = 0.5;
 		var score = 0,
 			maxScore = 0,
+			fcScore = 0,
 			combo = 0,
 			misses = 0;
 
@@ -445,6 +446,11 @@ AFRAME.registerComponent('replay-loader', {
 			maxScore += maxCounter.Multiplier * scoreForMaxScore;
 
 			if (note.score < 0) {
+				if (i == 0) {
+					fcScore += maxCounter.Multiplier * scoreForMaxScore;
+				} else {
+					fcScore += (maxCounter.Multiplier * allStructs[i - 1].accuracy * scoreForMaxScore) / 100;
+				}
 				normalCounter.Decrease();
 				combo = 0;
 				misses++;
@@ -471,6 +477,7 @@ AFRAME.registerComponent('replay-loader', {
 			} else {
 				normalCounter.Increase();
 				score += normalCounter.Multiplier * note.score;
+				fcScore += maxCounter.Multiplier * note.score;
 				if (note.scoringType == ScoringType.BurstSliderElement) {
 					energy += 1 / 500;
 				} else {
@@ -491,8 +498,10 @@ AFRAME.registerComponent('replay-loader', {
 
 			if (note.isBlock) {
 				note.accuracy = (note.totalScore / maxScore) * 100;
+				note.fcAccuracy = (fcScore / maxScore) * 100;
 			} else {
 				note.accuracy = i == 0 ? 0 : allStructs[i - 1].accuracy;
+				note.fcAccuracy = i == 0 ? 100 : allStructs[i - 1].fcAccuracy;
 			}
 		}
 		this.allStructs = allStructs;

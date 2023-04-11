@@ -57,6 +57,16 @@
   </a-entity>
 
   <a-entity
+    id="accuracy"
+    mixin="scoreText"
+    bind__text="value: 'FC ' + score.fcAccuracy"
+    text="width: 1; lineHeight: 40"
+    position="-1.8 0 -4"
+    bind__visible="score.misses > 0"
+    scale="3 3 3">
+  </a-entity>
+
+  <a-entity
       id="energyBar"
       render-order="hud"
       bind__energy-bar="enabled: isPlaying && challenge.isBeatsPreloaded; energy: score.energy"

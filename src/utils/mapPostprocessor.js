@@ -22,8 +22,8 @@ function upgrade(map) {
 				_lineIndex: bomb['x'],
 				_lineLayer: bomb['y'],
 				_angleOffset: 0,
-				_type: 2,
-				_cutDirection: 9,
+				_type: 3,
+				_cutDirection: NoteCutDirection.Any,
 				_scoringType: ScoringType.NoScore,
 			});
 		});

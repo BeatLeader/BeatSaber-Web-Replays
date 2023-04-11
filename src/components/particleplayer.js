@@ -44,7 +44,7 @@ AFRAME.registerComponent('particleplayer', {
 			default: 'flat',
 			oneOf: ['flat', 'lambert', 'phong', 'standard'],
 		},
-		src: {type: 'selector'},
+		src: {type: 'string'},
 	},
 
 	multiple: true,
@@ -90,51 +90,54 @@ AFRAME.registerComponent('particleplayer', {
 
 		this.partScale.set(1.0, 1.0, 1.0);
 
-		this.loadParticlesJSON(data.src, data.scale);
+		fetch(data.src)
+			.then(response => response.json())
+			.then(json => {
+				this.loadParticlesJSON(json, data.scale);
 
-		this.numFrames = this.framedata.length;
-		this.numParticles = this.numFrames > 0 ? this.framedata[0].length : 0;
+				this.numFrames = this.framedata.length;
+				this.numParticles = this.numFrames > 0 ? this.framedata[0].length : 0;
 
-		if (data.count[data.count.length - 1] === '%') {
-			this.particleCount = Math.floor((parseInt(data.count) * this.numParticles) / 100.0);
-		} else {
-			this.particleCount = parseInt(data.count);
-		}
-		this.particleCount = Math.min(this.numParticles, Math.max(0, this.particleCount));
+				if (data.count[data.count.length - 1] === '%') {
+					this.particleCount = Math.floor((parseInt(data.count) * this.numParticles) / 100.0);
+				} else {
+					this.particleCount = parseInt(data.count);
+				}
+				this.particleCount = Math.min(this.numParticles, Math.max(0, this.particleCount));
 
-		this.msPerFrame = data.dur / this.numFrames;
+				this.msPerFrame = data.dur / this.numFrames;
 
-		this.indexPool = new Array(this.numParticles);
+				this.indexPool = new Array(this.numParticles);
 
-		const materialParams = {
-			color: new THREE.Color(data.color),
-			side: THREE.DoubleSide,
-			blending: BLENDINGS[data.blending],
-			map: data.img ? new THREE.TextureLoader().load(data.img.src) : null,
-			depthWrite: false,
-			opacity: data.opacity,
-			transparent: !!data.img || data.blending !== 'normal' || data.opacity < 1,
-		};
-		if (SHADERS[data.shader] !== undefined) {
-			this.material = new SHADERS[data.shader](materialParams);
-		} else {
-			this.material = new SHADERS['flat'](materialParams);
-		}
+				const materialParams = {
+					color: new THREE.Color(data.color),
+					side: THREE.DoubleSide,
+					blending: BLENDINGS[data.blending],
+					map: data.img ? new THREE.TextureLoader().load(data.img.src) : null,
+					depthWrite: false,
+					opacity: data.opacity,
+					transparent: !!data.img || data.blending !== 'normal' || data.opacity < 1,
+				};
+				if (SHADERS[data.shader] !== undefined) {
+					this.material = new SHADERS[data.shader](materialParams);
+				} else {
+					this.material = new SHADERS['flat'](materialParams);
+				}
 
-		this.createParticles(data.poolSize);
+				this.createParticles(data.poolSize);
 
-		if (data.on === 'init') {
-			this.start();
-		}
+				if (data.on === 'init') {
+					this.start();
+				}
+			});
 	},
 
-	loadParticlesJSON: function (json, scale) {
+	loadParticlesJSON: function (jsonData, scale) {
 		var alive;
 
 		this.restPositions.length = 0;
 		this.restRotations.length = 0;
 
-		const jsonData = JSON.parse(json.data);
 		const frames = jsonData.frames;
 		const precision = jsonData.precision;
 

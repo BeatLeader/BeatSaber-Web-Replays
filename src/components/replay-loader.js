@@ -326,7 +326,8 @@ AFRAME.registerComponent('replay-loader', {
 		var group,
 			groupIndex,
 			groupTime,
-			offset = 0;
+			offset = 0,
+			stop = false;
 
 		const processGroup = () => {
 			for (var j = 0; j < group.length; j++) {
@@ -334,6 +335,11 @@ AFRAME.registerComponent('replay-loader', {
 				for (var m = 0; m < group.length; m++) {
 					const replaynote = noteStructs[groupIndex + offset + m];
 					const scoringType = mapnote._scoringType ? mapnote._scoringType + 2 : 3;
+
+					if (!replaynote) {
+						stop = true;
+						return;
+					}
 
 					if (
 						replaynote.index == undefined &&
@@ -353,12 +359,13 @@ AFRAME.registerComponent('replay-loader', {
 			}
 		};
 
-		for (var i = 0; i < mapnotes.length; i++) {
+		for (var i = 0; i < mapnotes.length && !stop; i++) {
 			if (!group) {
 				if (i + offset == noteStructs.length) {
 					group = [];
 					break;
 				}
+
 				if (mapnotes[i]._songTime < noteStructs[i + offset].spawnTime - 0.0001) {
 					offset--;
 					continue;

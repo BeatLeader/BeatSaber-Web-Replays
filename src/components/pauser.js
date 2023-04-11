@@ -23,13 +23,18 @@ AFRAME.registerComponent('pauser', {
 	},
 
 	tick: function () {
-		const source = this.el.sceneEl.components.song.source;
+		const song = this.el.sceneEl.components.song;
+		const source = song.source;
 		if (!source) {
 			return;
 		}
 
-		let song = this.el.sceneEl.components.song;
 		if (song.isPlaying && song.getCurrentTime() >= source.buffer.duration) {
+			this.el.sceneEl.emit('finishgame', null, false);
+		}
+
+		const replay = this.el.sceneEl.components['replay-loader'].replay;
+		if (replay && song.getCurrentTime() >= replay.info.failTime) {
 			this.el.sceneEl.emit('finishgame', null, false);
 		}
 	},

@@ -94,8 +94,17 @@ AFRAME.registerComponent('zip-loader', {
 			const diffBeatmaps = set._difficultyBeatmaps.sort(d => d._difficultyRank);
 			for (let index = 0; index < diffBeatmaps.length; index++) {
 				const diff = diffBeatmaps[index];
+				const fileArray = await files[diff._beatmapFilename].async('uint8array');
 
-				let map = postprocess(JSON.parse(await files[diff._beatmapFilename].async('string')), event.info);
+				var mapJson;
+				try {
+					var fileData = new TextDecoder().decode(fileArray);
+					mapJson = JSON.parse(fileData);
+				} catch (e) {
+					var fileData = new TextDecoder('UTF-16LE').decode(fileArray);
+					mapJson = JSON.parse(fileData);
+				}
+				let map = postprocess(mapJson, event.info);
 				event.beatmaps[mode][diff._difficulty] = map;
 				event.beatSpeeds[mode][diff._difficulty] = diff._noteJumpMovementSpeed;
 				event.beatOffsets[mode][diff._difficulty] = diff._noteJumpStartBeatOffset;

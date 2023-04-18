@@ -599,16 +599,19 @@ AFRAME.registerComponent('replay-loader', {
 			var lineLayer = mapnote._lineLayer;
 			var scoringType = mapnote._scoringType !== undefined ? mapnote._scoringType + 2 : colorType == 3 ? 2 : 3;
 
-			mapnote._id = lineIndex * 1000 + lineLayer * 100 + colorType * 10 + cutDirection;
-			mapnote._idWithScoring = mapnote._id + scoringType * 10000;
+			var id = lineIndex * 1000 + lineLayer * 100 + colorType * 10 + cutDirection;
+			mapnote._id = id;
+			mapnote._idWithScoring = id + scoringType * 10000;
 
 			var altscoringType = scoringType;
 			if (mapnote._scoringType == ScoringType.BurstSliderHead) {
 				altscoringType = ScoringType.SliderHead + 2;
 			} else if (mapnote._scoringType == ScoringType.SliderHead) {
 				altscoringType = ScoringType.BurstSliderHead + 2;
+			} else if (mapnote._scoringType == ScoringType.BurstSliderElement) {
+				id = mapnote._tailLineIndex * 1000 + mapnote._tailLineLayer * 100 + colorType * 10 + cutDirection;
 			}
-			mapnote._idWithAlternativeScoring = mapnote._id + altscoringType * 10000;
+			mapnote._idWithAlternativeScoring = id + altscoringType * 10000;
 		});
 	},
 });

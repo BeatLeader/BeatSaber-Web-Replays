@@ -70,7 +70,7 @@ AFRAME.registerComponent('replay-loader', {
 			let data = response.status == 200 ? await response.json() : null;
 			if (data && data.playerId) {
 				let splittedName = data.replay.split(/\.|-|\//);
-				if (splittedName.length > 4) {
+				if (splittedName.length > 4 && splittedName.length < 12) {
 					this.el.sceneEl.emit(
 						'replayInfofetched',
 						{

@@ -42,10 +42,6 @@ var settings;
 var song;
 
 var mineParticles;
-var wrongElLeft;
-var wrongElRight;
-var missElLeft;
-var missElRight;
 var hitSound;
 
 function initStatic(sceneEl) {
@@ -57,10 +53,6 @@ function initStatic(sceneEl) {
 	hitSound = sceneEl.components['beat-hit-sound'];
 
 	mineParticles = document.getElementById('mineParticles');
-	wrongElLeft = document.getElementById('wrongLeft');
-	wrongElRight = document.getElementById('wrongRight');
-	missElLeft = document.getElementById('missLeft');
-	missElRight = document.getElementById('missRight');
 }
 
 function InOutQuad(t) {
@@ -1198,10 +1190,7 @@ AFRAME.registerComponent('beat', {
 		let data = this.data;
 		if (score < 0) {
 			if (score == -3) {
-				var missEl = hand === 'left' ? missElLeft : missElRight;
-				if (!missEl) {
-					return;
-				}
+				const missEl = this.el.sceneEl.components['pool__beatscoremiss'].requestEntity();
 				missEl.object3D.rotation.set(0, 0, 0);
 				missEl.object3D.position.copy(this.el.object3D.position);
 				missEl.object3D.position.y += 0.2;
@@ -1216,18 +1205,17 @@ AFRAME.registerComponent('beat', {
 					missEl.setAttribute('animation__motionz', 'to', vector.z);
 					missEl.setAttribute('animation__motionx', 'to', vector.x);
 				} else {
-					missEl.object3D.position.z -= 0.5;
+					missEl.object3D.position.x += 0.6; // One block right
+					missEl.object3D.position.z -= 0.2;
 
 					missEl.setAttribute('animation__motionz', 'to', -8);
 					missEl.setAttribute('animation__motionx', 'to', missEl.object3D.position.x);
 				}
 
+				missEl.play();
 				missEl.emit('beatmiss', null, true);
 			} else if (score == -2) {
-				var wrongEl = hand === 'left' ? wrongElLeft : wrongElRight;
-				if (!wrongEl) {
-					return;
-				}
+				const wrongEl = this.el.sceneEl.components['pool__beatscorewrong'].requestEntity();
 				wrongEl.object3D.rotation.set(0, 0, 0);
 				wrongEl.object3D.position.copy(this.el.object3D.position);
 				wrongEl.object3D.position.y += 0.2;
@@ -1242,11 +1230,13 @@ AFRAME.registerComponent('beat', {
 					wrongEl.setAttribute('animation__motionz', 'to', vector.z);
 					wrongEl.setAttribute('animation__motionx', 'to', vector.x);
 				} else {
-					wrongEl.object3D.position.z -= 0.5;
+					wrongEl.object3D.position.x += 0.6; // One block right
+					wrongEl.object3D.position.z -= 0.2;
 					wrongEl.setAttribute('animation__motionz', 'to', -8);
 					wrongEl.setAttribute('animation__motionx', 'to', wrongEl.object3D.position.x);
 				}
 
+				wrongEl.play();
 				wrongEl.emit('beatwrong', null, true);
 			}
 		} else {

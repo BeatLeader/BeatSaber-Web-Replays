@@ -85,6 +85,16 @@
   animation__alpha="property: components.text.material.uniforms.opacity.value; from: 1; to: 0; startEvents: beatmiss; easing: easeOutQuart; dur: 4000"></a-mixin>
 
 <a-mixin
+  id="beatScoreWrong"
+  score-beat="type: wrong"
+  mixin="beatWrong"></a-mixin>
+
+<a-mixin
+  id="beatScoreMiss"
+  score-beat="type: miss"
+  mixin="beatMiss"></a-mixin>
+
+<a-mixin
   id="beatGlow"
   geometry="primitive: plane; width: 0.7; height: 0.7"
   material="shader: flat; fog: false; blending: additive; depthWrite: false; depthTest: false; transparent: true; src: #glowImg; opacity: 1"

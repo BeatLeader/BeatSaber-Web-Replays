@@ -257,7 +257,7 @@ AFRAME.registerComponent('beat-generator', {
 			let noteTime = obstacles[i]._songTime;
 			let noteDuration = obstacles[i]._songDuration;
 			if (this.isSeeking) {
-				if (noteTime + noteDuration / 2 > prevBeatsTime && noteTime - noteDuration / 2 <= beatsTime) {
+				if (noteTime + noteDuration + 2 > prevBeatsTime && noteTime - noteDuration - 2 <= beatsTime) {
 					this.generateWall(obstacles[i]);
 				}
 			} else {
@@ -482,17 +482,26 @@ AFRAME.registerComponent('beat-generator', {
 		}
 	},
 
-	generateWall: (function () {
+	generateWall: function (wall) {
+		const wallEl = this.el.sceneEl.components.pool__wall.requestEntity();
+		if (!wallEl) {
+			return;
+		}
+
+		if (!wallEl.components.wall || !wallEl.components.wall.data) {
+			wallEl.addEventListener('loaded', () => {
+				this.doGenerateWall(wallEl, wall);
+			});
+		} else {
+			this.doGenerateWall(wallEl, wall);
+		}
+	},
+
+	doGenerateWall: (function () {
 		const wallObj = {};
 		const WALL_THICKNESS = 0.6;
 
-		return function (wall) {
-			const el = this.el.sceneEl.components.pool__wall.requestEntity();
-
-			if (!el) {
-				return;
-			}
-
+		return function (wallEl, wall) {
 			const data = this.data;
 			const speed = this.beatSpeed;
 
@@ -532,7 +541,7 @@ AFRAME.registerComponent('beat-generator', {
 				}
 			}
 
-			el.setAttribute('wall', wallObj);
+			wallEl.setAttribute('wall', wallObj);
 
 			// Handle mapping extensions wall format.
 			if (this.mappingExtensions) {
@@ -560,12 +569,12 @@ AFRAME.registerComponent('beat-generator', {
 					var layer = (startHeight / 750) * 5;
 					layer = layer * 1000 + 1334;
 
-					el.components.wall.setMappingExtensionsHeight(layer / 1000 - 2, (height - 1000) / 1000);
+					wallEl.components.wall.setMappingExtensionsHeight(layer / 1000 - 2, (height - 1000) / 1000);
 				}
 			}
 
-			el.components.wall.onGenerate(this.mappingExtensions);
-			el.play();
+			wallEl.components.wall.onGenerate(this.mappingExtensions);
+			wallEl.play();
 		};
 	})(),
 

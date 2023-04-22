@@ -528,8 +528,8 @@ AFRAME.registerComponent('beat', {
 		this.replayNote = null;
 		if (data.type == 'mine') {
 			// Reset mine.
-			// this.blockEl.getObject3D('mesh').material = this.el.sceneEl.systems.materials['mineMaterial' + this.data.color];
-			// this.resetMineFragments();
+			this.blockEl.getObject3D('mesh').material = this.el.sceneEl.systems.materials['mineMaterial' + this.data.color];
+			this.resetMineFragments();
 
 			const bombs = replayLoader.bombs;
 			if (bombs) {
@@ -814,7 +814,7 @@ AFRAME.registerComponent('beat', {
 	},
 
 	resetMineFragments: function () {
-		if (this.data.type !== 'mine') {
+		if (this.data.type !== 'mine' || !this.mineFragments) {
 			return;
 		}
 		for (let i = 0; i < this.mineFragments.length; i++) {

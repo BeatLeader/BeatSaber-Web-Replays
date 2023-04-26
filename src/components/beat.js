@@ -642,7 +642,7 @@ AFRAME.registerComponent('beat', {
 	},
 
 	toSmallBox: function (boxSettings) {
-		return this.toScaledBox(0.35, 0.35, 0.35, boxSettings);
+		return this.toScaledBox(0.48, 0.48, 0.48, boxSettings);
 	},
 
 	toBigBox: function (boxSettings) {

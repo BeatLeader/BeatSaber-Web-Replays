@@ -55,7 +55,7 @@ const ScoringType = {
 	BurstSliderElement: 5,
 };
 
-const SWORD_OFFSET = 0.65;
+const SWORD_OFFSET = 0.9;
 
 function mirrorDirection(cutDirection) {
 	switch (cutDirection) {

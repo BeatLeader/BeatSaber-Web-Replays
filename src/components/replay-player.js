@@ -65,6 +65,7 @@ AFRAME.registerComponent('replay-player', {
 			this.fpsCounter.replayFps = frame.fps;
 			this.firstSaberControl.frameIndex = frameIndex;
 			this.secondSaberControl.frameIndex = frameIndex;
+			this.frameTime = frame.time;
 
 			var replayHeight;
 			if (replay.heights.length) {

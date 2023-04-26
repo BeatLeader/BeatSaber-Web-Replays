@@ -36,6 +36,11 @@ AFRAME.registerComponent('wall', {
 		this.headset = this.el.sceneEl.querySelectorAll('.headset')[0];
 		this.settings = this.el.sceneEl.components.settings;
 		this.replayLoader = this.el.sceneEl.components['replay-loader'];
+		this.replayPlayer = this.el.sceneEl.components['replay-player'];
+	},
+
+	getCurrentTime: function () {
+		return this.settings.settings.showHitboxes ? this.replayPlayer.frameTime : this.song.getCurrentTime();
 	},
 
 	updatePosition: function () {
@@ -47,7 +52,7 @@ AFRAME.registerComponent('wall', {
 		this.el.object3D.visible = true;
 
 		var newPosition = 0;
-		const currentTime = song.getCurrentTime();
+		const currentTime = this.getCurrentTime();
 
 		var timeOffset = data.time - currentTime - data.halfJumpDuration - data.moveTime;
 
@@ -177,7 +182,7 @@ AFRAME.registerComponent('wall', {
 		const data = this.data;
 		const halfDepth = (data.durationSeconds * data.speed) / 2;
 		const position = this.el.object3D.position;
-		const currentTime = this.song.getCurrentTime();
+		const currentTime = this.getCurrentTime();
 
 		this.updatePosition();
 

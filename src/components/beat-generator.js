@@ -388,6 +388,7 @@ AFRAME.registerComponent('beat-generator', {
 			beatObj.moveTime = data.moveTime;
 			beatObj.warmupSpeed = data.moveSpeed;
 			beatObj.beforeJumpLineLayer = note._beforeJumpLineLayer;
+			beatObj.seeking = this.isSeeking;
 
 			if (note._sliceCount || note.sliderhead) {
 				var slider = note;

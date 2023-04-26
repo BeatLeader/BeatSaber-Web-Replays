@@ -38,6 +38,7 @@ const RandomRotations = [
 var saberEls;
 var headset;
 var replayLoader;
+var replayPlayer;
 var settings;
 var song;
 
@@ -48,6 +49,7 @@ function initStatic(sceneEl) {
 	saberEls = sceneEl.querySelectorAll('[saber-controls]');
 	headset = sceneEl.querySelectorAll('.headset')[0];
 	replayLoader = sceneEl.components['replay-loader'];
+	replayPlayer = sceneEl.components['replay-player'];
 	settings = sceneEl.components['settings'];
 	song = sceneEl.components.song;
 	hitSound = sceneEl.components['beat-hit-sound'];
@@ -57,6 +59,10 @@ function initStatic(sceneEl) {
 
 function InOutQuad(t) {
 	return t >= 0.5 ? (4.0 - 2.0 * t) * t - 1.0 : 2 * t * t;
+}
+
+function getCurrentTime() {
+	return settings.settings.showHitboxes ? replayPlayer.frameTime : song.getCurrentTime();
 }
 
 /**
@@ -77,6 +83,7 @@ AFRAME.registerComponent('beat', {
 		time: {default: -1},
 		noteId: {default: 0},
 		noteIdWithScoring: {default: 0},
+		seeking: {default: false},
 
 		// Z Movement
 		time: {default: 0},
@@ -237,7 +244,7 @@ AFRAME.registerComponent('beat', {
 		var position = el.object3D.position;
 		var newPosition = 0;
 
-		const songTime = song.getCurrentTime();
+		const songTime = getCurrentTime();
 
 		var num1 = songTime - (data.time - data.halfJumpDuration);
 		var t = num1 / (data.halfJumpDuration * 2);
@@ -366,7 +373,7 @@ AFRAME.registerComponent('beat', {
 				((this.replayNote.cutPoint &&
 					this.currentPositionZ - -1 * this.replayNote.cutPoint.z > -0.05 &&
 					(settings.settings.reducedDebris || !this.checkCollisions())) ||
-					song.getCurrentTime() > this.replayNote.time)
+					getCurrentTime() >= this.replayNote.time)
 			) {
 				this.showScore();
 				this.destroyBeat(saberEls[this.replayNote.colorType]);
@@ -378,7 +385,7 @@ AFRAME.registerComponent('beat', {
 				}
 			}
 
-			if (this.data.type === 'mine' && this.replayNote.totalScore != -1 && song.getCurrentTime() > this.replayNote.time) {
+			if (this.data.type === 'mine' && this.replayNote.totalScore != -1 && getCurrentTime() >= this.replayNote.time) {
 				if (this.replayNote) {
 					this.postScoreEvent();
 				}
@@ -832,15 +839,11 @@ AFRAME.registerComponent('beat', {
 
 		this.postScoreEvent();
 		this.showScore(hand);
-
-		if (AFRAME.utils.getUrlParameter('synctest')) {
-			console.log(this.el.sceneEl.components.song.getCurrentTime());
-		}
 	},
 
 	postScoreEvent: function () {
 		if (!this.replayNote.time) return;
-		const timeToScore = this.replayNote.time - song.getCurrentTime();
+		const timeToScore = this.replayNote.time - getCurrentTime();
 		const payload = {index: this.replayNote.i};
 		const scoreChanged = () => this.el.emit('scoreChanged', payload, true);
 		if (timeToScore < 0) {
@@ -1319,10 +1322,10 @@ AFRAME.registerComponent('beat', {
 	checkStaticHitsound: function () {
 		if (this.data.type === 'mine' || this.hitSoundState == SOUND_STATE.hitPlayed) return;
 
-		const currentTime = song.getCurrentTime();
+		const currentTime = getCurrentTime();
 		const noteTime = this.data.time - 0.2;
 
-		if (currentTime > noteTime) {
+		if (currentTime > noteTime && !this.data.seeking) {
 			if (this.data.type !== 'sliderchain') {
 				hitSound.playSound();
 			}

@@ -266,7 +266,7 @@ AFRAME.registerComponent('replay-loader', {
 			.filter(a => a._type == 0 || a._type == 1);
 		var leftHanded = this.applyLeftHanded(map, replay);
 		this.applyModifiers(map, replay);
-		this.setIds(map);
+		this.setIds(map, replay);
 
 		var noteStructs = new Array();
 		var bombStructs = new Array();
@@ -591,7 +591,7 @@ AFRAME.registerComponent('replay-loader', {
 		}
 	},
 
-	setIds: function (map) {
+	setIds: function (map, replay) {
 		[].concat(map._notes, map._chains).forEach((mapnote, i) => {
 			var lineIndex = mapnote._lineIndex;
 			var colorType = mapnote._type;
@@ -603,12 +603,17 @@ AFRAME.registerComponent('replay-loader', {
 			mapnote._id = id;
 			mapnote._idWithScoring = id + scoringType * 10000;
 
+			var gameVersion = 0;
+			if (replay.info.gameVersion && replay.info.gameVersion.split('.').length == 3) {
+				gameVersion = parseInt(replay.info.gameVersion.split('.')[1]);
+			}
+
 			var altscoringType = scoringType;
 			if (mapnote._scoringType == ScoringType.BurstSliderHead) {
 				altscoringType = ScoringType.SliderHead + 2;
 			} else if (mapnote._scoringType == ScoringType.SliderHead) {
 				altscoringType = ScoringType.BurstSliderHead + 2;
-			} else if (mapnote._scoringType == ScoringType.BurstSliderElement) {
+			} else if (gameVersion >= 29 && mapnote._scoringType == ScoringType.BurstSliderElement) {
 				id = mapnote._tailLineIndex * 1000 + mapnote._tailLineLayer * 100 + colorType * 10 + cutDirection;
 			}
 			mapnote._idWithAlternativeScoring = id + altscoringType * 10000;

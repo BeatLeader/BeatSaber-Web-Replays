@@ -267,10 +267,6 @@ AFRAME.registerComponent('beat', {
 			newPosition = data.halfJumpPosition + data.warmupPosition + data.warmupSpeed * -timeOffset - SWORD_OFFSET;
 		}
 
-		if (this.chainOffset) {
-			newPosition -= this.chainOffset;
-		}
-
 		if (disableJumps) {
 			newX = this.endPos.x;
 			newY = this.endPos.y;
@@ -424,8 +420,6 @@ AFRAME.registerComponent('beat', {
 
 		// Set position.
 		if (data.type == 'sliderchain' || data.type == 'sliderhead') {
-			var t = (data.sliceIndex / (data.sliceCount - 1)) * data.squishAmount;
-
 			const headX = getHorizontalPosition(data.horizontalPosition);
 			const headY = highestJumpPosYForLineLayer(data.verticalPosition);
 
@@ -438,18 +432,12 @@ AFRAME.registerComponent('beat', {
 			const f = THREE.Math.degToRad(this.rotations[data.headCutDirection] + (this.data.rotationOffset ? this.data.rotationOffset : 0.0));
 			const p1 = new THREE.Vector2(Math.sin(f), -Math.cos(f)).multiplyScalar(0.5 * magnitude);
 
+			var t = (data.sliceIndex / (data.sliceCount - 1)) * data.squishAmount;
 			var curve = BezierCurve(new THREE.Vector2(0.0, 0.0), p1, p2, t);
 			const pos = curve[0];
 			const tangent = curve[1];
 
-			const timeDiff = (data.tailTime - data.time) * t * data.speed;
-			this.chainOffset = timeDiff;
-
-			this.startPos = new THREE.Vector3(
-				headX,
-				getVerticalPosition(0) + pos.y,
-				data.halfJumpPosition + data.warmupPosition - timeDiff - SWORD_OFFSET
-			);
+			this.startPos = new THREE.Vector3(headX, getVerticalPosition(0) + pos.y, data.halfJumpPosition + data.warmupPosition - SWORD_OFFSET);
 			this.endPos = new THREE.Vector3(pos.x + headX, pos.y + headY, -SWORD_OFFSET);
 
 			el.object3D.position.copy(this.startPos);

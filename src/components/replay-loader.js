@@ -613,7 +613,11 @@ AFRAME.registerComponent('replay-loader', {
 				altscoringType = ScoringType.SliderHead + 2;
 			} else if (mapnote._scoringType == ScoringType.SliderHead) {
 				altscoringType = ScoringType.BurstSliderHead + 2;
-			} else if (gameVersion >= 29 && mapnote._scoringType == ScoringType.BurstSliderElement) {
+			} else if (
+				gameVersion >= 29 &&
+				mapnote._scoringType == ScoringType.BurstSliderElement &&
+				mapnote._sliceIndex == mapnote._sliceCount - 1
+			) {
 				id = mapnote._tailLineIndex * 1000 + mapnote._tailLineLayer * 100 + colorType * 10 + cutDirection;
 			}
 			mapnote._idWithAlternativeScoring = id + altscoringType * 10000;

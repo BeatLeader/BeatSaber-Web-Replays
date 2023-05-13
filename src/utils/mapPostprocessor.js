@@ -349,6 +349,8 @@ function addScoringTypeAndChains(map) {
 			chain._scoringType = ScoringType.BurstSliderElement;
 			chain._sliceIndex = i;
 
+			chain._time += (chain._tailTime - chain._time) * (chain._sliceIndex / (slider._sliceCount - 1)) * slider._squishAmount;
+
 			chains.push(chain);
 		}
 	});

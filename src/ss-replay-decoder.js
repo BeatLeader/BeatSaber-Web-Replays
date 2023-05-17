@@ -33,7 +33,7 @@ function checkSSFile(file, completion) {
 }
 
 function ssReplayToBSOR(ssReplay) {
-	var result = {};
+	var result = {ssReplay: true};
 
 	result.info = ssReplay.info;
 	if (ssReplay.dynamicHeight) {

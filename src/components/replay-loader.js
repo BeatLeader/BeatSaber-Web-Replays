@@ -366,7 +366,7 @@ AFRAME.registerComponent('replay-loader', {
 					break;
 				}
 
-				if (mapnotes[i]._songTime < noteStructs[i + offset].spawnTime - 0.0001 && !mapnotes[i]._tailTime) {
+				if (mapnotes[i]._songTime < noteStructs[i + offset].spawnTime - 0.0001 && !mapnotes[i]._tailTime && !replay.ssReplay) {
 					offset--;
 					continue;
 				}

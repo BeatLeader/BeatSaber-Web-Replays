@@ -442,14 +442,18 @@ AFRAME.registerComponent('replay-loader', {
 				scoreForMaxScore = 20;
 			}
 
-			maxCounter.Increase();
-			maxScore += maxCounter.Multiplier * scoreForMaxScore;
+			if (note.isBlock) {
+				maxCounter.Increase();
+				maxScore += maxCounter.Multiplier * scoreForMaxScore;
+			}
 
 			if (note.score < 0) {
-				if (i == 0) {
-					fcScore += maxCounter.Multiplier * scoreForMaxScore;
-				} else {
-					fcScore += (maxCounter.Multiplier * allStructs[i - 1].accuracy * scoreForMaxScore) / 100;
+				if (note.isBlock) {
+					if (i == 0) {
+						fcScore += maxCounter.Multiplier * scoreForMaxScore;
+					} else {
+						fcScore += (maxCounter.Multiplier * allStructs[i - 1].accuracy * scoreForMaxScore) / 100;
+					}
 				}
 				normalCounter.Decrease();
 				combo = 0;

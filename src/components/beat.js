@@ -419,7 +419,7 @@ AFRAME.registerComponent('beat', {
 		}
 
 		// Set position.
-		if (data.type == 'sliderchain' || data.type == 'sliderhead') {
+		if (data.type == 'sliderchain' || (data.type == 'sliderhead' && data.sliceCount > 1)) {
 			const headX = getHorizontalPosition(data.horizontalPosition);
 			const headY = highestJumpPosYForLineLayer(data.verticalPosition);
 

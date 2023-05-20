@@ -80,6 +80,8 @@ AFRAME.registerComponent('beat-generator', {
 					this.jdToSet = evt.detail.jd;
 				}
 			}
+
+			this.replayFetched = true;
 		});
 		this.el.sceneEl.addEventListener('colorChanged', e => {
 			if (e.detail.color) {
@@ -176,7 +178,7 @@ AFRAME.registerComponent('beat-generator', {
 	 */
 	tick: function (time, delta) {
 		const song = this.el.components.song;
-		if (!this.data.isPlaying || !this.beatData) {
+		if (!this.data.isPlaying || !this.beatData || !this.replayFetched) {
 			return;
 		}
 

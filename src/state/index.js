@@ -27,6 +27,7 @@ const emptyChallenge = {
 };
 
 const emptyScore = {
+	time: -1,
 	accuracy: 0,
 	beatsHit: 0,
 	beatsMissed: 0,
@@ -224,7 +225,7 @@ AFRAME.registerState({
 		},
 
 		scoreChanged: (state, payload) => {
-			updateScore(state, {index: payload.index});
+			updateScore(state, {index: payload.index}, false);
 		},
 
 		victory: function (state) {
@@ -305,18 +306,12 @@ AFRAME.registerState({
 			let notes = state.notes;
 			for (var i = notes.length; --i > 0; ) {
 				if (notes[i].time < payload.newTime) {
-					updateScore(state, {index: i});
+					updateScore(state, {index: i}, true);
 					return;
 				}
 			}
 
-			state.score = {
-				accuracy: 0,
-				combo: 0,
-				maxCombo: 0,
-				multiplier: 1,
-				score: 0,
-			};
+			state.score = emptyScore;
 		},
 
 		modeselect: (state, payload) => {
@@ -415,18 +410,21 @@ function truncate(str, length) {
 	return str;
 }
 
-function updateScore(state, payload) {
+function updateScore(state, payload, force) {
 	let note = state.notes[payload.index];
 
-	state.score.score = note.totalScore;
-	state.score.scoreDescription = (note.totalScore + '').replace(/(\d)(?=(\d{3})+$)/g, '$1 ');
-	state.score.combo = note.combo;
-	state.score.multiplier = note.multiplier;
-	state.score.accuracy = note.accuracy.toFixed(2);
-	state.score.fcAccuracy = note.fcAccuracy.toFixed(2);
-	state.score.misses = note.misses;
-	state.score.energy = note.energy;
-	state.lastNoteTime = note.time;
+	if (note.time > state.score.time || force) {
+		state.score.time = note.time;
+		state.score.score = note.totalScore;
+		state.score.scoreDescription = (note.totalScore + '').replace(/(\d)(?=(\d{3})+$)/g, '$1 ');
+		state.score.combo = note.combo;
+		state.score.multiplier = note.multiplier;
+		state.score.accuracy = note.accuracy.toFixed(2);
+		state.score.fcAccuracy = note.fcAccuracy.toFixed(2);
+		state.score.misses = note.misses;
+		state.score.energy = note.energy;
+		state.lastNoteTime = note.time;
+	}
 
 	// console.log(note.totalScore + " - " + note.index + " - " + note.i + " - " + note.time + " - " + payload.index + " - " + note.score);
 }

@@ -6,7 +6,7 @@ function upgrade(map) {
 	if (map['version'] && parseInt(map['version'].split('.')[0]) == 3) {
 		let notes = [];
 		map['colorNotes'].forEach(note => {
-			notes.push({
+			var resultNote = {
 				_time: note['b'],
 				_lineIndex: note['x'],
 				_lineLayer: note['y'],
@@ -14,7 +14,15 @@ function upgrade(map) {
 				_cutDirection: note['d'],
 				_angleOffset: note['a'],
 				_scoringType: ScoringType.Normal,
-			});
+			};
+
+			if (note.customData) {
+				resultNote._customData = {
+					_position: note.customData.coordinates,
+				};
+			}
+
+			notes.push(resultNote);
 		});
 		map['bombNotes'].forEach(bomb => {
 			notes.push({

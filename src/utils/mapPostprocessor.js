@@ -124,6 +124,22 @@ function upgrade(map) {
 	} else {
 		map['_sliders'] = [];
 		map['_burstSliders'] = [];
+
+		if (!map['_bpmEvents']) {
+			let bpmevents = [];
+			map['_events'].forEach(event => {
+				if (event._type == 100) {
+					bpmevents.push({
+						_time: event._time,
+						_bpm: event._floatValue,
+					});
+				}
+			});
+
+			if (bpmevents.length) {
+				map['_bpmEvents'] = bpmevents;
+			}
+		}
 	}
 
 	return map;

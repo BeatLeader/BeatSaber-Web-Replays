@@ -56,9 +56,6 @@ AFRAME.registerSystem('materials', {
 
 		this.beatSignMaterial = new THREE.ShaderMaterial({
 			uniforms: {
-				src: {
-					value: atlas,
-				},
 				start: {value: 10000},
 				finish: {value: 10000},
 			},

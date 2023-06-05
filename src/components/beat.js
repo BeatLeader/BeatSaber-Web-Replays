@@ -649,9 +649,6 @@ AFRAME.registerComponent('beat', {
 		var blockEl = (this.blockEl = document.createElement('a-entity'));
 		var signEl = (this.signEl = document.createElement('a-entity'));
 		signEl.setAttribute('render-order', 'walls');
-
-		// Small offset to prevent z-fighting when the blocks are far away
-		signEl.object3D.position.z += 0.02;
 		blockEl.appendChild(signEl);
 		el.appendChild(blockEl);
 	},
@@ -677,7 +674,7 @@ AFRAME.registerComponent('beat', {
 				roughness: 0.1,
 				sphericalEnvMap: '#envmapTexture',
 				emissive: this.data[this.data.color],
-				emissiveIntensity: 0.05,
+				emissiveIntensity: 0.03,
 				color: this.data[this.data.color],
 			});
 		}

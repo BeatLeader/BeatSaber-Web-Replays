@@ -15,11 +15,10 @@ module.exports = {
     varying vec3 worldPos;
     uniform float start;
     uniform float finish;
-    uniform sampler2D src;
 
     void main() {
       float mask;
-      vec4 col = texture2D(src, uvs);
+      vec4 col = vec4(1, 1, 1, 1);
 
       if (worldPos.z >= start) {
         gl_FragColor = col * (1.0 - (worldPos.z - start) / (finish - start));

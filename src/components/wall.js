@@ -1,4 +1,4 @@
-import {getHorizontalPosition, highestJumpPosYForLineLayer, rotateAboutPoint, SWORD_OFFSET} from '../utils';
+import {getHorizontalPosition, getVerticalPosition, rotateAboutPoint, SWORD_OFFSET} from '../utils';
 
 // So wall does not clip the stage ground.
 const RAISE_Y_OFFSET = 0.15;
@@ -104,11 +104,20 @@ AFRAME.registerComponent('wall', {
 		const halfDepth = (data.durationSeconds * data.speed) / 2;
 		var origin;
 		if (data.isV3) {
-			let y = Math.max(highestJumpPosYForLineLayer(data.verticalPosition) + RAISE_Y_OFFSET, 0.1);
+			let y = Math.max(getVerticalPosition(data.verticalPosition) + RAISE_Y_OFFSET, 0.1);
 			origin = new THREE.Vector3(getHorizontalPosition(data.horizontalPosition) + width / 2 - 0.25, y, -SWORD_OFFSET);
 
+			var height = data.height;
+			if (height < 0) {
+				height *= -1;
+				origin.y -= height * _noteLinesDistance;
+			}
+
+			height = height * _noteLinesDistance;
+			origin.y += height / 2;
+
 			el.object3D.position.set(origin.x, origin.y, origin.z + data.halfJumpPosition + data.warmupPosition - halfDepth);
-			el.object3D.scale.set(width, Math.min(data.height * _noteLinesDistance, 3.1 - y), data.durationSeconds * data.speed);
+			el.object3D.scale.set(width, height, data.durationSeconds * data.speed);
 		} else {
 			if (data.isCeiling) {
 				origin = new THREE.Vector3(getHorizontalPosition(data.horizontalPosition) + width / 2 - 0.25, CEILING_HEIGHT, -SWORD_OFFSET);
@@ -127,6 +136,8 @@ AFRAME.registerComponent('wall', {
 				el.object3D.scale.set(width, 2.5, data.durationSeconds * data.speed);
 			}
 		}
+
+		material.uniforms['scale'].value = el.object3D.scale;
 
 		let axis = new THREE.Vector3(0, 1, 0);
 		let theta = data.spawnRotation * 0.0175;

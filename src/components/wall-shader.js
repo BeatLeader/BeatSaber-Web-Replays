@@ -8,6 +8,7 @@ const WALL_HL_COLOR = new THREE.Color('yellow');
 AFRAME.registerShader('wallShader', {
 	schema: {
 		iTime: {type: 'time', is: 'uniform'},
+		scale: {type: 'vec3', is: 'uniform', default: {x: 0, y: 0, z: 0}},
 		hitRight: {type: 'vec3', is: 'uniform', default: {x: -999, y: 0, z: 0}},
 		hitLeft: {type: 'vec3', is: 'uniform', default: {x: -999, y: 0, z: 0}},
 		highlight: {type: 'bool', is: 'uniform', default: false},
@@ -35,6 +36,7 @@ AFRAME.registerShader('wallShader', {
     uniform vec3 hitRight;
     uniform vec3 hitLeft;
     uniform bool highlight;
+    uniform vec3 scale;
 
     #define SEED 19.1254
     #define time (3.0 + iTime)/1000.0 * 0.15
@@ -86,7 +88,9 @@ AFRAME.registerShader('wallShader', {
       uv.y += sin(uv.x * 1.1 + time / 2.4) * 0.3;
 
       float w, r, bg;
-      r = 0.;
+      r = smoothNoise(vec3(uv + worldPos.x, time / 2.0), 3.0) * 0.55;
+      r += smoothNoise(vec3(uv, time / 6.0), 8.0) * 0.2;
+      r += smoothNoise(vec3(uv, time / 14.0), 50.0) * 0.04;
 
       bg = smoothstep(0.5, 1.0, r) + smoothstep(0.5, 0.0, r);
       r = smoothstep(0.4, 0.50, r) - smoothstep(0.50, 0.6, r);
@@ -99,7 +103,7 @@ AFRAME.registerShader('wallShader', {
       w += smoothstep(0.49, 0.498, abs(uv1.x));
       w += smoothstep(0.49, 0.498, abs(uv1.y));
 
-      w *= 0.9;
+      w *= 0.8;
       bg *= 0.5;
 
       vec3 COL = highlight ? WALL_HL_COLOR : WALL_COLOR;

@@ -224,7 +224,11 @@ AFRAME.registerComponent('song', {
 		this.el.emit('songstartaudio');
 		this.lastCurrentTime = this.speed > 0.01 ? 0 : time;
 
-		this.source.playbackRate.value = this.speed;
+		// this.source.playbackRate.value = this.speed;
+
+		// var interval = 12 * Math.log2(this.speed);
+		// var pitchFactor = 2 ** (-interval / 12);
+		this.source.vocoder.speed = this.speed;
 	},
 
 	getCurrentTime: function () {
@@ -242,6 +246,8 @@ AFRAME.registerComponent('song', {
 		this.lastCurrentTime = newCurrent;
 		this.lastContextTime = currentTime;
 
-		return newCurrent;
+		// console.log(this.source.vocoder.time);
+
+		return this.source.vocoder.time;
 	},
 });

@@ -631,7 +631,11 @@ AFRAME.registerComponent('song-controls', {
 
 		let speedHandler = value => {
 			firefoxHandler();
-			this.song.source.playbackRate.value = value;
+			// this.song.source.playbackRate.value = value;
+			// var pitch = 1.0 - (value - 1.0) / 1.5;
+			// var interval = 12 * Math.log2(value);
+			// var pitchFactor = 2 ** (-interval / 12);
+			this.song.source.vocoder.speed = value;
 
 			this.song.speed = value;
 			speedSlider.forEach(element => {

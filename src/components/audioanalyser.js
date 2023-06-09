@@ -4,6 +4,10 @@ if (typeof AFRAME === 'undefined') {
 
 var audioBufferCache = {};
 
+const {WAAPlayer} = require('../../vendor/phase-vocoder-2');
+var BUFFER_SIZE = 4096;
+var FRAME_SIZE = 1024;
+
 /**
  * Audio visualizer component for A-Frame using AnalyserNode.
  */
@@ -114,7 +118,7 @@ AFRAME.registerComponent('audioanalyser', {
 		}
 	},
 
-	initContext: function () {
+	initContext: async function () {
 		var data = this.data;
 		var analyser;
 		var gainNode;
@@ -123,9 +127,23 @@ AFRAME.registerComponent('audioanalyser', {
 		analyser = this.analyser = this.context.createAnalyser();
 		gainNode = this.gainNode = this.context.createGain();
 		gainNode.connect(analyser);
-		analyser.connect(this.context.destination);
+
+		try {
+			await this.context.audioWorklet.addModule('vendor/phase-vocoder-2.js');
+		} catch (err) {
+			throw new Error(`Error adding module: ${err}`);
+		}
+
+		this.vocoder = new WAAPlayer(this.context, FRAME_SIZE, BUFFER_SIZE); // new AudioWorkletNode(this.context, 'phase-vocoder-processor', {});
+		// this.vocoder.connect();
+		analyser.connect(this.vocoder.node);
+
+		// analyser.connect(gainNode);
 		analyser.fftSize = data.fftSize;
 		analyser.smoothingTimeConstant = data.smoothingTimeConstant;
+
+		// gainNode.connect(this.context.destination);
+		this.vocoder.node.connect(this.context.destination);
 		this.levels = new Uint8Array(analyser.frequencyBinCount);
 		this.waveform = new Uint8Array(analyser.fftSize);
 	},
@@ -200,6 +218,8 @@ AFRAME.registerComponent('audioanalyser', {
 				var source;
 				source = this.context.createBufferSource();
 				source.buffer = audioBufferCache[data.src];
+				this.vocoder.setBuffer(source.buffer);
+				source.vocoder = this.vocoder;
 				this.el.emit('audioanalyserbuffersource', source, false);
 				return source;
 			})

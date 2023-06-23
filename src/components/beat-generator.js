@@ -544,6 +544,13 @@ AFRAME.registerComponent('beat-generator', {
 				}
 			}
 
+			if (this.noodleExtensions && wall._customData) {
+				if (wall._customData._position) {
+					wallObj.horizontalPosition = wall._customData._position[0] + 4 / 2;
+					wallObj.verticalPosition = wall._customData._position[1];
+				}
+			}
+
 			wallEl.setAttribute('wall', wallObj);
 
 			// Handle mapping extensions wall format.

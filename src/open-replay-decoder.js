@@ -137,9 +137,9 @@ function DecodeFrame(dataView) {
 	var result = {};
 	result.time = DecodeFloat(dataView);
 	result.fps = DecodeInt(dataView);
-	result.h = DecodeEuler(dataView);
-	result.l = DecodeEuler(dataView);
-	result.r = DecodeEuler(dataView);
+	result.head = DecodeEuler(dataView);
+	result.left = DecodeEuler(dataView);
+	result.right = DecodeEuler(dataView);
 
 	return result;
 }
@@ -229,8 +229,8 @@ function DecodeCutInfo(dataView) {
 
 function DecodeEuler(dataView) {
 	var result = {};
-	result.p = DecodeVector3(dataView);
-	result.r = DecodeQuaternion(dataView);
+	result.position = DecodeVector3(dataView);
+	result.rotation = DecodeQuaternion(dataView);
 
 	return result;
 }

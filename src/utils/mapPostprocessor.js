@@ -40,7 +40,7 @@ function upgrade(map) {
 
 		let obstacles = [];
 		map['obstacles'].forEach(wall => {
-			obstacles.push({
+			var resultWall = {
 				_time: wall['b'],
 				_lineIndex: wall['x'],
 				_lineLayer: wall['y'],
@@ -48,7 +48,14 @@ function upgrade(map) {
 				_duration: wall['d'],
 				_width: wall['w'],
 				_height: wall['h'],
-			});
+			};
+
+			if (wall.customData) {
+				resultWall._customData = {
+					_position: wall.customData.coordinates,
+				};
+			}
+			obstacles.push(resultWall);
 		});
 
 		map['_obstacles'] = obstacles;

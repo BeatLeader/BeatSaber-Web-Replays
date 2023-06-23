@@ -154,6 +154,15 @@ function Mirror_Horizontal_Slider(note, numberOfLines, flip_lines) {
 function Mirror_Horizontal_Obstacle(obstacle, numberOfLines, flip_lines) {
 	if (flip_lines) {
 		obstacle._lineIndex = numberOfLines - obstacle._width - obstacle._lineIndex;
+
+		if (obstacle._customData && obstacle._customData._position) {
+			obstacle._customData._position[0] = numberOfLines - obstacle._customData._position[0] - 5;
+
+			if (obstacle._width > 1) {
+				obstacle._width *= -1;
+				obstacle._customData._position[0] += 1;
+			}
+		}
 	}
 }
 

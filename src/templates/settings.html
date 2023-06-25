@@ -1,0 +1,303 @@
+<script>
+	function changeTab(index) {
+		let buttons = Array.from(document.getElementsByClassName('tab-button'));
+		let panes = Array.from(document.getElementsByClassName('tab-pane'));
+
+		buttons.forEach((button, buttonIndex) => {
+			if (buttonIndex === index) {
+				button.classList.add('active');
+				panes[buttonIndex].classList.add('active');
+			} else {
+				button.classList.remove('active');
+				panes[buttonIndex].classList.remove('active');
+			}
+		});
+	}
+</script>
+<div id="settingsContainer">
+	<div class="tab-container">
+		<div class="tab-buttons">
+			<button class="tab-button active" onclick="changeTab(0)"><i class="fas fa-home"></i> Main</button>
+			<button class="tab-button" onclick="changeTab(1)"><i class="fas fa-palette"></i> Colors</button>
+			<button class="tab-button" onclick="changeTab(2)"><i class="fas fa-wand-sparkles"></i> Sabers</button>
+		</div>
+		<div class="tab-content">
+			<div class="tab-pane active">
+				<div class="generalSettingsContainer">
+					<div class="toggleButtons" style="display: flex; flex-direction: column; justify-content: space-between">
+						<div class="toggleButton" title="Show 3D model of headset synced with replay.">
+							<label class="switch">
+								<input type="checkbox" id="showHeadset" />
+								<span class="slider round"></span>
+							</label>
+							<label class="toggleButtonLabel"
+								><td><nobr>Show headset</nobr></td></label
+							>
+						</div>
+
+						<div class="toggleButton" title="Will play hitsound only when note is actually cut.">
+							<label class="switch">
+								<input type="checkbox" id="realHitsounds" />
+								<span class="slider round"></span>
+							</label>
+							<label class="toggleButtonLabel"
+								><td><nobr>Real hitsounds</nobr></td></label
+							>
+						</div>
+						<div class="toggleButton" title="Display time in map beat time as well.">
+							<label class="switch">
+								<input type="checkbox" id="timeInBeats" />
+								<span class="slider round"></span>
+							</label>
+							<label class="toggleButtonLabel"
+								><td><nobr>Time in beats</nobr></td></label
+							>
+						</div>
+
+						<div class="toggleButton" title="Will add color highlight for all missed notes, walls and bombs.">
+							<label class="switch">
+								<input type="checkbox" id="highlightErrors" />
+								<span class="slider round"></span>
+							</label>
+							<label class="toggleButtonLabel">
+								<td>
+									<nobr>Highlight errors</nobr>
+								</td>
+							</label>
+						</div>
+
+						<div class="toggleButton" title="Different note score color based on score value.">
+							<label class="switch">
+								<input type="checkbox" id="colorScores" />
+								<span class="slider round"></span>
+							</label>
+							<label class="toggleButtonLabel"
+								><td><nobr>Color scores</nobr></td></label
+							>
+						</div>
+
+						<div class="toggleButton" title="Disable parts of notes flying off.">
+							<label class="switch">
+								<input type="checkbox" id="reducedDebris" />
+								<span class="slider round"></span>
+							</label>
+							<label class="toggleButtonLabel">
+								<td>
+									<nobr>Reduced debris</nobr>
+								</td>
+							</label>
+						</div>
+					</div>
+
+					<div class="sliders" style="display: flex; flex-direction: column; justify-content: space-between">
+						<div class="toggleButton" title="Disable lasers, sparks, etc.">
+							<label class="switch">
+								<input type="checkbox" id="noEffects" />
+								<span class="slider round"></span>
+							</label>
+							<label class="toggleButtonLabel">
+								<td>
+									<nobr>No effects</nobr>
+								</td>
+							</label>
+						</div>
+						<div class="toggleButton" title="Disable jump animations.">
+							<label class="switch">
+								<input type="checkbox" id="disableJumps" />
+								<span class="slider round"></span>
+							</label>
+							<label class="toggleButtonLabel">
+								<td>
+									<nobr>No jumps</nobr>
+								</td>
+							</label>
+						</div>
+
+						<div class="toggleButton" title="Show collision boxes for notes and walls.">
+							<label class="switch">
+								<input type="checkbox" id="showHitboxes" />
+								<span class="slider round"></span>
+							</label>
+							<label class="toggleButtonLabel">
+								<td>
+									<nobr>Show hitboxes</nobr>
+								</td>
+							</label>
+						</div>
+
+						<div class="toggleButton" title="Show fps counter for viewer and replay.">
+							<label class="switch">
+								<input type="checkbox" id="showFps" />
+								<span class="slider round"></span>
+							</label>
+							<label class="toggleButtonLabel">
+								<td>
+									<nobr>Show fps</nobr>
+								</td>
+							</label>
+						</div>
+
+						<div class="toggleButton" title="Display note modifiers visuals.">
+							<label class="switch">
+								<input type="checkbox" id="showNoteModifierVisuals" />
+								<span class="slider round"></span>
+							</label>
+							<label class="toggleButtonLabel">
+								<td>
+									<nobr>Modifiers visuals</nobr>
+								</td>
+							</label>
+						</div>
+						<div class="toggleButton" title="Distance from player to note slowdown.">
+							<label>
+								<div class="toggleButtonContainer">
+									<label class="toggleButtonLabel" style="margin-left: 5px"
+										><td><nobr>Jump Distance:</nobr></td></label
+									>
+									<label id="jdLabel" class="toggleButtonLabel" style="margin-left: 40px">18</label>
+								</div>
+								<div style="height: 0; margin-left: 13px">
+									<svg role="presentation" class="jdRangePoint" height="30" width="100" xmlns="http://www.w3.org/2000/svg">
+										<rect id="jdTick" class="jd__tick" x="33%" y="0" width="1" height="10"></rect>
+									</svg>
+								</div>
+								<input id="jd" type="range" min="5" max="50" step="0.2" value="18" />
+								<div style="height: 10px; margin-left: 13px">
+									<svg role="presentation" class="rangePointsSvg" height="30" width="120" xmlns="http://www.w3.org/2000/svg">
+										<text id="jdPoint" class="jd__point" x="33%" y="8" text-anchor="start">0</text>
+									</svg>
+								</div>
+							</label>
+						</div>
+
+						<div class="toggleButton" title="How many pixels would be rendered for point.">
+							<label>
+								<div class="toggleButtonContainer">
+									<label class="toggleButtonLabel" style="margin-left: 5px"
+										><td><nobr>Pixel ratio:</nobr></td></label
+									>
+									<label id="pixelRatioLabel" class="toggleButtonLabel" style="margin-left: 20px">1.5</label>
+								</div>
+								<input id="pixelRatio" type="range" min="0.1" max="3" step="0.1" value="1.5" />
+							</label>
+						</div>
+
+						<button id="hitsounds-button" onclick="document.getElementById('hitSoundPicker').click();">Change hitsounds</button>
+						<input id="hitSoundPicker" style="display: none" type="file" accept=".mp3, .wav, .ogg" />
+						<span id="resetHitsounds"><u>reset to default</u></span>
+					</div>
+				</div>
+			</div>
+			<div class="tab-pane">
+				<div class="generalSettingsContainer">
+					<div class="toggleButtons" style="display: flex; flex-direction: column">
+						<span style="color: white; width: 100px; font-size: 0.7em; padding-bottom: 0.4em"
+							>If you are supporting project on Patreon, these two colors will be visible for everyone and on replay link preview</span
+						>
+						<div class="toggleButton" title="Left saber color, will show for everyone.">
+							<input type="color" id="leftSaberColor" value="#9c2121" />
+							<label class="toggleButtonLabel"
+								><td><nobr>Left saber</nobr></td></label
+							>
+						</div>
+
+						<div class="toggleButton" title="Right saber color, will show for everyone.">
+							<input type="color" id="rightSaberColor" value="#335aff" />
+							<label class="toggleButtonLabel"
+								><td><nobr>Right saber</nobr></td></label
+							>
+						</div>
+					</div>
+					<div class="toggleButtons" style="display: flex; flex-direction: column; justify-content: space-between">
+						<div class="toggleButton" title="Red event color, will show only for you.">
+							<input type="color" id="redEventColor" value="#9c2121" />
+							<label class="toggleButtonLabel"
+								><td><nobr>Red lights</nobr></td></label
+							>
+						</div>
+
+						<div class="toggleButton" title="Blue event color, will show only for you.">
+							<input type="color" id="blueEventColor" value="#335aff" />
+							<label class="toggleButtonLabel"
+								><td><nobr>Blue lights</nobr></td></label
+							>
+						</div>
+						<div class="toggleButton" title="Red background event color, will show only for you.">
+							<input type="color" id="redBGColor" value="#9c2121" />
+							<label class="toggleButtonLabel"
+								><td><nobr>Red background</nobr></td></label
+							>
+						</div>
+
+						<div class="toggleButton" title="Blue background event color, will show only for you.">
+							<input type="color" id="blueBGColor" value="#335aff" />
+							<label class="toggleButtonLabel"
+								><td><nobr>Blue background</nobr></td></label
+							>
+						</div>
+						<div class="toggleButton" title="Walls color, will show only for you.">
+							<input type="color" id="wallsColor" value="#335aff" />
+							<label class="toggleButtonLabel"
+								><td><nobr>Walls</nobr></td></label
+							>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="tab-pane">
+				<div class="toggleButton" title="How wide sabers would be compared to normal.">
+					<label>
+						<div class="toggleButtonContainer">
+							<label class="toggleButtonLabel" style="margin-left: 5px"
+								><td><nobr>Saber width:</nobr></td></label
+							>
+							<label id="saberWidthLabel" class="toggleButtonLabel" style="margin-left: 28px">100</label>
+						</div>
+						<input id="saberWidth" type="range" min="0" max="200" step="1" value="100" />
+					</label>
+				</div>
+
+				<div class="toggleButton" title="Custom z offset (visual only).">
+					<label>
+						<div class="toggleButtonContainer">
+							<label class="toggleButtonLabel" style="margin-left: 5px"
+								><td><nobr>Saber z offset:</nobr></td></label
+							>
+							<label id="saberOffsetLabel" class="toggleButtonLabel" style="margin-left: 40px">0</label>
+						</div>
+						<input id="saberOffset" type="range" min="-0.5" max="0.5" step="0.05" value="0" />
+					</label>
+				</div>
+
+				<div class="toggleButton" title="How saber trails will appear">
+					<label>
+						<div class="toggleButtonContainer">
+							<label class="toggleButtonLabel" style="margin-left: 5px"
+								><td><nobr>Trail type:</nobr></td></label
+							>
+						</div>
+						<select name="trails" style="margin-left: 5px; margin-bottom: 5px; font-size: 0.7em" id="trailType">
+							<option value="bright" selected>Bright</option>
+							<option value="dim">Dim</option>
+							<option value="timeDependence">Time dependence</option>
+							<option value="slim">Slim</option>
+							<option value="none">None</option>
+						</select>
+					</label>
+				</div>
+
+				<div class="toggleButton" title="Trail length">
+					<label>
+						<div class="toggleButtonContainer">
+							<label class="toggleButtonLabel" style="margin-left: 5px"
+								><td><nobr>Trail length: </nobr></td></label
+							>
+							<label id="trailLengthLabel" class="toggleButtonLabel" style="margin-left: 28px">20.0</label>
+						</div>
+						<input id="trailLength" type="range" min="5.0" max="40.0" step="1.0" value="20.0" />
+					</label>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

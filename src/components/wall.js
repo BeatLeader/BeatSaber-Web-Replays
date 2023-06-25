@@ -28,6 +28,7 @@ AFRAME.registerComponent('wall', {
 		halfJumpDuration: {default: 0},
 		moveTime: {default: 0},
 		warmupSpeed: {default: 0},
+		color: {default: 0},
 	},
 
 	init: function () {
@@ -100,6 +101,7 @@ AFRAME.registerComponent('wall', {
 
 		const material = el.getObject3D('mesh').material;
 		material.uniforms['highlight'].value = this.hit && this.settings.settings.highlightErrors;
+		material.uniforms['wallColor'].value = new THREE.Color(data.color ? data.color : this.settings.settings.wallColor);
 
 		const halfDepth = (data.durationSeconds * data.speed) / 2;
 		var origin;

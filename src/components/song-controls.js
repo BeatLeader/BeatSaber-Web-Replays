@@ -782,42 +782,6 @@ AFRAME.registerComponent('song-controls', {
 			this.jdChanged = false;
 		});
 
-		let leftSaberColorInput = document.getElementById('leftSaberColor');
-		leftSaberColorInput.addEventListener('input', e => {
-			this.el.sceneEl.emit('colorChanged', {hand: 'left', color: e.target.value}, null);
-			this.changeColor('leftSaberColor', e.target.value);
-		});
-
-		let rightSaberColorInput = document.getElementById('rightSaberColor');
-		rightSaberColorInput.addEventListener('input', e => {
-			this.el.sceneEl.emit('colorChanged', {hand: 'right', color: e.target.value}, null);
-			this.changeColor('rightSaberColor', e.target.value);
-		});
-
-		this.el.sceneEl.addEventListener('colorsFetched', e => {
-			const profileSettings = e.detail.features;
-			if (profileSettings.leftSaberColor) {
-				leftSaberColorInput.value = profileSettings.leftSaberColor;
-				this.el.sceneEl.emit('colorChanged', {hand: 'left', color: profileSettings.leftSaberColor}, null);
-			}
-
-			if (profileSettings.rightSaberColor) {
-				rightSaberColorInput.value = profileSettings.rightSaberColor;
-				this.el.sceneEl.emit('colorChanged', {hand: 'right', color: profileSettings.rightSaberColor}, null);
-			}
-
-			this.replayPlayerId = e.detail.playerId;
-		});
-
-		this.getColors(data => {
-			if (data.player) {
-				let roles = data.player.role;
-				if (roles.includes('tipper') || roles.includes('supporter') || roles.includes('supporter')) {
-					this.currentPlayer = data.player.id;
-				}
-			}
-		});
-
 		let pcorner = document.getElementById('patreon-corner');
 		let dcorner = document.getElementById('discord-corner');
 		if (Math.random() > 0.5) {
@@ -859,28 +823,6 @@ AFRAME.registerComponent('song-controls', {
 			hitSoundButton.innerText = 'Change hitsounds';
 			resetHitsounds.style.display = 'none';
 		});
-	},
-
-	getColors: completion => {
-		fetch('https://api.beatleader.xyz/user', {credentials: 'include'})
-			.then(response => response.json())
-			.then(async data => {
-				completion(data);
-			});
-	},
-
-	changeColor: (hand, color) => {
-		if (this.playerId == this.replayPlayerId) {
-			this.start = new Date().getTime();
-			setTimeout(() => {
-				if (new Date().getTime() - this.start > 999) {
-					fetch(`https://api.beatleader.xyz/user?${hand}=${encodeURIComponent(color)}`, {
-						method: 'PATCH',
-						credentials: 'include',
-					});
-				}
-			}, 1000);
-		}
 	},
 
 	makeTimelineOverlay: (replayData, buffer, target) => {

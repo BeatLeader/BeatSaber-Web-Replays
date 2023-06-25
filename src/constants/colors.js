@@ -11,7 +11,7 @@ module.exports = {
 	SKY_RED: '#154136',
 
 	BG_OFF: '#081a0f',
-	BG_DARK_BLUE: '#2851b8',
+	BG_BLUE: '#2851b8',
 	BG_BRIGHTBLUE: '#58bbed',
 	BG_RED: '#ff1f81',
 	BG_BRIGHTRED: '#ff6bb0',

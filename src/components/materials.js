@@ -21,10 +21,11 @@ AFRAME.registerSystem('materials', {
 	},
 
 	createMaterials: function (atlas) {
+
 		this.stageNormal = new THREE.ShaderMaterial({
 			uniforms: {
 				skyColor: {value: new THREE.Color(COLORS.SKY_BLUE)},
-				backglowColor: {value: new THREE.Color(COLORS.BG_BLUE)},
+				backglowColor: {value: new THREE.Color(COLORS.SKY_BLUE)},
 				src: {
 					value: atlas,
 				},

@@ -23,6 +23,17 @@ AFRAME.registerComponent('settings', {
 
 			timeInBeats: false,
 
+			// Colors
+			blueEventColor: '#2064a8',
+			blueBrightEventColor: '#87c2ff',
+			redEventColor: '#f01978',
+			redBrightEventColor: '#ff70b5',
+			blueBGColor: '#2851b8',
+			blueBrightBGColor: '#58bbed',
+			redBGColor: '#ff1f81',
+			redBrightBGColor: '#ff6bb0',
+			wallColor: '#f01978',
+
 			// Camera
 			cameraZPosition: 1,
 			fov: 60,

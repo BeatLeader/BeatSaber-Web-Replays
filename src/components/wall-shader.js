@@ -1,6 +1,5 @@
 const COLORS = require('../constants/colors.js');
 
-const WALL_COLOR = new THREE.Color(COLORS.NEON_RED);
 const RIGHT_COLOR = new THREE.Color(COLORS.NEON_BLUE);
 const WALL_BG = new THREE.Color(COLORS.SKY_RED);
 const WALL_HL_COLOR = new THREE.Color('yellow');
@@ -12,6 +11,7 @@ AFRAME.registerShader('wallShader', {
 		hitRight: {type: 'vec3', is: 'uniform', default: {x: -999, y: 0, z: 0}},
 		hitLeft: {type: 'vec3', is: 'uniform', default: {x: -999, y: 0, z: 0}},
 		highlight: {type: 'bool', is: 'uniform', default: false},
+		wallColor: {type: 'vec3', is: 'uniform', default: new THREE.Color(COLORS.NEON_RED)},
 	},
 
 	vertexShader: `
@@ -37,6 +37,7 @@ AFRAME.registerShader('wallShader', {
     uniform vec3 hitLeft;
     uniform bool highlight;
     uniform vec3 scale;
+    uniform vec3 wallColor;
 
     #define SEED 19.1254
     #define time (3.0 + iTime)/1000.0 * 0.15
@@ -73,7 +74,6 @@ AFRAME.registerShader('wallShader', {
       return mix(c, f, luvw.z);
     }
 
-    #define WALL_COLOR vec3(${WALL_COLOR.r}, ${WALL_COLOR.g}, ${WALL_COLOR.b})
     #define WALL_HL_COLOR vec3(${WALL_HL_COLOR.r}, ${WALL_HL_COLOR.g}, ${WALL_HL_COLOR.b})
     #define WALL_BG vec3(${WALL_BG.r}, ${WALL_BG.g}, ${WALL_BG.b})
     #define RIGHT_COLOR vec3(${RIGHT_COLOR.r}, ${RIGHT_COLOR.g}, ${RIGHT_COLOR.b})
@@ -104,7 +104,7 @@ AFRAME.registerShader('wallShader', {
       w *= 0.8;
       bg *= 0.5;
 
-      vec3 COL = highlight ? WALL_HL_COLOR : WALL_COLOR;
+      vec3 COL = highlight ? WALL_HL_COLOR : wallColor;
       vec3 BG = WALL_BG * 0.1;
 
       vec3 col = vec3(r * COL.r + w + BG.r, r * COL.g + w + BG.g, r * COL.b + w + BG.b);

@@ -249,9 +249,9 @@ function decodeFrames(dataView, offset) {
 
 function DecodeFrame(dataView) {
 	var result = {};
-	result.h = Decode34(dataView);
-	result.l = Decode34(dataView);
-	result.r = Decode34(dataView);
+	result.head = Decode34(dataView);
+	result.left = Decode34(dataView);
+	result.right = Decode34(dataView);
 	result.i = DecodeInt(dataView);
 	result.a = DecodeFloat(dataView);
 	return result;
@@ -259,8 +259,8 @@ function DecodeFrame(dataView) {
 
 function Decode34(dataView) {
 	var result = {};
-	result.p = Decode3(dataView);
-	result.r = Decode4(dataView);
+	result.position = Decode3(dataView);
+	result.rotation = Decode4(dataView);
 	return result;
 }
 

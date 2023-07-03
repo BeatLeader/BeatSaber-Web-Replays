@@ -9,7 +9,14 @@ function checkSS(file, isLink, completion) {
 			xhr.responseType = 'blob';
 
 			xhr.onload = function () {
-				checkSSFile(xhr.response, completion);
+				if (xhr.status != 200) {
+					completion({errorMessage: 'Sorry, this ScoreSaber replay is not available'});
+				} else {
+					checkSSFile(xhr.response, completion);
+				}
+			};
+			xhr.onerror = event => {
+				completion({errorMessage: 'Sorry, this ScoreSaber replay is not available'});
 			};
 			xhr.send();
 		} else {

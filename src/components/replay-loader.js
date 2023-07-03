@@ -128,7 +128,7 @@ AFRAME.registerComponent('replay-loader', {
 						error:
 							data == null
 								? hash
-									? 'Replay could not be found due to new ScoreSaber CDN'
+									? 'Sorry, this ScoreSaber replay is not available'
 									: 'This score was improved.'
 								: data.errorMessage || error,
 					},

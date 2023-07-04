@@ -535,7 +535,10 @@ AFRAME.registerComponent('replay-loader', {
 			let unIndex = 0;
 			let notFound = false;
 			for (let i = 0; i < mapnotes.length - 1; i++) {
-				if ((i == 0 || mapnotes[i - 1]._time != mapnotes[i]._time) && mapnotes[i]._time != mapnotes[i + 1]._time) {
+				if (
+					(i == 0 || mapnotes[i - 1]._time.toFixed(2) != mapnotes[i]._time.toFixed(2)) &&
+					mapnotes[i]._time.toFixed(2) != mapnotes[i + 1]._time.toFixed(2)
+				) {
 					unIndex = i;
 					break;
 				} else if (i == mapnotes.length - 2) {

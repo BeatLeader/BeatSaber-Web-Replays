@@ -160,9 +160,11 @@ AFRAME.registerComponent('audioanalyser', {
 		this.suspendContext();
 	},
 
-	unzeroFirefox: function () {
+	unzeroFirefox: function (startPlaying) {
 		this.firefoxZeroed = undefined;
-		this.resumeContext();
+		if (startPlaying) {
+			this.resumeContext();
+		}
 	},
 
 	/**

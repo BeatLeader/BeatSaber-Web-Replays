@@ -621,8 +621,8 @@ AFRAME.registerComponent('song-controls', {
 			if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) {
 				if (speedSlider[0].value == 0) {
 					this.song.audioAnalyser.zeroFirefox();
-				} else if (this.song.audioAnalyser.firefoxZeroed && this.song.isPlaying) {
-					this.song.audioAnalyser.unzeroFirefox();
+				} else if (this.song.audioAnalyser.firefoxZeroed) {
+					this.song.audioAnalyser.unzeroFirefox(this.song.isPlaying);
 				}
 			}
 		};

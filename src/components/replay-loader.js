@@ -65,7 +65,7 @@ AFRAME.registerComponent('replay-loader', {
 		this.el.sceneEl.emit('replayloadstart', null);
 		fetch(
 			'https://api.beatleader.xyz/score/' +
-				(scoreId ? `${scoreId}` : `${this.data.playerID}/${hash}/${this.data.difficulty}/${this.data.mode}`)
+				(scoreId ? `${scoreId}?fallbackToRedirect=true` : `${this.data.playerID}/${hash}/${this.data.difficulty}/${this.data.mode}`)
 		).then(async response => {
 			let data = response.status == 200 ? await response.json() : null;
 			if (data && data.playerId) {

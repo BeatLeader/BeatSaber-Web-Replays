@@ -620,11 +620,9 @@ AFRAME.registerComponent('song-controls', {
 			// Firefox seems to not like zeros
 			if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) {
 				if (speedSlider[0].value == 0) {
-					this.song.audioAnalyser.suspendContext();
-					this.firefoxZeroed = true;
-				} else if (this.firefoxZeroed && this.song.isPlaying) {
-					this.song.audioAnalyser.resumeContext();
-					this.firefoxZeroed = undefined;
+					this.song.audioAnalyser.zeroFirefox();
+				} else if (this.song.audioAnalyser.firefoxZeroed && this.song.isPlaying) {
+					this.song.audioAnalyser.unzeroFirefox();
 				}
 			}
 		};

@@ -150,7 +150,19 @@ AFRAME.registerComponent('audioanalyser', {
 	},
 
 	resumeContext: function () {
-		this.context.resume();
+		if (!this.firefoxZeroed) {
+			this.context.resume();
+		}
+	},
+
+	zeroFirefox: function () {
+		this.firefoxZeroed = true;
+		this.suspendContext();
+	},
+
+	unzeroFirefox: function () {
+		this.firefoxZeroed = undefined;
+		this.resumeContext();
 	},
 
 	/**

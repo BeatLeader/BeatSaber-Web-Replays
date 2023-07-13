@@ -280,7 +280,7 @@ AFRAME.registerComponent('zip-loader', {
 
 		var errorHandler = () => {
 			if (fallbackUrls && fallbackUrls.length) {
-				this.fetchZip(fallbackUrls.pop(), fallbackUrls);
+				this.fetchZip(fallbackUrls.shift(), fallbackUrls);
 			} else {
 				this.postchallengeloaderror(this.data.hash);
 				this.isFetching = '';

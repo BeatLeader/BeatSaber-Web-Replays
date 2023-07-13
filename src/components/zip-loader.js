@@ -237,7 +237,7 @@ AFRAME.registerComponent('zip-loader', {
 					const currentVersion = data.versions[0];
 					const desiredHash = byHash ? id : currentVersion.hash;
 
-					let callback = (hash, cover, zipUrl, fallbackUrl) => {
+					let callback = (hash, cover, zipUrl, fallbackUrls) => {
 						data.image = cover;
 						data.hash = hash;
 						data.leaderboardId = this.leaderboardId;
@@ -245,13 +245,13 @@ AFRAME.registerComponent('zip-loader', {
 
 						this.el.sceneEl.emit('songFetched', data);
 
-						this.fetchZip(zipUrl, fallbackUrl);
+						this.fetchZip(zipUrl, fallbackUrls);
 					};
 					if (desiredHash.toLowerCase() == currentVersion.hash.toLowerCase()) {
 						callback(currentVersion.hash, currentVersion.coverURL, currentVersion.downloadURL);
 					} else {
 						let urls = ['r2cdn', 'cdn'].map(prefix => 'https://' + prefix + '.beatsaver.com/' + desiredHash.toLowerCase() + '.zip');
-						callback(desiredHash, currentVersion.coverURL, urls[0], urls[1]);
+						callback(desiredHash, currentVersion.coverURL, urls[0], [urls[1], currentVersion.downloadURL]);
 					}
 				} else {
 					this.postchallengeloaderror(id);
@@ -260,7 +260,7 @@ AFRAME.registerComponent('zip-loader', {
 		});
 	},
 
-	fetchZip: function (zipUrl, fallbackUrl) {
+	fetchZip: function (zipUrl, fallbackUrls) {
 		// Already fetching.
 		if (this.isFetching === zipUrl || (this.data.id && this.fetchedZip & (this.fetchedZip === this.data.id))) {
 			return;
@@ -278,20 +278,28 @@ AFRAME.registerComponent('zip-loader', {
 			this.loadingIndicator.setAttribute('material', 'progress', e.loaded / e.total);
 		};
 
-		xhr.onload = () => {
-			JSZip.loadAsync(xhr.response).then(zip => {
-				this.fetchedZip = this.data.id;
-				this.processInfo(zip.files);
-			});
-		};
-
-		xhr.onerror = event => {
-			if (fallbackUrl) {
-				this.fetchZip(fallbackUrl);
+		var errorHandler = () => {
+			if (fallbackUrls && fallbackUrls.length) {
+				this.fetchZip(fallbackUrls.pop(), fallbackUrls);
 			} else {
 				this.postchallengeloaderror(this.data.hash);
 				this.isFetching = '';
 			}
+		};
+
+		xhr.onload = () => {
+			if (xhr.status == 200) {
+				JSZip.loadAsync(xhr.response).then(zip => {
+					this.fetchedZip = this.data.id;
+					this.processInfo(zip.files);
+				});
+			} else {
+				errorHandler();
+			}
+		};
+
+		xhr.onerror = event => {
+			errorHandler();
 		};
 
 		xhr.send();

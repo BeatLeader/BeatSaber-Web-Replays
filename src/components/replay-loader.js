@@ -380,7 +380,7 @@ AFRAME.registerComponent('replay-loader', {
 				groupIndex = i;
 				groupTime = mapnotes[i]._tailTime || mapnotes[i]._time;
 			} else {
-				if (Math.abs(groupTime - mapnotes[i]._time) < 0.0001 || Math.abs(groupTime - mapnotes[i]._tailTime) < 0.0001) {
+				if (Math.abs(groupTime - mapnotes[i]._time) < 0.001 || Math.abs(groupTime - mapnotes[i]._tailTime) < 0.001) {
 					group.push(i);
 				} else {
 					processGroup();

@@ -135,7 +135,7 @@
 						<rect id="jdTick" class="jd__tick" x="33%" y="0" width="1" height="10"></rect>
 					</svg>
 				</div>
-				<input id="jd" type="range" min="5" max="50" step="0.2" value="18" />
+				<input id="jd" class="settingRange" type="range" min="5" max="50" step="0.2" value="18" />
 				<div style="height: 10px; margin-left: 13px">
 					<svg role="presentation" class="rangePointsSvg" height="30" width="120" xmlns="http://www.w3.org/2000/svg">
 						<text id="jdPoint" class="jd__point" x="33%" y="8" text-anchor="start">0</text>
@@ -152,11 +152,11 @@
 					>
 					<label id="pixelRatioLabel" class="toggleButtonLabel" style="margin-left: 20px">1.5</label>
 				</div>
-				<input id="pixelRatio" type="range" min="0.1" max="3" step="0.1" value="1.5" />
+				<input id="pixelRatio" class="settingRange" type="range" min="0.1" max="3" step="0.1" value="1.5" />
 			</label>
 		</div>
 
-		<button id="hitsounds-button" onclick="document.getElementById('hitSoundPicker').click();">Change hitsounds</button>
+		<button id="hitsounds-button" class="settingButton" onclick="document.getElementById('hitSoundPicker').click();">Change hitsounds</button>
 		<input id="hitSoundPicker" style="display: none" type="file" accept=".mp3, .wav, .ogg" />
 		<span id="resetHitsounds"><u>reset to default</u></span>
 	</div>

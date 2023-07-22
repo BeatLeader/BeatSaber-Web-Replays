@@ -3,7 +3,7 @@
 
   <div id="volumeSliderContainer">
     <button id="mixer" title="Volume mixer"><i class="fas fa-sliders-h"></i></button>
-    <input id="volumeSlider" title="Volume" type="range" min="0" max="1" step="0.005" value="0.3"></input>
+    <input id="volumeSlider" class="settingRange" title="Volume" type="range" min="0" max="1" step="0.005" value="0.3"></input>
     <div id="mixerContainer" class="volumeHide" style="display: flex; flex-direction: row-reverse;">
       <div style="display: grid;">
         <i class="fas fa-music" style="color: white; transform: rotate(90deg);"></i>
@@ -11,8 +11,8 @@
       </div>
       
       <div style="display: grid;">
-        <input id="musicSlider" title="Music Volume" type="range" min="0" max="1" step="0.005" value="0.3"></input>
-        <input id="hitsoundSlider" title="Hitsound Volume" type="range" min="0" max="1" step="0.005" value="0.3"></input>
+        <input id="musicSlider" class="settingRange" title="Music Volume" type="range" min="0" max="1" step="0.005" value="0.3"></input>
+        <input id="hitsoundSlider" class="settingRange" title="Hitsound Volume" type="range" min="0" max="1" step="0.005" value="0.3"></input>
       </div>
     </div>
   </div>
@@ -75,7 +75,7 @@
             <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Field of view:</nobr></td></label>
             <label id="fovLabel" class="toggleButtonLabel" style="margin-left: 33px;">60°</label>
           </div>
-          <input id="fov" type="range" min="30" max="150" step="1" value="60">
+          <input id="fov" class="settingRange" type="range" min="30" max="150" step="1" value="60">
         </label>
       </div>
       <div class="toggleButton" title="How far back would be camera relative to the player.">
@@ -84,7 +84,7 @@
             <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Z position offset:</nobr></td></label>
             <label id="cameraZPositionLabel" class="toggleButtonLabel" style="margin-left: 51px;">1m</label>
           </div>
-          <input id="cameraZPosition" type="range" min="-5" max="5" step="0.1" value="1">
+          <input id="cameraZPosition" class="settingRange" type="range" min="-5" max="5" step="0.1" value="1">
         </label>
       </div>
       <div class="toggleButton" title="Rotate camera higher or lower on X axis">
@@ -93,7 +93,7 @@
             <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>X rotation offset:</nobr></td></label>
             <label id="cameraXRotationLabel" class="toggleButtonLabel" style="margin-left: 51px;">0°</label>
           </div>
-          <input id="cameraXRotation" type="range" min="-100" max="100" step="1" value="0">
+          <input id="cameraXRotation" class="settingRange" type="range" min="-100" max="100" step="1" value="0">
         </label>
       </div>
       <div class="toggleButton" title="Normalize look direction in First Person Camera. &#10;(Ignores 'X rotation offset' option)">
@@ -105,13 +105,13 @@
       </div>
       <div class="settingHeader">Main camera</div>
       <div id="cameraPositionContainer">
-        <button id="cameraToLeft" title='Select left camera (shift+q)'>< left</button>
-        <button id="cameraToCenter" title='Select center camera (shift+r)'>center</button>
-        <button id="cameraToRight" title='Select right camera (shift+e)'>right ></button>
+        <button id="cameraToLeft" class="settingButton" title='Select left camera (shift+q)'>< left</button>
+        <button id="cameraToCenter" class="settingButton" title='Select center camera (shift+r)'>center</button>
+        <button id="cameraToRight" class="settingButton" title='Select right camera (shift+e)'>right ></button>
       </div>
       <div id="cameraSaveContainer">
-        <button id="cameraSave" title='Save current camera position and rotation'>Save</button>
-        <button id="cameraRestore" title='Restore saved camera position and rotation'>Restore</button>
+        <button id="cameraSave" class="settingButton" title='Save current camera position and rotation'>Save</button>
+        <button id="cameraRestore" class="settingButton" title='Restore saved camera position and rotation'>Restore</button>
       </div>
       <div class="toggleButton" title="Use saved camera location and rotation as default on start.">
         <label class="switch">
@@ -136,7 +136,7 @@
             <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Viewport:</nobr></td></label>
             <label id="orthographicBackFrustumLabel" class="toggleButtonLabel" style="margin-left: 15px;">1.8</label>
           </div>
-          <input id="orthographicBackFrustum" type="range" min="0.5" max="5" step="0.01" value="1.8">
+          <input id="orthographicBackFrustum" class="settingRange" type="range" min="0.5" max="5" step="0.01" value="1.8">
         </label>
       </div>
       <div class="toggleButton" title="How far camera will render">
@@ -145,7 +145,7 @@
             <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Render:</nobr></td></label>
             <label id="orthographicBackFarLabel" class="toggleButtonLabel" style="margin-left: 15px;">10</label>
           </div>
-          <input id="orthographicBackFar" type="range" min="0.1" max="50" step="0.1" value="10">
+          <input id="orthographicBackFar" class="settingRange" type="range" min="0.1" max="50" step="0.1" value="10">
         </label>
       </div>
       <div class="toggleButton" title="Show right orthographic camera.">
@@ -161,7 +161,7 @@
             <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Viewport:</nobr></td></label>
             <label id="orthographicRightFrustumLabel" class="toggleButtonLabel" style="margin-left: 15px;">1.8</label>
           </div>
-          <input id="orthographicRightFrustum" type="range" min="0.5" max="5" step="0.01" value="1.8">
+          <input id="orthographicRightFrustum" class="settingRange" type="range" min="0.5" max="5" step="0.01" value="1.8">
         </label>
       </div>
       <div class="toggleButton" title="How far camera will render">
@@ -170,7 +170,7 @@
             <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Render:</nobr></td></label>
             <label id="orthographicRightFarLabel" class="toggleButtonLabel" style="margin-left: 15px;">10</label>
           </div>
-          <input id="orthographicRightFar" type="range" min="0.1" max="50" step="0.1" value="10">
+          <input id="orthographicRightFar" class="settingRange" type="range" min="0.1" max="50" step="0.1" value="10">
         </label>
       </div>
       <div class="toggleButton" title="Show top orthographic camera.">
@@ -186,7 +186,7 @@
             <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Viewport:</nobr></td></label>
             <label id="orthographicTopFrustumLabel" class="toggleButtonLabel" style="margin-left: 15px;">1.8</label>
           </div>
-          <input id="orthographicTopFrustum" type="range" min="0.5" max="5" step="0.01" value="1.8">
+          <input id="orthographicTopFrustum" class="settingRange" type="range" min="0.5" max="5" step="0.01" value="1.8">
         </label>
       </div>
       <div class="toggleButton" title="How far camera will render">
@@ -195,7 +195,7 @@
             <label class="toggleButtonLabel" style="margin-left: 5px;"><td><nobr>Render:</nobr></td></label>
             <label id="orthographicTopFarLabel" class="toggleButtonLabel" style="margin-left: 15px;">10</label>
           </div>
-          <input id="orthographicTopFar" type="range" min="0.1" max="50" step="0.1" value="10">
+          <input id="orthographicTopFar" class="settingRange" type="range" min="0.1" max="50" step="0.1" value="10">
         </label>
       </div>
     </div>

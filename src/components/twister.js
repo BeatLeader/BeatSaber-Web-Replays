@@ -9,6 +9,7 @@ AFRAME.registerComponent('twister', {
 		positionIncrement: {default: 1.4},
 		radiusIncrement: {default: 0.4},
 		thickness: {default: 0.37},
+		visible: {default: true},
 	},
 
 	init: function () {
@@ -18,7 +19,7 @@ AFRAME.registerComponent('twister', {
 	},
 
 	pulse: function (twist) {
-		if (!this.data.enabled) {
+		if (!this.data.enabled || !this.data.visible) {
 			return;
 		}
 		if (twist == 0) {
@@ -39,17 +40,19 @@ AFRAME.registerComponent('twister', {
 
 		this.clear();
 
-		for (var i = 0; i < this.data.count; i++) {
-			let segment = this.createSegment(radius);
-			segment.translate(0, this.data.positionIncrement * i, 0);
-			segments.push(segment);
-			radius += this.data.radiusIncrement;
+		if (this.data.visible) {
+			for (var i = 0; i < this.data.count; i++) {
+				let segment = this.createSegment(radius);
+				segment.translate(0, this.data.positionIncrement * i, 0);
+				segments.push(segment);
+				radius += this.data.radiusIncrement;
+			}
+			this.geometry = THREE.BufferGeometryUtils.mergeBufferGeometries(segments);
+			var material = this.el.sceneEl.systems.materials.stageNormal;
+			var mesh = new THREE.Mesh(this.geometry, material);
+			this.el.object3D.add(mesh);
+			this.el.object3D.parent.updateMatrixWorld(true);
 		}
-		this.geometry = THREE.BufferGeometryUtils.mergeBufferGeometries(segments);
-		var material = this.el.sceneEl.systems.materials.stageNormal;
-		var mesh = new THREE.Mesh(this.geometry, material);
-		this.el.object3D.add(mesh);
-		this.el.object3D.parent.updateMatrixWorld(true);
 	},
 
 	createSegment: function (radius) {
@@ -74,11 +77,11 @@ AFRAME.registerComponent('twister', {
 	clear: function () {
 		this.el.object3D.remove(this.el.object3D.children[0]);
 		if (this.geometry) this.geometry.dispose();
-		this.geometry = new THREE.BufferGeometry();
+		if (this.data.visible) this.geometry = new THREE.BufferGeometry();
 	},
 
 	tick: function (time, delta) {
-		if (!this.animate || !this.data.enabled) {
+		if (!this.animate || !this.data.enabled || !this.data.visible) {
 			return;
 		}
 

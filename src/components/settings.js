@@ -11,6 +11,7 @@ AFRAME.registerComponent('settings', {
 			showHitboxes: false,
 			pixelRatio: 1,
 			saberWidth: 100,
+			showHud: true,
 			showFps: false,
 			showNoteModifierVisuals: true,
 			savedCameraDefault: false,
@@ -48,6 +49,14 @@ AFRAME.registerComponent('settings', {
 			orthographicTopEnabled: false,
 			orthographicTopFrustum: 2.4,
 			orthographicTopFar: 10,
+
+			// Visuals
+			showLasers: true,
+			showTwister: true,
+			showPlatform: true,
+			showAudioColumns: true,
+			showLight: true,
+			showFloor: true,
 
 			// Volume
 			volume: 0.3,

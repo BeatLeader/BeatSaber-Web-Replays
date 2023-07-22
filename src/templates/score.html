@@ -1,96 +1,80 @@
 <a-mixin
-  render-order="hud"
-  id="scoreText"
-  mixin="font"
-  text="color: #FFF; letterSpacing: -2; align: center"></a-mixin>
+	render-order="hud"
+	bind__visible="settings.showHud"
+	id="scoreText"
+	mixin="font"
+	text="color: #FFF; letterSpacing: -2; align: center"></a-mixin>
 
 <a-entity
-  id="scoreContainer"
-  animation__rotationY="property: object3D.rotation.y; from: 0; to: 0; dur: 600; easing: easeInOutQuad; startEvents: spawnRotationStart"
-  bind__score-texts="isSongLoading: isSongLoading"
-  bind__visible="isPlaying || isPaused">
+	id="scoreContainer"
+	animation__rotationY="property: object3D.rotation.y; from: 0; to: 0; dur: 600; easing: easeInOutQuad; startEvents: spawnRotationStart"
+	bind__score-texts="isSongLoading: isSongLoading"
+	bind__visible="isPlaying || isPaused">
+	<a-entity id="scoreTextContainer" position="1.8 0.3 -4">
+		<a-entity id="score" mixin="scoreText" bind__text="value: score.scoreDescription" text="width: 4; color: #FAFAFA"> </a-entity>
+	</a-entity>
 
-  <a-entity id="scoreTextContainer" position="1.8 0.3 -4">
-    <a-entity
-      id="score"
-      mixin="scoreText"
-      bind__text="value: score.scoreDescription"
-      text="width: 4; color: #FAFAFA">
-    </a-entity>
-  </a-entity>
+	<a-entity id="fpsTextContainer" position="1.8 2.0 -4">
+		<a-entity id="fps" mixin="scoreText" bind__visible="settings.showFps" text="width: 4; color: #FAFAFA"> </a-entity>
+	</a-entity>
 
-  <a-entity id="fpsTextContainer" position="1.8 2.0 -4">
-    <a-entity
-      id="fps"
-      mixin="scoreText"
-      bind__visible="settings.showFps"
-      text="width: 4; color: #FAFAFA">
-    </a-entity>
-  </a-entity>
+	<a-entity
+		id="misses"
+		mixin="scoreText"
+		bind__text="value: 'Misses\n' + score.misses"
+		text="width: 1; lineHeight: 40"
+		position="-1.8 2.0 -4"
+		bind__visible="score.misses > 0"
+		scale="5 5 5">
+	</a-entity>
 
-  <a-entity
-    id="misses"
-    mixin="scoreText"
-    bind__text="value: 'Misses\n' + score.misses"
-    text="width: 1; lineHeight: 40"
-    position="-1.8 2.0 -4"
-    bind__visible="score.misses > 0"
-    scale="5 5 5">
-  </a-entity>
+	<a-entity
+		id="combo"
+		mixin="scoreText"
+		bind__text="value: 'COMBO\n' + score.combo"
+		text="width: 1; lineHeight: 40"
+		position="-1.8 1.2 -4"
+		scale="5 5 5">
+	</a-entity>
 
-  <a-entity
-    id="combo"
-    mixin="scoreText"
-    bind__text="value: 'COMBO\n' + score.combo"
-    text="width: 1; lineHeight: 40"
-    position="-1.8 1.2 -4"
-    scale="5 5 5">
-  </a-entity>
+	<a-entity
+		id="accuracy"
+		mixin="scoreText"
+		bind__text="value: score.accuracy"
+		text="width: 1; lineHeight: 40"
+		position="-1.8 0.3 -4"
+		scale="5 5 5">
+	</a-entity>
 
-  <a-entity
-    id="accuracy"
-    mixin="scoreText"
-    bind__text="value: score.accuracy"
-    text="width: 1; lineHeight: 40"
-    position="-1.8 0.3 -4"
-    scale="5 5 5">
-  </a-entity>
+	<a-entity
+		id="accuracy"
+		mixin="scoreText"
+		bind__text="value: 'FC ' + score.fcAccuracy"
+		text="width: 1; lineHeight: 40"
+		position="-1.8 0 -4"
+		bind__visible="score.misses > 0"
+		scale="3 3 3">
+	</a-entity>
 
-  <a-entity
-    id="accuracy"
-    mixin="scoreText"
-    bind__text="value: 'FC ' + score.fcAccuracy"
-    text="width: 1; lineHeight: 40"
-    position="-1.8 0 -4"
-    bind__visible="score.misses > 0"
-    scale="3 3 3">
-  </a-entity>
+	<a-entity
+		id="energyBar"
+		render-order="hud"
+		bind__visible="settings.showHud"
+		bind__energy-bar="enabled: isPlaying && challenge.isBeatsPreloaded; energy: score.energy"
+		geometry="primitive: plane; width: 1.5; height: 0.05"
+		material="shader: energy; progress: 0; transparent: true; depthWrite: false; color: #ABABAB"
+		position="0 -0.2 -4"></a-entity>
 
-  <a-entity
-      id="energyBar"
-      render-order="hud"
-      bind__energy-bar="enabled: isPlaying && challenge.isBeatsPreloaded; energy: score.energy"
-      geometry="primitive: plane; width: 1.5; height: 0.05"
-      material="shader: energy; progress: 0; transparent: true; depthWrite: false; color: #ABABAB"
-      position="0 -0.2 -4"></a-entity>
+	<a-entity render-order="hud" position="1.8 1.2 -4">
+		<a-entity id="multiplier" mixin="scoreText" bind__text="value: score.multiplier + 'x'" text="width: 1" scale="5 5 5"> </a-entity>
 
-  <a-entity 
-    render-order="hud"
-    position="1.8 1.2 -4">
-    <a-entity
-      id="multiplier"
-      mixin="scoreText"
-      bind__text="value: score.multiplier + 'x'"
-      text="width: 1"
-      scale="5 5 5">
-    </a-entity>
-
-   <a-entity
-      render-order="hud"
-      id="multiplierRing"
-      bind__multiplier-ring="combo: score.combo; multiplier: score.multiplier"
-      geometry="primitive: plane; width: 0.5; height: 0.5"
-      material="shader: ring; transparent: true; depthWrite: false; color: #88A; radiusInner: 0.7; progress: 0"
-      position="0 0.17 0"></a-entity>
-  </a-entity>
+		<a-entity
+			render-order="hud"
+			id="multiplierRing"
+			bind__visible="settings.showHud"
+			bind__multiplier-ring="combo: score.combo; multiplier: score.multiplier; visible: settings.showHud"
+			geometry="primitive: plane; width: 0.5; height: 0.5"
+			material="shader: ring; transparent: true; depthWrite: false; color: #88A; radiusInner: 0.7; progress: 0"
+			position="0 0.17 0"></a-entity>
+	</a-entity>
 </a-entity>

@@ -1,0 +1,52 @@
+<div class="toggleButton" title="How wide sabers would be compared to normal.">
+	<label>
+		<div class="toggleButtonContainer">
+			<label class="toggleButtonLabel" style="margin-left: 5px"
+				><td><nobr>Saber width:</nobr></td></label
+			>
+			<label id="saberWidthLabel" class="toggleButtonLabel" style="margin-left: 28px">100</label>
+		</div>
+		<input id="saberWidth" type="range" min="0" max="200" step="1" value="100" />
+	</label>
+</div>
+
+<div class="toggleButton" title="Custom z offset (visual only).">
+	<label>
+		<div class="toggleButtonContainer">
+			<label class="toggleButtonLabel" style="margin-left: 5px"
+				><td><nobr>Saber z offset:</nobr></td></label
+			>
+			<label id="saberOffsetLabel" class="toggleButtonLabel" style="margin-left: 40px">0</label>
+		</div>
+		<input id="saberOffset" type="range" min="-0.5" max="0.5" step="0.05" value="0" />
+	</label>
+</div>
+
+<div class="toggleButton" title="How saber trails will appear">
+	<label>
+		<div class="toggleButtonContainer">
+			<label class="toggleButtonLabel" style="margin-left: 5px"
+				><td><nobr>Trail type:</nobr></td></label
+			>
+		</div>
+		<select name="trails" style="margin-left: 5px; margin-bottom: 5px; font-size: 0.7em" id="trailType">
+			<option value="bright" selected>Bright</option>
+			<option value="dim">Dim</option>
+			<option value="timeDependence">Time dependence</option>
+			<option value="slim">Slim</option>
+			<option value="none">None</option>
+		</select>
+	</label>
+</div>
+
+<div class="toggleButton" title="Trail length">
+	<label>
+		<div class="toggleButtonContainer">
+			<label class="toggleButtonLabel" style="margin-left: 5px"
+				><td><nobr>Trail length: </nobr></td></label
+			>
+			<label id="trailLengthLabel" class="toggleButtonLabel" style="margin-left: 28px">20.0</label>
+		</div>
+		<input id="trailLength" type="range" min="5.0" max="40.0" step="1.0" value="20.0" />
+	</label>
+</div>

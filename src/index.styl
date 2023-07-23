@@ -157,12 +157,15 @@ html
 
     #mixerContainer .fas
         margin: 10px
+    
+    #mixerContainer .settingRange
+      margin auto
 
   .controlsSettings
-    cursor pointer
     margin: 6px 16px 0 8px;
     right: 24px;
     width: 24px;
+    cursor: pointer;
     img
       height 20px
       width 20px
@@ -212,17 +215,16 @@ html
       width 26px
 
   #settingsContainer
-    background rgba(85, 85, 85, 0.85)
-    border-radius 5px 5px 5px 5px
+    background: rgba(0,0,0,0.85)
+    border-radius 5px
     bottom 60px
-    cursor pointer
     display none
     grid-template-columns: 1fr 1fr
     right 0px
-    padding-top 4px
     position absolute
     z-index 999999999
     width: 360px
+    overflow: hidden
 
     input
       cursor pointer
@@ -234,13 +236,12 @@ html
     grid-template-columns: 1fr 1fr
 
   #cameraSettingsContainer
-    background rgba(85, 85, 85, 0.85)
-    border-radius 5px 5px 5px 5px
+    background rgba(0,0,0,0.85)
+    border-radius 5px
+    padding 8px
     bottom 60px
-    cursor pointer
     display none
     right 0px
-    padding-top 4px
     position absolute
     z-index 999999999
     width: 330px
@@ -266,7 +267,7 @@ html
     justify-content: center;
     display: flex;
     grid-gap: 0.5em;
-    margin: 10px 0px 10px 0px
+    margin: 10px 0px;
 
   #mobileContainer
     padding 0.5em
@@ -275,7 +276,6 @@ html
       background transparent !important
 
   .speedSliderContainer
-    background rgba(0, 0, 0, 0.85)
     border-radius 0 5px 5px 0
     cursor pointer
     display none
@@ -314,6 +314,16 @@ html
       cursor: -moz-grab;
       -moz-transition: border 1000ms ease;
       transition: border 1000ms ease;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 15px
+      width: 15px
+      border-radius: 50%
+      border: 1px solid white
+      background-color: #1d1c25
+      z-index: 1
     }
 
   #pause
@@ -369,10 +379,9 @@ html
   width 10px
 
 #mobileContainer
-  background rgba(85, 85, 85, 0.85)
-  border-radius 5px 5px 5px 5px
+  background rgba(0, 0, 0, 0.85)
+  border-radius 5px
   bottom 60px
-  cursor pointer
   display none
   right 0px
   position absolute
@@ -550,7 +559,8 @@ html
   #controls
     #cameraSettingsContainer
       &.settingsActive
-        display flex
+        display: grid;
+        grid-template-columns: 1fr 1fr;
     #settingsContainer
       &.settingsActive
         display block
@@ -558,6 +568,7 @@ html
       &.volumeActive
         display flex
         align-items center
+        padding-right 8px
     #mobileContainer
       &.settingsActive
         display flex
@@ -741,14 +752,74 @@ html
   font-size 11px
 }
 
+input[type=range].settingRange
+  display: inline-block
+  -webkit-appearance: none
+  height: 4px
+  padding: 0;
+  margin: 10px 0;
+  margin-left: 0.3em;
+  font: inherit;
+  outline: none;
+  color: #069
+  background: #3f3f3f;
+  box-sizing: border-box;
+  transition: opacity .2s;
+  cursor: pointer;
+
+/* Input range Chrome */
+input[type=range].settingRange::-webkit-slider-runnable-track 
+  border: none;
+  height: 14px
+  border-radius: 0;
+  background-color: transparent;
+
+
+input[type=range].settingRange::-webkit-slider-thumb 
+  -webkit-appearance: none;
+  height: 15px
+  width: 15px
+  border: none
+  border-radius: 50%
+  background-color: rgb(142,84,233);
+
+
+/* Input range Firefox */
+input[type=range].settingRange::-moz-range-track 
+  border: none;
+  height: 4px
+  border-radius: 0;
+  background-color: transparent;
+
+input[type=range].settingRange::-moz-range-thumb
+  height: 15px
+  width: 15px
+  border: none
+  border-radius: 50%
+  background-color: rgb(142,84,233);
+
+input[type=range].settingRange::-moz-range-progress
+  height: 4px;
+  background: transparent;
+
+.settingButton
+    border: none;
+    border-radius: 4px
+    color: white
+    padding: 4px
+    cursor: pointer
+    background-color: #3f3f3f
+
+.settingButton:disabled, button[disabled]
+    color: #6a6a6a
 
 .switch {
   position: relative;
   display: inline-block;
-  width: 30px;
+  width: 32px;
   height: 17px;
-  margin-left: 4px
-  margin-right: 2px
+  margin-left: 4px;
+  margin-right: 2px;
 }
 
 /* Hide default HTML checkbox */
@@ -766,25 +837,25 @@ html
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #ccc;
-  -webkit-transition: .4s;
-  transition: .4s;
+  background-color: #3f3f3f;
+  -webkit-transition: 0.1s;
+  transition: 0.1s;
 }
 
 .slider:before {
   position: absolute;
   content: "";
   height: 13px;
-  width: 13px;
+  width: 15px;
   left: 2px;
   bottom: 2px;
-  background-color: white;
-  -webkit-transition: .4s;
-  transition: .4s;
+  background-color: #6e6e6e;
+  -webkit-transition: 0.1s;
+  transition: 0.1s;
 }
 
 input:checked + .slider {
-  background-color: #2196F3;
+  background-color: #2f712d;
 }
 
 input:focus + .slider {
@@ -795,19 +866,16 @@ input:checked + .slider:before {
   -webkit-transform: translateX(13px);
   -ms-transform: translateX(13px);
   transform: translateX(13px);
+  background-color: #5ddd59;
 }
 
 /* Rounded sliders */
-.slider.round {
-  border-radius: 17px;
-}
-
-.slider.round:before {
-  border-radius: 50%;
+.slider.round, .slider.round:before {
+  border-radius: 4px;
 }
 
 .toggleButtonLabel {
-  top: -4px;
+  top: -2px;
   position: relative;
   display: inline-block;
   width: 30px;
@@ -1013,10 +1081,10 @@ input:checked + .slider:before {
 
 .rangePoints {
   position: absolute
-  bottom: 11px
+  bottom: 2px
   margin-left: 1.5px
   width: 100px;
-  height: 8px;
+  z-index: -1;
 }
 
 .range__tick:first-child {
@@ -1036,11 +1104,11 @@ input:checked + .slider:before {
 
 .rangePointsSvg {
   margin-left: -6px
-  -webkit-transform: translateY(-8px);
-  -moz-transform: translateY(-8px);
-  -ms-transform: translateY(-8px);
-  -o-transform: translateY(-8px);
-  transform: translateY(-8px);
+  -webkit-transform: translateY(-6px);
+  -moz-transform: translateY(-6px);
+  -ms-transform: translateY(-6px);
+  -o-transform: translateY(-6px);
+  transform: translateY(-6px);
 }
 
 .jd__tick {
@@ -1090,40 +1158,47 @@ input:checked + .slider:before {
       display block
 
 #hitsounds-button
-    margin-bottom: 1em;
-    margin-left: 0.3em;
-    font-size: 12px;
-    width: 9.6em !important;
-    height: 1.6em;
-    overflow: hidden;
+    margin-top: 0.3em
+    margin-left: 0.3em
+    font-size: 12px
+    width: 9.6em !important
+    overflow: hidden
+
 
 #resetHitsounds
     display: none
+    color: white
+    font-size: 13px
+    margin-left: 20px
+    cursor: pointer
 
 .tab-container {
   display: flex;
 }
 
 .tab-buttons {
+  width: 90px
   display: flex;
   flex-direction: column;
+  background-color: rgba(13, 13, 13, 0.40)
 }
 
 .tab-button {
   padding: 10px;
   border: none;
-  background-color: #ddd;
+  color: white;
+  background-color: transparent
   cursor: pointer;
   transition: background-color 0.3s;
 }
 
 .tab-button.active {
-  background-color: #bbb;
+  background-color: rgba(142,84,233,0.70);
 }
 
 .tab-content {
   flex-grow: 1;
-  padding-left: 20px;
+  padding: 8px;
 }
 
 .tab-pane {

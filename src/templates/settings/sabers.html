@@ -6,7 +6,7 @@
 			>
 			<label id="saberWidthLabel" class="toggleButtonLabel" style="margin-left: 28px">100</label>
 		</div>
-		<input id="saberWidth" type="range" min="0" max="200" step="1" value="100" />
+		<input id="saberWidth" class="settingRange" type="range" min="0" max="200" step="1" value="100" />
 	</label>
 </div>
 
@@ -18,7 +18,7 @@
 			>
 			<label id="saberOffsetLabel" class="toggleButtonLabel" style="margin-left: 40px">0</label>
 		</div>
-		<input id="saberOffset" type="range" min="-0.5" max="0.5" step="0.05" value="0" />
+		<input id="saberOffset" class="settingRange" type="range" min="-0.5" max="0.5" step="0.05" value="0" />
 	</label>
 </div>
 
@@ -29,7 +29,7 @@
 				><td><nobr>Trail type:</nobr></td></label
 			>
 		</div>
-		<select name="trails" style="margin-left: 5px; margin-bottom: 5px; font-size: 0.7em" id="trailType">
+		<select name="trails" class="settingButton" style="margin-left: 5px; margin-bottom: 5px; font-size: 0.7em" id="trailType">
 			<option value="bright" selected>Bright</option>
 			<option value="dim">Dim</option>
 			<option value="timeDependence">Time dependence</option>
@@ -47,6 +47,6 @@
 			>
 			<label id="trailLengthLabel" class="toggleButtonLabel" style="margin-left: 28px">20.0</label>
 		</div>
-		<input id="trailLength" type="range" min="5.0" max="40.0" step="1.0" value="20.0" />
+		<input id="trailLength" class="settingRange" type="range" min="5.0" max="40.0" step="1.0" value="20.0" />
 	</label>
 </div>

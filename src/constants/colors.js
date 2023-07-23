@@ -26,10 +26,10 @@ module.exports = {
 	TEXT_NORMAL: '#444',
 	TEXT_BOLD: '#888',
 
-	BEAT_RED: '#9c2121',
+	BEAT_RED: '#bf2121',
 	BEAT_BLUE: '#2064a8',
 
-	MINE_RED: '#1c060e',
+	MINE_RED: '#000',
 	MINE_RED_EMISSION: '#2a0d1b',
 	MINE_BLUE: '#011114',
 	MINE_BLUE_EMISSION: '#072020',

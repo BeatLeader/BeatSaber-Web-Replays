@@ -55,7 +55,8 @@
 		id="lightFixture"
 		bind__visible="settings.showLight"
 		animation__rotationY="property: object3D.rotation.y; from: 0; to: 0; dur: 600; easing: easeInOutQuad; startEvents: spawnRotationStart">
-		<a-entity light="type: spot; intensity: 3" position="8 8 10"> </a-entity>
+		<a-entity light="type: point; intensity: 10" position="-8 4 2"> </a-entity>
+		<a-entity light="type: point; intensity: 10" position="8 4 2"> </a-entity>
 	</a-entity>
 
 	<a-entity

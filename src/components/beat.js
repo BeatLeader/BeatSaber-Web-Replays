@@ -662,20 +662,19 @@ AFRAME.registerComponent('beat', {
 
 		if (this.data.type === 'mine') {
 			blockEl.setAttribute('material', {
-				roughness: 0.38,
+				roughness: 0.68,
 				metalness: 0.48,
 				sphericalEnvMap: '#mineTexture',
-				emissive: new THREE.Color(COLORS.MINE_RED_EMISSION),
 				color: new THREE.Color(COLORS.MINE_RED),
 			});
 		} else {
 			blockEl.setAttribute('material', {
-				metalness: 0.7,
-				roughness: 0.1,
+				metalness: 0.98,
+				roughness: 0.0,
+				color: this.data[this.data.color],
 				sphericalEnvMap: '#envmapTexture',
 				emissive: this.data[this.data.color],
-				emissiveIntensity: 0.03,
-				color: this.data[this.data.color],
+				emissiveIntensity: 0.3,
 			});
 		}
 		this.setObjModelFromTemplate(blockEl, this.models[this.data.type]);

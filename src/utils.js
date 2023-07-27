@@ -191,6 +191,32 @@ function rotateAboutPoint(obj, point, axis, theta, pointIsWorld) {
 	}
 }
 
+function hasTouchScreen() {
+	var result = false;
+
+	if ("maxTouchPoints" in navigator) {
+		result = navigator.maxTouchPoints > 0;
+	} else if ("msMaxTouchPoints" in navigator) {
+		result = navigator.msMaxTouchPoints > 0;
+	} else {
+		var mQ = window.matchMedia && matchMedia("(pointer:coarse)");
+		if (mQ && mQ.media === "(pointer:coarse)") {
+			result = !!mQ.matches;
+		} else if ('orientation' in window) {
+			result = true; // deprecated, but good fallback
+		} else {
+			// Only as a last resort, fall back to user agent sniffing
+			var UA = navigator.userAgent;
+			result = (
+				/\b(BlackBerry|webOS|iPhone|IEMobile)\b/i.test(UA) ||
+				/\b(Android|Windows Phone|iPad|iPod)\b/i.test(UA)
+			);
+		}
+	}
+
+	return result;
+}
+
 module.exports.getHorizontalPosition = getHorizontalPosition;
 module.exports.getVerticalPosition = getVerticalPosition;
 module.exports.highestJumpPosYForLineLayer = highestJumpPosYForLineLayer;
@@ -210,3 +236,4 @@ module.exports.BezierCurve = BezierCurve;
 module.exports.NoteLineLayer = NoteLineLayer;
 module.exports.rotateAboutPoint = rotateAboutPoint;
 module.exports.LerpUnclamped = LerpUnclamped;
+module.exports.hasTouchScreen = hasTouchScreen;

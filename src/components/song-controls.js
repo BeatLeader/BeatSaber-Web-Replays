@@ -1,4 +1,6 @@
+var utils = require('../utils');
 const ONCE = {once: true};
+
 const NoSleep = require('nosleep.js');
 const noSleep = new NoSleep();
 
@@ -8,6 +10,8 @@ if (!queryParamTime || isNaN(queryParamTime)) {
 } else {
 	queryParamTime = parseFloat(queryParamTime) / 1000;
 }
+
+var deviceHasTouchScreen = utils.hasTouchScreen();
 
 /**
  * Update the 2D UI. Should handle pause and seek.
@@ -360,13 +364,17 @@ AFRAME.registerComponent('song-controls', {
 				if (pauseButton.classList.contains('play')) {
 					pauseButton.classList.remove('play');
 					pauseButton.classList.add('pause');
-					noSleep.enable();
+					if (deviceHasTouchScreen) {
+						noSleep.enable();
+					}
 				}
 			} else {
 				if (pauseButton.classList.contains('pause')) {
 					pauseButton.classList.remove('pause');
 					pauseButton.classList.add('play');
-					noSleep.disable();
+					if (deviceHasTouchScreen) {
+						noSleep.disable();
+					}
 				}
 			}
 		};

@@ -1,6 +1,6 @@
 const ONCE = {once: true};
-const NoSleep = require('nosleep.js');
-const noSleep = new NoSleep();
+// const NoSleep = require('nosleep.js');
+// const noSleep = new NoSleep();
 
 let queryParamTime = AFRAME.utils.getUrlParameter('time').trim();
 if (!queryParamTime || isNaN(queryParamTime)) {
@@ -360,13 +360,13 @@ AFRAME.registerComponent('song-controls', {
 				if (pauseButton.classList.contains('play')) {
 					pauseButton.classList.remove('play');
 					pauseButton.classList.add('pause');
-					noSleep.enable();
+					// noSleep.enable();
 				}
 			} else {
 				if (pauseButton.classList.contains('pause')) {
 					pauseButton.classList.remove('pause');
 					pauseButton.classList.add('play');
-					noSleep.disable();
+					// noSleep.disable();
 				}
 			}
 		};

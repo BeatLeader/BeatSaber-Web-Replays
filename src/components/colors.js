@@ -171,6 +171,13 @@ AFRAME.registerComponent('colors', {
 			});
 		});
 
+		let backgroundColorInput = document.getElementById("backgroundColor");
+		backgroundColorInput.value = this.settings.settings["backgroundColor"];
+		backgroundColorInput.addEventListener('input', e => {
+			this.settings.settings["backgroundColor"] = e.target.value;
+			this.settings.sync();
+		});
+
 		let wallColorInput = document.getElementById('wallsColor');
 		wallColorInput.value = this.settings.settings.wallColor;
 		wallColorInput.addEventListener('input', e => {

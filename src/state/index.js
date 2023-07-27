@@ -358,6 +358,8 @@ AFRAME.registerState({
 
 			state.saberScale = new THREE.Vector3(saberScale, 1, saberScale);
 			state.saberGlowScale = new THREE.Vector3(saberScale, 1.1, saberScale);
+
+			document.body.style.backgroundColor = payload.settings.backgroundColor;
 		},
 
 		povchanged: (state, payload) => {

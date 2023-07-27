@@ -34,6 +34,7 @@ AFRAME.registerComponent('settings', {
 			redBGColor: '#ff1f81',
 			redBrightBGColor: '#ff6bb0',
 			wallColor: '#f01978',
+			backgroundColor: '#000000',
 
 			// Camera
 			cameraZPosition: 1,

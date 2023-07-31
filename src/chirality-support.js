@@ -103,7 +103,14 @@ function Mirror_Horizontal_Note(note, numberOfLines, flip_lines) {
 
 	let h_line;
 	if (flip_lines) {
-		h_line = numberOfLines - 1 - note._lineIndex;
+		if (note._lineIndex <= -1000 || note._lineIndex >= 1000) {
+			h_line = (numberOfLines - 1) * 1000 - note._lineIndex;
+			if (h_line >= 0 && h_line < numberOfLines * 1000) {
+				h_line += 2000;
+			}
+		} else {
+			h_line = numberOfLines - 1 - note._lineIndex;
+		}
 	} else {
 		h_line = note._lineIndex;
 		color = note._type;

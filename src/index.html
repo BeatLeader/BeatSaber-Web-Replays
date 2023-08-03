@@ -45,8 +45,11 @@
       });
       ["twitter:image", "og:image"].forEach(attribute => {
         var link = document.createElement('meta');  
-        link.setAttribute('property', attribute);   
-        link.content = document.location.protocol + "//" + document.location.host + "/preview.png" + window.location.search;  
+        link.setAttribute('property', attribute);
+        link.content = document.location.protocol + "//" + document.location.host + "/preview.png" + window.location.search;
+        if (attribute == "twitter:image")  {
+          link.content += "&twitter=true";
+        }
         document.getElementsByTagName('head')[0].appendChild(link);
       });
     </script>

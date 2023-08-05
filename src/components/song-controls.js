@@ -454,8 +454,20 @@ AFRAME.registerComponent('song-controls', {
 			controls.classList.remove('modeOptionsActive');
 		});
 
+		this.el.sceneEl.addEventListener('useractive', evt => {
+			if (evt.detail.isActive) {
+				setTimeout(() => {
+					this.userActive = evt.detail.isActive;
+				}, 1500);
+			} else {
+				this.userActive = evt.detail.isActive;
+			}
+		});
+
 		// Hide volume if click anywhere.
 		document.addEventListener('click', evt => {
+			if (!this.userActive) return;
+
 			var ctxMenu = document.getElementById('ctxMenu');
 			ctxMenu.style.display = 'none';
 

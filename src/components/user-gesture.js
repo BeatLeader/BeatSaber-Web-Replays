@@ -49,7 +49,6 @@ AFRAME.registerComponent('user-gesture', {
 
 	enableInactivityCheck: function () {
 		const captureThis = this;
-		var inactivityTimeout;
 		this.activityCheck = setInterval(function () {
 			// Check to see if the mouse has been moved
 			if (captureThis.userActivity) {
@@ -62,11 +61,11 @@ AFRAME.registerComponent('user-gesture', {
 				}
 
 				// Clear any existing inactivity timeout to start the timer over
-				clearTimeout(inactivityTimeout);
+				clearTimeout(captureThis.inactivityTimeout);
 
 				// In X seconds, if no more activity has occurred
 				// the user will be considered inactive
-				inactivityTimeout = setTimeout(function () {
+				captureThis.inactivityTimeout = setTimeout(function () {
 					// Protect against the case where the inactivity timeout can trigger
 					// before the next user activity is picked up  by the
 					// activityCheck loop.
@@ -80,6 +79,7 @@ AFRAME.registerComponent('user-gesture', {
 
 	disableInactivityCheck: function () {
 		clearTimeout(this.activityCheck);
+		clearTimeout(this.inactivityTimeout);
 	},
 
 	changeUserActive: function (isActive) {

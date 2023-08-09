@@ -5,7 +5,7 @@ AFRAME.registerComponent('settings', {
 
 	init: function () {
 		this.settings = {
-			showHeadset: true,
+			headsetOpacity: 100,
 			reducedDebris: true,
 			noEffects: false,
 			showHitboxes: false,
@@ -70,6 +70,7 @@ AFRAME.registerComponent('settings', {
 		};
 
 		this.units = {
+			headsetOpacity: '%',
 			saberWidth: '%',
 			cameraZPosition: 'm',
 			fov: '°',

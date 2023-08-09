@@ -122,7 +122,7 @@
       fps-counter
       intro-skip
       colors
-      render-order="background, additive, middle, hud, walls, splines">
+      render-order="background, additive, middle, hud, walls, splines, headset">
 
       <a-assets timeout="10000">
         {% include './assets.html' %}
@@ -249,7 +249,9 @@
         id="head" 
         class="headset"
         obj-model="obj: #questObj"
-        bind__visible="hasReceivedUserGesture && settings.showHeadset && !pov"
+        bind__visible="hasReceivedUserGesture && settings.headsetOpacity > 0 && !pov"
+        bind__material="transparent: settings.headsetOpacity &lt; 100; opacity: settings.headsetOpacity / 100"
+        render-order="headset"
         position="0 1.7 0.0">
         </a-entity>
       </a-entity>

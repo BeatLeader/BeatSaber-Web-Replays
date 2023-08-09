@@ -113,7 +113,7 @@ AFRAME.registerState({
 		spawnRotation: 0,
 		saberScale: new THREE.Vector3(1, 1, 1),
 		saberGlowScale: new THREE.Vector3(1, 1.1, 1),
-		settings: {showHeadset: false, volume: 0.0},
+		settings: {headsetOpacity: 0, volume: 0.0},
 		localReplay: !AFRAME.utils.getUrlParameter('id') && !AFRAME.utils.getUrlParameter('hash'),
 		hiddenSaber: '',
 	},

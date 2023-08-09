@@ -1,13 +1,15 @@
 <div class="generalSettingsContainer">
 	<div class="toggleButtons" style="display: flex; flex-direction: column; justify-content: space-between">
 		<div class="toggleButton" title="Show 3D model of headset synced with replay.">
-			<label class="switch">
-				<input type="checkbox" id="showHeadset" />
-				<span class="slider round"></span>
+			<label>
+				<div class="toggleButtonContainer">
+					<label class="toggleButtonLabel" style="margin-left: 5px"
+						><td><nobr>Headset opacity:</nobr></td></label
+					>
+					<label id="headsetOpacityLabel" class="toggleButtonLabel" style="margin-left: 50px">100</label>
+				</div>
+				<input id="headsetOpacity" class="settingRange" type="range" min="0" max="100" step="1" value="100" />
 			</label>
-			<label class="toggleButtonLabel"
-				><td><nobr>Show headset</nobr></td></label
-			>
 		</div>
 
 		<div class="toggleButton" title="Will play hitsound only when note is actually cut.">

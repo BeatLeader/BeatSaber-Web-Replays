@@ -1244,7 +1244,7 @@ AFRAME.registerComponent('beat', {
 				scoreEl.setAttribute('animation__motionz', 'easing', 'easeOutQuart');
 			}
 
-			scoreEl.setAttribute('animation__opacityin', 'dur', duration);
+			scoreEl.setAttribute('animation__opacityin', 'dur', duration / 2);
 			scoreEl.setAttribute('animation__opacityout', 'dur', duration);
 
 			scoreEl.setAttribute('animation__motiony', 'dur', duration);
@@ -1265,7 +1265,7 @@ AFRAME.registerComponent('beat', {
 				scoreEl.setAttribute('animation__motionx', 'to', vector.x);
 			} else {
 				scoreEl.object3D.position.x += 0.6; // One block right
-				scoreEl.object3D.position.z -= 3;
+				scoreEl.object3D.position.z -= 1.5;
 
 				scoreEl.setAttribute('animation__motionz', 'to', -8 - random);
 				scoreEl.setAttribute('animation__motionx', 'to', scoreEl.object3D.position.x);

@@ -78,8 +78,8 @@ AFRAME.registerComponent('song', {
 			this.hitSound.suspendContext();
 			this.hitSound.resumeContext();
 
-			if (this.data.isPaused && this.data.isBeatsPreloaded) {
-				this.startAudio();
+			if (this.data.isPaused && this.data.isBeatsPreloaded && this.source) {
+				this.startAudio(queryParamTime);
 			}
 
 			this.el.removeEventListener('usergesturereceive', gestureListener);
@@ -107,6 +107,9 @@ AFRAME.registerComponent('song', {
 			this.getAudio()
 				.then(source => {
 					this.el.sceneEl.emit('songprocessingfinish', null, false);
+					if (this.data.isPlaying && this.data.isBeatsPreloaded) {
+						this.startAudio(queryParamTime);
+					}
 				})
 				.catch(console.error);
 			return;

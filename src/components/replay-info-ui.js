@@ -13,49 +13,39 @@ AFRAME.registerComponent('replay-info-ui', {
 		let modifiersLabel = document.getElementById('modifiers');
 		modifiersLabel.innerHTML = modifiers;
 
-		fetch('https://api.beatleader.xyz/modifiers')
-			.then(response => response.json())
-			.then(data => {
-				modifiersLabel.title = this.describeModifiersAndMultipliers(Array.isArray(modifiers) ? modifiers : modifiers.split(','), data);
-			});
+		modifiersLabel.title = this.describeModifiersAndMultipliers(Array.isArray(modifiers) ? modifiers : modifiers.split(','));
 	},
 
 	userDescriptionForModifier: function (modifier) {
 		switch (modifier) {
 			case 'DA':
-				return 'Dissapearing arrows';
+				return 'Dissapearing Arrows';
 			case 'FS':
-				return 'Faster song';
+				return '"Faster Song" - song is 25% faster';
 			case 'SS':
-				return 'Slower song';
+				return '"Slower Song" - song is 25% slower';
 			case 'SF':
-				return 'Super fast song';
+				return '"Super Fast Song" - song is 50% faster';
 			case 'GN':
-				return 'Ghost notes';
+				return 'Ghost Notes';
 			case 'NA':
-				return 'No arrows';
+				return 'No Arrows';
 			case 'NB':
-				return 'No bombs';
+				return 'No Bombs';
 			case 'NF':
-				return 'No fail';
+				return 'No Fail';
 			case 'NO':
-				return 'No obstacles';
+				return 'No Obstacles(Walls)';
 		}
 		return 'Undefined modifier';
 	},
 
-	describeModifiersAndMultipliers: function (modifiers, multipliers) {
-		if (modifiers && multipliers) {
-			let result = 'Mods:';
-			let total = 0;
+	describeModifiersAndMultipliers: function (modifiers) {
+		if (modifiers) {
+			let result = 'Modifiers:';
 			modifiers.forEach(key => {
-				const value = multipliers[key];
-				total += value;
-				result += '\n' + this.userDescriptionForModifier(key) + (value > 0 ? ' +' : ' ') + Math.round(value * 100) + '%';
+				result += '\n' + this.userDescriptionForModifier(key);
 			});
-			if (modifiers.length > 1) {
-				result += '\nTotal:' + (total > 0 ? ' +' : ' ') + Math.round(total * 100) + '%';
-			}
 			return result;
 		} else {
 			return '';

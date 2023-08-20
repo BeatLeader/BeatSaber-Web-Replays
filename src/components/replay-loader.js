@@ -569,7 +569,7 @@ AFRAME.registerComponent('replay-loader', {
 
 			var result = checkAndMirror(replayNotes ? replayNotes[unIndex] : null, mapnotes ? mapnotes[unIndex] : null, map, notFound);
 
-			if (notFound && mapnotes.length > 2) {
+			if (notFound && result && mapnotes.length > 2) {
 				result = checkAndMirror(replayNotes ? replayNotes[unIndex + 2] : null, mapnotes ? mapnotes[unIndex + 2] : null, map, false);
 			}
 

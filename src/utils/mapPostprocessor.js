@@ -338,12 +338,26 @@ function addScoringTypeAndChains(map) {
 	});
 
 	map._sliders.forEach(slider => {
-		var head = mapnotes.find(n => n._time == slider._time && n._lineIndex == slider._lineIndex && n._lineLayer == slider._lineLayer);
+		var head = mapnotes.find(
+			n =>
+				n._time == slider._time &&
+				((n._lineIndex == slider._lineIndex && n._lineLayer == slider._lineLayer) ||
+					(n._customData &&
+						n._customData._position &&
+						Math.round(n._customData._position[0] + 4 / 2) == slider._lineIndex &&
+						Math.round(n._customData._position[1]) == slider._lineLayer))
+		);
 		if (head && head._scoringType == ScoringType.Normal) {
 			head._scoringType = ScoringType.SliderHead;
 		}
 		var tail = mapnotes.find(
-			n => n._time == slider._tailTime && n._lineIndex == slider._tailLineIndex && n._lineLayer == slider._tailLineLayer
+			n =>
+				n._time == slider._tailTime &&
+				((n._lineIndex == slider._tailLineIndex && n._lineLayer == slider._tailLineLayer) ||
+					(n._customData &&
+						n._customData._position &&
+						Math.round(n._customData._position[0] + 4 / 2) == slider._tailLineIndex &&
+						Math.round(n._customData._position[1]) == slider._tailLineLayer))
 		);
 		if (head) {
 			head.tail = tail;
@@ -358,14 +372,28 @@ function addScoringTypeAndChains(map) {
 	var chains = [];
 
 	map._burstSliders.forEach(slider => {
-		var head = mapnotes.find(n => n._time == slider._time && n._lineIndex == slider._lineIndex && n._lineLayer == slider._lineLayer);
+		var head = mapnotes.find(
+			n =>
+				n._time == slider._time &&
+				((n._lineIndex == slider._lineIndex && n._lineLayer == slider._lineLayer) ||
+					(n._customData &&
+						n._customData._position &&
+						Math.round(n._customData._position[0] + 4 / 2) == slider._lineIndex &&
+						Math.round(n._customData._position[1]) == slider._lineLayer))
+		);
 		if (head) {
 			if (head._scoringType == ScoringType.Normal) {
 				head._scoringType = ScoringType.BurstSliderHead;
 			}
 			if (head._scoringType == ScoringType.SliderHead && head.tail) {
 				let nextHead = map._burstSliders.find(
-					n => n._time == head.tail._time && n._lineIndex == head.tail._lineIndex && n._lineLayer == head.tail._lineLayer
+					n =>
+						n._time == head.tail._time &&
+						((n._lineIndex == head.tail._lineIndex && n._lineLayer == head.tail._lineLayer) ||
+							(n._customData &&
+								n._customData._position &&
+								Math.round(n._customData._position[0] + 4 / 2) == head.tail._lineIndex &&
+								Math.round(n._customData._position[1]) == head.tail._lineLayer))
 				);
 				if (nextHead) {
 					head._scoringType = ScoringType.BurstSliderHead;

@@ -16,6 +16,7 @@ AFRAME.registerComponent('settings', {
 			showNoteModifierVisuals: true,
 			savedCameraDefault: false,
 			highlightErrors: false,
+			highlight115s: false,
 			colorScores: true,
 			realHitsounds: false,
 			trailType: 'bright',

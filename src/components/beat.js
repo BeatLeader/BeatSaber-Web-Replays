@@ -236,6 +236,15 @@ AFRAME.registerComponent('beat', {
 		return LerpUnclamped(start + headOffsetZ * Math.min(1, t * 2), end + headOffsetZ, t);
 	},
 
+	makeColorGradient: function (i) {
+		const center = 128;
+		const width = 127;
+		var r = Math.sin(0.3 * i + 0) * width + center;
+		var g = Math.sin(0.3 * i + 2) * width + center;
+		var b = Math.sin(0.3 * i + 4) * width + center;
+		return 'rgb(' + Math.round(r) + ',' + Math.round(g) + ',' + Math.round(b) + ')';
+	},
+
 	updatePosition: function () {
 		const el = this.el;
 		const data = this.data;
@@ -287,6 +296,13 @@ AFRAME.registerComponent('beat', {
 		}
 
 		this.currentPositionZ = newPosition;
+
+		if (settings.settings.highlight115s && this.replayNote && this.replayNote.score == 115) {
+			if (data.type != 'mine') {
+				const color = this.makeColorGradient(newPosition * (timeOffset <= -data.moveTime ? 5 : 2));
+				this.blockEl.setAttribute('material', `color: ${color}; emissive: ${this.data[this.data.color]}; emissiveIntensity: 0.4`);
+			}
+		}
 
 		if (!disableJumps && this.yAvoidance != 0 && t > 0 && t < 0.25) {
 			position.y += (0.5 - Math.cos(t * 8.0 * Math.PI) * 0.5) * this.yAvoidance;

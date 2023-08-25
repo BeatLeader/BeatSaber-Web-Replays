@@ -264,8 +264,9 @@ AFRAME.registerComponent('replay-loader', {
 				return a._time - b._time;
 			})
 			.filter(a => a._type == 0 || a._type == 1);
-		var leftHanded = this.applyLeftHanded(map, replay);
 		this.applyModifiers(map, replay);
+		var leftHanded = this.applyLeftHanded(map, replay);
+
 		this.setIds(map, replay);
 
 		var noteStructs = new Array();

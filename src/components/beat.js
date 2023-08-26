@@ -561,6 +561,7 @@ AFRAME.registerComponent('beat', {
 
 		if (settings.settings.highlight115s && this.replayNote && this.replayNote.score == 115) {
 			if (data.type != 'mine') {
+				this.blockEl.materialToReset = this.blockEl.getObject3D('mesh').material;
 				this.blockEl.getObject3D('mesh').material = this.el.sceneEl.systems.materials[this.data.color + 'BlockRainbowMaterial'];
 			}
 		}
@@ -674,6 +675,9 @@ AFRAME.registerComponent('beat', {
 				color: new THREE.Color(COLORS.MINE_RED),
 			});
 		} else {
+			if (blockEl.materialToReset) {
+				this.blockEl.getObject3D('mesh').material = blockEl.materialToReset;
+			}
 			blockEl.setAttribute('material', {
 				metalness: 0.98,
 				roughness: 0.0,

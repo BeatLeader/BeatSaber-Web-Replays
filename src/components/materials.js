@@ -20,6 +20,88 @@ AFRAME.registerSystem('materials', {
 		this.createMaterials(atlas);
 	},
 
+	// TODO: If convert this to cycle - ThreeJS will use only first material for some reason
+	createRainbowMaterials: function (texture) {
+		this.redBlockRainbowMaterial = new THREE.MeshStandardMaterial({
+			metalness: 0.98,
+			roughness: 0.0,
+			color: COLORS.BEAT_RED,
+			envMap: texture,
+			emissive: COLORS.BEAT_RED,
+			emissiveIntensity: 0.3,
+			onBeforeCompile: shader => {
+				shader.vertexShader = shader.vertexShader.replace(
+					'void main() {',
+					`varying vec3 vPosition;
+					void main() {
+						vPosition = position;`
+				);
+
+				shader.fragmentShader =
+					`
+					vec3 hueToRgb(float hue) {
+						float r = abs(hue * 6.0 - 3.0) - 1.0;
+						float g = 2.0 - abs(hue * 6.0 - 2.0);
+						float b = 2.0 - abs(hue * 6.0 - 4.0);
+						return clamp(vec3(r, g, b), 0.0, 1.0);
+					}
+					varying vec3 vPosition;
+					` + shader.fragmentShader;
+
+				var fragmentToken =
+					'vec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;';
+				var injection = `
+					float angle = 0.785398163; // 45 degrees in radians
+					float rotatedY = vPosition.x * sin(angle) + vPosition.y * cos(angle);
+					float normalizedY = rotatedY * 4.0 + 0.1;
+					vec3 rainbowColor = hueToRgb(normalizedY);
+					vec3 outgoingLight = mix(reflectedLight.directDiffuse.rgb, rainbowColor, 0.6) + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;
+					`;
+				shader.fragmentShader = shader.fragmentShader.replace(fragmentToken, injection);
+			},
+		});
+		this.blueBlockRainbowMaterial = new THREE.MeshStandardMaterial({
+			metalness: 0.98,
+			roughness: 0.0,
+			color: COLORS.BEAT_BLUE,
+			envMap: texture,
+			emissive: COLORS.BEAT_BLUE,
+			emissiveIntensity: 0.3,
+			onBeforeCompile: shader => {
+				shader.vertexShader = shader.vertexShader.replace(
+					'void main() {',
+					`varying vec3 vPosition;
+					void main() {
+						vPosition = position;`
+				);
+
+				shader.fragmentShader =
+					`
+					vec3 hueToRgb(float hue) {
+						float r = abs(hue * 6.0 - 3.0) - 1.0;
+						float g = 2.0 - abs(hue * 6.0 - 2.0);
+						float b = 2.0 - abs(hue * 6.0 - 4.0);
+						return clamp(vec3(r, g, b), 0.0, 1.0);
+					}
+					varying vec3 vPosition;
+					` + shader.fragmentShader;
+
+				var fragmentToken =
+					'vec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;';
+				var injection = `
+					float angle =  -0.785398163; // 45 degrees in radians
+					float rotatedY = vPosition.x * sin(angle) + vPosition.y * cos(angle);
+					float normalizedY = 0.5 - rotatedY * 4.0; 
+					if (normalizedY > 0.65) {normalizedY = 0.65;}if (normalizedY < 0.0) {normalizedY = 1.0 + normalizedY;}
+					vec3 rainbowColor = hueToRgb(normalizedY);
+					vec3 outgoingLight = mix(reflectedLight.directDiffuse.rgb, rainbowColor, 0.6) + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;
+					`;
+
+				shader.fragmentShader = shader.fragmentShader.replace(fragmentToken, injection);
+			},
+		});
+	},
+
 	createMaterials: function (atlas) {
 		this.stageNormal = new THREE.ShaderMaterial({
 			uniforms: {
@@ -115,6 +197,14 @@ AFRAME.registerSystem('materials', {
 			color: new THREE.Color('yellow'),
 			emissive: new THREE.Color('yellow'),
 			envMap: new THREE.TextureLoader().load('assets/img/mineenviro-blue.jpg'),
+		});
+		new THREE.TextureLoader().load('assets/img/envmap.jpg', texture => {
+			texture.needsUpdate = true;
+			texture.mapping = THREE.SphericalReflectionMapping;
+
+			this.createRainbowMaterials(texture);
+
+			texture.needsUpdate = true;
 		});
 	},
 });

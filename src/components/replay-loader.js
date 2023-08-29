@@ -533,48 +533,41 @@ AFRAME.registerComponent('replay-loader', {
 				})
 				.filter(a => a.eventType != NoteEventType.bomb);
 
-			let unIndex = 0;
-			let notFound = false;
+			let lastIndex = 0;
 			for (let i = 0; i < mapnotes.length - 1; i++) {
-				if (
-					(i == 0 || mapnotes[i - 1]._time.toFixed(2) != mapnotes[i]._time.toFixed(2)) &&
-					mapnotes[i]._time.toFixed(2) != mapnotes[i + 1]._time.toFixed(2)
-				) {
-					unIndex = i;
+				if (mapnotes[0]._time.toFixed(2) != mapnotes[i]._time.toFixed(2)) {
+					lastIndex = i;
 					break;
-				} else if (i == mapnotes.length - 2) {
-					notFound = true;
 				}
 			}
 
-			let checkAndMirror = (replayNote, mapNote, mape, skip) => {
-				if (mapNote && replayNote) {
-					let mirroredNote = Object.assign({}, mapNote);
-					Mirror_Horizontal_Note(mirroredNote, 4, true);
+			let noteFound = 0;
+			for (let i = 0; i < lastIndex; i++) {
+				const mapNote = mapnotes[i];
 
+				let mirroredNote = Object.assign({}, mapNote);
+				Mirror_Horizontal_Note(mirroredNote, 4, true);
+
+				for (let j = 0; j < lastIndex; j++) {
+					const replayNote = replayNotes[j];
 					const replayNoteId = replayNote.noteID;
 					const mirroredNoteId =
 						mirroredNote._lineIndex * 1000 + mirroredNote._lineLayer * 100 + mirroredNote._type * 10 + mirroredNote._cutDirection;
 
 					const scoringType = mirroredNote._scoringType ? mirroredNote._scoringType + 2 : 3;
-					if (!skip && (replayNoteId == mirroredNoteId || replayNoteId == mirroredNoteId + scoringType * 10000)) {
-						Mirror_Horizontal(mape, 4, true, false);
-						return true;
+					if (replayNoteId == mirroredNoteId || replayNoteId == mirroredNoteId + scoringType * 10000) {
+						noteFound++;
+						break;
 					}
-
-					return false;
 				}
 
-				return false;
-			};
-
-			var result = checkAndMirror(replayNotes ? replayNotes[unIndex] : null, mapnotes ? mapnotes[unIndex] : null, map, notFound);
-
-			if (notFound && result && mapnotes.length > 2) {
-				result = checkAndMirror(replayNotes ? replayNotes[unIndex + 2] : null, mapnotes ? mapnotes[unIndex + 2] : null, map, false);
+				if (noteFound == lastIndex) {
+					Mirror_Horizontal(map, 4, true, false);
+					return true;
+				}
 			}
 
-			return result;
+			return false;
 		}
 	},
 

@@ -534,10 +534,15 @@ AFRAME.registerComponent('replay-loader', {
 				.filter(a => a.eventType != NoteEventType.bomb);
 
 			let lastIndex = 0;
+			let firstIndex = 0;
 			for (let i = 0; i < mapnotes.length - 1; i++) {
-				if (mapnotes[0]._time.toFixed(2) != mapnotes[i]._time.toFixed(2)) {
-					lastIndex = i;
-					break;
+				if (mapnotes[firstIndex]._time.toFixed(2) != mapnotes[i]._time.toFixed(2)) {
+					if (i % 2 != 0) {
+						lastIndex = i;
+						break;
+					} else {
+						firstIndex = i;
+					}
 				}
 			}
 

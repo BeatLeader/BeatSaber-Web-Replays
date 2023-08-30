@@ -560,7 +560,10 @@ AFRAME.registerComponent('replay-loader', {
 						mirroredNote._lineIndex * 1000 + mirroredNote._lineLayer * 100 + mirroredNote._type * 10 + mirroredNote._cutDirection;
 
 					const scoringType = mirroredNote._scoringType ? mirroredNote._scoringType + 2 : 3;
-					if (replayNoteId == mirroredNoteId || replayNoteId == mirroredNoteId + scoringType * 10000) {
+					if (
+						Math.abs(replayNote.spawnTime - mapNote._songTime) < 0.01 &&
+						(replayNoteId == mirroredNoteId || replayNoteId == mirroredNoteId + scoringType * 10000)
+					) {
 						noteFound++;
 						break;
 					}

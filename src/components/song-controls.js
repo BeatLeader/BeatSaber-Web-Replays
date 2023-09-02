@@ -589,6 +589,10 @@ AFRAME.registerComponent('song-controls', {
 				baseParams += '&' + this.el.components['camera-mover'].cameraPositionQuery();
 			}
 
+			if (AFRAME.utils.getUrlParameter('mapLink')) {
+				baseParams += '&mapLink=' + AFRAME.utils.getUrlParameter('mapLink');
+			}
+
 			let base = location.protocol + '//' + location.host + '/' + baseParams;
 			input.value =
 				base + (time ? `&time=${Math.round(this.song.getCurrentTime() * 1000)}&speed=${Math.round(this.song.speed * 100)}` : '');

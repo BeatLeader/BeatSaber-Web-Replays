@@ -291,6 +291,7 @@ AFRAME.registerComponent('zip-loader', {
 			if (xhr.status == 200) {
 				JSZip.loadAsync(xhr.response).then(zip => {
 					this.fetchedZip = this.data.id;
+					this.fetchedZipUrl = zipUrl;
 					this.processInfo(zip.files);
 				});
 			} else {

@@ -2,9 +2,15 @@ AFRAME.registerComponent('replay-info-ui', {
 	schema: {},
 	init: function () {
 		this.replayLoader = this.el.sceneEl.components['replay-loader'];
+		this.zipLoader = this.el.sceneEl.components['zip-loader'];
 
 		this.el.addEventListener('replayfetched', evt => {
 			this.updateUI();
+			this.checkMapVersion();
+		});
+
+		this.el.addEventListener('challengeloadend', evt => {
+			this.checkMapVersion();
 		});
 	},
 
@@ -14,6 +20,18 @@ AFRAME.registerComponent('replay-info-ui', {
 		modifiersLabel.innerHTML = modifiers;
 
 		modifiersLabel.title = this.describeModifiersAndMultipliers(Array.isArray(modifiers) ? modifiers : modifiers.split(','));
+	},
+
+	checkMapVersion: function () {
+		if (
+			this.replayLoader.replay &&
+			this.zipLoader.fetchedZipUrl &&
+			this.zipLoader.fetchedZipUrl.includes('beatsaver') &&
+			!this.zipLoader.fetchedZipUrl.includes(this.replayLoader.replay.info.hash.substring(0, 40).toLowerCase())
+		) {
+			let outdatedMap = document.getElementById('outdatedMap');
+			outdatedMap.style.display = 'block';
+		}
 	},
 
 	userDescriptionForModifier: function (modifier) {

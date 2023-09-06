@@ -6,6 +6,10 @@ function getHorizontalPosition(lineIndex) {
 	return (-(_noteLinesCount - 1) * 0.5 + lineIndex) * _noteLinesDistance;
 }
 
+function getHorizontalWallPosition(lineIndex) {
+	return (lineIndex - 2) * _noteLinesDistance;
+}
+
 // 0.85 1.4 1.9
 function highestJumpPosYForLineLayer(lineLayer) {
 	return 0.6 * (lineLayer + 1) + 0.05 * (5 - lineLayer - (lineLayer > 1 ? 1 : 0));
@@ -218,6 +222,7 @@ function hasTouchScreen() {
 }
 
 module.exports.getHorizontalPosition = getHorizontalPosition;
+module.exports.getHorizontalWallPosition = getHorizontalWallPosition;
 module.exports.getVerticalPosition = getVerticalPosition;
 module.exports.highestJumpPosYForLineLayer = highestJumpPosYForLineLayer;
 module.exports.get2DNoteOffset = get2DNoteOffset;

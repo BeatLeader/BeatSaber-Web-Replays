@@ -111,13 +111,11 @@ AFRAME.registerComponent('zip-loader', {
 				event.customData[mode][diff._difficulty] = diff._customData;
 
 				// TODO: Assume for now if one difficulty wants extensions, they all do. Fix later.
-				if (
-					diff._customData &&
-					diff._customData._requirements &&
-					(diff._customData._requirements.indexOf('Mapping Extensions') !== -1 ||
-						diff._customData._requirements.indexOf('Noodle Extensions') !== -1)
-				) {
+				if (diff._customData && diff._customData._requirements && diff._customData._requirements.indexOf('Mapping Extensions') !== -1) {
 					event.mappingExtensions = {isEnabled: true};
+				}
+
+				if (diff._customData && diff._customData._requirements && diff._customData._requirements.indexOf('Noodle Extensions') !== -1) {
 					map = processNoodle(map);
 				}
 			}

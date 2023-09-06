@@ -1,11 +1,10 @@
-import {getHorizontalPosition, getVerticalPosition, rotateAboutPoint, SWORD_OFFSET} from '../utils';
+import {getHorizontalPosition, getHorizontalWallPosition, getVerticalPosition, rotateAboutPoint, SWORD_OFFSET} from '../utils';
 
 // So wall does not clip the stage ground.
-const RAISE_Y_OFFSET = 0.15;
+const RAISE_Y_OFFSET = 0.1;
 
-const CEILING_THICKNESS = 1.5;
-const CEILING_HEIGHT = 1.4 + CEILING_THICKNESS / 2;
 const _noteLinesDistance = 0.6;
+const EMPTY_ROTATION = new THREE.Euler(0, 0, 0);
 
 /**
  * Wall to dodge.
@@ -28,11 +27,15 @@ AFRAME.registerComponent('wall', {
 		halfJumpDuration: {default: 0},
 		moveTime: {default: 0},
 		warmupSpeed: {default: 0},
-		color: {default: 0},
+		color: {default: null},
+		scale: {default: null},
+		localRotation: {default: null},
+		customPosition: {default: null},
+		definitePosition: {default: null},
 	},
 
 	init: function () {
-		this.maxZ = 10;
+		this.maxZ = 30;
 		this.song = this.el.sceneEl.components.song;
 		this.headset = this.el.sceneEl.querySelectorAll('.headset')[0];
 		this.settings = this.el.sceneEl.components.settings;
@@ -46,8 +49,8 @@ AFRAME.registerComponent('wall', {
 
 	updatePosition: function () {
 		const data = this.data;
+		if (data.definitePosition) return;
 		const halfDepth = (data.durationSeconds * data.speed) / 2;
-		const song = this.song;
 
 		// Move.
 		this.el.object3D.visible = true;
@@ -69,6 +72,7 @@ AFRAME.registerComponent('wall', {
 
 		var direction = this.startPosition.clone().sub(this.origin).normalize();
 		this.el.object3D.position.copy(direction.multiplyScalar(-newPosition).add(this.origin));
+		this.lastPosition = newPosition;
 
 		if (this.hit && currentTime > this.hitWall.time) {
 			this.hit = false;
@@ -83,7 +87,8 @@ AFRAME.registerComponent('wall', {
 	update: function () {
 		const el = this.el;
 		const data = this.data;
-		const width = data.width;
+		var width = data.width;
+		var length = data.durationSeconds * data.speed;
 
 		this.hit = false;
 		const walls = this.replayLoader.walls;
@@ -105,41 +110,51 @@ AFRAME.registerComponent('wall', {
 
 		const halfDepth = (data.durationSeconds * data.speed) / 2;
 		var origin;
+		var height = data.height;
 		if (data.isV3) {
 			let y = Math.max(getVerticalPosition(data.verticalPosition) + RAISE_Y_OFFSET, 0.1);
-			origin = new THREE.Vector3(getHorizontalPosition(data.horizontalPosition) + width / 2 - 0.25, y, -SWORD_OFFSET);
+			origin = new THREE.Vector3(getHorizontalWallPosition(data.horizontalPosition), y, -SWORD_OFFSET);
 
-			var height = data.height;
 			if (height < 0) {
 				height *= -1;
 				origin.y -= height * _noteLinesDistance;
 			}
-
-			height = height * _noteLinesDistance;
-			origin.y += height / 2;
-
-			el.object3D.position.set(origin.x, origin.y, origin.z + data.halfJumpPosition + data.warmupPosition - halfDepth);
-			el.object3D.scale.set(width, height, data.durationSeconds * data.speed);
 		} else {
 			if (data.isCeiling) {
-				origin = new THREE.Vector3(getHorizontalPosition(data.horizontalPosition) + width / 2 - 0.25, CEILING_HEIGHT, -SWORD_OFFSET);
-
-				el.object3D.position.set(origin.x, origin.y, origin.z + data.halfJumpPosition + data.warmupPosition - halfDepth);
-				el.object3D.scale.set(width, CEILING_THICKNESS, data.durationSeconds * data.speed);
+				let y = Math.max(getVerticalPosition(2) + RAISE_Y_OFFSET, 0.1);
+				origin = new THREE.Vector3(getHorizontalWallPosition(data.horizontalPosition), y, -SWORD_OFFSET);
+				height = 3;
 			} else {
-				// Box geometry is constructed from the local 0,0,0 growing in the positive and negative
-				// x and z axis. We have to shift by half width and depth to be positioned correctly.
-				origin = new THREE.Vector3(
-					getHorizontalPosition(data.horizontalPosition) + width / 2 - 0.25,
-					data.height + RAISE_Y_OFFSET,
-					-SWORD_OFFSET
-				);
-				el.object3D.position.set(origin.x, origin.y, origin.z + data.halfJumpPosition + data.warmupPosition - halfDepth);
-				el.object3D.scale.set(width, 2.5, data.durationSeconds * data.speed);
+				let y = Math.max(getVerticalPosition(0) + RAISE_Y_OFFSET, 0.1);
+				origin = new THREE.Vector3(getHorizontalWallPosition(data.horizontalPosition), y, -SWORD_OFFSET);
+				height = 5;
 			}
 		}
+		height = height * _noteLinesDistance;
+		if (data.scale) {
+			width = data.scale.x;
+			height = data.scale.y;
+			if (data.scale.z) {
+				length = data.scale.z;
+			}
+		}
+		if (data.customPosition) {
+			origin = new THREE.Vector3(data.customPosition.x, data.customPosition.y + RAISE_Y_OFFSET, -SWORD_OFFSET);
+		}
+		if (data.definitePosition) {
+			origin = data.definitePosition;
+		}
 
-		material.uniforms['scale'].value = el.object3D.scale;
+		origin.y += height / 2;
+		origin.x += width / 2;
+
+		el.object3D.scale.set(width, height, length);
+		if (!data.definitePosition) {
+			el.object3D.position.set(origin.x, origin.y, origin.z + data.halfJumpPosition + data.warmupPosition - halfDepth);
+		} else {
+			el.object3D.position.set(origin.x, origin.y, origin.z);
+		}
+		el.object3D.rotation.copy(EMPTY_ROTATION);
 
 		let axis = new THREE.Vector3(0, 1, 0);
 		let theta = data.spawnRotation * 0.0175;
@@ -149,6 +164,12 @@ AFRAME.registerComponent('wall', {
 
 		rotateAboutPoint(el.object3D, new THREE.Vector3(0, 0, this.headset.object3D.position.z), axis, theta, true);
 		el.object3D.lookAt(origin);
+
+		if (data.localRotation) {
+			el.object3D.rotateX(data.localRotation.x);
+			el.object3D.rotateY(data.localRotation.y);
+			el.object3D.rotateZ(data.localRotation.z);
+		}
 
 		this.startPosition = el.object3D.position.clone();
 	},
@@ -194,7 +215,6 @@ AFRAME.registerComponent('wall', {
 	tock: function (time, timeDelta) {
 		const data = this.data;
 		const halfDepth = (data.durationSeconds * data.speed) / 2;
-		const position = this.el.object3D.position;
 		const currentTime = this.getCurrentTime();
 
 		this.updatePosition();
@@ -204,7 +224,12 @@ AFRAME.registerComponent('wall', {
 			this.el.emit('scoreChanged', {index: this.hitWall.i}, true);
 		}
 
-		if (position.z > this.maxZ + halfDepth) {
+		if (this.lastPosition > this.maxZ + halfDepth) {
+			this.returnToPool();
+			return;
+		}
+
+		if (data.definitePosition && currentTime > data.time + data.durationSeconds) {
 			this.returnToPool();
 			return;
 		}

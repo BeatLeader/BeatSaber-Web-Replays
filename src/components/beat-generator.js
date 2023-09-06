@@ -506,10 +506,10 @@ AFRAME.registerComponent('beat-generator', {
 
 		return function (wallEl, wall) {
 			const data = this.data;
-			const speed = this.beatSpeed;
+			const speed = wall._customData && wall._customData._noteJumpMovementSpeed ? wall._customData._noteJumpMovementSpeed : this.beatSpeed;
 
 			const durationSeconds = wall._songDuration;
-			wallObj.halfJumpPosition = -this.halfJumpDuration * this.beatSpeed;
+			wallObj.halfJumpPosition = -this.halfJumpDuration * speed;
 			wallObj.durationSeconds = durationSeconds;
 			wallObj.horizontalPosition = wall._lineIndex;
 			if (wall._lineLayer != undefined) {
@@ -543,11 +543,46 @@ AFRAME.registerComponent('beat-generator', {
 					wallObj.width = ((wall._width - 1000) / 1000) * WALL_THICKNESS;
 				}
 			}
+			wallObj.scale = null;
+			wallObj.color = null;
+			wallObj.customPosition = null;
+			wallObj.localRotation = null;
+			wallObj.definitePosition = null;
 
 			if (this.noodleExtensions && wall._customData) {
+				if (wall._customData._scale) {
+					wallObj.scale = {x: wall._customData._scale[0], y: wall._customData._scale[1], z: wall._customData._scale[2]};
+				}
+
 				if (wall._customData._position) {
-					wallObj.horizontalPosition = wall._customData._position[0] + 4 / 2;
-					wallObj.verticalPosition = wall._customData._position[1];
+					wallObj.customPosition = {x: wall._customData._position[0], y: wall._customData._position[1], z: wall._customData._position[1]};
+				}
+
+				if (wall._customData._color) {
+					wallObj.color = new THREE.Color(wall._customData._color[0], wall._customData._color[1], wall._customData._color[2]);
+				}
+
+				if (wall._customData._localRotation) {
+					wallObj.localRotation = new THREE.Euler(
+						wall._customData._localRotation[0] * 0.0175,
+						wall._customData._localRotation[1] * 0.0175,
+						wall._customData._localRotation[2] * 0.0175
+					);
+				}
+
+				if (wall._customData._rotation) {
+					wallObj.spawnRotation = -wall._customData._rotation;
+				}
+
+				// Copium TODO: add animations support
+				if (wall._customData._animation) {
+					if (wall._customData._animation._definitePosition) {
+						wall._customData._animation._definitePosition.forEach(element => {
+							if (element.length >= 4 && element[3] == 1) {
+								wallObj.definitePosition = new THREE.Vector3(element[0], element[1], -element[2]);
+							}
+						});
+					}
 				}
 			}
 

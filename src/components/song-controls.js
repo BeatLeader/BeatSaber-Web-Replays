@@ -202,6 +202,41 @@ AFRAME.registerComponent('song-controls', {
 				document.getElementById('songMode').style.display = 'block';
 			}
 
+			if (evt.detail.customData && evt.detail.customData[evt.detail.mode][evt.detail.difficulty]) {
+				const removal = evt.detail.customData[evt.detail.mode][evt.detail.difficulty]['_environmentRemoval'];
+				if (removal) {
+					var settings = this.settings.settings;
+					console.log(removal);
+
+					removal.forEach(element => {
+						switch (element) {
+							case 'Spectrograms':
+								settings.showAudioColumns = false;
+								break;
+							case 'Floor':
+								settings.showFloor = false;
+								break;
+							case 'TrackLaneRing':
+								settings.showTwister = false;
+								break;
+							case 'BackColumns':
+								settings.showLasers = false;
+								settings.showPlatform = false;
+								break;
+							case 'Frame':
+								settings.showHud = false;
+								break;
+
+							default:
+								break;
+						}
+					});
+
+					// Don't persist the settings
+					this.el.sceneEl.emit('settingsChanged', {settings}, false);
+				}
+			}
+
 			// this.updateModeOptions();
 		});
 

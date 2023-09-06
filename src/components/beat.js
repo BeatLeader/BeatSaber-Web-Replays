@@ -395,6 +395,10 @@ AFRAME.registerComponent('beat', {
 		if (this.smallHitObject) {
 			this.smallHitObject.visible = !this.destroyed && settings.settings.showHitboxes;
 		}
+		if (this.rainbowShader && !this.blockEl.materialToReset && this.blockEl.getObject3D('mesh').material.envMap) {
+			this.blockEl.materialToReset = this.blockEl.getObject3D('mesh').material;
+			this.blockEl.getObject3D('mesh').material = this.el.sceneEl.systems.materials[this.data.color + 'BlockRainbowMaterial'];
+		}
 
 		this.returnToPool();
 	},
@@ -559,10 +563,10 @@ AFRAME.registerComponent('beat', {
 			}
 		}
 
+		this.rainbowShader = false;
 		if (settings.settings.highlight115s && this.replayNote && this.replayNote.score == 115) {
 			if (data.type != 'mine') {
-				this.blockEl.materialToReset = this.blockEl.getObject3D('mesh').material;
-				this.blockEl.getObject3D('mesh').material = this.el.sceneEl.systems.materials[this.data.color + 'BlockRainbowMaterial'];
+				this.rainbowShader = true;
 			}
 		}
 
@@ -677,6 +681,7 @@ AFRAME.registerComponent('beat', {
 		} else {
 			if (blockEl.materialToReset) {
 				this.blockEl.getObject3D('mesh').material = blockEl.materialToReset;
+				blockEl.materialToReset = null;
 			}
 			blockEl.setAttribute('material', {
 				metalness: 0.98,

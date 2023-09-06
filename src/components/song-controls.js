@@ -206,7 +206,6 @@ AFRAME.registerComponent('song-controls', {
 				const removal = evt.detail.customData[evt.detail.mode][evt.detail.difficulty]['_environmentRemoval'];
 				if (removal) {
 					var settings = this.settings.settings;
-					console.log(removal);
 
 					removal.forEach(element => {
 						switch (element) {

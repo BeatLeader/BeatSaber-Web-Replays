@@ -571,7 +571,11 @@ AFRAME.registerComponent('beat-generator', {
 				}
 
 				if (wall._customData._rotation) {
-					wallObj.spawnRotation = -wall._customData._rotation;
+					if (Array.isArray(wall._customData._rotation)) {
+						wallObj.spawnRotation = wall._customData._rotation[0];
+					} else {
+						wallObj.spawnRotation = -wall._customData._rotation;
+					}
 				}
 
 				// Copium TODO: add animations support

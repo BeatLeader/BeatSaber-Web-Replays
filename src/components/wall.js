@@ -88,7 +88,7 @@ AFRAME.registerComponent('wall', {
 		const el = this.el;
 		const data = this.data;
 		var width = data.width;
-		var length = data.durationSeconds * data.speed;
+		var length = Math.abs(data.durationSeconds) * data.speed;
 
 		this.hit = false;
 		const walls = this.replayLoader.walls;
@@ -148,7 +148,7 @@ AFRAME.registerComponent('wall', {
 		origin.y += height / 2;
 		origin.x += width / 2;
 
-		el.object3D.scale.set(width, height, length);
+		el.object3D.scale.set(Math.max(width, 0.01), Math.max(height, 0.01), Math.max(length, 0.01));
 		if (!data.definitePosition) {
 			el.object3D.position.set(origin.x, origin.y, origin.z + data.halfJumpPosition + data.warmupPosition - halfDepth);
 		} else {
@@ -203,13 +203,6 @@ AFRAME.registerComponent('wall', {
 		if (pointIsWorld) {
 			obj.parent.worldToLocal(obj.position); // undo world coordinates compensation
 		}
-	},
-
-	play: function () {
-		this.el.object3D.visible = true;
-		this.el.setAttribute('data-collidable-head', '');
-		this.el.setAttribute('data-saber-particles', '');
-		this.el.setAttribute('raycastable-game', '');
 	},
 
 	tock: function (time, timeDelta) {

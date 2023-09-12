@@ -522,8 +522,10 @@ AFRAME.registerComponent('beat-generator', {
 			wallObj.isCeiling = wall._type === 1;
 			wallObj.speed = speed;
 			wallObj.warmupPosition = -data.moveTime * data.moveSpeed;
-			// wall._width can be like 1 or 2. Map that to 0.6 thickness.
-			wallObj.width = wall._width * WALL_THICKNESS;
+			if (wall._width < 0) {
+				wallObj.horizontalPosition += wall._width;
+			}
+			wallObj.width = Math.abs(wall._width * WALL_THICKNESS);
 
 			wallObj.spawnRotation = this.getRotation(wall._songTime);
 			wallObj.time = wall._songTime;

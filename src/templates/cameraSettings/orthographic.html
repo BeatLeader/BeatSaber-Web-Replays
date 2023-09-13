@@ -1,0 +1,100 @@
+<div class="settingHeader">Orthographic camera</div>
+<div class="orthoSettingsContainer">
+	<div class="toggleButtons" style="display: flex; flex-direction: column; justify-content: flex-end">
+		<div class="toggleButton" title="Show top orthographic camera.">
+			<label class="switch">
+				<input type="checkbox" id="orthographicTopEnabled" />
+				<span class="slider round"></span>
+			</label>
+			<label class="toggleButtonLabel"
+				><td><nobr>Top camera</nobr></td></label
+			>
+		</div>
+		<div class="toggleButton" title="How far away from player camera would be">
+			<label>
+				<div class="toggleButtonContainer">
+					<label class="toggleButtonLabel" style="margin-left: 5px"
+						><td><nobr>Viewport:</nobr></td></label
+					>
+					<label id="orthographicTopFrustumLabel" class="toggleButtonLabel" style="margin-left: 15px">1.8</label>
+				</div>
+				<input id="orthographicTopFrustum" class="settingRange" type="range" min="0.5" max="5" step="0.01" value="1.8" />
+			</label>
+		</div>
+		<div class="toggleButton" title="How far camera will render">
+			<label>
+				<div class="toggleButtonContainer">
+					<label class="toggleButtonLabel" style="margin-left: 5px"
+						><td><nobr>Render:</nobr></td></label
+					>
+					<label id="orthographicTopFarLabel" class="toggleButtonLabel" style="margin-left: 15px">10</label>
+				</div>
+				<input id="orthographicTopFar" class="settingRange" type="range" min="0.1" max="50" step="0.1" value="10" />
+			</label>
+		</div>
+	</div>
+	<div class="toggleButtons" style="display: flex; flex-direction: column; justify-content: space-between">
+		<div class="toggleButton" title="Show right orthographic camera.">
+			<label class="switch">
+				<input type="checkbox" id="orthographicRightEnabled" />
+				<span class="slider round"></span>
+			</label>
+			<label class="toggleButtonLabel"
+				><td><nobr>Right camera</nobr></td></label
+			>
+		</div>
+		<div class="toggleButton" title="How far away from player camera would be">
+			<label>
+				<div class="toggleButtonContainer">
+					<label class="toggleButtonLabel" style="margin-left: 5px"
+						><td><nobr>Viewport:</nobr></td></label
+					>
+					<label id="orthographicRightFrustumLabel" class="toggleButtonLabel" style="margin-left: 15px">1.8</label>
+				</div>
+				<input id="orthographicRightFrustum" class="settingRange" type="range" min="0.5" max="5" step="0.01" value="1.8" />
+			</label>
+		</div>
+		<div class="toggleButton" title="How far camera will render">
+			<label>
+				<div class="toggleButtonContainer">
+					<label class="toggleButtonLabel" style="margin-left: 5px"
+						><td><nobr>Render:</nobr></td></label
+					>
+					<label id="orthographicRightFarLabel" class="toggleButtonLabel" style="margin-left: 15px">10</label>
+				</div>
+				<input id="orthographicRightFar" class="settingRange" type="range" min="0.1" max="50" step="0.1" value="10" />
+			</label>
+		</div>
+		<div class="toggleButton" title="Show back orthographic camera.">
+			<label class="switch">
+				<input type="checkbox" id="orthographicBackEnabled" />
+				<span class="slider round"></span>
+			</label>
+			<label class="toggleButtonLabel"
+				><td><nobr>Back camera</nobr></td></label
+			>
+		</div>
+		<div class="toggleButton" title="How far away from player camera would be">
+			<label>
+				<div>
+					<label class="toggleButtonLabel" style="margin-left: 5px"
+						><td><nobr>Viewport:</nobr></td></label
+					>
+					<label id="orthographicBackFrustumLabel" class="toggleButtonLabel" style="margin-left: 15px">1.8</label>
+				</div>
+				<input id="orthographicBackFrustum" class="settingRange" type="range" min="0.5" max="5" step="0.01" value="1.8" />
+			</label>
+		</div>
+		<div class="toggleButton" title="How far camera will render">
+			<label>
+				<div class="toggleButtonContainer">
+					<label class="toggleButtonLabel" style="margin-left: 5px"
+						><td><nobr>Render:</nobr></td></label
+					>
+					<label id="orthographicBackFarLabel" class="toggleButtonLabel" style="margin-left: 15px">10</label>
+				</div>
+				<input id="orthographicBackFar" class="settingRange" type="range" min="0.1" max="50" step="0.1" value="10" />
+			</label>
+		</div>
+	</div>
+</div>

@@ -1,0 +1,30 @@
+<script>
+	function changeCameraTab(index) {
+		let buttons = Array.from(document.getElementsByClassName('camera-tab-button'));
+		let panes = Array.from(document.getElementsByClassName('camera-tab-pane'));
+
+		buttons.forEach((button, buttonIndex) => {
+			if (buttonIndex === index) {
+				button.classList.add('active');
+				panes[buttonIndex].classList.add('active');
+			} else {
+				button.classList.remove('active');
+				panes[buttonIndex].classList.remove('active');
+			}
+		});
+	}
+</script>
+<div id="cameraSettingsContainer">
+	<div class="tab-container">
+		<div class="tab-buttons">
+			<button class="camera-tab-button tab-button active" onclick="changeCameraTab(0)"><i class="fas fa-home"></i> Main</button>
+			<button class="camera-tab-button tab-button" onclick="changeCameraTab(1)"><i class="fas fa-vr-cardboard"></i> FPV</button>
+			<button class="camera-tab-button tab-button" onclick="changeCameraTab(2)"><i class="fas fa-camera-retro"></i> Ortho</button>
+		</div>
+		<div class="tab-content">
+			<div class="camera-tab-pane tab-pane active">{% include './cameraSettings/main.html' %}</div>
+			<div class="camera-tab-pane tab-pane">{% include './cameraSettings/fpv.html' %}</div>
+			<div class="camera-tab-pane tab-pane">{% include './cameraSettings/orthographic.html' %}</div>
+		</div>
+	</div>
+</div>

@@ -20,6 +20,8 @@ html
     display: block !important;
   .povswitch:not(.mobileControl)
     display: none !important;
+  .patreonColors
+    display: none
 
 @media screen and (max-width: 600px)
   #desktopContainer
@@ -238,7 +240,6 @@ html
   #cameraSettingsContainer
     background rgba(0,0,0,0.85)
     border-radius 5px
-    padding 8px
     bottom 60px
     display none
     right 0px
@@ -268,6 +269,7 @@ html
     display: flex;
     grid-gap: 0.5em;
     margin: 10px 0px;
+    width: 10em;
 
   #mobileContainer
     padding 0.5em
@@ -1211,10 +1213,26 @@ input:checked + .slider:before {
   padding: 8px;
 }
 
+.camera-tab-pane {
+  width: 10em;
+}
+
 .tab-pane {
   display: none;
 }
 
 .tab-pane.active {
   display: block;
+}
+
+.orthoSettingsContainer {
+  display: flex;
+  width: 14em;
+}
+
+.patreonColors {
+  color: white; 
+  width: 100px; 
+  font-size: 0.7em; 
+  padding-bottom: 0.4em
 }

@@ -92,7 +92,12 @@ AFRAME.registerComponent('replay-loader', {
 							const jd = replay.info.jumpDistance > 5 ? replay.info.jumpDistance : undefined;
 							this.el.sceneEl.emit(
 								'replayfetched',
-								{hash: replay.info.hash, difficulty: difficultyFromName(replay.info.difficulty), mode: replay.info.mode, jd},
+								{
+									hash: replay.info.hash.substring(0, 40).toLowerCase(),
+									difficulty: difficultyFromName(replay.info.difficulty),
+									mode: replay.info.mode,
+									jd,
+								},
 								null
 							);
 							if (this.challenge) {

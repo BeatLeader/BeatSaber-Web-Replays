@@ -65,6 +65,14 @@ AFRAME.registerComponent('settings', {
 			hitSoundVolume: 0.3,
 			volumeMixed: false,
 
+			// Narkers
+			pauseMarkers: true,
+			missMarkers: true,
+			badCutMarkers: true,
+			bombMarkers: true,
+			wallMarkers: true,
+			failMarkers: true,
+
 			// HitSound
 			hitsoundName: '',
 			hitSound: defaultHitSound,

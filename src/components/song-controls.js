@@ -881,7 +881,7 @@ AFRAME.registerComponent('song-controls', {
 		});
 	},
 
-	makeTimelineOverlay: (replayData, buffer, target) => {
+	makeTimelineOverlay: function (replayData, buffer, target) {
 		const notes = replayData.notes;
 		const pauses = replayData.replay.pauses;
 
@@ -931,7 +931,7 @@ AFRAME.registerComponent('song-controls', {
 
 				const img = document.createElement('img');
 				img.src = 'assets/img/pause-timeline.png';
-				img.className = 'missMark';
+				img.className = 'missMark pause-mark';
 				img.style.left = (pause.time / duration) * width - 6 + 'px';
 				img.style.setProperty('--hover-bottom', ((pause.accuracy - minAcc) / (maxAcc - minAcc)) * height + 5 + 'px');
 				img.title += 'Pause at ' + formatSeconds(pause.time) + ' for ' + formatSeconds(parseInt(pause.duration));
@@ -939,22 +939,38 @@ AFRAME.registerComponent('song-controls', {
 				container.appendChild(img);
 			}
 
+			if (note.fail) {
+				const img = document.createElement('img');
+				img.className = 'missMark fail-mark';
+				img.style.left = (note.time / duration) * width - 6 + 'px';
+				img.style.setProperty('--hover-bottom', ((note.accuracy - minAcc) / (maxAcc - minAcc)) * height + 5 + 'px');
+
+				img.src = 'assets/img/fail-timeline.png';
+				img.title += 'Failed at ' + formatSeconds(note.time);
+
+				container.appendChild(img);
+			}
+
 			if (note.score < 0) {
 				const img = document.createElement('img');
-				img.className = 'missMark';
+
 				img.style.left = (note.time / duration) * width - 6 + 'px';
 				img.style.setProperty('--hover-bottom', ((note.accuracy - minAcc) / (maxAcc - minAcc)) * height + 5 + 'px');
 
 				if (note.score == -3) {
+					img.className = 'missMark miss-mark';
 					img.title = 'Miss';
 					img.src = 'assets/img/miss-timeline.png';
 				} else if (note.score == -2) {
+					img.className = 'missMark badCut-mark';
 					img.title = 'Bad cut';
 					img.src = 'assets/img/badcut-timeline.png';
 				} else if (note.score == -5) {
+					img.className = 'missMark wall-mark';
 					img.title = 'Wall hit';
 					img.src = 'assets/img/wall-timeline.png';
 				} else if (note.score == -4) {
+					img.className = 'missMark bomb-mark';
 					img.title = 'Bomb hit';
 					img.src = 'assets/img/bomb-timeline.png';
 				}
@@ -990,6 +1006,26 @@ AFRAME.registerComponent('song-controls', {
 
 		target.minAcc = minAcc;
 		target.maxAcc = maxAcc;
+
+		const updateMarkers = settings => {
+			['pause', 'fail', 'miss', 'badCut', 'bomb', 'wall'].forEach(key => {
+				const marks = document.querySelectorAll(`.${key}-mark`);
+				const visible = settings[key + 'Markers'];
+				marks.forEach(element => {
+					if (visible && element.classList.contains('hiddenMark')) {
+						element.classList.remove('hiddenMark');
+					} else if (!visible && !element.classList.contains('hiddenMark')) {
+						element.classList.add('hiddenMark');
+					}
+				});
+			});
+		};
+
+		updateMarkers(this.settings.settings);
+
+		this.el.sceneEl.addEventListener('settingsChanged', e => {
+			updateMarkers(e.detail.settings);
+		});
 	},
 
 	tick: function () {

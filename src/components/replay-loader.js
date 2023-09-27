@@ -435,6 +435,8 @@ AFRAME.registerComponent('replay-loader', {
 			combo = 0,
 			misses = 0;
 
+		var failRecorded = false;
+
 		const maxCounter = new MultiplierCounter();
 		const normalCounter = new MultiplierCounter();
 
@@ -505,6 +507,11 @@ AFRAME.registerComponent('replay-loader', {
 			note.misses = misses;
 			note.energy = energy;
 			note.maxScore = scoreForMaxScore;
+
+			if (energy <= 0 && !failRecorded) {
+				failRecorded = true;
+				note.fail = true;
+			}
 
 			if (note.isBlock) {
 				note.accuracy = (note.totalScore / maxScore) * 100;

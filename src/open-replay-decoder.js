@@ -1,6 +1,7 @@
 function checkBSOR(file, isLink, completion) {
 	if (isLink) {
-		if (file.split('.').pop() == 'bsor' || file.split('.').pop() == 'bsortemp') {
+		const filename = file.split('?')[0];
+		if (filename.split('.').pop() == 'bsor' || filename.split('.').pop() == 'bsortemp') {
 			file = file.replace('https://cdn.discordapp.com/', '/cors/discord-cdn/');
 			var xhr = new XMLHttpRequest();
 			xhr.open('GET', file + '?random=' + Math.random(), true);

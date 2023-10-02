@@ -265,11 +265,12 @@ AFRAME.registerComponent('replay-loader', {
 		const map = this.challenge.beatmaps[this.challenge.mode][this.challenge.difficulty];
 		var mapnotes = [].concat(map._notes, map._chains);
 		const firstReplayNote = replay.notes[0];
+		const firstReplayNoteTime = Math.floor(firstReplayNote.spawnTime);
 		mapnotes = mapnotes
 			.sort((a, b) => {
 				return a._time - b._time;
 			})
-			.filter(a => (a._type == 0 || a._type == 1) && a._songTime >= firstReplayNote.spawnTime);
+			.filter(a => (a._type == 0 || a._type == 1) && a._songTime >= firstReplayNoteTime);
 		this.applyModifiers(map, replay);
 		var leftHanded = this.applyLeftHanded(map, replay);
 

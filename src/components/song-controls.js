@@ -1,15 +1,9 @@
 var utils = require('../utils');
+var {queryParamTime} = require('../query-params');
 const ONCE = {once: true};
 
 const NoSleep = require('nosleep.js');
 const noSleep = new NoSleep();
-
-let queryParamTime = AFRAME.utils.getUrlParameter('time').trim();
-if (!queryParamTime || isNaN(queryParamTime)) {
-	queryParamTime = undefined;
-} else {
-	queryParamTime = parseFloat(queryParamTime) / 1000;
-}
 
 var deviceHasTouchScreen = utils.hasTouchScreen();
 
@@ -939,14 +933,19 @@ AFRAME.registerComponent('song-controls', {
 				container.appendChild(img);
 			}
 
-			if (note.fail) {
+			if (note.fail || note.start) {
 				const img = document.createElement('img');
 				img.className = 'missMark fail-mark';
 				img.style.left = (note.time / duration) * width - 6 + 'px';
 				img.style.setProperty('--hover-bottom', ((note.accuracy - minAcc) / (maxAcc - minAcc)) * height + 5 + 'px');
 
-				img.src = 'assets/img/fail-timeline.png';
-				img.title += 'Failed at ' + formatSeconds(note.time);
+				if (note.fail) {
+					img.src = 'assets/img/fail-timeline.png';
+					img.title += 'Failed at ' + formatSeconds(note.time);
+				} else {
+					img.src = 'assets/img/start-timeline.png';
+					img.title += 'Started at ' + formatSeconds(note.time);
+				}
 
 				container.appendChild(img);
 			}

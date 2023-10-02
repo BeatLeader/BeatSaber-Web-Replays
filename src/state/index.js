@@ -1,5 +1,6 @@
 /* global localStorage */
 var utils = require('../utils');
+var {queryParamTime} = require('../query-params');
 
 const DAMAGE_DECAY = 0.25;
 const DAMAGE_MAX = 10;
@@ -51,13 +52,6 @@ if (isSafari) {
 		decodeOggData(data).then(completion);
 	};
 	(window.AudioContext || window.webkitAudioContext).prototype.decodeOggData = decodeAudioData;
-}
-
-let queryParamTime = AFRAME.utils.getUrlParameter('time').trim();
-if (!queryParamTime || isNaN(queryParamTime)) {
-	queryParamTime = 0;
-} else {
-	queryParamTime = parseFloat(queryParamTime) / 1000;
 }
 
 let beatmaps;

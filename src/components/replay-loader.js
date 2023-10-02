@@ -3,6 +3,7 @@ import {checkBSOR, NoteEventType} from '../open-replay-decoder';
 import {checkSS} from '../ss-replay-decoder';
 import {Mirror_Horizontal, Mirror_Horizontal_Note} from '../chirality-support';
 import {MultiplierCounter} from '../utils/MultiplierCounter';
+var queryParams = require('../query-params');
 
 import {NoteCutDirection, difficultyFromName, clamp, ScoringType} from '../utils';
 
@@ -263,12 +264,12 @@ AFRAME.registerComponent('replay-loader', {
 		const replay = this.replay;
 		const map = this.challenge.beatmaps[this.challenge.mode][this.challenge.difficulty];
 		var mapnotes = [].concat(map._notes, map._chains);
-
+		const firstReplayNote = replay.notes[0];
 		mapnotes = mapnotes
 			.sort((a, b) => {
 				return a._time - b._time;
 			})
-			.filter(a => a._type == 0 || a._type == 1);
+			.filter(a => (a._type == 0 || a._type == 1) && a._songTime >= firstReplayNote.spawnTime);
 		this.applyModifiers(map, replay);
 		var leftHanded = this.applyLeftHanded(map, replay);
 
@@ -351,7 +352,7 @@ AFRAME.registerComponent('replay-loader', {
 						replaynote.index == undefined &&
 						(replaynote.id == mapnote._id || replaynote.id == mapnote._idWithScoring || replaynote.id == mapnote._idWithAlternativeScoring)
 					) {
-						replaynote.index = group[j];
+						replaynote.index = mapnote._index;
 						replaynote.colorType = mapnote._type;
 						replaynote.lineIndex = mapnote._lineIndex;
 						replaynote.cutDirection = mapnote._cutDirection;
@@ -426,6 +427,10 @@ AFRAME.registerComponent('replay-loader', {
 			if (!note.score) {
 				note.score = ScoreForNote(note.eventType, note.cutInfo, note.scoringType);
 			}
+		}
+
+		if (replay.info.startTime && allStructs.length) {
+			allStructs[0].start = true;
 		}
 
 		var energy = 0.5;
@@ -531,12 +536,13 @@ AFRAME.registerComponent('replay-loader', {
 
 	applyLeftHanded: function (map, replay) {
 		if (map && replay && replay.notes) {
+			const firstReplayNote = replay.notes[0];
 			var mapnotes = [].concat(map._notes, map._chains);
 			mapnotes = mapnotes
 				.sort((a, b) => {
 					return a._time - b._time;
 				})
-				.filter(a => a._type == 0 || a._type == 1);
+				.filter(a => (a._type == 0 || a._type == 1) && a._songTime >= firstReplayNote.spawnTime);
 
 			var replayNotes = replay.notes;
 			replayNotes = replayNotes

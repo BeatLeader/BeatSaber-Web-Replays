@@ -1,4 +1,5 @@
 const utils = require('../utils');
+var {queryParamTime} = require('../query-params');
 
 const GAME_OVER_LENGTH = 3.5;
 const ONCE = {once: true};
@@ -19,13 +20,6 @@ if (!!songSpeed) {
 	}
 } else {
 	songSpeed = 1.0;
-}
-
-let queryParamTime = AFRAME.utils.getUrlParameter('time').trim();
-if (!queryParamTime || isNaN(queryParamTime)) {
-	queryParamTime = 0;
-} else {
-	queryParamTime = parseFloat(queryParamTime) / 1000;
 }
 
 /**

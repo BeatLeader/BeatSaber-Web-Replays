@@ -6,6 +6,9 @@ import {MultiplierCounter} from '../utils/MultiplierCounter';
 var queryParams = require('../query-params');
 
 import {NoteCutDirection, difficultyFromName, clamp, ScoringType} from '../utils';
+function floorToTwo(num) {
+	return Math.floor(num * 100) / 100;
+}
 
 AFRAME.registerComponent('replay-loader', {
 	schema: {
@@ -265,7 +268,7 @@ AFRAME.registerComponent('replay-loader', {
 		const map = this.challenge.beatmaps[this.challenge.mode][this.challenge.difficulty];
 		var mapnotes = [].concat(map._notes, map._chains);
 		const firstReplayNote = replay.notes[0];
-		const firstReplayNoteTime = Math.floor(firstReplayNote.spawnTime);
+		const firstReplayNoteTime = firstReplayNote ? floorToTwo(firstReplayNote.spawnTime) : 0;
 		mapnotes = mapnotes
 			.sort((a, b) => {
 				return a._time - b._time;
@@ -567,12 +570,13 @@ AFRAME.registerComponent('replay-loader', {
 	applyLeftHanded: function (map, replay) {
 		if (map && replay && replay.notes) {
 			const firstReplayNote = replay.notes[0];
+			const firstReplayNoteTime = firstReplayNote ? floorToTwo(firstReplayNote.spawnTime) : 0;
 			var mapnotes = [].concat(map._notes, map._chains);
 			mapnotes = mapnotes
 				.sort((a, b) => {
 					return a._time - b._time;
 				})
-				.filter(a => (a._type == 0 || a._type == 1) && a._songTime >= firstReplayNote.spawnTime);
+				.filter(a => (a._type == 0 || a._type == 1) && a._songTime >= firstReplayNoteTime);
 
 			var replayNotes = replay.notes;
 			replayNotes = replayNotes

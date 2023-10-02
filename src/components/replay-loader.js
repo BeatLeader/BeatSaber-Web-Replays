@@ -439,6 +439,10 @@ AFRAME.registerComponent('replay-loader', {
 			fcScore = 0,
 			combo = 0,
 			misses = 0;
+		var streak = 0,
+			maxStreak = 0,
+			streakId = -1,
+			maxStreakId = -1;
 
 		var failRecorded = false;
 
@@ -504,6 +508,22 @@ AFRAME.registerComponent('replay-loader', {
 					energy = 1;
 				}
 				combo++;
+
+				if (note.scoringType != ScoringType.BurstSliderElement) {
+					if (note.score == 115) {
+						streak++;
+						if (streakId == -1) {
+							streakId = i;
+						}
+					} else if (note.isBlock) {
+						if (streak > maxStreak) {
+							maxStreak = streak;
+							maxStreakId = streakId;
+						}
+						streak = 0;
+						streakId = -1;
+					}
+				}
 			}
 
 			note.multiplier = normalCounter.Multiplier;
@@ -526,6 +546,15 @@ AFRAME.registerComponent('replay-loader', {
 				note.fcAccuracy = i == 0 ? 100 : allStructs[i - 1].fcAccuracy;
 			}
 		}
+		if (streak > maxStreak) {
+			maxStreak = streak;
+			maxStreakId = streakId;
+		}
+
+		if (maxStreakId > -1) {
+			allStructs[maxStreakId].maxStreak = maxStreak;
+		}
+
 		this.allStructs = allStructs;
 		this.notes = noteStructs;
 		this.bombs = bombStructs;

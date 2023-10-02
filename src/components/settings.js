@@ -72,6 +72,7 @@ AFRAME.registerComponent('settings', {
 			bombMarkers: true,
 			wallMarkers: true,
 			failMarkers: true,
+			maxStreakMarkers: false,
 
 			// HitSound
 			hitsoundName: '',

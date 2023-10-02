@@ -929,6 +929,9 @@ AFRAME.registerComponent('song-controls', {
 				img.style.left = (pause.time / duration) * width - 6 + 'px';
 				img.style.setProperty('--hover-bottom', ((pause.accuracy - minAcc) / (maxAcc - minAcc)) * height + 5 + 'px');
 				img.title += 'Pause at ' + formatSeconds(pause.time) + ' for ' + formatSeconds(parseInt(pause.duration));
+				img.onclick = () => {
+					this.seek(pause.time - 0.3);
+				};
 
 				container.appendChild(img);
 			}
@@ -946,6 +949,24 @@ AFRAME.registerComponent('song-controls', {
 					img.src = 'assets/img/start-timeline.png';
 					img.title += 'Started at ' + formatSeconds(note.time);
 				}
+				img.onclick = () => {
+					this.seek(note.spawnTime - 0.3);
+				};
+
+				container.appendChild(img);
+			}
+
+			if (note.maxStreak) {
+				const img = document.createElement('img');
+				img.className = 'missMark maxStreak-mark';
+				img.style.left = (note.time / duration) * width - 6 + 'px';
+				img.style.setProperty('--hover-bottom', ((note.accuracy - minAcc) / (maxAcc - minAcc)) * height + 5 + 'px');
+
+				img.src = 'assets/img/maxStreak-timeline.png';
+				img.title += `${note.maxStreak} streak of 115s at ` + formatSeconds(note.time);
+				img.onclick = () => {
+					this.seek(note.spawnTime - 0.3);
+				};
 
 				container.appendChild(img);
 			}
@@ -974,6 +995,9 @@ AFRAME.registerComponent('song-controls', {
 					img.src = 'assets/img/bomb-timeline.png';
 				}
 				img.title += ' at ' + formatSeconds(note.time);
+				img.onclick = () => {
+					this.seek(note.spawnTime - 0.3);
+				};
 
 				container.appendChild(img);
 			}
@@ -1007,7 +1031,7 @@ AFRAME.registerComponent('song-controls', {
 		target.maxAcc = maxAcc;
 
 		const updateMarkers = settings => {
-			['pause', 'fail', 'miss', 'badCut', 'bomb', 'wall'].forEach(key => {
+			['pause', 'fail', 'miss', 'badCut', 'bomb', 'wall', 'maxStreak'].forEach(key => {
 				const marks = document.querySelectorAll(`.${key}-mark`);
 				const visible = settings[key + 'Markers'];
 				marks.forEach(element => {

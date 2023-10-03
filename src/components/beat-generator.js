@@ -707,6 +707,18 @@ AFRAME.registerComponent('beat-generator', {
 			beatObj.tailHorizontalPosition = note._tailLineIndex;
 			beatObj.tailVerticalPosition = note._tailLineLayer;
 
+			if (this.noodleExtensions && note._customData) {
+				if (note._customData._position) {
+					beatObj.horizontalPosition = note._customData._position[0] + 4 / 2;
+					beatObj.verticalPosition = note._customData._position[1];
+				}
+
+				if (note._customData._tailPosition) {
+					beatObj.tailHorizontalPosition = note._customData._tailPosition[0] + 4 / 2;
+					beatObj.tailVerticalPosition = note._customData._tailPosition[1];
+				}
+			}
+
 			beatObj.flip = note._flipLineIndex !== undefined;
 			beatObj.flipHorizontalPosition = note._flipLineIndex;
 			beatObj.flipYSide = note._flipYSide;

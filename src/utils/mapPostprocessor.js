@@ -84,7 +84,7 @@ function upgrade(map) {
 
 		let sliders = [];
 		map['sliders'].forEach(slider => {
-			sliders.push({
+			const resultSlider = {
 				_time: slider['b'],
 				_lineIndex: slider['x'],
 				_lineLayer: slider['y'],
@@ -97,7 +97,16 @@ function upgrade(map) {
 				_tailControlPointLengthMultiplier: slider['tmu'],
 				_tailCutDirection: slider['tc'],
 				_arcMidAnchorMode: slider['m'],
-			});
+			};
+
+			if (slider.customData) {
+				resultSlider._customData = {
+					_position: slider.customData.coordinates,
+					_tailPosition: slider.customData.tailCoordinates,
+				};
+			}
+
+			sliders.push(resultSlider);
 		});
 
 		map['_sliders'] = sliders;
@@ -326,6 +335,31 @@ function processTimingGroups(map) {
 	}
 }
 
+function compareSlider(note, slider, tail) {
+	if (note._time != slider[`_${tail ? 'tailT' : 't'}ime`]) return false;
+
+	if (note._lineIndex == slider[`_${tail ? 'tailL' : 'l'}ineIndex`] && note._lineLayer == slider[`_${tail ? 'tailL' : 'l'}ineLayer`])
+		return true;
+
+	if (note._customData && note._customData._position) {
+		if (slider._customData && slider._customData[`_${tail ? 'tailP' : 'p'}osition`]) {
+			if (
+				note._customData._position[0].toFixed(2) == slider._customData[`_${tail ? 'tailP' : 'p'}osition`][0].toFixed(2) &&
+				note._customData._position[1].toFixed(2) == slider._customData[`_${tail ? 'tailP' : 'p'}osition`][1].toFixed(2)
+			)
+				return true;
+		} else {
+			if (
+				Math.round(note._customData._position[0] + 4 / 2) == slider[`_${tail ? 'tailL' : 'l'}ineIndex`] &&
+				Math.round(note._customData._position[1]) == slider[`_${tail ? 'tailL' : 'l'}ineLayer`]
+			)
+				return true;
+		}
+	}
+
+	return false;
+}
+
 function addScoringTypeAndChains(map) {
 	const mapnotes = map._notes;
 
@@ -338,27 +372,11 @@ function addScoringTypeAndChains(map) {
 	});
 
 	map._sliders.forEach(slider => {
-		var head = mapnotes.find(
-			n =>
-				n._time == slider._time &&
-				((n._lineIndex == slider._lineIndex && n._lineLayer == slider._lineLayer) ||
-					(n._customData &&
-						n._customData._position &&
-						Math.round(n._customData._position[0] + 4 / 2) == slider._lineIndex &&
-						Math.round(n._customData._position[1]) == slider._lineLayer))
-		);
+		var head = mapnotes.find(n => compareSlider(n, slider));
 		if (head && head._scoringType == ScoringType.Normal) {
 			head._scoringType = ScoringType.SliderHead;
 		}
-		var tail = mapnotes.find(
-			n =>
-				n._time == slider._tailTime &&
-				((n._lineIndex == slider._tailLineIndex && n._lineLayer == slider._tailLineLayer) ||
-					(n._customData &&
-						n._customData._position &&
-						Math.round(n._customData._position[0] + 4 / 2) == slider._tailLineIndex &&
-						Math.round(n._customData._position[1]) == slider._tailLineLayer))
-		);
+		var tail = mapnotes.find(n => compareSlider(n, slider, true));
 		if (head) {
 			head.tail = tail;
 		}

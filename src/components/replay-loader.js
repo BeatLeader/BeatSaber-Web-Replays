@@ -268,7 +268,9 @@ AFRAME.registerComponent('replay-loader', {
 		const map = this.challenge.beatmaps[this.challenge.mode][this.challenge.difficulty];
 		var mapnotes = [].concat(map._notes, map._chains);
 		const firstReplayNote = replay.notes[0];
-		const firstReplayNoteTime = firstReplayNote ? floorToTwo(firstReplayNote.spawnTime) : 0;
+		const firstReplayNoteTime = firstReplayNote
+			? Math.min(floorToTwo(firstReplayNote.spawnTime), floorToTwo(firstReplayNote.eventTime))
+			: 0;
 		mapnotes = mapnotes
 			.sort((a, b) => {
 				return a._time - b._time;
@@ -570,7 +572,9 @@ AFRAME.registerComponent('replay-loader', {
 	applyLeftHanded: function (map, replay) {
 		if (map && replay && replay.notes) {
 			const firstReplayNote = replay.notes[0];
-			const firstReplayNoteTime = firstReplayNote ? floorToTwo(firstReplayNote.spawnTime) : 0;
+			const firstReplayNoteTime = firstReplayNote
+				? Math.min(floorToTwo(firstReplayNote.spawnTime), floorToTwo(firstReplayNote.eventTime))
+				: 0;
 			var mapnotes = [].concat(map._notes, map._chains);
 			mapnotes = mapnotes
 				.sort((a, b) => {

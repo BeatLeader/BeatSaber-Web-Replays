@@ -2,17 +2,21 @@ const {get2DNoteOffset, directionVector, NoteCutDirection, signedAngleToLine, Sc
 
 const ANY_CUT_DIRECTION = NoteCutDirection.Any;
 
+function zeroIfUndefined(value) {
+	return value === undefined ? 0 : value;
+}
+
 function upgrade(map) {
 	if (map['version'] && parseInt(map['version'].split('.')[0]) == 3) {
 		let notes = [];
 		map['colorNotes'].forEach(note => {
 			var resultNote = {
-				_time: note['b'],
-				_lineIndex: note['x'],
-				_lineLayer: note['y'],
-				_type: note['c'],
-				_cutDirection: note['d'],
-				_angleOffset: note['a'],
+				_time: zeroIfUndefined(note['b']),
+				_lineIndex: zeroIfUndefined(note['x']),
+				_lineLayer: zeroIfUndefined(note['y']),
+				_type: zeroIfUndefined(note['c']),
+				_cutDirection: zeroIfUndefined(note['d']),
+				_angleOffset: zeroIfUndefined(note['a']),
 				_scoringType: ScoringType.Normal,
 			};
 
@@ -26,9 +30,9 @@ function upgrade(map) {
 		});
 		map['bombNotes'].forEach(bomb => {
 			notes.push({
-				_time: bomb['b'],
-				_lineIndex: bomb['x'],
-				_lineLayer: bomb['y'],
+				_time: zeroIfUndefined(bomb['b']),
+				_lineIndex: zeroIfUndefined(bomb['x']),
+				_lineLayer: zeroIfUndefined(bomb['y']),
 				_angleOffset: 0,
 				_type: 3,
 				_cutDirection: NoteCutDirection.Any,
@@ -41,13 +45,13 @@ function upgrade(map) {
 		let obstacles = [];
 		map['obstacles'].forEach(wall => {
 			var resultWall = {
-				_time: wall['b'],
-				_lineIndex: wall['x'],
-				_lineLayer: wall['y'],
-				_type: wall['y'] / 2,
-				_duration: wall['d'],
-				_width: wall['w'],
-				_height: wall['h'],
+				_time: zeroIfUndefined(wall['b']),
+				_lineIndex: zeroIfUndefined(wall['x']),
+				_lineLayer: zeroIfUndefined(wall['y']),
+				_type: zeroIfUndefined(wall['y']) / 2,
+				_duration: zeroIfUndefined(wall['d']),
+				_width: zeroIfUndefined(wall['w']),
+				_height: zeroIfUndefined(wall['h']),
 			};
 
 			if (wall.customData) {
@@ -63,18 +67,18 @@ function upgrade(map) {
 		let events = [];
 		map['basicBeatmapEvents'].forEach(event => {
 			events.push({
-				_time: event['b'],
-				_type: event['et'],
-				_value: event['i'],
-				_floatValue: event['f'],
+				_time: zeroIfUndefined(event['b']),
+				_type: zeroIfUndefined(event['et']),
+				_value: zeroIfUndefined(event['i']),
+				_floatValue: zeroIfUndefined(event['f']),
 			});
 		});
 		map['rotationEvents'].forEach(event => {
-			var value = (event['r'] - 60) / -15;
+			var value = (zeroIfUndefined(event['r']) - 60) / -15;
 
 			events.push({
-				_time: event['b'],
-				_type: event['e'] == 1 ? 15 : 14,
+				_time: zeroIfUndefined(event['b']),
+				_type: zeroIfUndefined(event['e']) == 1 ? 15 : 14,
 				_value: value < 4 ? value : value - 1,
 				_inverted: true,
 			});
@@ -85,18 +89,18 @@ function upgrade(map) {
 		let sliders = [];
 		map['sliders'].forEach(slider => {
 			const resultSlider = {
-				_time: slider['b'],
-				_lineIndex: slider['x'],
-				_lineLayer: slider['y'],
-				_type: slider['c'],
-				_cutDirection: slider['d'],
-				_tailTime: slider['tb'],
-				_tailLineIndex: slider['tx'],
-				_tailLineLayer: slider['ty'],
-				_headControlPointLengthMultiplier: slider['mu'],
-				_tailControlPointLengthMultiplier: slider['tmu'],
-				_tailCutDirection: slider['tc'],
-				_arcMidAnchorMode: slider['m'],
+				_time: zeroIfUndefined(slider['b']),
+				_lineIndex: zeroIfUndefined(slider['x']),
+				_lineLayer: zeroIfUndefined(slider['y']),
+				_type: zeroIfUndefined(slider['c']),
+				_cutDirection: zeroIfUndefined(slider['d']),
+				_tailTime: zeroIfUndefined(slider['tb']),
+				_tailLineIndex: zeroIfUndefined(slider['tx']),
+				_tailLineLayer: zeroIfUndefined(slider['ty']),
+				_headControlPointLengthMultiplier: zeroIfUndefined(slider['mu']),
+				_tailControlPointLengthMultiplier: zeroIfUndefined(slider['tmu']),
+				_tailCutDirection: zeroIfUndefined(slider['tc']),
+				_arcMidAnchorMode: zeroIfUndefined(slider['m']),
 			};
 
 			if (slider.customData) {
@@ -114,16 +118,16 @@ function upgrade(map) {
 		let burstSliders = [];
 		map['burstSliders'].forEach(slider => {
 			burstSliders.push({
-				_time: slider['b'],
-				_lineIndex: slider['x'],
-				_lineLayer: slider['y'],
-				_type: slider['c'],
-				_cutDirection: slider['d'],
-				_tailTime: slider['tb'],
-				_tailLineIndex: slider['tx'],
-				_tailLineLayer: slider['ty'],
-				_sliceCount: slider['sc'],
-				_squishAmount: slider['s'],
+				_time: zeroIfUndefined(slider['b']),
+				_lineIndex: zeroIfUndefined(slider['x']),
+				_lineLayer: zeroIfUndefined(slider['y']),
+				_type: zeroIfUndefined(slider['c']),
+				_cutDirection: zeroIfUndefined(slider['d']),
+				_tailTime: zeroIfUndefined(slider['tb']),
+				_tailLineIndex: zeroIfUndefined(slider['tx']),
+				_tailLineLayer: zeroIfUndefined(slider['ty']),
+				_sliceCount: zeroIfUndefined(slider['sc']),
+				_squishAmount: zeroIfUndefined(slider['s']),
 			});
 		});
 		map['_burstSliders'] = burstSliders;
@@ -131,8 +135,8 @@ function upgrade(map) {
 		let bpmevents = [];
 		map['bpmEvents'].forEach(event => {
 			bpmevents.push({
-				_time: event['b'],
-				_bpm: event['m'],
+				_time: zeroIfUndefined(event['b']),
+				_bpm: zeroIfUndefined(event['m']),
 			});
 		});
 

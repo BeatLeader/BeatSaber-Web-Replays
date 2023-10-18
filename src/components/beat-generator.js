@@ -739,9 +739,13 @@ AFRAME.registerComponent('beat-generator', {
 				break;
 			case 2:
 				this.stageColors.setColor('leftlaser', event._value);
+				this.leftStageLasers.components['stage-lasers'].SetVis(event._value);
+				this.leftStageLasers.components['stage-lasers'].isLeft(true);
 				break;
 			case 3:
 				this.stageColors.setColor('rightlaser', event._value);
+				this.rightStageLasers.components['stage-lasers'].SetVis(event._value);
+				this.rightStageLasers.components['stage-lasers'].isLeft(false);
 				break;
 			case 4:
 				this.stageColors.setColor('floor', event._value);
@@ -754,10 +758,10 @@ AFRAME.registerComponent('beat-generator', {
 				this.twister.components.twister.pulse(event._value);
 				break;
 			case 12:
-				this.leftStageLasers.components['stage-lasers'].pulse(event._value);
+				this.leftStageLasers.components['stage-lasers'].SetSpeed(event._value);
 				break;
 			case 13:
-				this.rightStageLasers.components['stage-lasers'].pulse(event._value);
+				this.rightStageLasers.components['stage-lasers'].SetSpeed(event._value);
 				break;
 		}
 	},

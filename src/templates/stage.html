@@ -24,9 +24,10 @@
 
 		<!-- Lasers left. -->
 		<a-entity
-			render-order="middle"
 			id="leftStageLasers"
+			render-order="middle"
 			bind__visible="settings.showLasers"
+			stage-lasers="side: left"
 			bind__stage-lasers="rotating: isPlaying && !settings.noEffects">
 			<a-entity obj-model="obj: #leftLaserObj" materials="name: stageAdditive" position="-5 2 -40" scale="1 5 1"></a-entity>
 			<a-entity obj-model="obj: #leftLaserObj" materials="name: stageAdditive" position="-5 2 -44" scale="1 5 1"></a-entity>
@@ -40,6 +41,7 @@
 			id="rightStageLasers"
 			render-order="middle"
 			bind__visible="settings.showLasers"
+			stage-lasers="side: right"
 			bind__stage-lasers="rotating: isPlaying && !settings.noEffects">
 			<a-entity obj-model="obj: #rightLaserObj" materials="name: stageAdditive" position="5 2 -40" scale="1 5 1"></a-entity>
 			<a-entity obj-model="obj: #rightLaserObj" materials="name: stageAdditive" position="5 2 -44" scale="1 5 1"></a-entity>

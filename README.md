@@ -3,53 +3,45 @@
 [![Netlify Status](https://api.netlify.com/api/v1/badges/08ead0d0-ade4-4f38-8af4-9b6c3c679234/deploy-status)](https://app.netlify.com/sites/musing-aryabhata-6ae6ea/deploys)
 
 [A-Frame]: https://github.com/nsgolova/ngoframe
-[visit]: https://www.replay.beatleader.xyz/?id=c32d&difficulty=ExpertPlus&playerID=76561198333869741
+[visit]: https://replay.beatleader.xyz/?scoreId=8931530
 
 Web-based viewer for Beat Saber replays, built with [A-Frame] and JavaScript.
 
 **[CLICK TO VIEW][visit]**
 
-![https://www.replay.beatleader.xyz/?id=c32d&difficulty=ExpertPlus&playerID=76561198333869741](assets/img/preview.png)
+![https://replay.beatleader.xyz/?scoreId=8931530](assets/img/preview.png)
 
 ## Community
 
 - [BeatLeader Discord](https://discord.gg/2RG5YVqtG6)
 
-*The Beat Saber Web Replays is an unofficial community project and not officially
-affiliated with Beat Saber.*
+_The Beat Saber Web Replays is an unofficial community project and not officially
+affiliated with Beat Saber._
 
 ## Usage
 
 Go to the [BeatLeader](https://beatleader.xyz) and click on dancing pepe icon in the leaderboard.
 
 Or if you have a site, you can I-Frame the viewer and pass a query parameter
-containing the song ID, difficulty and playerID:
+containing the BeatLeader's score ID:
 
-`https://www.replay.beatleader.xyz/?id=c32d&difficulty=ExpertPlus&playerID=76561198333869741`
-
-id - BeatSaver song ID. ("Ov Sacrament" in this case)
-difficulty - Easy, Normal, Hard, Expert, ExpertPlus
-playerID - player's ScoreSaber or BeatLeader id (cerret in this case)
+`https://replay.beatleader.xyz/?scoreId=9280912`
 
 To directly link to a sought time, use the `?time` parameter in the URL (milliseconds, int, 0 to song duration):
 
-`https://www.replay.beatleader.xyz/?id=c32d&difficulty=ExpertPlus&playerID=76561198333869741&time=15000` - 15 sec
+`https://replay.beatleader.xyz/?scoreId=9280912&time=15000` - 15 sec
 
 To specify replay speed use the `?speed` parameter in the URL (percent, int, 0 to 200):
 
-`https://www.replay.beatleader.xyz/?id=c32d&difficulty=ExpertPlus&playerID=76561198333869741&speed=50` - 50% speed
+`https://replay.beatleader.xyz/?scoreId=9280912&speed=50` - 50% speed
 
 To specify notes jump distance use the `?jd` parameter in the URL (meters, float, 5 to 50):
 
-`https://www.replay.beatleader.xyz/?id=c32d&difficulty=ExpertPlus&playerID=76561198333869741&jd=18.6` - 18.6 JD
+`https://replay.beatleader.xyz/?scoreId=9280912&jd=18.6` - 18.6 JD
 
 To specify replay download link use the `?link` parameter in the URL. Make sure the link(name of the file) contains playerID:
 
-`https://www.replay.beatleader.xyz/?link=https://cdn.discordapp.com/attachments/921820046345523314/934953493624660058/76561198059961776-Cheshires_dance-ExpertPlus-Standard-A2B943FE75E48394352B4FD912CEE8306788D0B1.dat`
-
-It can also use BeatLeader's scoreId:
-
-`https://www.replay.beatleader.xyz/?scoreId=442819`
+`https://replay.beatleader.xyz/?link=https://cdn.replays.beatleader.xyz/9280912-76561198059961776-ExpertPlus-Standard-13400F5FB2FD19F52E8C7AC48815D12E72FA3B4A.bsor`
 
 ## Development
 
@@ -68,11 +60,13 @@ Version 16 or greater (LTS) is recommended; some developers have experienced iss
 ### Starting local build
 
 Install netlify-cli(one time setup):
+
 ```bash
 npm install netlify-cli -g
 ```
 
 Start Netlify dev environment(every time):
+
 ```bash
 netlify dev
 ```
@@ -94,12 +88,13 @@ This project uses a custom A-Frame fork: https://github.com/nsgolova/ngoframe
 It's prebuilt and can be found in the \vendor folder.
 
 To build it
+
 ```bash
 npm install
 npm run dist
 ```
 
-Copy files from \dist folder of A-Frame to \vendor folder here. 
+Copy files from \dist folder of A-Frame to \vendor folder here.
 
 ### Replay Format
 

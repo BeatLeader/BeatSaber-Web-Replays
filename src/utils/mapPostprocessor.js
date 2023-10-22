@@ -57,6 +57,7 @@ function upgrade(map) {
 			if (wall.customData) {
 				resultWall._customData = {
 					_position: wall.customData.coordinates,
+					_color: wall.customData.color,
 				};
 			}
 			obstacles.push(resultWall);

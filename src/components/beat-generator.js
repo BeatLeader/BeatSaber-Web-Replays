@@ -551,7 +551,7 @@ AFRAME.registerComponent('beat-generator', {
 			wallObj.localRotation = null;
 			wallObj.definitePosition = null;
 
-			if (this.noodleExtensions && wall._customData) {
+			if (wall._customData) {
 				if (wall._customData._scale) {
 					wallObj.scale = {x: wall._customData._scale[0], y: wall._customData._scale[1], z: wall._customData._scale[2]};
 				}

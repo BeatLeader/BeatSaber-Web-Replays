@@ -1,51 +1,3 @@
-{
-	/* <a-mixin id="bgColorAnimation"
-  animation__bgcoloroff="isRawProperty: true; property: systems.materials.stageNormal.uniforms.backglowColor.value; type: color; to: {{ COLORS.BG_OFF }}; dur: 500; easing: linear; startEvents: bgcoloroff"
-  animation__bgcolorblue="isRawProperty: true; property: systems.materials.stageNormal.uniforms.backglowColor.value; type: color; to: {{ COLORS.BG_DARK_BLUE }}; dur: 5; easing: linear; startEvents: bgcolorblue"
-  animation__bgcolorbluefade="isRawProperty: true; property: systems.materials.stageNormal.uniforms.backglowColor.value; type: color; from: {{ COLORS.BG_BRIGHTBLUE }}; to: {{ COLORS.BG_DARK_BLUE }}; dur: 500; easing: linear; startEvents: bgcolorbluefade"
-  animation__bgcolorred="isRawProperty: true; property: systems.materials.stageNormal.uniforms.backglowColor.value; type: color; to: {{ COLORS.BG_RED }}; dur: 5; easing: linear; startEvents: bgcolorred"
-  animation__bgcolorredfade="isRawProperty: true; property: systems.materials.stageNormal.uniforms.backglowColor.value; type: color; from: {{ COLORS.BG_BRIGHTRED }}; to: {{ COLORS.BG_RED }}; dur: 500; easing: linear; startEvents: bgcolorredfade"
-  animation__skycoloroff="isRawProperty: true; property: systems.materials.stageNormal.uniforms.skyColor.value; type: color; to: {{ COLORS.SKY_OFF }}; dur: 500; easing: linear; startEvents: bgcoloroff"
-  animation__skycolorblue="isRawProperty: true; property: systems.materials.stageNormal.uniforms.skyColor.value; type: color; to: {{ COLORS.SKY_BLUE }}; dur: 5; easing: linear; startEvents: bgcolorblue"
-  animation__skycolorred="isRawProperty: true; property: systems.materials.stageNormal.uniforms.skyColor.value; type: color; to: {{ COLORS.SKY_RED }}; dur: 5; easing: linear; startEvents: bgcolorred"
-  animation__bgcolorgameover="isRawProperty: true; property: systems.materials.stageNormal.uniforms.backglowColor.value; type: color; to: {{ COLORS.BG_OFF }}; dur: 500; easing: linear; startEvents: bgcolorgameover"
-  animation__skycolorgameover="isRawProperty: true; property: systems.materials.stageNormal.uniforms.skyColor.value; type: color; to: {{ COLORS.SKY_BLUE }}; dur: 5; easing: linear; startEvents: bgcolorgameover"></a-mixin>
-
-<a-mixin id="tunnelColorAnimation"
-  animation__tunnelcoloroff="isRawProperty: true; property: systems.materials.stageAdditive.uniforms.tunnelNeon.value; type: color; to: {{ COLORS.NEON_OFF }}; dur: 500; easing: linear; startEvents: tunnelcoloroff"
-  animation__tunnelcolorblue= {{ COLORS.NEON_BLUE }}; dur: 5; easing: linear; startEvents: tunnelcolorblue"
-  animation__tunnelcolorbluefade=" {{ COLORS.NEON_BRIGHTBLUE }}; to: {{ COLORS.NEON_BLUE }}; dur: 500; easing: linear; startEvents: tunnelcolorbluefade"
-  animation__tunnelcolorred="is {{ COLORS.NEON_RED }}; dur: 5; easing: linear; startEvents: tunnelcolorred"
-  animation__tunnelcolorredfade= from: {{ COLORS.NEON_BRIGHTRED }}; to: {{ COLORS.NEON_RED }}; dur: 500; easing: linear; startEvents: tunnelcolorredfade"></a-mixin>
-
-<a-mixin id="floorColorAnimation"
-  animation__floorcoloroff="isRawProperty: true; property: systems.materials.stageAdditive.uniforms.floorNeon.value; type: color; to: {{ COLORS.NEON_OFF }}; dur: 500; easing: linear; startEvents: floorcoloroff"
-  animation__floorcolorblue="isRawProperty: true; property: systems.materials.stageAdditive.uniforms.floorNeon.value; type: color; to: {{ COLORS.NEON_BLUE }}; dur: 5; easing: linear; startEvents: floorcolorblue"
-  animation__floorcolorbluefade="isRawProperty: true; property: systems.materials.stageAdditive.uniforms.floorNeon.value; type: color; from: {{ COLORS.NEON_BRIGHTBLUE }}; to: {{ COLORS.NEON_BLUE }}; dur: 500; easing: linear; startEvents: floorcolorbluefade"
-  animation__floorcolorred="isRawProperty: true; property: systems.materials.stageAdditive.uniforms.floorNeon.value; type: color; to: {{ COLORS.NEON_RED }}; dur: 5; easing: linear; startEvents: floorcolorred"
-  animation__floorcolorredfade="isRawProperty: true; property: systems.materials.stageAdditive.uniforms.floorNeon.value; type: color; from: {{ COLORS.NEON_BRIGHTRED }}; to: {{ COLORS.NEON_RED }}; dur: 500; easing: linear; startEvents: floorcolorredfade"></a-mixin>
-
-<a-mixin id="leftLaserColorAnimation"
-  animation__leftlasercoloroff="isRawProperty: true; property: systems.materials.stageAdditive.uniforms.leftLaser.value; type: color; to: {{ COLORS.NEON_OFF }}; dur: 500; easing: linear; startEvents: leftlasercoloroff"
-  animation__leftlasercolorblue="isRawProperty: true; property: systems.materials.stageAdditive.uniforms.leftLaser.value; type: color; to: {{ COLORS.NEON_BLUE }}; dur: 5; easing: linear; startEvents: leftlasercolorblue"
-  animation__leftlasercolorbluefade="isRawProperty: true; property: systems.materials.stageAdditive.uniforms.leftLaser.value; type: color; from: {{ COLORS.NEON_BRIGHTBLUE }}; to: {{ COLORS.NEON_BLUE }}; dur: 500; easing: linear; startEvents: leftlasercolorbluefade"
-  animation__leftlasercolorred="isRawProperty: true; property: systems.materials.stageAdditive.uniforms.leftLaser.value; type: color; to: {{ COLORS.NEON_RED }}; dur: 5; easing: linear; startEvents: leftlasercolorred"
-  animation__leftlasercolorredfade="isRawProperty: true; property: systems.materials.stageAdditive.uniforms.leftLaser.value; type: color; from: {{ COLORS.NEON_BRIGHTRED }}; to: {{ COLORS.NEON_RED }}; dur: 500; easing: linear; startEvents: leftlasercolorredfade"></a-mixin>
-
-<a-mixin id="rightLaserColorAnimation"
-  animation__rightlasercoloroff="isRawProperty: true; property: systems.materials.stageAdditive.uniforms.rightLaser.value; type: color; to: {{ COLORS.NEON_OFF }}; dur: 500; easing: linear; startEvents: rightlasercoloroff"
-  animation__rightlasercolorblue="isRawProperty: true; property: systems.materials.stageAdditive.uniforms.rightLaser.value; type: color; to: {{ COLORS.NEON_BLUE }}; dur: 5; easing: linear; startEvents: rightlasercolorblue"
-  animation__rightlasercolorbluefade="isRawProperty: true; property: systems.materials.stageAdditive.uniforms.rightLaser.value; type: color; from: {{ COLORS.NEON_BRIGHTBLUE }}; to: {{ COLORS.NEON_BLUE }}; dur: 500; easing: linear; startEvents: rightlasercolorbluefade"
-  animation__rightlasercolorred="isRawProperty: true; property: systems.materials.stageAdditive.uniforms.rightLaser.value; type: color; to: {{ COLORS.NEON_RED }}; dur: 5; easing: linear; startEvents: rightlasercolorred"
-  animation__rightlasercolorredfade="isRawProperty: true; property: systems.materials.stageAdditive.uniforms.rightLaser.value; type: color; from: {{ COLORS.NEON_BRIGHTRED }}; to: {{ COLORS.NEON_RED }}; dur: 500; easing: linear; startEvents: rightlasercolorredfade"></a-mixin>
-
-<a-mixin id="textGlowColorAnimation"
-  animation__textglowoff="isRawProperty: true; property: systems.materials.stageAdditive.uniforms.textGlow.value; type: color; to: {{ COLORS.TEXT_OFF }}; dur: 5; easing: easeInOutCubic; startEvents: textglowoff"
-  animation__textglownormal="isRawProperty: true; property: systems.materials.stageAdditive.uniforms.textGlow.value; type: color; to: {{ COLORS.TEXT_NORMAL }}; dur: 750; easing: easeInOutCubic; delay: 100; startEvents: textglownormal"
-  animation__textglowbold="isRawProperty: true; property: systems.materials.stageAdditive.uniforms.textGlow.value; type: color; from: {{ COLORS.TEXT_BOLD }}; to: {{ COLORS.TEXT_NORMAL }}; dur: 500; easing: easeInOutCubic; startEvents: textglowbold"
-  ></a-mixin> */
-}
-
 function hexToHSL(hex) {
 	let r = parseInt(hex.slice(1, 3), 16);
 	let g = parseInt(hex.slice(3, 5), 16);
@@ -171,10 +123,10 @@ AFRAME.registerComponent('colors', {
 			});
 		});
 
-		let backgroundColorInput = document.getElementById("backgroundColor");
-		backgroundColorInput.value = this.settings.settings["backgroundColor"];
+		let backgroundColorInput = document.getElementById('backgroundColor');
+		backgroundColorInput.value = this.settings.settings['backgroundColor'];
 		backgroundColorInput.addEventListener('input', e => {
-			this.settings.settings["backgroundColor"] = e.target.value;
+			this.settings.settings['backgroundColor'] = e.target.value;
 			this.settings.sync();
 		});
 
@@ -195,6 +147,35 @@ AFRAME.registerComponent('colors', {
 		rightSaberColorInput.addEventListener('input', e => {
 			this.el.sceneEl.emit('colorChanged', {hand: 'right', color: e.target.value}, null);
 			this.changeColor('rightSaberColor', e.target.value);
+		});
+
+		let goodTdColorInput = document.getElementById('goodTdColor');
+		goodTdColorInput.value = this.settings.settings.goodTdColor;
+		goodTdColorInput.addEventListener('input', e => {
+			this.settings.settings.goodTdColor = e.target.value;
+			this.settings.sync();
+		});
+
+		let badTdColorInput = document.getElementById('badTdColor');
+		badTdColorInput.value = this.settings.settings.badTdColor;
+		badTdColorInput.addEventListener('input', e => {
+			this.settings.settings.badTdColor = e.target.value;
+			this.settings.sync();
+		});
+
+		const updateTdColorPickers = () => {
+			if (this.settings.settings.trailType == 'timeDependence') {
+				badTdColorInput.parentElement.style.display = 'block';
+				goodTdColorInput.parentElement.style.display = 'block';
+			} else {
+				badTdColorInput.parentElement.style.display = 'none';
+				goodTdColorInput.parentElement.style.display = 'none';
+			}
+		};
+		updateTdColorPickers();
+
+		this.el.sceneEl.addEventListener('settingsChanged', e => {
+			updateTdColorPickers();
 		});
 
 		this.el.sceneEl.addEventListener('colorsFetched', e => {

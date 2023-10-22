@@ -90,17 +90,15 @@ const TRAILS = {
       }`,
 		fragmentShader: `
       uniform vec4 bladeColor;
+	  uniform vec4 goodTdColor;
+	  uniform vec4 badTdColor;
       varying vec2 uv0;
       varying float td;
       
       #define goodTdValue 0.0
-      #define goodTdColor vec4(0.0, 1.0, 0.0, 1.0)
-      
       #define neutralTdValue 0.15
       #define neutralTdColor vec4(1.0, 1.0, 0.0, 1.0)
-      
       #define badTdValue 0.3
-      #define badTdColor vec4(1.0, 0.0, 0.0, 1.0)
       
       float inverseLerpClamped01(const float from, const float to, const float value) {
         return clamp((value - from) / (to - from), 0.0, 1.0);
@@ -236,6 +234,8 @@ const TRAILS = {
 AFRAME.registerComponent('trail', {
 	schema: {
 		color: {type: 'color'},
+		goodTdColor: {type: 'color'},
+		badTdColor: {type: 'color'},
 		enabled: {default: true},
 		hand: {type: 'string'},
 		trailType: {default: 'bright'},
@@ -292,6 +292,8 @@ AFRAME.registerComponent('trail', {
 			fragmentShader: this.trailType.fragmentShader,
 			uniforms: {
 				bladeColor: {value: {x: 0, y: 0, z: 0, w: 0}},
+				goodTdColor: {value: {x: 0, y: 1, z: 0, w: 0}},
+				badTdColor: {value: {x: 1, y: 0, z: 0, w: 0}},
 			},
 		});
 	},
@@ -340,6 +342,22 @@ AFRAME.registerComponent('trail', {
 			z: bladeColor.b,
 			w: 1,
 		};
+
+		const goodTdColor = new THREE.Color(this.data.goodTdColor);
+		this.material.uniforms.goodTdColor.value = {
+			x: goodTdColor.r,
+			y: goodTdColor.g,
+			z: goodTdColor.b,
+			w: 1,
+		};
+		const badTdColor = new THREE.Color(this.data.badTdColor);
+		this.material.uniforms.badTdColor.value = {
+			x: badTdColor.r,
+			y: badTdColor.g,
+			z: badTdColor.b,
+			w: 1,
+		};
+
 		this.material.uniformsNeedUpdate = true;
 	},
 

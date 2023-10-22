@@ -19,8 +19,6 @@ AFRAME.registerComponent('settings', {
 			highlight115s: false,
 			colorScores: true,
 			realHitsounds: false,
-			trailType: 'bright',
-			trailLength: 20,
 			disableJumps: false,
 
 			timeInBeats: false,
@@ -77,6 +75,12 @@ AFRAME.registerComponent('settings', {
 			// HitSound
 			hitsoundName: '',
 			hitSound: defaultHitSound,
+
+			// Trails
+			trailType: 'bright',
+			trailLength: 20,
+			goodTdColor: '#00FF00',
+			badTdColor: '#FF0000',
 		};
 
 		this.units = {

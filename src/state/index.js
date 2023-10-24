@@ -291,8 +291,7 @@ AFRAME.registerState({
 			state.isPaused = false;
 			state.isFinished = false;
 			state.isSongBufferProcessing = true;
-			state.score = emptyScore;
-			state.lastNoteTime = 0;
+			resetScore(state);
 		},
 
 		timechanged: (state, payload) => {
@@ -301,6 +300,9 @@ AFRAME.registerState({
 			for (var i = notes.length; --i > 0; ) {
 				if (notes[i].time < payload.newTime) {
 					updateScore(state, {index: i}, true);
+					return;
+				} else if (i == 1) {
+					resetScore(state);
 					return;
 				}
 			}
@@ -423,4 +425,17 @@ function updateScore(state, payload, force) {
 	}
 
 	// console.log(note.totalScore + " - " + note.index + " - " + note.i + " - " + note.time + " - " + payload.index + " - " + note.score);
+}
+
+function resetScore(state) {
+	state.score.time = emptyScore.time;
+	state.score.score = emptyScore.score;
+	state.score.scoreDescription = emptyScore.scoreDescription;
+	state.score.combo = emptyScore.combo;
+	state.score.multiplier = emptyScore.multiplier;
+	state.score.accuracy = emptyScore.accuracy;
+	state.score.fcAccuracy = emptyScore.fcAccuracy;
+	state.score.misses = emptyScore.misses;
+	state.score.energy = emptyScore.energy;
+	state.lastNoteTime = 0;
 }

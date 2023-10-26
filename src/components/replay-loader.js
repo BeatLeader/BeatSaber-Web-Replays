@@ -617,9 +617,11 @@ AFRAME.registerComponent('replay-loader', {
 
 					const scoringType = mirroredNote._scoringType ? mirroredNote._scoringType + 2 : 3;
 					if (
+						!replayNote.foundForLeftHanded &&
 						Math.abs(replayNote.spawnTime - mapNote._songTime) < 0.01 &&
 						(replayNoteId == mirroredNoteId || replayNoteId == mirroredNoteId + scoringType * 10000)
 					) {
+						replayNote.foundForLeftHanded = true;
 						noteFound++;
 						break;
 					}

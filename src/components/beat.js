@@ -595,7 +595,7 @@ AFRAME.registerComponent('beat', {
 		let noteScale = smallCubes && !itsMine ? SCScale : 1;
 
 		if (smallCubes && settings.settings.showNoteModifierVisuals) {
-			this.blockEl.object3D.scale.multiplyScalar(noteScale);
+			this.blockEl.object3D.scale.set(1, 1, 1).multiplyScalar(3.45).multiplyScalar(this.data.size).multiplyScalar(noteScale);
 		}
 		let gameVersion = (replay.info.gameVersion || '0.0.0').split('.'); // SS doesn't have a game version
 		let oldDots =

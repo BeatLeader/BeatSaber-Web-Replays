@@ -91,9 +91,6 @@ AFRAME.registerComponent('saber-controls', {
 			return;
 		}
 
-		this.el.querySelectorAll('.axisContainer')
-			.forEach(el => el.object3D.visible = this.settings.settings.showSaberAxes);
-
 		if (!this.settings.settings.showHitboxes && this.settings.settings.reducedDebris) {
 			if (this.line) {
 				this.line.visible = false;

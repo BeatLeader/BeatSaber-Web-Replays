@@ -366,10 +366,12 @@ AFRAME.registerComponent('beat', {
 			if (
 				this.data.type != 'mine' &&
 				this.replayNote.score != NoteErrorType.Miss &&
-				((this.replayNote.cutPoint &&
-					this.currentPositionZ - -1 * this.replayNote.cutPoint.z > -0.05 &&
-					(settings.settings.reducedDebris || !this.checkCollisions())) ||
-					getCurrentTime() >= this.replayNote.time)
+				((settings.settings.reducedDebris || !this.checkCollisions()) &&
+					((this.replayNote.cutTime &&
+						getCurrentTime() >= this.replayNote.cutTime) ||
+					(this.replayNote.cutPoint &&
+						this.currentPositionZ - -1 * this.replayNote.cutPoint.z > -0.05)) ||
+				getCurrentTime() >= this.replayNote.time)
 			) {
 				this.showScore();
 				this.destroyBeat(saberEls[this.replayNote.colorType]);
@@ -553,6 +555,11 @@ AFRAME.registerComponent('beat', {
 				score: 1,
 				totalScore: -1,
 			};
+		}
+
+		if ((replayLoader.challenge && "RhythmGameStandard" !== replayLoader.challenge.mode)
+			&& (this.replayNote.cutInfo && this.replayNote.cutInfo.timeDeviation)) {
+			this.replayNote.cutTime = this.replayNote.spawnTime - this.replayNote.cutInfo.timeDeviation;
 		}
 
 		if (settings.settings.highlightErrors && this.replayNote && this.replayNote.score < 0) {

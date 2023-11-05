@@ -211,6 +211,36 @@
                 material="shader: flat; color: #FFFFFF"
                 position="0 0.08 0.0"></a-entity>
               </a-entity>
+
+              <a-entity class="axisContainer" rotation="0 -90 0" bind__visible="settings.showSaberAxes">
+                <a-entity
+                  class="xSaberAxis"
+                  geometry="primitive: cylinder; radius: 0.003; height: 0.2;"
+                  material="shader: flat; color: #FF0000"
+                  position="0.0 0.0 0.1"
+                  rotation="90 0 0"></a-entity>
+                <a-entity
+                  class="xSaberAxisCone"
+                  geometry="primitive: cone; radius-top: 0.0; radius-bottom: 0.01; height: 0.03"
+                  material="shader: flat; color: #FF0000"
+                  position="0.0 0.0 0.2"
+                  rotation="90 0 0"></a-entity>
+              </a-entity>
+
+              <a-entity class="axisContainer" rotation="0 0 90" bind__visible="settings.showSaberAxes">
+                <a-entity
+                  class="ySaberAxis"
+                  geometry="primitive: cylinder; radius: 0.003; height: 0.2;"
+                  material="shader: flat; color: #00FF00"
+                  position="0.0 0.0 0.1"
+                  rotation="90 0 0"></a-entity>
+                <a-entity
+                  class="ySaberAxisCone"
+                  geometry="primitive: cone; radius-top: 0.0; radius-bottom: 0.01; height: 0.03;"
+                  material="shader: flat; color: #00FF00"
+                  position="0.0 0.0 0.2"
+                  rotation="90 0 0"></a-entity>
+              </a-entity>
             </a-entity>
           </a-entity>
 

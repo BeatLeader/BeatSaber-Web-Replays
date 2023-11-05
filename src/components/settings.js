@@ -81,6 +81,8 @@ AFRAME.registerComponent('settings', {
 			trailLength: 20,
 			goodTdColor: '#00FF00',
 			badTdColor: '#FF0000',
+
+			showSaberAxes: false,
 		};
 
 		this.units = {

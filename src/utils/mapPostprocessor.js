@@ -341,7 +341,7 @@ function processTimingGroups(map) {
 }
 
 function compareSlider(note, slider, tail) {
-	if (note._time != slider[`_${tail ? 'tailT' : 't'}ime`]) return false;
+	if (note._time.toFixed(2) != slider[`_${tail ? 'tailT' : 't'}ime`].toFixed(2)) return false;
 
 	if (note._lineIndex == slider[`_${tail ? 'tailL' : 'l'}ineIndex`] && note._lineLayer == slider[`_${tail ? 'tailL' : 'l'}ineLayer`])
 		return true;

@@ -160,7 +160,16 @@ function Mirror_Horizontal_Slider(note, numberOfLines, flip_lines) {
 
 function Mirror_Horizontal_Obstacle(obstacle, numberOfLines, flip_lines) {
 	if (flip_lines) {
-		obstacle._lineIndex = numberOfLines - obstacle._width - obstacle._lineIndex;
+		if (obstacle._lineIndex <= -1000 || obstacle._lineIndex >= 1000) {
+			var width = obstacle._width;
+			if (width < 1000) {
+				width *= 1000;
+			}
+			var lineIndex = (numberOfLines - 1) * 1000 - width - obstacle._lineIndex;
+			obstacle._lineIndex = lineIndex + 2000;
+		} else {
+			obstacle._lineIndex = numberOfLines - obstacle._width - obstacle._lineIndex;
+		}
 
 		if (obstacle._customData && obstacle._customData._position) {
 			obstacle._customData._position[0] = numberOfLines - obstacle._customData._position[0] - 5;

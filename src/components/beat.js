@@ -366,12 +366,10 @@ AFRAME.registerComponent('beat', {
 			if (
 				this.data.type != 'mine' &&
 				this.replayNote.score != NoteErrorType.Miss &&
-				((settings.settings.reducedDebris || !this.checkCollisions()) &&
-					((this.replayNote.cutTime &&
-						getCurrentTime() >= this.replayNote.cutTime) ||
-					(this.replayNote.cutPoint &&
-						this.currentPositionZ - -1 * this.replayNote.cutPoint.z > -0.05)) ||
-				getCurrentTime() >= this.replayNote.time)
+				(((settings.settings.reducedDebris || !this.checkCollisions()) &&
+					((this.replayNote.cutTime && getCurrentTime() >= this.replayNote.cutTime) ||
+						(this.replayNote.cutPoint && this.currentPositionZ - -1 * this.replayNote.cutPoint.z > -0.05))) ||
+					getCurrentTime() >= this.replayNote.time)
 			) {
 				this.showScore();
 				this.destroyBeat(saberEls[this.replayNote.colorType]);
@@ -493,7 +491,7 @@ AFRAME.registerComponent('beat', {
 		if (data.spawnRotation) {
 			let axis = new THREE.Vector3(0, 1, 0);
 			let theta = data.spawnRotation * 0.0175;
-			let origin = new THREE.Vector3(getHorizontalPosition(data.horizontalPosition), getVerticalPosition(data.verticalPosition), 0);
+			let origin = new THREE.Vector3(getHorizontalPosition(data.horizontalPosition), highestJumpPosYForLineLayer(data.verticalPosition), 0);
 
 			origin.applyAxisAngle(axis, theta);
 			this.origin = origin;
@@ -557,8 +555,12 @@ AFRAME.registerComponent('beat', {
 			};
 		}
 
-		if ((replayLoader.challenge && "RhythmGameStandard" !== replayLoader.challenge.mode)
-			&& (this.replayNote.cutInfo && this.replayNote.cutInfo.timeDeviation)) {
+		if (
+			replayLoader.challenge &&
+			'RhythmGameStandard' !== replayLoader.challenge.mode &&
+			this.replayNote.cutInfo &&
+			this.replayNote.cutInfo.timeDeviation
+		) {
 			this.replayNote.cutTime = this.replayNote.spawnTime - this.replayNote.cutInfo.timeDeviation;
 		}
 

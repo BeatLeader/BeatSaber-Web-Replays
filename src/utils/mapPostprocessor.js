@@ -149,7 +149,7 @@ function upgrade(map) {
 		if (!map['_bpmEvents']) {
 			let bpmevents = [];
 			map['_events'].forEach(event => {
-				if (event._type == 100) {
+				if (event._type == 100 && event._floatValue) {
 					bpmevents.push({
 						_time: event._time,
 						_bpm: event._floatValue,

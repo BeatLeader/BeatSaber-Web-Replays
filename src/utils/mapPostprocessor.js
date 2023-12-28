@@ -496,6 +496,7 @@ function calculateSongTimes(map, info) {
 	}
 
 	[map['_notes'], map['_obstacles'], map['_events']].forEach(collection => {
+		if (!collection) return;
 		collection.forEach(o => {
 			o._songTime = convertBeatToSongTime(o._time, startBpm, bpmChangeDataList);
 			if (o._duration) {
@@ -504,6 +505,7 @@ function calculateSongTimes(map, info) {
 		});
 	});
 	[map['_sliders'], map['_burstSliders'], map['_chains']].forEach(collection => {
+		if (!collection) return;
 		collection.forEach(o => {
 			o._songTime = convertBeatToSongTime(o._time, startBpm, bpmChangeDataList);
 			o._songTailTime = convertBeatToSongTime(o._tailTime, startBpm, bpmChangeDataList);

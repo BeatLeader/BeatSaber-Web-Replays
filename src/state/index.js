@@ -102,7 +102,15 @@ AFRAME.registerState({
 		saberScale: new THREE.Vector3(1, 1, 1),
 		saberGlowScale: new THREE.Vector3(1, 1.1, 1),
 		settings: {showHeadset: false, volume: 0.0},
-		replaysCount: AFRAME.utils.getUrlParameter('players').split(',').length || 1,
+		replaysCount: (() => {
+			if (AFRAME.utils.getUrlParameter('players').length > 0) {
+				return AFRAME.utils.getUrlParameter('players').split(',').length;
+			} else if (AFRAME.utils.getUrlParameter('links').length > 0) {
+				return AFRAME.utils.getUrlParameter('links').split(',').length;
+			} else {
+				return 1;
+			}
+		})(),
 		localReplay: !AFRAME.utils.getUrlParameter('id') && !AFRAME.utils.getUrlParameter('hash'),
 	},
 

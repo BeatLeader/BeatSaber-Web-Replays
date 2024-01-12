@@ -548,8 +548,8 @@ AFRAME.registerComponent('song-controls', {
 			}
 
 			let baseParams = '';
-			if (AFRAME.utils.getUrlParameter('link')) {
-				baseParams = `?link=${AFRAME.utils.getUrlParameter('link')}${modeParam}${jdParam}`;
+			if (AFRAME.utils.getUrlParameter('links')) {
+				baseParams = `?links=${AFRAME.utils.getUrlParameter('links')}${modeParam}${jdParam}`;
 			} else {
 				let playerParam = AFRAME.utils.getUrlParameter('playerID')
 					? `&playerID=${AFRAME.utils.getUrlParameter('playerID')}`

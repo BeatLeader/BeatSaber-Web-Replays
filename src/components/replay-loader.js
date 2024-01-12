@@ -10,7 +10,7 @@ AFRAME.registerComponent('replay-loader', {
 	schema: {
 		playerID: {default: AFRAME.utils.getUrlParameter('playerID')},
 		players: {default: AFRAME.utils.getUrlParameter('players')},
-		link: {default: AFRAME.utils.getUrlParameter('link')},
+		links: {default: AFRAME.utils.getUrlParameter('links')},
 		hash: {default: AFRAME.utils.getUrlParameter('hash')},
 		isSafari: {default: false},
 		difficulty: {
@@ -29,8 +29,9 @@ AFRAME.registerComponent('replay-loader', {
 
 	update: function () {
 		let captureThis = this;
-		if (this.data.link.length) {
-			setTimeout(() => this.fetchByFile(this.data.link, true), 300);
+		if (this.data.links.length) {
+			this.userIds = this.data.links.split(',');
+			setTimeout(() => this.fetchByFile(this.data.links, true), 300);
 		} else if (!this.data.playerID.length && !this.data.players.length) {
 			this.cleanup = dragDrop('#body', files => {
 				this.fetchByFile(files[0]);
@@ -109,81 +110,49 @@ AFRAME.registerComponent('replay-loader', {
 		});
 	},
 
-	downloadSSReplay: function (hash, playerID, index) {
-		fetch(`/cors/score-saber/api/leaderboard/by-hash/${hash}/info?difficulty=${difficultyFromName(this.data.difficulty)}`, {
-			referrer: 'https://www.beatlooser.com',
-		}).then(res => {
-			res.json().then(leaderbord => {
-				// this.userIds.forEach((playerID, i) => {
-				//   const index = i;
-				fetch(`${DECODER_LINK}/?playerID=${playerID}&songID=${leaderbord.id}`).then(res => {
-					res.json().then(replay => {
-						if (replay.frames) {
-							replay = ssReplayToBSOR(replay);
-							replay.index = index;
-							replay.color = getRandomColor();
-							replay.info.playerID = playerID;
-							this.replays[index] = replay;
-							this.el.sceneEl.emit(
-								'replayfetched',
-								{
-									hash: replay.info.hash,
-									difficulty: replay.info.difficulty,
-									index,
-									color: replay.color,
-									playerID,
-									mode: replay.info.mode,
-								},
-								null
-							);
-							this.el.sceneEl.emit('colorChanged', {index, color: replay.color, playerID}, null);
-							if (this.challenge) {
-								this.processScores(replay);
-							}
-						} else {
-							this.el.sceneEl.emit('replayloadfailed', {error: replay.errorMessage}, null);
-						}
-					});
-				});
-				//});
-			});
-		});
-		fetch(`/cors/score-saber/api/player/${playerID}/full`, {
-			referrer: 'https://www.beatlooser.com',
-		}).then(res => {
-			res.json().then(data => {
-				const user = {
-					name: data.name,
-					avatar: data.profilePicture.replace('https://cdn.scoresaber.com/', '/cors/score-saber-cdn/'),
-					country: data.country,
-					countryIcon: `assets/flags/${data.country.toLowerCase()}.png`,
-					id: data.id,
-				};
-				this.users.push(user);
-				this.el.sceneEl.emit('userloaded', user, null);
-			});
-		});
-	},
-
 	fetchByFile: function (file, itsLink) {
 		this.el.sceneEl.emit('replayloadstart', null);
-		checkBSOR(file, itsLink, replay => {
-			if (replay && replay.frames) {
-				this.replay = replay;
-				this.fetchPlayer(replay.info.playerID);
-				this.el.sceneEl.emit(
-					'replayfetched',
-					{
-						hash: replay.info.hash,
-						difficulty: difficultyFromName(replay.info.difficulty),
-						mode: replay.info.mode,
-						jd: replay.info.jumpDistance,
-					},
-					null
-				);
-			} else {
-				this.fetchSSFile(file, itsLink);
-			}
+		this.userIds.forEach((file, index) => {
+			checkBSOR(file, itsLink, replay => {
+				if (replay && replay.frames) {
+					if (replay.frames.length == 0) {
+						this.el.sceneEl.emit(
+							'replayloadfailed',
+							{
+								error: 'Replay broken, redownload and reinstall mod, please',
+							},
+							null
+						);
+					} else {
+						replay.index = index;
+						replay.color = getRandomColor();
+						this.fetchPlayer(replay.info.playerID, index);
+						replay.info.playerID = replay.info.playerID + index;
+						this.replays[index] = replay;
+						const jd = replay.info.jumpDistance > 5 ? replay.info.jumpDistance : undefined;
+
+						this.el.sceneEl.emit(
+							'replayfetched',
+							{
+								hash: replay.info.hash,
+								difficulty: difficultyFromName(replay.info.difficulty),
+								index,
+								color: replay.color,
+								playerID: replay.info.playerID + index,
+								mode: replay.info.mode,
+								jd,
+							},
+							null
+						);
+						this.el.sceneEl.emit('colorChanged', {index, color: replay.color, playerID: replay.info.playerID + index}, null);
+						if (this.challenge) {
+							this.processScores(replay);
+						}
+					}
+				} else {
+					this.el.sceneEl.emit('replayloadfailed', {error: replay.errorMessage}, null);
+				}
+			});
 		});
 	},
 
@@ -225,24 +194,19 @@ AFRAME.registerComponent('replay-loader', {
 		}
 	},
 
-	fetchPlayer: function (playerID) {
-		fetch(`/cors/score-saber/api/player/${playerID}/full`, {
-			referrer: 'https://www.beatlooser.com',
-		}).then(res => {
+	fetchPlayer: function (playerID, index) {
+		fetch(`https://api.beatleader.xyz/player/${playerID}`).then(res => {
 			res.json().then(data => {
-				this.user = data;
-				this.el.sceneEl.emit(
-					'userloaded',
-					{
-						name: this.user.name,
-						avatar: this.user.profilePicture.replace('https://cdn.scoresaber.com/', '/cors/score-saber-cdn/'),
-						country: this.user.country,
-						countryIcon: `assets/flags/${this.user.country.toLowerCase()}.png`,
-						profileLink: `https://scoresaber.com/u/${this.user.id}`,
-						id: this.user.id,
-					},
-					null
-				);
+				const user = {
+					name: data.name,
+					avatar: data.avatar,
+					country: data.country,
+					countryIcon: `assets/flags/${data.country.toLowerCase()}.png`,
+					profileLink: `https://beatleader.xyz/u/${data.id}`,
+					id: data.id + index,
+				};
+				this.users.push(user);
+				this.el.sceneEl.emit('userloaded', user, null);
 			});
 		});
 	},

@@ -25,8 +25,11 @@ AFRAME.registerComponent('zip-loader', {
 				this.data.mode = e.detail.mode;
 				if (this.data.mapLink) {
 					this.fetchZip(this.data.mapLink.replace('https://cdn.discordapp.com/', '/cors/discord-cdn/'));
+				} else if (e.detail.hash.length >= 40) {
+					this.fetchData(e.detail.hash.replace('custom_level_', '').substring(0, 40).toLowerCase(), true);
 				} else {
-					this.fetchData(e.detail.hash.replace('custom_level_', ''), true);
+					this.el.sceneEl.emit('songFetched', {leaderboardId: this.leaderboardId, metadata: e.detail.metadata});
+					this.fetchZip(`https://cdn.songs.beatleader.xyz/${e.detail.hash}.zip`);
 				}
 			}
 		};

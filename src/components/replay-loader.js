@@ -73,19 +73,22 @@ AFRAME.registerComponent('replay-loader', {
 		).then(async response => {
 			let data = response.status == 200 ? await response.json() : null;
 			if (data && data.playerId) {
-				let splittedName = data.replay.split(/\.|-|\//);
-				if (splittedName.length > 4 && splittedName.length < 12) {
-					this.el.sceneEl.emit(
-						'replayInfofetched',
-						{
-							hash: splittedName[splittedName.length - 2],
-							leaderboardId: data.leaderboardId,
-							difficulty: difficultyFromName(splittedName[splittedName.length - 4]),
-							mode: splittedName[splittedName.length - 3],
-						},
-						null
-					);
-				}
+				this.el.sceneEl.emit(
+					'replayInfofetched',
+					{
+						hash: data.song.hash,
+						leaderboardId: data.leaderboardId,
+						difficulty: data.difficulty.value,
+						mode: data.difficulty.modeName,
+						metadata: {
+							songName: data.song.name,
+							songAuthorName: data.song.author,
+							songSubName: data.song.subName,
+							levelAuthorName: data.song.mapper
+						}
+					},
+					null
+				);
 
 				checkBSOR(data.replay, true, replay => {
 					if (replay && replay.frames) {
@@ -97,7 +100,7 @@ AFRAME.registerComponent('replay-loader', {
 							this.el.sceneEl.emit(
 								'replayfetched',
 								{
-									hash: replay.info.hash.substring(0, 40).toLowerCase(),
+									hash: replay.info.hash,
 									difficulty: difficultyFromName(replay.info.difficulty),
 									mode: replay.info.mode,
 									jd,

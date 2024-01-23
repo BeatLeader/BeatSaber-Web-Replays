@@ -583,7 +583,7 @@ AFRAME.registerComponent('replay-loader', {
 				.sort((a, b) => {
 					return a._time - b._time;
 				})
-				.filter(a => (a._type == 0 || a._type == 1) && a._songTime >= firstReplayNoteTime);
+				.filter(a => (a._type == 0 || a._type == 1) && (floorToTwo(a._songTime) > firstReplayNoteTime || Math.abs(floorToTwo(a._songTime) - firstReplayNoteTime) < 0.01));
 
 			var replayNotes = replay.notes;
 			replayNotes = replayNotes

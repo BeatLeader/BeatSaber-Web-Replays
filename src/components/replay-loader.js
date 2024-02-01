@@ -5,19 +5,19 @@ import {Mirror_Horizontal, Mirror_Horizontal_Note} from '../chirality-support';
 import {MultiplierCounter} from '../utils/MultiplierCounter';
 var queryParams = require('../query-params');
 
-import {NoteCutDirection, difficultyFromName, clamp, ScoringType} from '../utils';
+import {NoteCutDirection, difficultyFromName, clamp, ScoringType, getUrlParameter} from '../utils';
 function floorToTwo(num) {
 	return Math.floor(num * 100) / 100;
 }
 
 AFRAME.registerComponent('replay-loader', {
 	schema: {
-		playerID: {default: AFRAME.utils.getUrlParameter('playerID')},
-		link: {default: AFRAME.utils.getUrlParameter('link')},
+		playerID: {default: getUrlParameter('playerID')},
+		link: {default: getUrlParameter('link')},
 		isSafari: {default: false},
-		difficulty: {default: AFRAME.utils.getUrlParameter('difficulty') || 'ExpertPlus'},
-		mode: {default: AFRAME.utils.getUrlParameter('mode') || 'Standard'},
-		scoreId: {default: AFRAME.utils.getUrlParameter('scoreId')},
+		difficulty: {default: getUrlParameter('difficulty') || 'ExpertPlus'},
+		mode: {default: getUrlParameter('mode') || 'Standard'},
+		scoreId: {default: getUrlParameter('scoreId')},
 	},
 
 	init: function () {

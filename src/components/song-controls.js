@@ -77,7 +77,7 @@ AFRAME.registerComponent('song-controls', {
 			}
 			this.replayData = event.detail;
 
-			if (AFRAME.utils.getUrlParameter('speed')) {
+			if (utils.getUrlParameter('speed')) {
 				// keep speed from url param
 			} else {
 				let replay = event.detail.replay;
@@ -591,24 +591,24 @@ AFRAME.registerComponent('song-controls', {
 			let jdParam = '';
 			if (this.jdChanged) {
 				jdParam = '&jd=' + document.getElementById('jdLabel').innerHTML;
-			} else if (AFRAME.utils.getUrlParameter('jd')) {
-				jdParam = '&jd=' + AFRAME.utils.getUrlParameter('jd');
+			} else if (utils.getUrlParameter('jd')) {
+				jdParam = '&jd=' + utils.getUrlParameter('jd');
 			}
 			let modeParam = '';
-			if (AFRAME.utils.getUrlParameter('mode') && AFRAME.utils.getUrlParameter('mode') != 'Standard') {
-				modeParam = '&mode=' + AFRAME.utils.getUrlParameter('mode');
+			if (utils.getUrlParameter('mode') && utils.getUrlParameter('mode') != 'Standard') {
+				modeParam = '&mode=' + utils.getUrlParameter('mode');
 			}
 
 			let baseParams = '';
-			if (AFRAME.utils.getUrlParameter('link')) {
-				baseParams = `?link=${AFRAME.utils.getUrlParameter('link')}${modeParam}${jdParam}`;
-			} else if (AFRAME.utils.getUrlParameter('scoreId')) {
-				baseParams = `?scoreId=${AFRAME.utils.getUrlParameter('scoreId')}${modeParam}${jdParam}`;
+			if (utils.getUrlParameter('link')) {
+				baseParams = `?link=${utils.getUrlParameter('link')}${modeParam}${jdParam}`;
+			} else if (utils.getUrlParameter('scoreId')) {
+				baseParams = `?scoreId=${utils.getUrlParameter('scoreId')}${modeParam}${jdParam}`;
 			} else {
-				let songParam = AFRAME.utils.getUrlParameter('id')
-					? `?id=${AFRAME.utils.getUrlParameter('id')}`
-					: `?hash=${AFRAME.utils.getUrlParameter('hash')}`;
-				baseParams = `${songParam}&playerID=${AFRAME.utils.getUrlParameter('playerID')}&difficulty=${AFRAME.utils.getUrlParameter(
+				let songParam = utils.getUrlParameter('id')
+					? `?id=${utils.getUrlParameter('id')}`
+					: `?hash=${utils.getUrlParameter('hash')}`;
+				baseParams = `${songParam}&playerID=${utils.getUrlParameter('playerID')}&difficulty=${utils.getUrlParameter(
 					'difficulty'
 				)}${modeParam}${jdParam}`;
 			}
@@ -617,8 +617,8 @@ AFRAME.registerComponent('song-controls', {
 				baseParams += '&' + this.el.components['camera-mover'].cameraPositionQuery();
 			}
 
-			if (AFRAME.utils.getUrlParameter('mapLink')) {
-				baseParams += '&mapLink=' + AFRAME.utils.getUrlParameter('mapLink');
+			if (utils.getUrlParameter('mapLink')) {
+				baseParams += '&mapLink=' + utils.getUrlParameter('mapLink');
 			}
 
 			let base = location.protocol + '//' + location.host + '/' + baseParams;

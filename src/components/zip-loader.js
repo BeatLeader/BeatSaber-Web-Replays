@@ -6,11 +6,11 @@ import {postprocess, processNoodle} from '../utils/mapPostprocessor';
 
 AFRAME.registerComponent('zip-loader', {
 	schema: {
-		id: {default: AFRAME.utils.getUrlParameter('id')},
-		hash: {default: AFRAME.utils.getUrlParameter('hash')},
-		mapLink: {default: AFRAME.utils.getUrlParameter('mapLink')},
-		difficulty: {default: AFRAME.utils.getUrlParameter('difficulty') || 'ExpertPlus'},
-		mode: {default: AFRAME.utils.getUrlParameter('mode') || 'Standard'},
+		id: {default: utils.getUrlParameter('id')},
+		hash: {default: utils.getUrlParameter('hash')},
+		mapLink: {default: utils.getUrlParameter('mapLink')},
+		difficulty: {default: utils.getUrlParameter('difficulty') || 'ExpertPlus'},
+		mode: {default: utils.getUrlParameter('mode') || 'Standard'},
 	},
 
 	init: function () {

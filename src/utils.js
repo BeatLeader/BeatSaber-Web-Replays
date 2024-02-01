@@ -221,6 +221,21 @@ function hasTouchScreen() {
 	return result;
 }
 
+function getUrlParameter(name, url = window.location.href) {
+	name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+	const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+	const results = regex.exec(url);
+	if (!results) {
+		return '';
+	}
+	const value = results[1];
+	if (value.includes('cdn.discordapp')) {
+		const cdnAndOthers = url.substring(results.index + 2 + name.length);
+		return `${value}&is=${getUrlParameter("is", cdnAndOthers)}&hm=${getUrlParameter("hm", cdnAndOthers)}`;
+	}
+	return decodeURIComponent(value.replace(/\+/g, ' '));
+}
+
 module.exports.getHorizontalPosition = getHorizontalPosition;
 module.exports.getHorizontalWallPosition = getHorizontalWallPosition;
 module.exports.getVerticalPosition = getVerticalPosition;
@@ -242,3 +257,4 @@ module.exports.NoteLineLayer = NoteLineLayer;
 module.exports.rotateAboutPoint = rotateAboutPoint;
 module.exports.LerpUnclamped = LerpUnclamped;
 module.exports.hasTouchScreen = hasTouchScreen;
+module.exports.getUrlParameter = getUrlParameter;

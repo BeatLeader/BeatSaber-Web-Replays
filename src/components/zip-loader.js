@@ -188,6 +188,40 @@ AFRAME.registerComponent('zip-loader', {
 						callback(desiredHash, currentVersion.coverURL, urls[0], urls[1]);
 					}
 				} else {
+					this.fetchDataBl(id, byHash);
+				}
+			});
+		});
+	},
+
+	fetchDataBl: function (id, byHash) {
+		return fetch(`https://api.beatleader.xyz/map/${byHash ? 'hash' : 'id'}/${id}`).then(res => {
+			res.json().then(data => {
+				if (data.hash) {
+					const currentVersion = data;
+					const desiredHash = byHash ? id : currentVersion.hash;
+
+					let callback = (hash, cover, zipUrl, fallbackUrl) => {
+						data.image = utils.beatsaverCdnCors(cover);
+						data.hash = hash;
+						data.leaderboardId = this.leaderboardId;
+
+						data.songName = data.name;
+						data.songSubName = data.subName;
+						data.songAuthorName = data.author;
+						data.levelAuthorName = data.mapper;
+
+						this.el.sceneEl.emit('songFetched', data);
+
+						this.fetchZip(zipUrl, fallbackUrl);
+					};
+					if (desiredHash.toLowerCase() == currentVersion.hash.toLowerCase()) {
+						callback(currentVersion.hash, currentVersion.coverImage, currentVersion.downloadUrl);
+					} else {
+						let urls = ['r2cdn', 'cdn'].map(prefix => 'https://' + prefix + '.beatsaver.com/' + desiredHash.toLowerCase() + '.zip');
+						callback(desiredHash, currentVersion.coverImage, urls[0], urls[1]);
+					}
+				} else {
 					this.el.emit('challengeloaderror', {hash: id});
 				}
 			});

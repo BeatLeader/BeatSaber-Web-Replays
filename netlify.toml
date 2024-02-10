@@ -19,22 +19,8 @@
     headers = {X-From = "Netlify"}
 
 [[redirects]]
-    from = "/cors/score-saber/*"
-    to = "https://sleepy-tundra-20866.herokuapp.com/https://scoresaber.com/:splat"
-    status = 200
-    force = true
-    headers = {X-From = "Netlify", origin = "Netlify"}
-
-[[redirects]]
     from = "/preview.png"
     to = "https://api.beatleader.xyz/preview/replay/"
-    status = 200
-    force = true
-    headers = {X-From = "Netlify", origin = "Netlify"}
-
-[[redirects]]
-    from = "/cors/score-saber-cdn/*"
-    to = "https://sleepy-tundra-20866.herokuapp.com/https://cdn.scoresaber.com/:splat"
     status = 200
     force = true
     headers = {X-From = "Netlify", origin = "Netlify"}

@@ -18,6 +18,7 @@ AFRAME.registerComponent('replay-loader', {
 		difficulty: {default: getUrlParameter('difficulty') || 'ExpertPlus'},
 		mode: {default: getUrlParameter('mode') || 'Standard'},
 		scoreId: {default: getUrlParameter('scoreId')},
+		context: {default: getUrlParameter('context') || 'general'},
 	},
 
 	init: function () {
@@ -56,7 +57,7 @@ AFRAME.registerComponent('replay-loader', {
 			});
 		} else {
 			document.addEventListener('songFetched', e => {
-				captureThis.downloadSSReplay(e.detail.hash);
+				captureThis.downloadReplay(e.detail.hash);
 			});
 		}
 
@@ -69,7 +70,7 @@ AFRAME.registerComponent('replay-loader', {
 		this.el.sceneEl.emit('replayloadstart', null);
 		fetch(
 			'https://api.beatleader.xyz/score/' +
-				(scoreId ? `${scoreId}?fallbackToRedirect=true` : `${this.data.playerID}/${hash}/${this.data.difficulty}/${this.data.mode}`)
+				(scoreId ? `${scoreId}?fallbackToRedirect=true` : `${this.data.context}/${this.data.playerID}/${hash}/${this.data.difficulty}/${this.data.mode}`)
 		).then(async response => {
 			let data = response.status == 200 ? await response.json() : null;
 			if (data && data.playerId) {
@@ -150,36 +151,6 @@ AFRAME.registerComponent('replay-loader', {
 		});
 	},
 
-	downloadSSReplay: function (hash) {
-		this.el.sceneEl.emit('replayloadstart', null);
-		fetch(`/cors/score-saber/api/leaderboard/by-hash/${hash}/info?difficulty=${difficultyFromName(this.data.difficulty)}`, {
-			referrer: 'https://www.beatlooser.com',
-		}).then(res => {
-			res.json().then(leaderbord => {
-				checkSS(`/cors/score-saber/game/replays/${leaderbord.id}-${this.data.playerID}.dat`, true, replay => {
-					if (replay.frames) {
-						this.replay = replay;
-						this.el.sceneEl.emit(
-							'replayfetched',
-							{hash: replay.info.hash, difficulty: replay.info.difficulty, mode: replay.info.mode},
-							null
-						);
-						if (this.challenge) {
-							this.processScores();
-						}
-					} else {
-						if (replay.errorMessage && replay.errorMessage != 'Replay not found. Try better ranked play.') {
-							this.el.sceneEl.emit('replayloadfailed', {error: replay.errorMessage}, null);
-						} else {
-							this.downloadReplay(hash);
-						}
-					}
-				});
-			});
-		});
-		this.fetchSSPlayer(this.data.playerID);
-	},
-
 	fetchByFile: function (file, itsLink) {
 		this.el.sceneEl.emit('replayloadstart', null);
 		checkBSOR(file, itsLink, replay => {
@@ -202,30 +173,6 @@ AFRAME.registerComponent('replay-loader', {
 		});
 	},
 
-	fetchSSFile: function (file, itsLink) {
-		if (!itsLink && file.size > 40000000) {
-			// 40 MB cap
-			this.el.sceneEl.emit('replayloadfailed', {error: 'File is too big'}, null);
-			return;
-		}
-		checkSS(file, itsLink, replay => {
-			if (replay.frames) {
-				this.replay = replay;
-				this.cleanup && this.cleanup();
-				this.el.sceneEl.emit('replayfetched', {hash: replay.info.hash, difficulty: replay.info.difficulty, mode: replay.info.mode}, null);
-				if (this.challenge) {
-					this.processScores();
-				}
-			} else {
-				this.el.sceneEl.emit('replayloadfailed', {error: replay.errorMessage}, null);
-			}
-		});
-		let playerId = (itsLink ? file : file.name).split(/\.|-|\//).find(el => (el.length == 16 || el.length == 17) && parseInt(el, 10));
-		if (playerId) {
-			this.fetchSSPlayer(playerId);
-		}
-	},
-
 	fetchPlayer: function (playerID) {
 		fetch(`https://api.beatleader.xyz/player/${playerID}`).then(res => {
 			res.json().then(data => {
@@ -238,26 +185,6 @@ AFRAME.registerComponent('replay-loader', {
 						country: this.user.country,
 						countryIcon: `assets/flags/${this.user.country.toLowerCase()}.png`,
 						profileLink: `https://beatleader.xyz/u/${this.user.id}`,
-						id: this.user.id,
-					},
-					null
-				);
-			});
-		});
-	},
-
-	fetchSSPlayer: function (playerID) {
-		fetch(`/cors/score-saber/api/player/${playerID}/full`, {referrer: 'https://www.beatlooser.com'}).then(res => {
-			res.json().then(data => {
-				this.user = data;
-				this.el.sceneEl.emit(
-					'userloaded',
-					{
-						name: this.user.name,
-						avatar: this.user.profilePicture.replace('https://cdn.scoresaber.com/', '/cors/score-saber-cdn/'),
-						country: this.user.country,
-						countryIcon: `assets/flags/${this.user.country.toLowerCase()}.png`,
-						profileLink: `https://scoresaber.com/u/${this.user.id}`,
 						id: this.user.id,
 					},
 					null

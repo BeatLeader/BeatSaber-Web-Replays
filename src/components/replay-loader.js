@@ -168,7 +168,14 @@ AFRAME.registerComponent('replay-loader', {
 					null
 				);
 			} else {
-				this.fetchSSFile(file, itsLink);
+				var replayError = replay;
+				if (replayError == null) {
+					replayError = 'Error: please check the replay file or link';
+				}
+				if (itsLink && file.includes('discordapp')) {
+					replayError = 'Error: please provide full Discord file url (with params)';
+				}
+				this.el.sceneEl.emit('replayloadfailed', {error: replayError}, null);
 			}
 		});
 	},

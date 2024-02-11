@@ -12,7 +12,7 @@ function checkBSOR(file, isLink, completion) {
 			};
 			xhr.send();
 		} else {
-			completion(null);
+			completion('Error: wrong file format');
 		}
 	} else {
 		checkBSORFile(file, completion);
@@ -83,7 +83,7 @@ function decode(arrayBuffer, completion) {
 
 		completion(replay);
 	} else {
-		completion(null);
+		completion('Error: failed to decode replay');
 	}
 }
 

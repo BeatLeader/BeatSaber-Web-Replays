@@ -368,7 +368,7 @@ function jsonParseLoop(str, i) {
 }
 
 function generateMode(event, difficulty, mode) {
-	if (mode.includes('Standard')) {
+	if (mode.toLowerCase().includes('standard')) {
 		event.beatmaps[mode] = {};
 		event.beatSpeeds[mode] = {};
 		event.beatOffsets[mode] = {};

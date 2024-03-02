@@ -58,7 +58,6 @@ AFRAME.registerComponent('beat-generator', {
 			this.beatSpeeds = evt.detail.beatSpeeds;
 			this.beatOffsets = evt.detail.beatOffsets;
 			this.info = evt.detail.info;
-			this.processBeats();
 
 			// Mapping extensions.
 			// https://github.com/joshwcomeau/beatmapper/tree/master/src/helpers/obstacles.helpers.js
@@ -82,6 +81,10 @@ AFRAME.registerComponent('beat-generator', {
 			}
 
 			this.replayFetched = true;
+		});
+
+		this.el.addEventListener('replayloaded', evt => {
+			this.processBeats();
 		});
 		this.el.sceneEl.addEventListener('colorChanged', e => {
 			if (e.detail.color) {

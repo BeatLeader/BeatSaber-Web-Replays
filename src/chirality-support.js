@@ -47,6 +47,13 @@ function Mirror_Horizontal(beatmap, numberOfLines, flip_lines, remove_walls) {
 		Mirror_Horizontal_Slider(note, numberOfLines, flip_lines);
 	});
 
+	beatmap._events.forEach(event => {
+		if (event._type == 15 || event._type == 14) {
+			console.log(event);
+			event._inverted = !event._inverted;
+		}
+	});
+
 	if (!remove_walls) {
 		beatmap._obstacles.forEach(obstacle => {
 			Mirror_Horizontal_Obstacle(obstacle, numberOfLines, flip_lines);

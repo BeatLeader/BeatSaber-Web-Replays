@@ -5,6 +5,12 @@
     targetPort = 3003
 
 [[redirects]]
+    from = "https://www.replay.beatleader.xyz/*"
+    to = "https://replay.beatleader.xyz/:splat"
+    status = 301
+    force = true
+
+[[redirects]]
     from = "/cors/beat-saver2/*"
     to = "https://beatsaver.com/:splat"
     status = 200

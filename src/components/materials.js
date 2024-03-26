@@ -55,7 +55,12 @@ AFRAME.registerSystem('materials', {
 					float rotatedY = vPosition.x * sin(angle) + vPosition.y * cos(angle);
 					float normalizedY = rotatedY * 4.0 + 0.1;
 					vec3 rainbowColor = hueToRgb(normalizedY);
-					vec3 outgoingLight = mix(reflectedLight.directDiffuse.rgb, rainbowColor, 0.6) + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;
+					vec3 outgoingLight = vec3(0, 0, 0);
+					if (rainbowColor.r > 0.6) {
+						outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;
+					} else {
+						outgoingLight = mix(reflectedLight.directDiffuse.rgb, rainbowColor, 0.6) + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;
+					}
 					`;
 				shader.fragmentShader = shader.fragmentShader.replace(fragmentToken, injection);
 			},
@@ -94,7 +99,12 @@ AFRAME.registerSystem('materials', {
 					float normalizedY = 0.5 - rotatedY * 4.0; 
 					if (normalizedY > 0.65) {normalizedY = 0.65;}if (normalizedY < 0.0) {normalizedY = 1.0 + normalizedY;}
 					vec3 rainbowColor = hueToRgb(normalizedY);
-					vec3 outgoingLight = mix(reflectedLight.directDiffuse.rgb, rainbowColor, 0.6) + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;
+					vec3 outgoingLight = vec3(0, 0, 0);
+					if (rainbowColor.b > 0.6) {
+						outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;
+					} else {
+						outgoingLight = mix(reflectedLight.directDiffuse.rgb, rainbowColor, 0.6) + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;
+					}
 					`;
 
 				shader.fragmentShader = shader.fragmentShader.replace(fragmentToken, injection);

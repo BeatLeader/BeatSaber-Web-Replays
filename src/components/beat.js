@@ -397,7 +397,11 @@ AFRAME.registerComponent('beat', {
 		}
 		if (this.rainbowShader && !this.blockEl.materialToReset && this.blockEl.getObject3D('mesh').material.envMap) {
 			this.blockEl.materialToReset = this.blockEl.getObject3D('mesh').material;
-			this.blockEl.getObject3D('mesh').material = this.el.sceneEl.systems.materials[this.data.color + 'BlockRainbowMaterial'];
+			const rainbowMaterial = this.el.sceneEl.systems.materials[this.data.color + 'BlockRainbowMaterial'];
+
+			rainbowMaterial.color = new THREE.Color(this.data[this.data.color]);
+			rainbowMaterial.emissive = new THREE.Color(this.data[this.data.color]);
+			this.blockEl.getObject3D('mesh').material = rainbowMaterial;
 		}
 
 		this.returnToPool();

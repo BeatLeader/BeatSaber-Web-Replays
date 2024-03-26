@@ -311,19 +311,22 @@ AFRAME.registerComponent('beat-generator', {
 		const rotations = this.spawnRotationKeys;
 		if (rotations.length == 0) return 0;
 
-		for (let i = 0; i < rotations.length; ++i) {
-			let noteTime = rotations[i];
-			if (noteTime >= time) {
-				if (i == 0) return 0;
-				const rotationTime = rotations[i - 1];
-				var spawnRotation = this.spawnRotations[rotationTime];
+		for (let i = rotations.length - 1; i >= 0; i--) {
+			let eventTime = rotations[i];
+			var timeDiff = eventTime - time;
+			if (Math.abs(timeDiff) < 0.001 || timeDiff < 0) {
+				var spawnRotation = this.spawnRotations[eventTime];
 
-				if (spawnRotation.early || rotationTime != time) {
-					return spawnRotation.rotation;
-				} else if (i == 1) {
-					return 0;
+				if (Math.abs(timeDiff) < 0.001) {
+					if (spawnRotation.early) {
+						return spawnRotation.rotation;
+					} else if (i == 0) {
+						return 0;
+					} else {
+						this.spawnRotations[rotations[i - 1]].rotation;
+					}
 				} else {
-					return this.spawnRotations[rotations[i - 2]].rotation;
+					return spawnRotation.rotation;
 				}
 			}
 		}

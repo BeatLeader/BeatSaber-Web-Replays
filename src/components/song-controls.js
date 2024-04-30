@@ -11,6 +11,34 @@ if (!queryParamTime || isNaN(queryParamTime)) {
 
 let disabledRoyale = AFRAME.utils.getUrlParameter('noRoyale');
 
+const isValidDate = d => d instanceof Date && !isNaN(d);
+
+const dateFromUnix = str => {
+	const date = new Date(parseInt(str, 10) * 1000);
+
+	return isValidDate(date) ? date : null;
+};
+
+function formatDateWithOptions(val, options = {localeMatcher: 'best fit'}, locale = navigator.language) {
+	if (!isValidDate(val)) return null;
+
+	const rtf = new Intl.DateTimeFormat(locale, options);
+
+	return rtf.format(val);
+}
+
+function formatDate(val, dateStyle = 'short', timeStyle = 'medium', locale = navigator.language) {
+	return formatDateWithOptions(
+		val,
+		{
+			localeMatcher: 'best fit',
+			dateStyle,
+			timeStyle,
+		},
+		locale
+	);
+}
+
 /**
  * Update the 2D UI. Should handle pause and seek.
  */
@@ -1077,6 +1105,8 @@ AFRAME.registerComponent('song-controls', {
 
 		usersContainer.append(table);
 
+		const singlePlayer = loader.users.every(u => u.profileLink == loader.users[0].profileLink);
+
 		loader.users.forEach((user, index) => {
 			let tableBodyRow = document.createElement('tr');
 			tableBodyRow.className = 'playerTableRow';
@@ -1108,7 +1138,7 @@ AFRAME.registerComponent('song-controls', {
 			div.style.alignItems = 'center';
 
 			let nameLabel = document.createElement('tb');
-			nameLabel.innerHTML = '<b>' + user.name + '</b>';
+			nameLabel.innerHTML = '<b>' + (singlePlayer ? formatDate(dateFromUnix(user.replay.info.timestamp)) : user.name) + '</b>';
 			nameLabel.style.display = 'inline';
 			nameLabel.style.color = 'white';
 

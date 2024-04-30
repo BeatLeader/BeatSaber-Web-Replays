@@ -29,18 +29,20 @@ AFRAME.registerComponent('replay-loader', {
 
 	update: function () {
 		let captureThis = this;
-		if (this.data.links.length) {
-			this.userIds = this.data.links.split(',');
-			setTimeout(() => this.fetchByFile(this.data.links, true), 300);
-		} else if (!this.data.playerID.length && !this.data.players.length) {
-			this.cleanup = dragDrop('#body', files => {
-				this.fetchByFile(files[0]);
-			});
-		} else {
-			this.userIds = this.data.playerID.length ? [this.data.playerID] : this.data.players.split(',');
-			document.addEventListener('songFetched', e => {
-				captureThis.downloadReplay(this.data.hash ? this.data.hash : e.detail.hash);
-			});
+		if (!this.userIds) {
+			if (this.data.links.length) {
+				this.userIds = this.data.links.split(',');
+				setTimeout(() => this.fetchByFile(this.data.links, true), 300);
+			} else if (!this.data.playerID.length && !this.data.players.length) {
+				this.cleanup = dragDrop('#body', files => {
+					this.fetchByFile(files[0]);
+				});
+			} else {
+				this.userIds = this.data.playerID.length ? [this.data.playerID] : this.data.players.split(',');
+				document.addEventListener('songFetched', e => {
+					captureThis.downloadReplay(this.data.hash ? this.data.hash : e.detail.hash);
+				});
+			}
 		}
 
 		this.el.addEventListener('challengeloadend', e => {

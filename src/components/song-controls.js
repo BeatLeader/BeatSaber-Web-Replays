@@ -59,7 +59,7 @@ AFRAME.registerComponent('song-controls', {
 		showControls: {default: true},
 		replaysCount: {default: 1},
 		isSafari: {default: false},
-		disabledRoyale: {default: !disabledRoyale},
+		disabledRoyale: {default: disabledRoyale == 'true'},
 		showColorInputs: {default: false},
 		showPovs: {default: true},
 	},

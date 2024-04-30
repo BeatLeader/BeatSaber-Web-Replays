@@ -1,15 +1,27 @@
 function checkBSOR(file, isLink, completion) {
 	if (isLink) {
-		if (file.split('.').pop() == 'bsor' || file.split('.').pop() == 'bsortemp') {
-			file = file.replace('https://cdn.discordapp.com/', '/cors/discord-cdn/');
-			var xhr = new XMLHttpRequest();
-			xhr.open('GET', file, true);
-			xhr.responseType = 'blob';
+		if (file.split('.').pop() == 'bsor' || file.split('.').pop() == 'bsortemp' || file.split('?')[0].split('.').pop() == 'bsor') {
+			if (file.includes('/otherreplays/')) {
+				var linkxhr = new XMLHttpRequest();
+				linkxhr.withCredentials = true;
+				linkxhr.open('GET', file, true);
+				linkxhr.responseType = 'text';
 
-			xhr.onload = function () {
-				checkBSORFile(xhr.response, completion);
-			};
-			xhr.send();
+				linkxhr.onload = function () {
+					checkBSOR(linkxhr.response, true, completion);
+				};
+				linkxhr.send();
+			} else {
+				file = file.replace('https://cdn.discordapp.com/', '/cors/discord-cdn/');
+				var xhr = new XMLHttpRequest();
+				xhr.open('GET', file, true);
+				xhr.responseType = 'blob';
+
+				xhr.onload = function () {
+					checkBSORFile(xhr.response, completion);
+				};
+				xhr.send();
+			}
 		} else {
 			completion(null);
 		}

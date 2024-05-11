@@ -1176,6 +1176,7 @@ AFRAME.registerComponent('song-controls', {
 
 			colorInput.addEventListener('input', evt => {
 				tableBodyRow.style.backgroundColor = evt.target.value;
+				user.replay.color = evt.target.value;
 				this.el.sceneEl.emit('colorChanged', {index: user.replay.index, color: evt.target.value}, null);
 			});
 

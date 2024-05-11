@@ -75,6 +75,7 @@ AFRAME.registerComponent('zip-loader', {
 
 		// Index beatmaps (modes + difficulties).
 		const beatmapSets = event.info._difficultyBeatmapSets;
+		if (!beatmapSets) return;
 		for (let index = 0; index < beatmapSets.length; index++) {
 			const set = beatmapSets[index];
 			const mode = set._beatmapCharacteristicName;

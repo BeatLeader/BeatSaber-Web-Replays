@@ -4,12 +4,13 @@
 AFRAME.registerComponent('pauser', {
 	schema: {
 		enabled: {default: true},
+		pauseOnUnfocus: {default: false},
 	},
 
 	init: function () {
 		this.pauseGame = this.pauseGame.bind(this);
 		document.addEventListener('visibilitychange', () => {
-			if (document.visibilityState === 'hidden') {
+			if (this.data.pauseOnUnfocus && document.visibilityState === 'hidden') {
 				this.pauseGame();
 			}
 		});

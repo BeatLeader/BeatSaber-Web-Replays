@@ -82,6 +82,11 @@ AFRAME.registerComponent('settings', {
 			goodTdColor: '#00FF00',
 			badTdColor: '#FF0000',
 
+			// Playback
+			pauseOnUnfocus: false,
+			autoplayOnLoad: false,
+			autoplayRandomScore: true,
+
 			showSaberAxes: false,
 		};
 

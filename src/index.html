@@ -74,13 +74,13 @@
     {% include './templates/controls.html' %}
     <a-scene
       settings
-      beat-hit-sound
       bind__pixelRatio="settings.pixelRatio"
       precision="mediump"
       mixin="bgColorAnimation tunnelColorAnimation leftLaserColorAnimation rightLaserColorAnimation textGlowColorAnimation floorColorAnimation"
       bind__beat-generator="difficulty: challenge.difficulty; mode: challenge.mode; isPlaying: isPlaying || isPaused; beatSpeed: challenge.beatSpeed; noEffects: settings.noEffects"
-      bind__pauser="enabled: isPlaying"
+      bind__pauser="enabled: isPlaying; pauseOnUnfocus: settings.pauseOnUnfocus"
       bind__song="audio: challenge.audio; difficulty: challenge.difficulty; mode: challenge.mode; isPaused: isPaused; isFinished: isFinished; isPlaying: isPlaying; isBeatsPreloaded: challenge.isBeatsPreloaded"
+      beat-hit-sound
       bind__song-controls="difficulty: challenge.difficulty; mode: challenge.mode; isSafari: isSafari; isPlaying: isPlaying; songName: challenge.songName; songSubName: challenge.author; songImage: challenge.image; showControls: showControls; leaderboardId: challenge.leaderboardId; songId: challenge.id"
       bind__zip-loader="difficulty: challenge.difficulty; id: challenge.id; mode: challenge.mode"
       bind__replay-loader="difficulty: challenge.difficulty; mode: challenge.mode"
@@ -164,7 +164,6 @@
           <a-entity id="{{ hand }}Hand"
             render-order="wall"
             class="saber"
-            bind__pauser="enabled: isPlaying"
             bind__trail="trailType: settings.trailType; lifetime: settings.trailLength; hiddenSaber: hiddenSaber; goodTdColor: settings.goodTdColor; badTdColor: settings.badTdColor"
             bind__cut-plane="enabled: isPlaying"
             saber-controls="hand: {{ hand }}"

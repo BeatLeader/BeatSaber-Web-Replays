@@ -5,6 +5,7 @@ AFRAME.registerComponent('user-gesture', {
 	init: function () {
 		this.userActivity = true;
 		this.userActive = false;
+		this.settings = this.el.sceneEl.components['settings'];
 	},
 	play: function () {
 		document.addEventListener('click', evt => {
@@ -13,6 +14,12 @@ AFRAME.registerComponent('user-gesture', {
 			}
 			this.el.sceneEl.emit('usergesturereceive', null, false);
 		});
+
+		if (this.settings.settings.autoplayOnLoad) {
+			setTimeout(() => {
+				this.el.sceneEl.emit('usergesturereceive', null, false);
+			}, 1000);
+		}
 
 		const captureThis = this;
 		['mousemove', 'gesturechange', 'touchchange'].forEach(e => {

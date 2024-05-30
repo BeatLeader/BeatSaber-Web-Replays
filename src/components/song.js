@@ -55,7 +55,6 @@ AFRAME.registerComponent('song', {
 		this.songLoadingIndicator = document.getElementById('songLoadingIndicator');
 		this.speed = songSpeed;
 		this.hasReceivedUserGesture = false;
-		this.hitSound = this.el.components['beat-hit-sound'];
 
 		this.audioAnalyser.gainNode.gain.value = this.el.sceneEl.components.settings.settings.volume || BASE_VOLUME;
 
@@ -64,6 +63,9 @@ AFRAME.registerComponent('song', {
 		this.el.addEventListener('wallhitend', this.onWallHitEnd.bind(this));
 
 		const gestureListener = () => {
+			if (!this.hitSound) {
+				this.hitSound = this.el.components['beat-hit-sound'];
+			}
 			this.hasReceivedUserGesture = true;
 
 			this.audioAnalyser.suspendContext();

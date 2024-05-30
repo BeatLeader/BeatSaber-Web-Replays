@@ -16,12 +16,6 @@ const collisionZThreshold = -2.6;
 const DESTROYED_SPEED = 1.0;
 const ONCE = {once: true};
 
-const SOUND_STATE = {
-	initial: 0,
-	waitingForHitSound: 1,
-	hitPlayed: 2,
-};
-
 const RandomRotations = [
 	new THREE.Vector3(-0.9543871, -0.1183784, 0.2741019),
 	new THREE.Vector3(0.7680854, -0.08805521, 0.6342642),
@@ -83,7 +77,6 @@ AFRAME.registerComponent('beat', {
 		time: {default: -1},
 		noteId: {default: 0},
 		noteIdWithScoring: {default: 0},
-		seeking: {default: false},
 
 		// Z Movement
 		time: {default: 0},
@@ -169,7 +162,6 @@ AFRAME.registerComponent('beat', {
 		this.gravityVelocity = 0;
 
 		this.hitEventDetail = {};
-		this.hitSoundState = SOUND_STATE.initial;
 
 		this.poolName = undefined;
 		this.returnToPoolTimeStart = undefined;
@@ -341,12 +333,6 @@ AFRAME.registerComponent('beat', {
 			return;
 		}
 
-		if (!settings.realHitsounds) {
-			this.checkStaticHitsound();
-			if (this.hitSoundState == SOUND_STATE.waitingForHitSound) {
-				return;
-			}
-		}
 		const el = this.el;
 
 		if (this.destroyed) {
@@ -516,7 +502,6 @@ AFRAME.registerComponent('beat', {
 
 		// Reset the state properties.
 		this.returnToPoolTimeStart = undefined;
-		this.hitSoundState = SOUND_STATE.initial;
 		this.hitSaberEl = null;
 
 		// Find corresponding score from replay
@@ -995,12 +980,7 @@ AFRAME.registerComponent('beat', {
 				auxObj3D.lookAt(direction);
 			} else {
 				this.destroyed = true;
-				if (!settings.realHitsounds && this.hitSoundState != SOUND_STATE.hitPlayed) {
-					this.el.object3D.visible = false;
-					this.hitSoundState = SOUND_STATE.waitingForHitSound;
-				} else {
-					this.returnToPool(true);
-				}
+				this.returnToPool(true);
 			}
 
 			// if (!settings.settings.noEffects) {
@@ -1330,24 +1310,6 @@ AFRAME.registerComponent('beat', {
 			return {color: '#' + color.getHexString(), scale: 1.4};
 		};
 	})(),
-
-	checkStaticHitsound: function () {
-		if (this.data.type === 'mine' || this.hitSoundState == SOUND_STATE.hitPlayed) return;
-
-		const currentTime = getCurrentTime();
-		const noteTime = this.data.time - 0.2;
-
-		if (currentTime > noteTime && !this.data.seeking) {
-			if (this.data.type !== 'sliderchain') {
-				hitSound.playSound();
-			}
-
-			if (this.hitSoundState == SOUND_STATE.waitingForHitSound) {
-				this.returnToPool(true);
-			}
-			this.hitSoundState = SOUND_STATE.hitPlayed;
-		}
-	},
 
 	tockDestroyed: (function () {
 		var leftCutNormal = new THREE.Vector3();

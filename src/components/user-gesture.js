@@ -1,3 +1,5 @@
+const {getCookie, getUrlParameter, setCookie} = require('../utils');
+
 /**
  * Lame Chrome user gesture policy.
  */
@@ -6,6 +8,12 @@ AFRAME.registerComponent('user-gesture', {
 		this.userActivity = true;
 		this.userActive = false;
 		this.settings = this.el.sceneEl.components['settings'];
+		const firefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+		if (!firefox && (this.settings.settings.autoplayOnLoad || getCookie('autoplayReplay'))) {
+			setTimeout(() => {
+				this.el.sceneEl.emit('usergesturereceive', null, false);
+			}, 1001);
+		}
 	},
 	play: function () {
 		document.addEventListener('click', evt => {
@@ -14,12 +22,6 @@ AFRAME.registerComponent('user-gesture', {
 			}
 			this.el.sceneEl.emit('usergesturereceive', null, false);
 		});
-
-		if (this.settings.settings.autoplayOnLoad) {
-			setTimeout(() => {
-				this.el.sceneEl.emit('usergesturereceive', null, false);
-			}, 1000);
-		}
 
 		const captureThis = this;
 		['mousemove', 'gesturechange', 'touchchange'].forEach(e => {

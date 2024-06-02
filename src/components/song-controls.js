@@ -395,6 +395,7 @@ AFRAME.registerComponent('song-controls', {
 					if (deviceHasTouchScreen) {
 						noSleep.enable();
 					}
+					navigator.mediaSession.playbackState = 'playing';
 				}
 			} else {
 				if (pauseButton.classList.contains('pause')) {
@@ -403,6 +404,7 @@ AFRAME.registerComponent('song-controls', {
 					if (deviceHasTouchScreen) {
 						noSleep.disable();
 					}
+					navigator.mediaSession.playbackState = 'paused';
 				}
 			}
 		};
@@ -605,9 +607,7 @@ AFRAME.registerComponent('song-controls', {
 			} else if (utils.getUrlParameter('scoreId')) {
 				baseParams = `?scoreId=${utils.getUrlParameter('scoreId')}${modeParam}${jdParam}`;
 			} else {
-				let songParam = utils.getUrlParameter('id')
-					? `?id=${utils.getUrlParameter('id')}`
-					: `?hash=${utils.getUrlParameter('hash')}`;
+				let songParam = utils.getUrlParameter('id') ? `?id=${utils.getUrlParameter('id')}` : `?hash=${utils.getUrlParameter('hash')}`;
 				baseParams = `${songParam}&playerID=${utils.getUrlParameter('playerID')}&difficulty=${utils.getUrlParameter(
 					'difficulty'
 				)}${modeParam}${jdParam}`;
@@ -776,14 +776,28 @@ AFRAME.registerComponent('song-controls', {
 			fullscreenHandler(document.fullscreenElement);
 		});
 
+		const togglePlayback = () => {
+			if (this.song.data.isPlaying) {
+				this.el.sceneEl.emit('pausegame', null, false);
+			} else {
+				this.el.sceneEl.emit('usergesturereceive', null, false);
+				this.el.sceneEl.emit('gamemenuresume', null, false);
+			}
+		};
+
+		const seekRight = () => {
+			let currentTime = captureThis.song.getCurrentTime();
+			doSeek(null, currentTime + Math.max(0.01, 5 * captureThis.song.speed));
+		};
+
+		const seekLeft = () => {
+			let currentTime = captureThis.song.getCurrentTime();
+			doSeek(null, currentTime - Math.max(0.01, 5 * captureThis.song.speed));
+		};
+
 		document.addEventListener('keydown', e => {
 			if (e.key === ' ') {
-				if (this.song.data.isPlaying) {
-					this.el.sceneEl.emit('pausegame', null, false);
-				} else {
-					this.el.sceneEl.emit('usergesturereceive', null, false);
-					this.el.sceneEl.emit('gamemenuresume', null, false);
-				}
+				togglePlayback();
 			}
 			if (e.keyCode === 70 && !e.shiftKey) {
 				// f
@@ -791,15 +805,53 @@ AFRAME.registerComponent('song-controls', {
 			}
 			if (e.keyCode === 39) {
 				// right
-				let currentTime = captureThis.song.getCurrentTime();
-				doSeek(null, currentTime + Math.max(0.01, 5 * captureThis.song.speed));
+				seekRight();
 			}
 			if (e.keyCode === 37) {
 				// left
-				let currentTime = captureThis.song.getCurrentTime();
-				doSeek(null, currentTime - Math.max(0.01, 5 * captureThis.song.speed));
+				seekLeft();
 			}
 		});
+
+		if ('mediaSession' in navigator) {
+			navigator.mediaSession.setActionHandler('play', function () {
+				togglePlayback();
+			});
+			navigator.mediaSession.setActionHandler('pause', function () {
+				togglePlayback();
+			});
+			navigator.mediaSession.setActionHandler('seekbackward', function () {
+				seekLeft();
+			});
+			navigator.mediaSession.setActionHandler('seekforward', function () {
+				seekRight();
+			});
+			if (utils.getCookie('autoplayReplay')) {
+				navigator.mediaSession.setActionHandler('previoustrack', function () {
+					utils.setCookie('autoplayReplay', true, 30);
+					window.history.go(-1);
+				});
+			}
+			navigator.mediaSession.setActionHandler('nexttrack', function () {
+				utils.setCookie('autoplayReplay', true, 30);
+				window.history.forward();
+				captureThis.el.sceneEl.components['random-replay'].fetchRandomReplay(true);
+			});
+			// try {
+			// 	navigator.mediaSession.setActionHandler('enterpictureinpicture', async function () {
+			// 		if (!this.video) {
+			// 			const video = document.createElement('video');
+			// 			video.srcObject = document.getElementById('main-canvas').captureStream();
+			// 			video.muted = true;
+			// 			this.video = video;
+			// 		}
+			// 		await this.video.play();
+			// 		await this.video.requestPictureInPicture();
+			// 	});
+			// } catch (error) {
+			// 	console.log('Warning! The "enterpictureinpicture" media session action is not supported.');
+			// }
+		}
 
 		let jd = document.getElementById('jd');
 		let jdLabel = document.getElementById('jdLabel');
@@ -1142,6 +1194,14 @@ AFRAME.registerComponent('song-controls', {
 		}
 
 		this.timelineFilter.style.width = this.timeline.getBoundingClientRect().width * percent + 'px';
+
+		if ('mediaSession' in navigator) {
+			navigator.mediaSession.setPositionState({
+				duration: this.song.source.buffer.duration,
+				playbackRate: this.song.speed,
+				position: this.song.getCurrentTime(),
+			});
+		}
 	},
 
 	setupVolumeControls: function () {

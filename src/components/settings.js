@@ -85,7 +85,9 @@ AFRAME.registerComponent('settings', {
 			// Playback
 			pauseOnUnfocus: false,
 			autoplayOnLoad: false,
+
 			autoplayRandomScore: true,
+			randomScoreFromFriends: true,
 
 			showSaberAxes: false,
 		};

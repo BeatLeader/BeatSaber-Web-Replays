@@ -81,6 +81,21 @@
   {% include './settings.html' %}
 </div>
 
+<div id="randomReplay" style="display: none;">
+  <div id="randomReplayControls">
+  <img id="randomReplayImage">
+  <div id="randomReplayButtons">
+    <button id="randomReplayCancel" title="Cancel random replay playing"><i class="fas fa-xmark"></i></button>
+    <button id="randomReplayReroll" title="Reroll random selection"><i class="fas fa-rotate-right"></i></button>
+  </div>
+</div>
+  <div id="randomReplayInfo">
+    <a href="#" id="randomReplayNext"></a>
+    <span id="randomReplayPlayerName"></span>
+    <span id="randomReplaySongName"></span>
+  </div>
+</div>
+
 <div id="ctxMenu">
   <div class="panel-menu" role="menu" style="height: 40px;">
     <div id="copyURL" class="menuitem" role="menuitemcheckbox" aria-checked="false" tabindex="0">

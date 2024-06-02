@@ -176,6 +176,19 @@ AFRAME.registerState({
 			state.challenge.isLoading = false;
 		},
 
+		songstartaudio: (state, payload) => {
+			navigator.mediaSession.metadata = new MediaMetadata({
+				title: state.challenge.songName,
+				artist: state.challenge.songSubName,
+				album: state.player.name,
+				artwork: [
+					{
+						src: state.challenge.image,
+					},
+				],
+			});
+		},
+
 		replayloadstart: (state, payload) => {
 			state.localReplay = false;
 			state.replay.isLoading = true;

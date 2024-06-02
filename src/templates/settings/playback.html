@@ -1,19 +1,39 @@
-<div class="toggleButton" title="Start the replay on the tab load">
+<div class="toggleButton" title="Start the replay on the tab load on Google Chrome">
 	<label class="switch">
 		<input type="checkbox" id="autoplayOnLoad" />
 		<span class="slider round"></span>
 	</label>
 	<label class="toggleButtonLabel"
-		><td><nobr>Autoplay on load</nobr></td></label
+		><td><nobr>Autoplay on load (Chrome only!)</nobr></td></label
 	>
 </div>
 
-<div class="toggleButton" title="Pause player when tab loses focus">
+<div class="toggleButton" style="border-bottom: 1px solid white; margin-bottom: 4px" title="Pause player when tab loses focus">
 	<label class="switch">
 		<input type="checkbox" id="pauseOnUnfocus" />
 		<span class="slider round"></span>
 	</label>
 	<label class="toggleButtonLabel"
 		><td><nobr>Pause on focus lose</nobr></td></label
+	>
+</div>
+
+<div class="toggleButton" title="Automatically play a random replay at the end">
+	<label class="switch">
+		<input type="checkbox" id="autoplayRandomScore" />
+		<span class="slider round"></span>
+	</label>
+	<label class="toggleButtonLabel"
+		><td><nobr>Random replay</nobr></td></label
+	>
+</div>
+
+<div class="toggleButton" title="Play random replay friends (this will woerk only if you are logged in on the main website)">
+	<label class="switch">
+		<input type="checkbox" id="randomScoreFromFriends" />
+		<span class="slider round"></span>
+	</label>
+	<label class="toggleButtonLabel"
+		><td><nobr>Random replay from friends</nobr></td></label
 	>
 </div>

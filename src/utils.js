@@ -198,23 +198,20 @@ function rotateAboutPoint(obj, point, axis, theta, pointIsWorld) {
 function hasTouchScreen() {
 	var result = false;
 
-	if ("maxTouchPoints" in navigator) {
+	if ('maxTouchPoints' in navigator) {
 		result = navigator.maxTouchPoints > 0;
-	} else if ("msMaxTouchPoints" in navigator) {
+	} else if ('msMaxTouchPoints' in navigator) {
 		result = navigator.msMaxTouchPoints > 0;
 	} else {
-		var mQ = window.matchMedia && matchMedia("(pointer:coarse)");
-		if (mQ && mQ.media === "(pointer:coarse)") {
+		var mQ = window.matchMedia && matchMedia('(pointer:coarse)');
+		if (mQ && mQ.media === '(pointer:coarse)') {
 			result = !!mQ.matches;
 		} else if ('orientation' in window) {
 			result = true; // deprecated, but good fallback
 		} else {
 			// Only as a last resort, fall back to user agent sniffing
 			var UA = navigator.userAgent;
-			result = (
-				/\b(BlackBerry|webOS|iPhone|IEMobile)\b/i.test(UA) ||
-				/\b(Android|Windows Phone|iPad|iPod)\b/i.test(UA)
-			);
+			result = /\b(BlackBerry|webOS|iPhone|IEMobile)\b/i.test(UA) || /\b(Android|Windows Phone|iPad|iPod)\b/i.test(UA);
 		}
 	}
 
@@ -231,9 +228,29 @@ function getUrlParameter(name, url = window.location.href) {
 	const value = results[1];
 	if (value.includes('cdn.discordapp')) {
 		const cdnAndOthers = url.substring(results.index + 2 + name.length);
-		return `${value}&is=${getUrlParameter("is", cdnAndOthers)}&hm=${getUrlParameter("hm", cdnAndOthers)}`;
+		return `${value}&is=${getUrlParameter('is', cdnAndOthers)}&hm=${getUrlParameter('hm', cdnAndOthers)}`;
 	}
 	return decodeURIComponent(value.replace(/\+/g, ' '));
+}
+
+function setCookie(name, value, seconds) {
+	var expires = '';
+	if (seconds) {
+		var date = new Date();
+		date.setTime(date.getTime() + seconds * 1000);
+		expires = '; expires=' + date.toUTCString();
+	}
+	document.cookie = name + '=' + (value || '') + expires + '; path=/; SameSite=Lax';
+}
+function getCookie(name) {
+	var nameEQ = name + '=';
+	var ca = document.cookie.split(';');
+	for (var i = 0; i < ca.length; i++) {
+		var c = ca[i];
+		while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+		if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+	}
+	return null;
 }
 
 module.exports.getHorizontalPosition = getHorizontalPosition;
@@ -258,3 +275,5 @@ module.exports.rotateAboutPoint = rotateAboutPoint;
 module.exports.LerpUnclamped = LerpUnclamped;
 module.exports.hasTouchScreen = hasTouchScreen;
 module.exports.getUrlParameter = getUrlParameter;
+module.exports.setCookie = setCookie;
+module.exports.getCookie = getCookie;

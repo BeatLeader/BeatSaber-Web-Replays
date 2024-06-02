@@ -91,6 +91,10 @@ AFRAME.registerComponent('beat-generator', {
 				this.colors[e.detail.hand] = e.detail.color;
 			}
 		});
+
+		setInterval(() => {
+			this.manualTick();
+		}, 0);
 	},
 
 	update: function (oldData) {
@@ -179,7 +183,7 @@ AFRAME.registerComponent('beat-generator', {
 	/**
 	 * Generate beats and stuff according to timestamp.
 	 */
-	tick: function (time, delta) {
+	manualTick: function () {
 		const song = this.el.components.song;
 		if (!this.data.isPlaying || !this.beatData || !this.replayFetched) {
 			return;

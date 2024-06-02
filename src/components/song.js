@@ -55,6 +55,8 @@ AFRAME.registerComponent('song', {
 		this.songLoadingIndicator = document.getElementById('songLoadingIndicator');
 		this.speed = songSpeed;
 		this.hasReceivedUserGesture = false;
+		this.audio = document.createElement('audio');
+		this.audio.volume = 0;
 
 		this.audioAnalyser.gainNode.gain.value = this.el.sceneEl.components.settings.settings.volume || BASE_VOLUME;
 
@@ -94,6 +96,7 @@ AFRAME.registerComponent('song', {
 		// Resume.
 		if (oldData.isPaused && !data.isPaused) {
 			this.audioAnalyser.resumeContext();
+			this.playMediaSession();
 			this.isPlaying = true;
 		}
 
@@ -121,6 +124,7 @@ AFRAME.registerComponent('song', {
 			this.startAudio();
 			if (data.isPaused) {
 				this.audioAnalyser.suspendContext();
+				this.audio.pause();
 				this.isPlaying = false;
 			}
 		}
@@ -128,6 +132,7 @@ AFRAME.registerComponent('song', {
 		// Pause / stop.
 		if (!oldData.isPaused && data.isPaused) {
 			this.audioAnalyser.suspendContext();
+			this.audio.pause();
 			this.isPlaying = false;
 		}
 	},
@@ -135,12 +140,14 @@ AFRAME.registerComponent('song', {
 	pause: function () {
 		if (this.data.isPlaying) {
 			this.audioAnalyser.suspendContext();
+			this.audio.pause();
 		}
 	},
 
 	play: function () {
 		if (this.data.isPlaying) {
 			this.audioAnalyser.resumeContext();
+			this.playMediaSession();
 		}
 	},
 
@@ -154,6 +161,7 @@ AFRAME.registerComponent('song', {
 				evt => {
 					// Finished decoding.
 					this.source = evt.detail;
+					this.audio.src = this.audioAnalyser.data.src;
 					resolve(this.source);
 				},
 				ONCE
@@ -170,6 +178,7 @@ AFRAME.registerComponent('song', {
 		}
 		this.source.stop();
 		this.source.disconnect();
+
 		this.source = null;
 		this.isPlaying = false;
 	},
@@ -193,6 +202,7 @@ AFRAME.registerComponent('song', {
 			'audioanalyserbuffersource',
 			evt => {
 				this.source = evt.detail;
+				this.audio.src = this.audioAnalyser.data.src;
 				this.el.sceneEl.emit('songprocessingfinish', null, false);
 				if (this.data.isPlaying) {
 					this.startAudio();
@@ -215,15 +225,41 @@ AFRAME.registerComponent('song', {
 		gain.linearRampToValueAtTime(volume, this.context.currentTime + 0.1);
 	},
 
+	playMediaSession: function () {
+		if (!this.metadataAudioLoading) {
+			this.metadataAudioLoading = true;
+			this.audio.play().then(_ => {
+				this.metadataAudioLoading = false;
+				navigator.mediaSession.metadata = new MediaMetadata({
+					title: '',
+					artist: '',
+					album: '',
+				});
+
+				this.el.emit('songstartaudio');
+			});
+		}
+	},
+
 	startAudio: function (time) {
 		this.isPlaying = true;
 		const playTime = time || skipDebug || 0;
 		this.songStartTime = (this.context.currentTime * this.speed - playTime) / (this.speed > 0.01 ? this.speed : 0.01);
 		this.source.start(0, playTime);
-		this.el.emit('songstartaudio');
+
 		this.lastCurrentTime = this.speed > 0.01 ? 0 : time;
 
 		this.source.playbackRate.value = this.speed;
+
+		this.audio.currentTime = playTime;
+
+		navigator.mediaSession.setPositionState({
+			duration: this.source.buffer.duration,
+			playbackRate: this.speed,
+			position: playTime,
+		});
+
+		this.playMediaSession();
 	},
 
 	getCurrentTime: function () {

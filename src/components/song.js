@@ -253,11 +253,13 @@ AFRAME.registerComponent('song', {
 
 		this.audio.currentTime = playTime;
 
-		navigator.mediaSession.setPositionState({
-			duration: this.source.buffer.duration,
-			playbackRate: this.speed,
-			position: playTime,
-		});
+		if (this.speed > 0 && 'mediaSession' in navigator) {
+			navigator.mediaSession.setPositionState({
+				duration: this.source.buffer.duration,
+				playbackRate: this.speed,
+				position: playTime,
+			});
+		}
 
 		this.playMediaSession();
 	},

@@ -1195,7 +1195,7 @@ AFRAME.registerComponent('song-controls', {
 
 		this.timelineFilter.style.width = this.timeline.getBoundingClientRect().width * percent + 'px';
 
-		if ('mediaSession' in navigator) {
+		if (this.song.speed > 0 && 'mediaSession' in navigator) {
 			navigator.mediaSession.setPositionState({
 				duration: this.song.source.buffer.duration,
 				playbackRate: this.song.speed,

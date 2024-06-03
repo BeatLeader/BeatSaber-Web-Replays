@@ -139,8 +139,7 @@ AFRAME.registerComponent('song-controls', {
 			utils.checkAutoplay().then(canAutoplay => {
 				if (!canAutoplay) {
 					document.getElementById('autoplayWarning').style.display = 'block';
-					const firefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
-					if (firefox) {
+					if (utils.isFirefox()) {
 						document.getElementById('firefoxAutoplayWarning').style.display = 'block';
 					}
 				} else {
@@ -414,7 +413,6 @@ AFRAME.registerComponent('song-controls', {
 					if (deviceHasTouchScreen) {
 						noSleep.enable();
 					}
-					navigator.mediaSession.playbackState = 'playing';
 				}
 			} else {
 				if (pauseButton.classList.contains('pause')) {
@@ -423,7 +421,6 @@ AFRAME.registerComponent('song-controls', {
 					if (deviceHasTouchScreen) {
 						noSleep.disable();
 					}
-					navigator.mediaSession.playbackState = 'paused';
 				}
 			}
 		};
@@ -689,7 +686,7 @@ AFRAME.registerComponent('song-controls', {
 
 		let firefoxHandler = () => {
 			// Firefox seems to not like zeros
-			if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) {
+			if (utils.isFirefox()) {
 				if (speedSlider[0].value == 0) {
 					this.song.audioAnalyser.zeroFirefox();
 				} else if (this.song.audioAnalyser.firefoxZeroed) {
@@ -856,20 +853,20 @@ AFRAME.registerComponent('song-controls', {
 				window.history.forward();
 				captureThis.el.sceneEl.components['random-replay'].fetchRandomReplay(true);
 			});
-			// try {
-			// 	navigator.mediaSession.setActionHandler('enterpictureinpicture', async function () {
-			// 		if (!this.video) {
-			// 			const video = document.createElement('video');
-			// 			video.srcObject = document.getElementById('main-canvas').captureStream();
-			// 			video.muted = true;
-			// 			this.video = video;
-			// 		}
-			// 		await this.video.play();
-			// 		await this.video.requestPictureInPicture();
-			// 	});
-			// } catch (error) {
-			// 	console.log('Warning! The "enterpictureinpicture" media session action is not supported.');
-			// }
+			try {
+				navigator.mediaSession.setActionHandler('enterpictureinpicture', async function () {
+					if (!this.video) {
+						const video = document.createElement('video');
+						video.srcObject = document.getElementById('main-canvas').captureStream(25);
+						video.muted = true;
+						this.video = video;
+					}
+					await this.video.play();
+					await this.video.requestPictureInPicture();
+				});
+			} catch (error) {
+				console.log('Warning! The "enterpictureinpicture" media session action is not supported.');
+			}
 		}
 
 		let jd = document.getElementById('jd');

@@ -273,6 +273,10 @@ async function checkAutoplay() {
 	return cached;
 }
 
+function isFirefox() {
+	return navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+}
+
 module.exports.getHorizontalPosition = getHorizontalPosition;
 module.exports.getHorizontalWallPosition = getHorizontalWallPosition;
 module.exports.getVerticalPosition = getVerticalPosition;
@@ -298,3 +302,4 @@ module.exports.getUrlParameter = getUrlParameter;
 module.exports.setCookie = setCookie;
 module.exports.getCookie = getCookie;
 module.exports.checkAutoplay = checkAutoplay;
+module.exports.isFirefox = isFirefox;

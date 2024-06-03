@@ -56,7 +56,9 @@ AFRAME.registerComponent('song', {
 		this.speed = songSpeed;
 		this.hasReceivedUserGesture = false;
 		this.audio = document.createElement('audio');
-		this.audio.volume = 0;
+		this.audio.volume = utils.isFirefox() ? 0.0001 : 0; // Firefox really does not like zeros
+		this.audio.addEventListener('play', () => (navigator.mediaSession.playbackState = 'playing'));
+		this.audio.addEventListener('pause', () => (navigator.mediaSession.playbackState = 'paused'));
 
 		this.audioAnalyser.gainNode.gain.value = this.el.sceneEl.components.settings.settings.volume || BASE_VOLUME;
 
@@ -228,13 +230,9 @@ AFRAME.registerComponent('song', {
 	playMediaSession: function () {
 		if (!this.metadataAudioLoading) {
 			this.metadataAudioLoading = true;
+			navigator.mediaSession.metadata = new MediaMetadata({});
 			this.audio.play().then(_ => {
 				this.metadataAudioLoading = false;
-				navigator.mediaSession.metadata = new MediaMetadata({
-					title: '',
-					artist: '',
-					album: '',
-				});
 
 				this.el.emit('songstartaudio');
 			});

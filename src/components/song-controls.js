@@ -26,6 +26,7 @@ AFRAME.registerComponent('song-controls', {
 		isPlaying: {default: false},
 		showControls: {default: true},
 		isSafari: {default: false},
+		autoplayOnLoad: {default: false},
 	},
 
 	init: function () {
@@ -132,6 +133,24 @@ AFRAME.registerComponent('song-controls', {
 			document.body.classList.add('showControls');
 		} else if (!data.showControls && oldData.showControls) {
 			document.body.classList.remove('showControls');
+		}
+
+		if (data.autoplayOnLoad && !oldData.autoplayOnLoad) {
+			utils.checkAutoplay().then(canAutoplay => {
+				if (!canAutoplay) {
+					document.getElementById('autoplayWarning').style.display = 'block';
+					const firefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+					if (firefox) {
+						document.getElementById('firefoxAutoplayWarning').style.display = 'block';
+					}
+				} else {
+					document.getElementById('autoplayWarning').style.display = 'none';
+					document.getElementById('firefoxAutoplayWarning').style.display = 'none';
+				}
+			});
+		} else if (!data.autoplayOnLoad && oldData.autoplayOnLoad) {
+			document.getElementById('autoplayWarning').style.display = 'none';
+			document.getElementById('firefoxAutoplayWarning').style.display = 'none';
 		}
 
 		if (data.songImage != oldData.songImage) {

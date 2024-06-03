@@ -81,7 +81,7 @@
       bind__pauser="enabled: isPlaying; pauseOnUnfocus: settings.pauseOnUnfocus"
       bind__song="audio: challenge.audio; difficulty: challenge.difficulty; mode: challenge.mode; isPaused: isPaused; isFinished: isFinished; isPlaying: isPlaying; isBeatsPreloaded: challenge.isBeatsPreloaded"
       beat-hit-sound
-      bind__song-controls="difficulty: challenge.difficulty; mode: challenge.mode; isSafari: isSafari; isPlaying: isPlaying; songName: challenge.songName; songSubName: challenge.author; songImage: challenge.image; showControls: showControls; leaderboardId: challenge.leaderboardId; songId: challenge.id"
+      bind__song-controls="difficulty: challenge.difficulty; mode: challenge.mode; isSafari: isSafari; isPlaying: isPlaying; songName: challenge.songName; songSubName: challenge.author; songImage: challenge.image; showControls: showControls; leaderboardId: challenge.leaderboardId; songId: challenge.id; autoplayOnLoad: settings.autoplayOnLoad"
       bind__zip-loader="difficulty: challenge.difficulty; id: challenge.id; mode: challenge.mode"
       bind__replay-loader="difficulty: challenge.difficulty; mode: challenge.mode"
       bind__intro-skip="difficulty: challenge.difficulty"
@@ -361,7 +361,9 @@
       </a-entity>
     </a-scene>
     
-    
+    <audio id="dummyAudio" autoplay>
+			<source src="assets/sounds/silence.mp3" type="audio/mpeg" />
+		</audio>
     
 
     <span id="iframeUrl"></span>

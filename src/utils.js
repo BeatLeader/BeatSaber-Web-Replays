@@ -253,6 +253,26 @@ function getCookie(name) {
 	return null;
 }
 
+var cached;
+async function checkAutoplay() {
+	if (cached === undefined) {
+		const dummyAudio = document.createElement('audio');
+		dummyAudio.src = '/assets/sounds/silence.mp3';
+		document.body.appendChild(dummyAudio);
+
+		try {
+			await dummyAudio.play();
+			console.log('Autoplay is enabled');
+			cached = true;
+		} catch (error) {
+			console.log('Autoplay is disabled', error);
+			cached = false;
+		}
+	}
+
+	return cached;
+}
+
 module.exports.getHorizontalPosition = getHorizontalPosition;
 module.exports.getHorizontalWallPosition = getHorizontalWallPosition;
 module.exports.getVerticalPosition = getVerticalPosition;
@@ -277,3 +297,4 @@ module.exports.hasTouchScreen = hasTouchScreen;
 module.exports.getUrlParameter = getUrlParameter;
 module.exports.setCookie = setCookie;
 module.exports.getCookie = getCookie;
+module.exports.checkAutoplay = checkAutoplay;

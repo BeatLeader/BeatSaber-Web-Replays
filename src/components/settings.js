@@ -88,6 +88,7 @@ AFRAME.registerComponent('settings', {
 
 			autoplayRandomScore: true,
 			randomScoreFromFriends: true,
+			randomScoreEmptyPlayer: true,
 
 			showSaberAxes: false,
 		};

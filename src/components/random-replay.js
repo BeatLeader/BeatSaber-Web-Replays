@@ -41,7 +41,8 @@ AFRAME.registerComponent('random-replay', {
 		if (
 			!this.canceled &&
 			this.settings.settings.autoplayRandomScore &&
-			((source && song.getCurrentTime() >= source.buffer.duration - 10) || this.replayLoader.cleanup)
+			((source && song.getCurrentTime() >= source.buffer.duration - 10) ||
+				(this.settings.settings.randomScoreEmptyPlayer && this.replayLoader.cleanup))
 		) {
 			this.fetchRandomReplay();
 		} else if (this.randomReplay.style.display == 'flex') {
@@ -67,7 +68,7 @@ AFRAME.registerComponent('random-replay', {
 			}
 			this.randomReplay.style.display = 'flex';
 			if (!this.interval) {
-				this.seconds = 10;
+				this.seconds = this.replayLoader.cleanup ? 30 : 10;
 				this.interval = setInterval(() => {
 					this.randomReplayNext.innerHTML = 'Next in ' + this.seconds + ' sec...';
 					this.seconds--;

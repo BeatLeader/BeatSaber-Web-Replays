@@ -15,7 +15,9 @@ AFRAME.registerComponent('camera-mover', {
 	schema: {},
 
 	init: function () {
+		this.settings = this.el.sceneEl.components.settings;
 		this.pov = false;
+
 		this.defaultCameraRig = this.el.sceneEl.querySelectorAll('.floatingCamera')[0];
 		this.povCameraRig = this.el.sceneEl.querySelectorAll('.headCamera')[0];
 
@@ -27,12 +29,10 @@ AFRAME.registerComponent('camera-mover', {
 
 		this.restoreButton = document.getElementById('cameraRestore');
 		this.saveButton = document.getElementById('cameraSave');
-
-		this.settings = this.el.sceneEl.components.settings;
 	},
 
 	play: function () {
-		let powHandler = () => {
+		let powHandler = keepValue => {
 			if (this.pov) {
 				this.povCamera.setAttribute('camera', 'active', false);
 				this.defaultCamera.setAttribute('camera', 'active', true);
@@ -41,6 +41,10 @@ AFRAME.registerComponent('camera-mover', {
 				this.povCamera.setAttribute('camera', 'active', true);
 			}
 			this.pov = !this.pov;
+			if (!keepValue) {
+				this.settings.settings.fpvCameraIsOn = this.pov;
+				this.settings.sync();
+			}
 			this.updateSaveButtons();
 			this.el.sceneEl.emit('povchanged', {newPov: this.pov}, false);
 		};
@@ -50,6 +54,15 @@ AFRAME.registerComponent('camera-mover', {
 				powHandler();
 			});
 		});
+
+		if (this.settings.settings.saveFpvToggle) {
+			if (this.settings.settings.fpvCameraIsOn) {
+				powHandler(true);
+			}
+		} else if (this.settings.settings.fpvCameraIsOn) {
+			this.settings.settings.fpvCameraIsOn = false;
+			this.settings.sync();
+		}
 
 		let toLeftHandler = () => {
 			this.defaultCamera.object3D.position.y = 1.75;
@@ -146,6 +159,8 @@ AFRAME.registerComponent('camera-mover', {
 	disablePovIfNeeded: function () {
 		if (this.pov) {
 			this.pov = false;
+			this.settings.settings.fpvCameraIsOn = false;
+			this.settings.sync();
 			this.povCamera.setAttribute('camera', 'active', false);
 			this.defaultCamera.setAttribute('camera', 'active', true);
 			this.el.sceneEl.emit('povchanged', {newPov: this.pov}, false);

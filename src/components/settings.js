@@ -49,6 +49,8 @@ AFRAME.registerComponent('settings', {
 			orthographicTopEnabled: false,
 			orthographicTopFrustum: 2.4,
 			orthographicTopFar: 10,
+			fpvCameraIsOn: false,
+			saveFpvToggle: true,
 
 			// Visuals
 			showLasers: true,

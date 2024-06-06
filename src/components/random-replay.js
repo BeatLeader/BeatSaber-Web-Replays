@@ -1,4 +1,4 @@
-const {setCookie} = require('../utils');
+const {setCookie, getApiUrl} = require('../utils');
 
 AFRAME.registerComponent('random-replay', {
 	schema: {
@@ -79,12 +79,9 @@ AFRAME.registerComponent('random-replay', {
 			}
 		} else if (!this.loadingScore) {
 			this.loadingScore = true;
-			fetch(
-				`https://api.beatleader.xyz/score/random?scoreSource=${this.settings.settings.randomScoreFromFriends ? 'friends' : 'general'}`,
-				{
-					credentials: 'include',
-				}
-			)
+			fetch(`${getApiUrl()}/score/random?scoreSource=${this.settings.settings.randomScoreFromFriends ? 'friends' : 'general'}`, {
+				credentials: 'include',
+			})
 				.then(r => r.json())
 				.then(score => {
 					this.score = score;

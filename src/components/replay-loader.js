@@ -5,7 +5,7 @@ import {Mirror_Horizontal, Mirror_Horizontal_Note} from '../chirality-support';
 import {MultiplierCounter} from '../utils/MultiplierCounter';
 var queryParams = require('../query-params');
 
-import {NoteCutDirection, difficultyFromName, clamp, ScoringType, getUrlParameter} from '../utils';
+import {NoteCutDirection, difficultyFromName, clamp, ScoringType, getUrlParameter, getApiUrl, getWebsiteUrl} from '../utils';
 function floorToTwo(num) {
 	return Math.floor(num * 100) / 100;
 }
@@ -69,8 +69,11 @@ AFRAME.registerComponent('replay-loader', {
 	downloadReplay: function (hash, scoreId, error) {
 		this.el.sceneEl.emit('replayloadstart', null);
 		fetch(
-			'https://api.beatleader.xyz/score/' +
-				(scoreId ? `${scoreId}?fallbackToRedirect=true` : `${this.data.context}/${this.data.playerID}/${hash}/${this.data.difficulty}/${this.data.mode}`)
+			getApiUrl() +
+				'/score/' +
+				(scoreId
+					? `${scoreId}?fallbackToRedirect=true`
+					: `${this.data.context}/${this.data.playerID}/${hash}/${this.data.difficulty}/${this.data.mode}`)
 		).then(async response => {
 			let data = response.status == 200 ? await response.json() : null;
 			if (data && data.playerId) {
@@ -85,8 +88,8 @@ AFRAME.registerComponent('replay-loader', {
 							songName: data.song.name,
 							songAuthorName: data.song.author,
 							songSubName: data.song.subName,
-							levelAuthorName: data.song.mapper
-						}
+							levelAuthorName: data.song.mapper,
+						},
 					},
 					null
 				);
@@ -124,7 +127,7 @@ AFRAME.registerComponent('replay-loader', {
 						avatar: this.user.avatar,
 						country: this.user.country,
 						countryIcon: `assets/flags/${this.user.country.toLowerCase()}.png`,
-						profileLink: `https://beatleader.xyz/u/${this.user.id}`,
+						profileLink: `${getWebsiteUrl()}/u/${this.user.id}`,
 						id: this.user.id,
 					},
 					null
@@ -133,7 +136,7 @@ AFRAME.registerComponent('replay-loader', {
 				if (profileSettings) {
 					this.el.sceneEl.emit('colorsFetched', {playerId: data.player.id, features: profileSettings}, null);
 				}
-				fetch('https://api.beatleader.xyz/watched/' + data.id, {credentials: 'include'});
+				fetch(getApiUrl() + '/watched/' + data.id, {credentials: 'include'});
 			} else {
 				this.el.sceneEl.emit(
 					'replayloadfailed',
@@ -181,7 +184,7 @@ AFRAME.registerComponent('replay-loader', {
 	},
 
 	fetchPlayer: function (playerID) {
-		fetch(`https://api.beatleader.xyz/player/${playerID}`).then(res => {
+		fetch(`${getApiUrl()}/player/${playerID}`).then(res => {
 			res.json().then(data => {
 				this.user = data;
 				this.el.sceneEl.emit(
@@ -191,7 +194,7 @@ AFRAME.registerComponent('replay-loader', {
 						avatar: this.user.avatar,
 						country: this.user.country,
 						countryIcon: `assets/flags/${this.user.country.toLowerCase()}.png`,
-						profileLink: `https://beatleader.xyz/u/${this.user.id}`,
+						profileLink: `${getWebsiteUrl()}/u/${this.user.id}`,
 						id: this.user.id,
 					},
 					null
@@ -517,7 +520,11 @@ AFRAME.registerComponent('replay-loader', {
 				.sort((a, b) => {
 					return a._time - b._time;
 				})
-				.filter(a => (a._type == 0 || a._type == 1) && (floorToTwo(a._songTime) > firstReplayNoteTime || Math.abs(floorToTwo(a._songTime) - firstReplayNoteTime) < 0.01));
+				.filter(
+					a =>
+						(a._type == 0 || a._type == 1) &&
+						(floorToTwo(a._songTime) > firstReplayNoteTime || Math.abs(floorToTwo(a._songTime) - firstReplayNoteTime) < 0.01)
+				);
 
 			var replayNotes = replay.notes;
 			replayNotes = replayNotes

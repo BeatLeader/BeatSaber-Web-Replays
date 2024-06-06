@@ -1,3 +1,5 @@
+const {getApiUrl} = require('../utils');
+
 function hexToHSL(hex) {
 	let r = parseInt(hex.slice(1, 3), 16);
 	let g = parseInt(hex.slice(3, 5), 16);
@@ -204,7 +206,7 @@ AFRAME.registerComponent('colors', {
 	},
 
 	getColors: completion => {
-		fetch('https://api.beatleader.xyz/user', {credentials: 'include'})
+		fetch(getApiUrl() + '/user', {credentials: 'include'})
 			.then(response => response.json())
 			.then(async data => {
 				completion(data);
@@ -216,7 +218,7 @@ AFRAME.registerComponent('colors', {
 			this.start = new Date().getTime();
 			setTimeout(() => {
 				if (new Date().getTime() - this.start > 999) {
-					fetch(`https://api.beatleader.xyz/user?${hand}=${encodeURIComponent(color)}`, {
+					fetch(`${getApiUrl()}/user?${hand}=${encodeURIComponent(color)}`, {
 						method: 'PATCH',
 						credentials: 'include',
 					});

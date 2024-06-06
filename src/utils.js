@@ -2,6 +2,14 @@
 const _noteLinesCount = 4;
 const _noteLinesDistance = 0.6;
 
+function getApiUrl() {
+	return location.host.includes('beatleader.net') ? 'https://api.beatleader.net' : 'https://api.beatleader.xyz';
+}
+
+function getWebsiteUrl() {
+	return location.host.includes('beatleader.net') ? 'https://beatleader.net' : 'https://beatleader.xyz';
+}
+
 function getHorizontalPosition(lineIndex) {
 	return (-(_noteLinesCount - 1) * 0.5 + lineIndex) * _noteLinesDistance;
 }
@@ -277,6 +285,8 @@ function isFirefox() {
 	return navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
 }
 
+module.exports.getApiUrl = getApiUrl;
+module.exports.getWebsiteUrl = getWebsiteUrl;
 module.exports.getHorizontalPosition = getHorizontalPosition;
 module.exports.getHorizontalWallPosition = getHorizontalWallPosition;
 module.exports.getVerticalPosition = getVerticalPosition;

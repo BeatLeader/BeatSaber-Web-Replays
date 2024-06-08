@@ -4,6 +4,7 @@ var {queryParamTime} = require('../query-params');
 const GAME_OVER_LENGTH = 3.5;
 const ONCE = {once: true};
 const BASE_VOLUME = 0.35;
+const isSafari = navigator.userAgent.toLowerCase().indexOf('safari') !== -1 && navigator.userAgent.toLowerCase().indexOf('chrome') === -1;
 
 let skipDebug = AFRAME.utils.getUrlParameter('skip');
 if (!!skipDebug) {
@@ -57,8 +58,6 @@ AFRAME.registerComponent('song', {
 		this.hasReceivedUserGesture = false;
 		this.audio = document.createElement('audio');
 		this.audio.volume = utils.isFirefox() ? 0.0001 : 0; // Firefox really does not like zeros
-		this.audio.addEventListener('play', () => (navigator.mediaSession.playbackState = 'playing'));
-		this.audio.addEventListener('pause', () => (navigator.mediaSession.playbackState = 'paused'));
 
 		this.audioAnalyser.gainNode.gain.value = this.el.sceneEl.components.settings.settings.volume || BASE_VOLUME;
 
@@ -163,7 +162,11 @@ AFRAME.registerComponent('song', {
 				evt => {
 					// Finished decoding.
 					this.source = evt.detail;
-					this.audio.src = this.audioAnalyser.data.src;
+					if (isSafari) {
+						this.audio.src = "/assets/sounds/silence.mp3"
+					} else {
+						this.audio.src = this.audioAnalyser.data.src;
+					}
 					resolve(this.source);
 				},
 				ONCE
@@ -204,7 +207,11 @@ AFRAME.registerComponent('song', {
 			'audioanalyserbuffersource',
 			evt => {
 				this.source = evt.detail;
-				this.audio.src = this.audioAnalyser.data.src;
+				if (isSafari) {
+					this.audio.src = "/assets/sounds/silence.mp3"
+				} else {
+					this.audio.src = this.audioAnalyser.data.src;
+				}
 				this.el.sceneEl.emit('songprocessingfinish', null, false);
 				if (this.data.isPlaying) {
 					this.startAudio();
@@ -230,8 +237,9 @@ AFRAME.registerComponent('song', {
 	playMediaSession: function () {
 		if (!this.metadataAudioLoading) {
 			this.metadataAudioLoading = true;
-			navigator.mediaSession.metadata = new MediaMetadata({});
+			
 			this.audio.play().then(_ => {
+				navigator.mediaSession.metadata = new MediaMetadata({});
 				this.metadataAudioLoading = false;
 
 				this.el.emit('songstartaudio');

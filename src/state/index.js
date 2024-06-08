@@ -57,6 +57,14 @@ if (isSafari) {
 let beatmaps;
 let difficulties;
 
+AFRAME.utils.extendDeep = function deepAssign(original, extension) {
+	Object.keys(extension).forEach(key => {
+		original[key] = extension[key];
+	});
+
+	return original;
+};
+
 /**
  * State handler.
  *
@@ -396,7 +404,7 @@ AFRAME.registerState({
 	/**
 	 * Post-process the state after each action.
 	 */
-	computeState: state => {
+	computeState: (state, action, payload) => {
 		state.isPlaying =
 			!state.isPaused &&
 			!state.isSongBufferProcessing &&

@@ -413,6 +413,7 @@ AFRAME.registerComponent('song-controls', {
 					if (deviceHasTouchScreen) {
 						noSleep.enable();
 					}
+					navigator.mediaSession.playbackState = 'playing';
 				}
 			} else {
 				if (pauseButton.classList.contains('pause')) {
@@ -421,6 +422,7 @@ AFRAME.registerComponent('song-controls', {
 					if (deviceHasTouchScreen) {
 						noSleep.disable();
 					}
+					navigator.mediaSession.playbackState = 'paused';
 				}
 			}
 		};
@@ -867,6 +869,13 @@ AFRAME.registerComponent('song-controls', {
 			} catch (error) {
 				console.log('Warning! The "enterpictureinpicture" media session action is not supported.');
 			}
+			try {
+				navigator.mediaSession.setActionHandler('seekto', function(event) {
+				  doSeek(null, event.seekTime);
+				});
+			  } catch(error) {
+				console.log('Warning! The "seekto" media session action is not supported.');
+			  }
 		}
 
 		let jd = document.getElementById('jd');

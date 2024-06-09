@@ -163,7 +163,7 @@ AFRAME.registerComponent('song', {
 					// Finished decoding.
 					this.source = evt.detail;
 					if (isSafari) {
-						this.audio.src = "/assets/sounds/silence.mp3"
+						this.audio.src = utils.createSilence(evt.detail.buffer.duration);
 					} else {
 						this.audio.src = this.audioAnalyser.data.src;
 					}
@@ -208,7 +208,7 @@ AFRAME.registerComponent('song', {
 			evt => {
 				this.source = evt.detail;
 				if (isSafari) {
-					this.audio.src = "/assets/sounds/silence.mp3"
+					this.audio.src = utils.createSilence(evt.detail.buffer.duration);
 				} else {
 					this.audio.src = this.audioAnalyser.data.src;
 				}

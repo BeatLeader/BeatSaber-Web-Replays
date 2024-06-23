@@ -1,4 +1,4 @@
-const {get2DNoteOffset, directionVector, NoteCutDirection, signedAngleToLine, ScoringType, clone} = require('../utils.js');
+const {get2DNoteOffset, directionVector, NoteCutDirection, signedAngleToLine, ScoringType, clone, LerpUnclamped} = require('../utils.js');
 
 const ANY_CUT_DIRECTION = NoteCutDirection.Any;
 
@@ -424,14 +424,14 @@ function addScoringTypeAndChains(map) {
 			}
 			head.sliderhead = slider;
 		}
-		for (var i = 1; i < slider._sliceCount; i++) {
+		for (var i = 1; i < slider._sliceCount; ++i) {
 			let chain = clone(slider);
 			chain._headCutDirection = slider._cutDirection;
 			chain._cutDirection = ANY_CUT_DIRECTION;
 			chain._scoringType = ScoringType.BurstSliderElement;
 			chain._sliceIndex = i;
 
-			chain._time += (chain._tailTime - chain._time) * 0.5 * (chain._sliceIndex / (slider._sliceCount - 1)) * slider._squishAmount;
+			chain._time = LerpUnclamped(chain._time, chain._tailTime, chain._sliceIndex / (slider._sliceCount - 1));
 
 			chains.push(chain);
 		}

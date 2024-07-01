@@ -3,7 +3,7 @@ const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
 function checkSS(file, isLink, completion) {
 	if (isLink) {
 		if (file.split('.').pop() == 'dat') {
-			file = file.replace('https://cdn.discordapp.com/', '/cors/discord-cdn/');
+			file = file.replace('https://cdn.discordapp.com/attachments/', 'https://discord.beatleader.pro/');
 			var xhr = new XMLHttpRequest();
 			xhr.open('GET', file, true);
 			xhr.responseType = 'blob';

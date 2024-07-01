@@ -24,7 +24,7 @@ AFRAME.registerComponent('zip-loader', {
 				this.data.difficulty = this.difficultyFromId(e.detail.difficulty);
 				this.data.mode = e.detail.mode;
 				if (this.data.mapLink) {
-					this.fetchZip(this.data.mapLink.replace('https://cdn.discordapp.com/', '/cors/discord-cdn/'));
+					this.fetchZip(this.data.mapLink.replace('https://cdn.discordapp.com/attachments/', 'https://discord.beatleader.pro/'));
 				} else if (e.detail.hash.length >= 40) {
 					this.fetchData(e.detail.hash.replace('custom_level_', '').substring(0, 40).toLowerCase(), true);
 				} else {

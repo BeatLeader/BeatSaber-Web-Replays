@@ -13,7 +13,7 @@ function checkBSOR(file, isLink, completion) {
 				};
 				linkxhr.send();
 			} else {
-				file = file.replace('https://cdn.discordapp.com/', '/cors/discord-cdn/');
+				file = file.replace('https://cdn.discordapp.com/attachments/', 'https://discord.beatleader.pro/');
 				var xhr = new XMLHttpRequest();
 				xhr.open('GET', file, true);
 				xhr.responseType = 'blob';

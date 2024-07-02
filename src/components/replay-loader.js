@@ -127,7 +127,7 @@ AFRAME.registerComponent('replay-loader', {
 						avatar: this.user.avatar,
 						country: this.user.country,
 						countryIcon: `assets/flags/${this.user.country.toLowerCase()}.png`,
-						profileLink: `${getWebsiteUrl()}/u/${this.user.id}`,
+						profileLink: `${getWebsiteUrl()}/u/${this.user.alias ? this.user.alias : this.user.id}`,
 						id: this.user.id,
 					},
 					null
@@ -194,7 +194,7 @@ AFRAME.registerComponent('replay-loader', {
 						avatar: this.user.avatar,
 						country: this.user.country,
 						countryIcon: `assets/flags/${this.user.country.toLowerCase()}.png`,
-						profileLink: `${getWebsiteUrl()}/u/${this.user.id}`,
+						profileLink: `${getWebsiteUrl()}/u/${this.user.alias ? this.user.alias : this.user.id}`,
 						id: this.user.id,
 					},
 					null

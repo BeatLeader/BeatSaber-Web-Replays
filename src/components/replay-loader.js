@@ -5,7 +5,7 @@ import {Mirror_Horizontal, Mirror_Horizontal_Note} from '../chirality-support';
 import {MultiplierCounter} from '../utils/MultiplierCounter';
 var queryParams = require('../query-params');
 
-import {NoteCutDirection, difficultyFromName, clamp, ScoringType, getUrlParameter, getApiUrl, getWebsiteUrl} from '../utils';
+import {NoteCutDirection, difficultyFromName, clamp, ScoringType, getUrlParameter, getApiUrl, getWebsiteUrl, getCookie} from '../utils';
 function floorToTwo(num) {
 	return Math.floor(num * 100) / 100;
 }
@@ -136,7 +136,9 @@ AFRAME.registerComponent('replay-loader', {
 				if (profileSettings) {
 					this.el.sceneEl.emit('colorsFetched', {playerId: data.player.id, features: profileSettings}, null);
 				}
-				fetch(getApiUrl() + '/watched/' + data.id, {credentials: 'include'});
+				if (!getCookie('autoplayReplay')) {
+					fetch(getApiUrl() + '/watched/' + data.id, {credentials: 'include'});
+				}
 			} else {
 				this.el.sceneEl.emit(
 					'replayloadfailed',

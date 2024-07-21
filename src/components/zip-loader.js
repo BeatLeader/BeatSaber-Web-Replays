@@ -189,6 +189,10 @@ AFRAME.registerComponent('zip-loader', {
 	},
 
 	postchallengeloaderror: function (hash) {
+		if (utils.getCookie('autoplayReplay')) {
+			this.el.sceneEl.components['random-replay'].fetchRandomReplay(true);
+		}
+
 		const gestureListener = e => {
 			if (this.fetching) {
 				return;

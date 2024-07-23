@@ -237,33 +237,38 @@ AFRAME.registerComponent('zip-loader', {
 	fetchData: function (id, byHash) {
 		this.fetched = true;
 		document.cookie = 'aprilFools=1; expires=Sat, 03 Apr 2022 00:00:00 UTC; path=/';
-		return fetch(`/cors/beat-saver2/api/maps/${byHash ? 'hash' : 'id'}/${id}`).then(res => {
-			res.json().then(data => {
-				if (data.versions) {
-					const currentVersion = data.versions[0];
-					const desiredHash = byHash ? id : currentVersion.hash;
+		return fetch(`/cors/beat-saver2/api/maps/${byHash ? 'hash' : 'id'}/${id}`, {signal: AbortSignal.timeout(5000)})
+			.then(res => {
+				res.json().then(data => {
+					if (data.versions) {
+						const currentVersion = data.versions[0];
+						const desiredHash = byHash ? id : currentVersion.hash;
 
-					let callback = (hash, cover, zipUrl, fallbackUrls) => {
-						data.image = cover;
-						data.hash = hash;
-						data.leaderboardId = this.leaderboardId;
-						this.data.hash = hash;
+						let callback = (hash, cover, zipUrl, fallbackUrls) => {
+							data.image = cover;
+							data.hash = hash;
+							data.leaderboardId = this.leaderboardId;
+							this.data.hash = hash;
 
-						this.el.sceneEl.emit('songFetched', data);
+							this.el.sceneEl.emit('songFetched', data);
 
-						this.fetchZip(zipUrl, fallbackUrls);
-					};
-					if (desiredHash.toLowerCase() == currentVersion.hash.toLowerCase()) {
-						callback(currentVersion.hash, currentVersion.coverURL, currentVersion.downloadURL);
+							this.fetchZip(zipUrl, fallbackUrls);
+						};
+						if (desiredHash.toLowerCase() == currentVersion.hash.toLowerCase()) {
+							callback(currentVersion.hash, currentVersion.coverURL, currentVersion.downloadURL);
+						} else {
+							let urls = ['r2cdn', 'cdn'].map(prefix => 'https://' + prefix + '.beatsaver.com/' + desiredHash.toLowerCase() + '.zip');
+							callback(desiredHash, currentVersion.coverURL, urls[0], [urls[1], currentVersion.downloadURL]);
+						}
 					} else {
-						let urls = ['r2cdn', 'cdn'].map(prefix => 'https://' + prefix + '.beatsaver.com/' + desiredHash.toLowerCase() + '.zip');
-						callback(desiredHash, currentVersion.coverURL, urls[0], [urls[1], currentVersion.downloadURL]);
+						this.postchallengeloaderror(id);
 					}
-				} else {
-					this.postchallengeloaderror(id);
-				}
+				});
+			})
+			.catch(_ => {
+				let urls = ['r2cdn', 'cdn'].map(prefix => 'https://' + prefix + '.beatsaver.com/' + id.toLowerCase() + '.zip');
+				this.fetchZip(urls[0], [urls[1]]);
 			});
-		});
 	},
 
 	fetchZip: function (zipUrl, fallbackUrls) {

@@ -33,6 +33,8 @@ AFRAME.registerComponent('twister', {
 		var radius = 6;
 		var segments = [];
 
+		this.el.object3D.parent.updateMatrixWorld(true);
+
 		if (Math.abs(this.data.twist - this.currentTwist) > 0.001) {
 			this.animate = true;
 			return;

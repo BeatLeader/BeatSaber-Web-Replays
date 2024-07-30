@@ -81,7 +81,7 @@ AFRAME.registerComponent('replay-player', {
 			let height = clamp((replayHeight - 1.8) * 0.5, -0.2, 0.6);
 			let slerpValue = (currentTime - frame.time) / Math.max(1e-6, nextFrame.time - frame.time);
 
-			this.movementsTock(frame, nextFrame, height, slerpValue, delta / 1000);
+			this.movementsTock(frame, nextFrame, height, slerpValue, delta);
 		}
 	},
 	movementsTock: function (frame, nextFrame, height, slerpValue, delta) {
@@ -160,10 +160,11 @@ AFRAME.registerComponent('replay-player', {
 			this.v3.z += parseFloat(this.settings.settings.cameraZPosition);
 		}
 
-		povCamera.position.copy(povCamera.position.lerp(this.v3, 5 * delta));
+		const normalizedDelta = delta > 1000 ? 0.01 : delta / 1000;
+		povCamera.position.copy(povCamera.position.lerp(this.v3, 5 * normalizedDelta));
 
 		if (povCamera.hquat) {
-			hquat = povCamera.hquat.slerp(hquat, 5 * delta);
+			hquat = povCamera.hquat.slerp(hquat, 5 * normalizedDelta);
 		} else {
 			hquat = new THREE.Quaternion().copy(hquat);
 		}

@@ -93,9 +93,8 @@ AFRAME.registerComponent('twister', {
 		var sin, cos;
 		var diff;
 
-		delta *= 0.001;
-
-		diff = (this.data.twist - this.currentTwist) * delta;
+		const normalizedDelta = delta > 1000 ? 0.01 : delta / 1000;
+		diff = (this.data.twist - this.currentTwist) * normalizedDelta;
 
 		this.currentTwist += diff;
 		rotation = diff * 3.0;

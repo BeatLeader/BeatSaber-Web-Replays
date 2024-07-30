@@ -52,7 +52,7 @@ AFRAME.registerComponent('stage-lasers', {
 			this.loaded = true;
 		}
 
-		delta /= 1000;
+		const normalizedDelta = delta > 1000 ? 0.01 : delta / 1000;
 
 		if (!this.data.rotating) {
 			//nice little slow down thing. i like it. picasso.
@@ -70,7 +70,7 @@ AFRAME.registerComponent('stage-lasers', {
 		}
 
 		this.lasers.forEach(element => {
-			element.rotation.y += this.speed * delta * this.rotationDirection;
+			element.rotation.y += this.speed * normalizedDelta * this.rotationDirection;
 		});
 	},
 });

@@ -829,14 +829,14 @@ AFRAME.registerComponent('song-controls', {
 				// left
 				seekLeft(e.shiftKey);
 			}
-			if (e.keyCode === 189) {
+			if (!e.ctrlKey && (e.keyCode === 189 || e.keyCode === 173)) {
 				// -
 				const currentSpeed = parseFloat(this.song.speed);
 				const change = e.shiftKey ? 0.01 : 0.1;
 
 				speedHandler(Math.max(currentSpeed - change, 0));
 			}
-			if (e.keyCode === 187) {
+			if (!e.ctrlKey && (e.keyCode === 187 || e.keyCode === 61)) {
 				// +
 				const currentSpeed = parseFloat(this.song.speed);
 				const change = e.shiftKey ? 0.01 : 0.1;

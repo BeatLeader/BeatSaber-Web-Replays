@@ -803,31 +803,45 @@ AFRAME.registerComponent('song-controls', {
 			}
 		};
 
-		const seekRight = () => {
+		const seekRight = precise => {
 			let currentTime = captureThis.song.getCurrentTime();
-			doSeek(null, currentTime + Math.max(0.01, 5 * captureThis.song.speed));
+			doSeek(null, currentTime + Math.max(0.01, captureThis.song.speed / (precise ? 10 : 1)));
 		};
 
-		const seekLeft = () => {
+		const seekLeft = precise => {
 			let currentTime = captureThis.song.getCurrentTime();
-			doSeek(null, currentTime - Math.max(0.01, 5 * captureThis.song.speed));
+			doSeek(null, currentTime - Math.max(0.01, captureThis.song.speed / (precise ? 10 : 1)));
 		};
 
 		document.addEventListener('keydown', e => {
-			if (e.key === ' ') {
+			if (e.key === ' ' || e.keyCode == 75) {
 				togglePlayback();
 			}
 			if (e.keyCode === 70 && !e.shiftKey) {
 				// f
 				toggleFullscreen();
 			}
-			if (e.keyCode === 39) {
+			if (e.keyCode === 39 || e.keyCode == 76) {
 				// right
-				seekRight();
+				seekRight(e.shiftKey);
 			}
-			if (e.keyCode === 37) {
+			if (e.keyCode === 37 || e.keyCode == 74) {
 				// left
-				seekLeft();
+				seekLeft(e.shiftKey);
+			}
+			if (e.keyCode === 189) {
+				// -
+				const currentSpeed = parseFloat(this.song.speed);
+				const change = e.shiftKey ? 0.01 : 0.1;
+
+				speedHandler(Math.max(currentSpeed - change, 0));
+			}
+			if (e.keyCode === 187) {
+				// +
+				const currentSpeed = parseFloat(this.song.speed);
+				const change = e.shiftKey ? 0.01 : 0.1;
+
+				speedHandler(Math.min(currentSpeed + change, 2));
 			}
 		});
 
@@ -870,12 +884,12 @@ AFRAME.registerComponent('song-controls', {
 				console.log('Warning! The "enterpictureinpicture" media session action is not supported.');
 			}
 			try {
-				navigator.mediaSession.setActionHandler('seekto', function(event) {
-				  doSeek(null, event.seekTime);
+				navigator.mediaSession.setActionHandler('seekto', function (event) {
+					doSeek(null, event.seekTime);
 				});
-			  } catch(error) {
+			} catch (error) {
 				console.log('Warning! The "seekto" media session action is not supported.');
-			  }
+			}
 		}
 
 		let jd = document.getElementById('jd');

@@ -78,7 +78,7 @@
       precision="mediump"
       mixin="bgColorAnimation tunnelColorAnimation leftLaserColorAnimation rightLaserColorAnimation textGlowColorAnimation floorColorAnimation"
       bind__beat-generator="difficulty: challenge.difficulty; mode: challenge.mode; isPlaying: isPlaying || isPaused; beatSpeed: challenge.beatSpeed; noEffects: settings.noEffects"
-      bind__pauser="enabled: isPlaying; pauseOnUnfocus: settings.pauseOnUnfocus"
+      
       bind__song="audio: challenge.audio; difficulty: challenge.difficulty; mode: challenge.mode; isPaused: isPaused; isFinished: isFinished; isPlaying: isPlaying; isBeatsPreloaded: challenge.isBeatsPreloaded"
       beat-hit-sound
       bind__song-controls="difficulty: challenge.difficulty; mode: challenge.mode; isSafari: isSafari; isPlaying: isPlaying; songName: challenge.songName; songSubName: challenge.author; songImage: challenge.image; showControls: showControls; leaderboardId: challenge.leaderboardId; songId: challenge.id; autoplayOnLoad: settings.autoplayOnLoad"
@@ -116,6 +116,7 @@
       stats-param
       user-gesture
       replay-loader
+      bind__pauser="enabled: isPlaying; pauseOnUnfocus: settings.pauseOnUnfocus"
       replay-player
       replay-info-ui
       camera-mover

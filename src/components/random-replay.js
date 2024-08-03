@@ -41,6 +41,7 @@ AFRAME.registerComponent('random-replay', {
 		if (
 			!this.canceled &&
 			this.settings.settings.autoplayRandomScore &&
+			!this.settings.settings.loopReplays &&
 			((source && song.getCurrentTime() >= source.buffer.duration - 10) ||
 				(this.settings.settings.randomScoreEmptyPlayer && this.replayLoader.cleanup))
 		) {

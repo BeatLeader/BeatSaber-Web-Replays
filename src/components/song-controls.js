@@ -1238,7 +1238,7 @@ AFRAME.registerComponent('song-controls', {
 			navigator.mediaSession.setPositionState({
 				duration: this.song.source.buffer.duration,
 				playbackRate: this.song.speed,
-				position: this.song.getCurrentTime(),
+				position: Math.min(this.song.getCurrentTime(), this.song.source.buffer.duration),
 			});
 		}
 	},

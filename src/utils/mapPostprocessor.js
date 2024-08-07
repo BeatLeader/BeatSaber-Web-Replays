@@ -118,7 +118,7 @@ function upgrade(map) {
 
 		let burstSliders = [];
 		map['burstSliders'].forEach(slider => {
-			burstSliders.push({
+			const resultSlider = {
 				_time: zeroIfUndefined(slider['b']),
 				_lineIndex: zeroIfUndefined(slider['x']),
 				_lineLayer: zeroIfUndefined(slider['y']),
@@ -129,7 +129,16 @@ function upgrade(map) {
 				_tailLineLayer: zeroIfUndefined(slider['ty']),
 				_sliceCount: zeroIfUndefined(slider['sc']),
 				_squishAmount: zeroIfUndefined(slider['s']),
-			});
+			};
+
+			if (slider.customData) {
+				resultSlider._customData = {
+					_position: slider.customData.coordinates,
+					_tailPosition: slider.customData.tailCoordinates,
+				};
+			}
+
+			burstSliders.push(resultSlider);
 		});
 		map['_burstSliders'] = burstSliders;
 
@@ -395,29 +404,13 @@ function addScoringTypeAndChains(map) {
 	var chains = [];
 
 	map._burstSliders.forEach(slider => {
-		var head = mapnotes.find(
-			n =>
-				n._time == slider._time &&
-				((n._lineIndex == slider._lineIndex && n._lineLayer == slider._lineLayer) ||
-					(n._customData &&
-						n._customData._position &&
-						Math.round(n._customData._position[0] + 4 / 2) == slider._lineIndex &&
-						Math.round(n._customData._position[1]) == slider._lineLayer))
-		);
+		var head = mapnotes.find(n => compareSlider(n, slider));
 		if (head) {
 			if (head._scoringType == ScoringType.Normal) {
 				head._scoringType = ScoringType.BurstSliderHead;
 			}
 			if (head._scoringType == ScoringType.SliderHead && head.tail) {
-				let nextHead = map._burstSliders.find(
-					n =>
-						n._time == head.tail._time &&
-						((n._lineIndex == head.tail._lineIndex && n._lineLayer == head.tail._lineLayer) ||
-							(n._customData &&
-								n._customData._position &&
-								Math.round(n._customData._position[0] + 4 / 2) == head.tail._lineIndex &&
-								Math.round(n._customData._position[1]) == head.tail._lineLayer))
-				);
+				let nextHead = map._burstSliders.find(n => compareSlider(n, head.tail));
 				if (nextHead) {
 					head._scoringType = ScoringType.BurstSliderHead;
 				}

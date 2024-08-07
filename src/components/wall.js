@@ -174,21 +174,6 @@ AFRAME.registerComponent('wall', {
 		this.startPosition = el.object3D.position.clone();
 	},
 
-	setMappingExtensionsHeight: function (startHeight, height) {
-		const data = this.data;
-		const el = this.el;
-
-		const halfDepth = (data.durationSeconds * (data.speed * this.song.speed)) / 2;
-
-		el.object3D.position.set(
-			getHorizontalPosition(data.horizontalPosition) + (data.width - _noteLinesDistance) / 2,
-			startHeight * 0.25 + RAISE_Y_OFFSET,
-			data.halfJumpPosition + data.warmupPosition - halfDepth - SWORD_OFFSET
-		);
-
-		el.object3D.scale.set(data.width * 0.98, height * 0.3, data.durationSeconds * (data.speed * this.song.speed));
-	},
-
 	rotateAboutPoint: function (obj, point, axis, theta, pointIsWorld) {
 		pointIsWorld = pointIsWorld === undefined ? false : pointIsWorld;
 

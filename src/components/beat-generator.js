@@ -546,14 +546,6 @@ AFRAME.registerComponent('beat-generator', {
 				wallObj.color = this.customData._obstacleColor;
 			}
 
-			if (this.mappingExtensions) {
-				if (wall._lineIndex <= -1000 || wall._lineIndex >= 1000) {
-					wallObj.horizontalPosition = wall._lineIndex < 0 ? wall._lineIndex / 1000 + 1 : wall._lineIndex / 1000 - 1;
-				}
-				if (wall._width >= 1000) {
-					wallObj.width = ((wall._width - 1000) / 1000) * WALL_THICKNESS;
-				}
-			}
 			wallObj.scale = null;
 			wallObj.color = null;
 			wallObj.customPosition = null;
@@ -601,7 +593,14 @@ AFRAME.registerComponent('beat-generator', {
 				}
 			}
 
-			wallEl.setAttribute('wall', wallObj);
+			if (this.mappingExtensions) {
+				if (wall._lineIndex <= -1000 || wall._lineIndex >= 1000) {
+					wallObj.horizontalPosition = wall._lineIndex < 0 ? wall._lineIndex / 1000 + 1 : wall._lineIndex / 1000 - 1;
+				}
+				if (wall._width >= 1000 || wall._width <= -1000) {
+					wallObj.width = (((wall._width <= -1000 ? wall._width + 2000 : wall._width) - 1000) / 1000) * WALL_THICKNESS;
+				}
+			}
 
 			// Handle mapping extensions wall format.
 			if (this.mappingExtensions) {
@@ -609,29 +608,29 @@ AFRAME.registerComponent('beat-generator', {
 
 				if ((obstacleType >= 1000 && obstacleType <= 4000) || (obstacleType >= 4001 && obstacleType <= 4005000)) {
 					let obsHeight;
+					let startHeight = 0;
 					var value = obstacleType;
 					if (obstacleType >= 4001 && obstacleType <= 4100000) {
 						value -= 4001;
 						obsHeight = value / 1000;
+						startHeight = value % 1000;
 					} else {
 						obsHeight = value - 1000;
 					}
+
 					var height = (obsHeight / 1000) * 5;
 					height = height * 1000 + 1000;
-
-					var startHeight = 0;
-					var value1 = obstacleType;
-					if (obstacleType >= 4001 && obstacleType <= 4100000) {
-						value1 -= 4001;
-						startHeight = value1 % 1000;
-					}
 
 					var layer = (startHeight / 750) * 5;
 					layer = layer * 1000 + 1334;
 
-					wallEl.components.wall.setMappingExtensionsHeight(layer / 1000 - 2, (height - 1000) / 1000);
+					wallObj.verticalPosition = layer / 1000 - 2;
+					wallObj.height = (height - 1000) / 1000;
+					wallObj.isV3 = true;
 				}
 			}
+
+			wallEl.setAttribute('wall', wallObj);
 
 			wallEl.components.wall.onGenerate(this.mappingExtensions);
 			wallEl.play();

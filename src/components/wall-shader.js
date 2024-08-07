@@ -6,116 +6,39 @@ const WALL_HL_COLOR = new THREE.Color('yellow');
 
 AFRAME.registerShader('wallShader', {
 	schema: {
-		iTime: {type: 'time', is: 'uniform'},
-		scale: {type: 'vec3', is: 'uniform', default: {x: 0, y: 0, z: 0}},
-		hitRight: {type: 'vec3', is: 'uniform', default: {x: -999, y: 0, z: 0}},
-		hitLeft: {type: 'vec3', is: 'uniform', default: {x: -999, y: 0, z: 0}},
 		highlight: {type: 'bool', is: 'uniform', default: false},
+    thickness: {type: 'float', is: 'uniform', default: 3.0},
 		wallColor: {type: 'vec3', is: 'uniform', default: new THREE.Color(COLORS.NEON_RED)},
 	},
 
 	vertexShader: `
-    varying vec2 uvs;
-    varying vec3 nrml;
-    varying vec3 worldPos;
-    void main() {
-      uvs.xy = uv.xy;
-      nrml.xyz = normal.xyz;
-      vec4 p = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-      worldPos = (modelMatrix * vec4( position, 1.0 )).xyz;
-      gl_Position = p;
+  varying vec2 vUv;
+    void main()	{
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
     }
   `,
 
 	fragmentShader: `
-    varying vec2 uvs;
-    varying vec3 nrml;
-    varying vec3 worldPos;
-    uniform float iTime;
-    //uniform sampler2D env;
-    uniform vec3 hitRight;
-    uniform vec3 hitLeft;
-    uniform bool highlight;
-    uniform vec3 scale;
+  #extension GL_OES_standard_derivatives : enable
+    varying vec2 vUv;
     uniform vec3 wallColor;
-
-    #define SEED 19.1254
-    #define time (3.0 + iTime)/1000.0 * 0.15
-
-    float noise(vec3 uv) {
-      return fract(sin(uv.x*123243. + uv.y*424. + uv.z*642. + SEED) * 1524.);
+    uniform bool highlight;
+    uniform float thickness;
+   	
+    float edgeFactor(vec2 p){
+    	vec2 grid = abs(fract(p - 0.5) - 0.5) / fwidth(p);
+  		return min(grid.x, grid.y);
     }
-
-    vec3 drawCircle(vec3 p, vec3 center, float radius, float edgeWidth, vec3 color) {
-      return color * (1.0 - smoothstep(radius, radius + edgeWidth, length(p - center)));
-    }
-
-    float smoothNoise(vec3 uvw, float frec){
-      vec3 luvw = vec3(smoothstep(0.0, 1.0, fract(uvw.xy * frec)), fract(uvw.z * frec));
-      vec3 id = floor(uvw * frec);
-      float blt = noise(id);
-      float brt = noise(id + vec3(1.0, 0.0, 0.0));
-      float tlt = noise(id + vec3(0.0, 1.0, 0.0));
-      float trt = noise(id + vec3(1.0, 1.0, 0.0));
-
-      float blb = noise(id + vec3(0.0, 0.0, 1.0));
-      float brb = noise(id + vec3(1.0, 0.0, 1.0));
-      float tlb = noise(id + vec3(0.0, 1.0, 1.0));
-      float trb = noise(id + vec3(1.0, 1.0, 1.0));
-
-      float a = mix(blt, brt, luvw.x);
-      float b = mix(tlt, trt, luvw.x);
-      float c = mix(a, b, luvw.y);
-
-      float d = mix(blb, brb, luvw.x);
-      float e = mix(tlb, trb, luvw.x);
-      float f = mix(d, e, luvw.y);
-
-      return mix(c, f, luvw.z);
-    }
-
-    #define WALL_HL_COLOR vec3(${WALL_HL_COLOR.r}, ${WALL_HL_COLOR.g}, ${WALL_HL_COLOR.b})
-    #define WALL_BG vec3(${WALL_BG.r}, ${WALL_BG.g}, ${WALL_BG.b})
-    #define RIGHT_COLOR vec3(${RIGHT_COLOR.r}, ${RIGHT_COLOR.g}, ${RIGHT_COLOR.b})
-
+    
     void main() {
-      vec2 uv1 = uvs.xy-0.5;
-      float angle = time / 10.0;
-      vec2 uv;
-      uv.x = uv1.x * cos(angle) - uv1.y * sin(angle);
-      uv.y = uv1.y * cos(angle) + uv1.x * sin(angle);
-      uv.x += sin(uv.y * 1.7 + time / 1.7) * 0.2;
-      uv.y += sin(uv.x * 1.1 + time / 2.4) * 0.3;
-
-      float w, r, bg;
-      r = 0.;
-
-      bg = smoothstep(0.5, 1.0, r) + smoothstep(0.5, 0.0, r);
-      r = smoothstep(0.4, 0.50, r) - smoothstep(0.50, 0.6, r);
-      w = smoothstep(0.97, 1.0, r);
-
-
-      r += smoothstep(0.44, 0.50, abs(uv1.x));
-      r += smoothstep(0.44, 0.50, abs(uv1.y));
-
-      w += smoothstep(0.49, 0.498, abs(uv1.x));
-      w += smoothstep(0.49, 0.498, abs(uv1.y));
-
-      w *= 0.8;
-      bg *= 0.5;
-
-      vec3 COL = highlight ? WALL_HL_COLOR : wallColor;
-      vec3 BG = WALL_BG * 0.1;
-
-      vec3 col = vec3(r * COL.r + w + BG.r, r * COL.g + w + BG.g, r * COL.b + w + BG.b);
-
-      vec3 hit;
-      hit = drawCircle(worldPos, hitRight, 0.04, 0.05, RIGHT_COLOR);
-      hit += drawCircle(worldPos, hitRight, 0.02, 0.03, vec3(0.7, 0.7, 0.7));
-      hit += drawCircle(worldPos, hitLeft, 0.04, 0.05, COL);
-      hit += drawCircle(worldPos, hitLeft, 0.02, 0.03, vec3(0.7, 0.7, 0.7));
-
-      gl_FragColor = vec4(col + hit, 0.3 + w + hit.x);
+			
+      float a = edgeFactor(vUv);
+      if (a < thickness) {
+        gl_FragColor = mix(vec4(wallColor, 1.0), vec4(1.0, 1.0, 1.0, 1.0), 1.0 - sqrt(a / thickness));
+      } else {
+        gl_FragColor = vec4(wallColor * 0.4, 0.3);
+      }
     }
 `,
 });

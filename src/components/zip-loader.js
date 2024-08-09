@@ -237,7 +237,9 @@ AFRAME.registerComponent('zip-loader', {
 	fetchData: function (id, byHash) {
 		this.fetched = true;
 		document.cookie = 'aprilFools=1; expires=Sat, 03 Apr 2022 00:00:00 UTC; path=/';
-		return fetch(`/cors/beat-saver2/api/maps/${byHash ? 'hash' : 'id'}/${id}`, {signal: AbortSignal.timeout(5000)})
+		return fetch(`/cors/beat-saver2/api/maps/${byHash ? 'hash' : 'id'}/${id}`, {
+			signal: AbortSignal.timeout ? AbortSignal.timeout(5000) : null,
+		})
 			.then(res => {
 				res.json().then(data => {
 					if (data.versions) {

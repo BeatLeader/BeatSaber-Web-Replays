@@ -518,7 +518,11 @@ AFRAME.registerComponent('beat-generator', {
 			const speed = wall._customData && wall._customData._noteJumpMovementSpeed ? wall._customData._noteJumpMovementSpeed : this.beatSpeed;
 
 			const durationSeconds = wall._songDuration;
-			wallObj.halfJumpPosition = -this.halfJumpDuration * speed;
+			const halfJumpDuration =
+				wall._customData && wall._customData._noteJumpStartBeatOffset
+					? (60 / this.bpm) * this.calculateHalfJumpDuration(this.bpm, speed, wall._customData._noteJumpStartBeatOffset)
+					: this.halfJumpDuration;
+			wallObj.halfJumpPosition = -halfJumpDuration * speed;
 			wallObj.durationSeconds = durationSeconds;
 			wallObj.horizontalPosition = wall._lineIndex;
 			if (wall._lineLayer != undefined) {
@@ -538,7 +542,7 @@ AFRAME.registerComponent('beat-generator', {
 
 			wallObj.spawnRotation = this.getRotation(wall._songTime);
 			wallObj.time = wall._songTime;
-			wallObj.halfJumpDuration = this.halfJumpDuration;
+			wallObj.halfJumpDuration = halfJumpDuration;
 			wallObj.moveTime = data.moveTime;
 			wallObj.warmupSpeed = data.moveSpeed;
 
@@ -558,7 +562,9 @@ AFRAME.registerComponent('beat-generator', {
 				}
 
 				if (wall._customData._position) {
-					wallObj.customPosition = {x: wall._customData._position[0], y: wall._customData._position[1], z: wall._customData._position[1]};
+					wallObj.isV3 = true;
+					wallObj.horizontalPosition = wall._customData._position[0] + 2;
+					wallObj.verticalPosition = wall._customData._position[1];
 				}
 
 				if (wall._customData._color) {
@@ -569,15 +575,20 @@ AFRAME.registerComponent('beat-generator', {
 					wallObj.localRotation = new THREE.Euler(
 						wall._customData._localRotation[0] * 0.0175,
 						wall._customData._localRotation[1] * 0.0175,
-						wall._customData._localRotation[2] * 0.0175
+						wall._customData._localRotation[2] * 0.0175,
+						'YZX'
 					);
 				}
 
 				if (wall._customData._rotation) {
 					if (Array.isArray(wall._customData._rotation)) {
-						wallObj.spawnRotation = wall._customData._rotation[0];
+						wallObj.spawnRotation = new THREE.Vector3(
+							wall._customData._rotation[0],
+							wall._customData._rotation[1],
+							wall._customData._rotation[2]
+						);
 					} else {
-						wallObj.spawnRotation = -wall._customData._rotation;
+						wallObj.spawnRotation = wall._customData._rotation;
 					}
 				}
 

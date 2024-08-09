@@ -58,6 +58,9 @@ function upgrade(map) {
 				resultWall._customData = {
 					_position: wall.customData.coordinates,
 					_color: wall.customData.color,
+					_scale: wall.customData.size,
+					_localRotation: wall.customData.localRotation,
+					_rotation: wall.customData.worldRotation,
 				};
 			}
 			obstacles.push(resultWall);

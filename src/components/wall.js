@@ -22,7 +22,7 @@ AFRAME.registerComponent('wall', {
 		warmupPosition: {default: 0},
 		width: {default: 1},
 		positionOffset: {default: 0},
-		spawnRotation: {default: 0},
+		spawnRotation: {default: null},
 		time: {default: 0},
 		halfJumpDuration: {default: 0},
 		moveTime: {default: 0},
@@ -56,13 +56,18 @@ AFRAME.registerComponent('wall', {
 		this.el.object3D.visible = true;
 
 		var newPosition = 0;
-		const currentTime = this.getCurrentTime();
+		var currentTime = this.getCurrentTime();
+		var moveTime = data.moveTime;
 
-		var timeOffset = data.time - currentTime - data.halfJumpDuration - data.moveTime;
+		var timeOffset = data.time - currentTime - data.halfJumpDuration - moveTime;
 
-		if (timeOffset <= -data.moveTime) {
+		if (data.durationSeconds < 0) {
+			moveTime -= data.durationSeconds / 2;
+		}
+
+		if (timeOffset <= -moveTime) {
 			newPosition = data.halfJumpPosition - halfDepth;
-			timeOffset += data.moveTime;
+			timeOffset += moveTime;
 			newPosition += -timeOffset * data.speed;
 		} else {
 			newPosition = data.halfJumpPosition - halfDepth + data.warmupPosition + data.warmupSpeed * -timeOffset;
@@ -112,7 +117,7 @@ AFRAME.registerComponent('wall', {
 		var origin;
 		var height = data.height;
 		if (data.isV3) {
-			let y = Math.max(getVerticalPosition(data.verticalPosition) + RAISE_Y_OFFSET, 0.1);
+			let y = getVerticalPosition(data.verticalPosition) + RAISE_Y_OFFSET;
 			origin = new THREE.Vector3(getHorizontalWallPosition(data.horizontalPosition), y, -SWORD_OFFSET);
 
 			if (height < 0) {
@@ -130,17 +135,15 @@ AFRAME.registerComponent('wall', {
 				height = 5;
 			}
 		}
-		height = height * _noteLinesDistance;
+
 		if (data.scale) {
-			width = data.scale.x;
+			width = data.scale.x * _noteLinesDistance;
 			height = data.scale.y;
 			if (data.scale.z) {
-				length = data.scale.z;
+				length = data.scale.z * _noteLinesDistance;
 			}
 		}
-		if (data.customPosition) {
-			origin = new THREE.Vector3(data.customPosition.x, data.customPosition.y + RAISE_Y_OFFSET, -SWORD_OFFSET);
-		}
+		height = height * _noteLinesDistance;
 		if (data.definitePosition) {
 			origin = data.definitePosition;
 		}
@@ -148,7 +151,7 @@ AFRAME.registerComponent('wall', {
 		origin.y += height / 2;
 		origin.x += width / 2;
 
-		el.object3D.scale.set(Math.max(width, 0.01), Math.max(height, 0.01), Math.max(length, 0.01));
+		el.object3D.scale.set(Math.max(width, 0.1), Math.max(height, 0.1), Math.max(length, 0.1));
 		if (!data.definitePosition) {
 			el.object3D.position.set(origin.x, origin.y, origin.z + data.halfJumpPosition + data.warmupPosition - halfDepth);
 		} else {
@@ -156,13 +159,20 @@ AFRAME.registerComponent('wall', {
 		}
 		el.object3D.rotation.copy(EMPTY_ROTATION);
 
-		let axis = new THREE.Vector3(0, 1, 0);
-		let theta = data.spawnRotation * 0.0175;
+		if (!data.spawnRotation || typeof data.spawnRotation !== 'object') {
+			let axis = new THREE.Vector3(0, 1, 0);
+			let theta = (data.spawnRotation ? -data.spawnRotation : 0) * 0.0175;
 
-		origin.applyAxisAngle(axis, theta);
+			origin.applyAxisAngle(axis, theta);
+			rotateAboutPoint(el.object3D, new THREE.Vector3(0, 0, this.headset.object3D.position.z), axis, theta, true);
+		} else {
+			var rotationEuler = new THREE.Euler(data.spawnRotation.x * 0.0175, data.spawnRotation.y * 0.0175, data.spawnRotation.z * 0.0175);
+			origin.applyEuler(rotationEuler);
+			this.rotateAboutPointEuler(el.object3D, new THREE.Vector3(0, 0, this.headset.object3D.position.z), rotationEuler, true);
+		}
+
 		this.origin = origin;
 
-		rotateAboutPoint(el.object3D, new THREE.Vector3(0, 0, this.headset.object3D.position.z), axis, theta, true);
 		el.object3D.lookAt(origin);
 
 		if (data.localRotation) {
@@ -184,6 +194,23 @@ AFRAME.registerComponent('wall', {
 		obj.position.sub(point); // remove the offset
 		obj.position.applyAxisAngle(axis, theta); // rotate the POSITION
 		obj.position.add(point); // re-add the offset
+
+		if (pointIsWorld) {
+			obj.parent.worldToLocal(obj.position); // undo world coordinates compensation
+		}
+	},
+
+	rotateAboutPointEuler: function (obj, point, euler, pointIsWorld) {
+		pointIsWorld = pointIsWorld === undefined ? false : pointIsWorld;
+
+		if (pointIsWorld) {
+			obj.parent.localToWorld(obj.position); // compensate for world coordinate
+		}
+
+		let rotationMatrix = new THREE.Matrix4().makeRotationFromEuler(euler);
+		obj.position.sub(point);
+		obj.position.applyMatrix4(rotationMatrix);
+		obj.position.add(point);
 
 		if (pointIsWorld) {
 			obj.parent.worldToLocal(obj.position); // undo world coordinates compensation
@@ -217,7 +244,5 @@ AFRAME.registerComponent('wall', {
 		this.el.sceneEl.components.pool__wall.returnEntity(this.el);
 		this.el.object3D.position.z = 9999;
 		this.el.pause();
-		this.el.removeAttribute('data-collidable-head');
-		this.el.removeAttribute('raycastable-game');
 	},
 });

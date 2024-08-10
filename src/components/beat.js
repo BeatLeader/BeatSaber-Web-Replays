@@ -848,6 +848,9 @@ AFRAME.registerComponent('beat', {
 		} else {
 			setTimeout(scoreChanged, timeToScore * 1000);
 		}
+		if (this.data.type !== 'sliderchain' && settings.settings.realHitsounds && Math.abs(timeToScore) < 0.1) {
+			hitSound.playSound();
+		}
 	},
 
 	destroyMine: function () {
@@ -1087,12 +1090,6 @@ AFRAME.registerComponent('beat', {
 					this.replayNote.score != -3) ||
 				this.checkBigCollider(beatBigBoundingBox, hand, saberControls)
 			) {
-				// Sound.
-
-				if (this.data.type !== 'sliderchain' && settings.realHitsounds) {
-					hitSound.playSound();
-				}
-
 				if (this.data.type === 'mine') {
 					if (this.replayNote.totalScore != -1) {
 						if (this.replayNote) {

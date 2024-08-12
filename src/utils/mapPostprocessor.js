@@ -464,6 +464,30 @@ function convertBeatToSongTime(beatTime, bpm, bpmChangeDataList) {
 	return bpmChangeData.bpmChangeStartTime + ((beatTime - bpmChangeData.bpmChangeStartBpmTime) / bpmChangeData.bpm) * 60.0;
 }
 
+function convertSongToBeatTime(songTime, bpm, bpmChangeDataList) {
+	if (bpmChangeDataList.length === 0) {
+		return songTime / (60 / bpm);
+	}
+
+	let currentBpm = bpm;
+	let lastBpmTime = 0;
+	let lastSongTime = 0;
+
+	for (let i = 0; i < bpmChangeDataList.length; i++) {
+		const bpmChangeData = bpmChangeDataList[i];
+		const nextSongTime = bpmChangeData.bpmChangeStartTime;
+		if (songTime < nextSongTime) {
+			return lastBpmTime + ((songTime - lastSongTime) * currentBpm) / 60.0;
+		}
+		lastBpmTime += ((nextSongTime - lastSongTime) * currentBpm) / 60.0;
+		lastSongTime = nextSongTime;
+		currentBpm = bpmChangeData.bpm;
+	}
+
+	// If song time is beyond all changes
+	return lastBpmTime + ((songTime - lastSongTime) * currentBpm) / 60.0;
+}
+
 function calculateSongTimes(map, info) {
 	var startBpm = info._beatsPerMinute;
 	var bpmChangeDataList = [];
@@ -491,20 +515,28 @@ function calculateSongTimes(map, info) {
 		}
 	}
 
+	map.timeConvertor = bpm_time => {
+		return convertBeatToSongTime(bpm_time, startBpm, bpmChangeDataList);
+	};
+
+	map.reverseTimeConvertor = song_time => {
+		return convertSongToBeatTime(song_time, startBpm, bpmChangeDataList);
+	};
+
 	[map['_notes'], map['_obstacles'], map['_events']].forEach(collection => {
 		if (!collection) return;
 		collection.forEach(o => {
-			o._songTime = convertBeatToSongTime(o._time, startBpm, bpmChangeDataList);
+			o._songTime = map.timeConvertor(o._time);
 			if (o._duration) {
-				o._songDuration = convertBeatToSongTime(o._time + o._duration, startBpm, bpmChangeDataList) - o._songTime;
+				o._songDuration = map.timeConvertor(o._time + o._duration) - o._songTime;
 			}
 		});
 	});
 	[map['_sliders'], map['_burstSliders'], map['_chains']].forEach(collection => {
 		if (!collection) return;
 		collection.forEach(o => {
-			o._songTime = convertBeatToSongTime(o._time, startBpm, bpmChangeDataList);
-			o._songTailTime = convertBeatToSongTime(o._tailTime, startBpm, bpmChangeDataList);
+			o._songTime = map.timeConvertor(o._time);
+			o._songTailTime = map.timeConvertor(o._tailTime);
 		});
 	});
 }

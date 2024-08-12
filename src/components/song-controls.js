@@ -184,6 +184,7 @@ AFRAME.registerComponent('song-controls', {
 			this.beatmaps = evt.detail.beatmaps;
 			this.difficulties = evt.detail.difficulties;
 			this.info = evt.detail.info;
+			this.beatData = this.beatmaps[this.data.mode][this.data.difficulty];
 
 			this.customDifficultyLabels = {};
 
@@ -803,14 +804,28 @@ AFRAME.registerComponent('song-controls', {
 			}
 		};
 
-		const seekRight = precise => {
+		const seekRight = (divider = 0.2) => {
 			let currentTime = captureThis.song.getCurrentTime();
-			doSeek(null, currentTime + Math.max(0.01, captureThis.song.speed / (precise ? 10 : 1)));
+			doSeek(null, currentTime + Math.max(0.01, captureThis.song.speed / divider));
 		};
 
-		const seekLeft = precise => {
+		const seekLeft = (divider = 0.2) => {
 			let currentTime = captureThis.song.getCurrentTime();
-			doSeek(null, currentTime - Math.max(0.01, captureThis.song.speed / (precise ? 10 : 1)));
+			doSeek(null, currentTime - Math.max(0.01, captureThis.song.speed / divider));
+		};
+
+		const seekRightBeats = (step = 0) => {
+			let currentTime = captureThis.song.getCurrentTime();
+			let currentBeat = captureThis.beatData.reverseTimeConvertor(currentTime);
+
+			doSeek(null, captureThis.beatData.timeConvertor(parseFloat(currentBeat) + step));
+		};
+
+		const seekLeftBeats = (step = 0) => {
+			let currentTime = captureThis.song.getCurrentTime();
+			let currentBeat = captureThis.beatData.reverseTimeConvertor(currentTime);
+
+			doSeek(null, captureThis.beatData.timeConvertor(parseFloat(currentBeat) - step));
 		};
 
 		document.addEventListener('keydown', e => {
@@ -823,12 +838,22 @@ AFRAME.registerComponent('song-controls', {
 			}
 			if (e.keyCode === 39 || e.keyCode == 76) {
 				// right
-				seekRight(e.shiftKey);
+				seekRight(e.shiftKey ? 2 : 0.2);
 			}
 			if (e.keyCode === 37 || e.keyCode == 74) {
 				// left
-				seekLeft(e.shiftKey);
+				seekLeft(e.shiftKey ? 2 : 0.2);
 			}
+
+			if (e.keyCode === 190) {
+				// right
+				seekRightBeats(e.shiftKey ? 0.1 : 1);
+			}
+			if (e.keyCode === 188) {
+				// left
+				seekLeftBeats(e.shiftKey ? 0.1 : 1);
+			}
+
 			if (!e.ctrlKey && (e.keyCode === 189 || e.keyCode === 173)) {
 				// -
 				const currentSpeed = parseFloat(this.song.speed);

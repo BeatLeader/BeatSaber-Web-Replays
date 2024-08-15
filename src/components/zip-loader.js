@@ -87,45 +87,52 @@ AFRAME.registerComponent('zip-loader', {
 		// Index beatmaps (modes + difficulties).
 		const beatmapSets = event.info._difficultyBeatmapSets;
 		if (!beatmapSets) return;
-		for (let index = 0; index < beatmapSets.length; index++) {
-			const set = beatmapSets[index];
-			const mode = set._beatmapCharacteristicName;
-			event.beatmaps[mode] = {};
-			event.beatSpeeds[mode] = {};
-			event.beatOffsets[mode] = {};
-			event.customData[mode] = {};
+		try {
+			for (let index = 0; index < beatmapSets.length; index++) {
+				const set = beatmapSets[index];
+				const mode = set._beatmapCharacteristicName;
+				event.beatmaps[mode] = {};
+				event.beatSpeeds[mode] = {};
+				event.beatOffsets[mode] = {};
+				event.customData[mode] = {};
 
-			const diffBeatmaps = set._difficultyBeatmaps.sort(d => d._difficultyRank);
-			for (let index = 0; index < diffBeatmaps.length; index++) {
-				const diff = diffBeatmaps[index];
-				const fileArray = await files[diff._beatmapFilename].async('uint8array');
+				const diffBeatmaps = set._difficultyBeatmaps.sort(d => d._difficultyRank);
+				for (let index = 0; index < diffBeatmaps.length; index++) {
+					const diff = diffBeatmaps[index];
+					const fileArray = await files[Object.keys(files).find(f => f.toLowerCase().endsWith(diff._beatmapFilename.toLowerCase()))].async(
+						'uint8array'
+					);
 
-				var mapJson;
-				try {
-					var fileData = new TextDecoder().decode(fileArray);
-					mapJson = JSON.parse(fileData);
-				} catch (e) {
-					var fileData = new TextDecoder('UTF-16LE').decode(fileArray);
-					mapJson = JSON.parse(fileData);
+					var mapJson;
+					try {
+						var fileData = new TextDecoder().decode(fileArray);
+						mapJson = JSON.parse(fileData);
+					} catch (e) {
+						var fileData = new TextDecoder('UTF-16LE').decode(fileArray);
+						mapJson = JSON.parse(fileData);
+					}
+					let map = postprocess(mapJson, event.info);
+					event.beatmaps[mode][diff._difficulty] = map;
+					event.beatSpeeds[mode][diff._difficulty] = diff._noteJumpMovementSpeed;
+					event.beatOffsets[mode][diff._difficulty] = diff._noteJumpStartBeatOffset;
+					event.customData[mode][diff._difficulty] = diff._customData;
+
+					// TODO: Assume for now if one difficulty wants extensions, they all do. Fix later.
+					if (diff._customData && diff._customData._requirements && diff._customData._requirements.indexOf('Mapping Extensions') !== -1) {
+						event.mappingExtensions = {isEnabled: true};
+					}
+
+					if (diff._customData && diff._customData._requirements && diff._customData._requirements.indexOf('Noodle Extensions') !== -1) {
+						map = processNoodle(map);
+					}
 				}
-				let map = postprocess(mapJson, event.info);
-				event.beatmaps[mode][diff._difficulty] = map;
-				event.beatSpeeds[mode][diff._difficulty] = diff._noteJumpMovementSpeed;
-				event.beatOffsets[mode][diff._difficulty] = diff._noteJumpStartBeatOffset;
-				event.customData[mode][diff._difficulty] = diff._customData;
 
-				// TODO: Assume for now if one difficulty wants extensions, they all do. Fix later.
-				if (diff._customData && diff._customData._requirements && diff._customData._requirements.indexOf('Mapping Extensions') !== -1) {
-					event.mappingExtensions = {isEnabled: true};
-				}
-
-				if (diff._customData && diff._customData._requirements && diff._customData._requirements.indexOf('Noodle Extensions') !== -1) {
-					map = processNoodle(map);
-				}
+				// Get difficulties.
+				event.difficulties[mode] = diffBeatmaps;
 			}
-
-			// Get difficulties.
-			event.difficulties[mode] = diffBeatmaps;
+		} catch (e) {
+			this.postchallengeloaderror(this.data.hash);
+			return;
 		}
 
 		if (!event.beatmaps[this.data.mode]) {

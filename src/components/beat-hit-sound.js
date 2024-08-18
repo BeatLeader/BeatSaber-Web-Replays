@@ -15,6 +15,7 @@ AFRAME.registerComponent('beat-hit-sound', {
 
 		this.beatGenerator = this.el.sceneEl.components['beat-generator'];
 		this.beatIndex = -1;
+		this.beatSeekReset = false;
 		this.el.sceneEl.addEventListener('gamemenurestart', e => {
 			this.beatIndex = -1;
 		});
@@ -78,14 +79,31 @@ AFRAME.registerComponent('beat-hit-sound', {
 			this.beatIndex = -1;
 			return;
 		}
-
-		if (!this.settings.settings.realHitsounds) {
+		
+		var skipNextHitsounds = false;
+		if (this.beatSeekReset) {
+			this.beatIndex = -1;
+			this.beatSeekReset = false;
+			skipNextHitsounds = true;
+		}
+		
+		if (!this.settings.settings.realHitsounds && !this.song.data.isPaused) {
+			const playbackSpeedPercent = this.song.speed;
 			const currentTime = this.song.getCurrentTime();
 
 			const notes = this.beatGenerator.beatData._notes;
 			for (let i = this.beatIndex + 1; i < notes.length; ++i) {
-				let noteTime = notes[i]._songTime - 0.2;
-				if ((notes[i]._type == 0 || notes[i]._type == 1) && Math.abs(currentTime - noteTime) < 0.01) {
+				let noteTime = notes[i]._songTime - 0.2*playbackSpeedPercent;
+
+				if (noteTime > currentTime + 1*playbackSpeedPercent) {
+					break;
+				} else if ((notes[i]._type == 0 || notes[i]._type == 1) && (currentTime - noteTime) > 0.01*playbackSpeedPercent) {
+					this.beatIndex = i;
+					if (!skipNextHitsounds) {
+						skipNextHitsounds = true;
+						this.playSound();
+					}
+				} else if ((notes[i]._type == 0 || notes[i]._type == 1) && Math.abs(currentTime - noteTime) < 0.01*playbackSpeedPercent) {
 					this.playSound();
 					this.beatIndex = i;
 					break;

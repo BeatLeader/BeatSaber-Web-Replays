@@ -305,6 +305,7 @@ AFRAME.registerComponent('beat-generator', {
 		this.clearBeats(true);
 		this.beatsTime = time;
 		this.isSeeking = true;
+		this.el.sceneEl.components['beat-hit-sound'].beatSeekReset = true;
 
 		if (this.getRotation(time) != this.spawnRotation.rotation) {
 			this.el.sceneEl.emit('spawnRotationChanged', {spawnRotation: this.getRotation(time), oldSpawnRotation: this.spawnRotation}, false);

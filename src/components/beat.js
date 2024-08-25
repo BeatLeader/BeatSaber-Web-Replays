@@ -848,7 +848,7 @@ AFRAME.registerComponent('beat', {
 		} else {
 			setTimeout(scoreChanged, timeToScore * 1000);
 		}
-		if (this.data.type !== 'sliderchain' && settings.settings.realHitsounds && Math.abs(timeToScore) < 0.1) {
+		if (this.data.type !== 'sliderchain' && settings.settings.realHitsounds && Math.abs(timeToScore) < 0.1 && (this.replayNote.eventType == 0 || this.replayNote.eventType == 1)) {
 			hitSound.playSound();
 		}
 	},

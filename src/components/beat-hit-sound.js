@@ -67,7 +67,11 @@ AFRAME.registerComponent('beat-hit-sound', {
 		var source = this.sources.pop();
 		if (source == null) return;
 
-		source.start(0);
+		if (!this.settings.settings.realHitsounds) {
+			source.start(0);
+		} else {
+			source.start(0, 0.15);
+		}
 		setTimeout(() => {
 			this.addNewSource();
 		}, 1000);

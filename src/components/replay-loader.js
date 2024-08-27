@@ -77,6 +77,12 @@ AFRAME.registerComponent('replay-loader', {
 		).then(async response => {
 			let data = response.status == 200 ? await response.json() : null;
 			if (data && data.playerId) {
+				if (/googlebot/i.test(navigator.userAgent)) {
+					document.title = `Replay | ${data.player.name} | ${data.song.name}`;
+					document.querySelector('meta[property="og:title"]').setAttribute('content', `Replay | ${data.player.name} | ${data.song.name}`);
+					return;
+				}
+
 				this.el.sceneEl.emit(
 					'replayInfofetched',
 					{

@@ -387,33 +387,38 @@ function jsonParseLoop(str, i) {
 }
 
 function generateMode(event, difficulty, mode) {
-	if (mode.toLowerCase().includes('standard')) {
-		event.beatmaps[mode] = {};
-		event.beatSpeeds[mode] = {};
-		event.beatOffsets[mode] = {};
+	var modeNames = Object.keys(event.beatmaps);
+	for (let i = 0; i < modeNames.length; i++) {
+		const defaultMode = modeNames[i];
+		if (mode.toLowerCase().includes(defaultMode.toLowerCase())) {
+			event.beatmaps[mode] = {};
+			event.beatSpeeds[mode] = {};
+			event.beatOffsets[mode] = {};
 
-		event.beatmaps[mode][difficulty] = event.beatmaps['Standard'][difficulty];
-		event.beatSpeeds[mode][difficulty] = event.beatSpeeds['Standard'][difficulty];
-		event.beatOffsets[mode][difficulty] = event.beatOffsets['Standard'][difficulty];
-		event.difficulties[mode] = event.difficulties['Standard'];
-		event.customData[mode] = event.customData['Standard'];
+			event.beatmaps[mode][difficulty] = event.beatmaps[defaultMode][difficulty];
+			event.beatSpeeds[mode][difficulty] = event.beatSpeeds[defaultMode][difficulty];
+			event.beatOffsets[mode][difficulty] = event.beatOffsets[defaultMode][difficulty];
+			event.difficulties[mode] = event.difficulties[defaultMode];
+			event.customData[mode] = event.customData[defaultMode];
 
-		switch (mode) {
-			case 'VerticalStandard':
-				Mirror_Vertical(event.beatmaps[mode][difficulty], false, false);
-				break;
-			case 'HorizontalStandard':
-				Mirror_Horizontal(event.beatmaps[mode][difficulty], 4, false, false);
-				break;
-			case 'InverseStandard':
-				Mirror_Inverse(event.beatmaps[mode][difficulty], 4, true, true, false);
-				break;
-			case 'InvertedStandard':
-				Mirror_Inverse(event.beatmaps[mode][difficulty], 4, false, false, false);
-				break;
+			switch (mode) {
+				case 'VerticalStandard':
+					Mirror_Vertical(event.beatmaps[mode][difficulty], false, false);
+					break;
+				case 'HorizontalStandard':
+					Mirror_Horizontal(event.beatmaps[mode][difficulty], 4, false, false);
+					break;
+				case 'InverseStandard':
+					Mirror_Inverse(event.beatmaps[mode][difficulty], 4, true, true, false);
+					break;
+				case 'InvertedStandard':
+					Mirror_Inverse(event.beatmaps[mode][difficulty], 4, false, false, false);
+					break;
 
-			default:
-				break;
+				default:
+					break;
+			}
+			break;
 		}
 	}
 }

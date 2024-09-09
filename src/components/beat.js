@@ -302,7 +302,7 @@ AFRAME.registerComponent('beat', {
 			el.object3D.up = new THREE.Vector3(-Math.sin(this.zRotation), Math.cos(this.zRotation), 0);
 			el.object3D.lookAt(headPseudoLocalPos);
 
-			if (data.spawnRotation == 0) {
+			if (data.spawnRotation == 0 && (data.type == 'arrow' || data.type == 'dot')) {
 				let rotation = new THREE.Euler().setFromQuaternion(a.clone().slerp(el.object3D.quaternion, t * 2));
 				el.object3D.rotation.set(rotation.x, rotation.y, rotation.z);
 			} else {
@@ -415,10 +415,15 @@ AFRAME.registerComponent('beat', {
 		// Set position.
 		if (data.type == 'sliderchain' || (data.type == 'sliderhead' && data.sliceCount > 1)) {
 			const headX = getHorizontalPosition(data.horizontalPosition);
-			const headY = highestJumpPosYForLineLayer(data.verticalPosition);
+			const headStartY = getVerticalPosition(data.beforeJumpLineLayer);
+			var headY = headStartY;
+			const headGravity = this.noteJumpGravityForLineLayer(data.verticalPosition, data.beforeJumpLineLayer);
+			headY += headGravity * data.halfJumpDuration * data.halfJumpDuration * 0.5;
 
 			const tailX = getHorizontalPosition(data.tailHorizontalPosition);
-			const tailY = highestJumpPosYForLineLayer(data.tailVerticalPosition);
+			var tailY = getVerticalPosition(0);
+			const tailGravity = this.noteJumpGravityForLineLayer(data.tailVerticalPosition, 0);
+			tailY += tailGravity * data.halfJumpDuration * data.halfJumpDuration * 0.5;
 
 			const p2 = new THREE.Vector2(tailX - headX, tailY - headY);
 			const magnitude = p2.length();
@@ -431,8 +436,8 @@ AFRAME.registerComponent('beat', {
 			const pos = curve[0];
 			const tangent = curve[1];
 
-			this.startPos = new THREE.Vector3(headX, getVerticalPosition(0) + pos.y, data.halfJumpPosition + data.warmupPosition - SWORD_OFFSET);
-			this.endPos = new THREE.Vector3(pos.x + headX, pos.y + headY, -SWORD_OFFSET);
+			this.startPos = new THREE.Vector3(pos.x + headX, headStartY, data.halfJumpPosition + data.warmupPosition - SWORD_OFFSET);
+			this.endPos = new THREE.Vector3(pos.x + headX, headStartY, -SWORD_OFFSET);
 
 			el.object3D.position.copy(this.startPos);
 			el.object3D.rotation.set(0, 0, 0);
@@ -443,7 +448,7 @@ AFRAME.registerComponent('beat', {
 			this.endRotationEuler = endRotation;
 			this.endRotation = new THREE.Quaternion().setFromEuler(endRotation);
 			this.middleRotation = new THREE.Quaternion().setFromEuler(endRotation);
-			this.gravity = this.noteJumpGravityForLineLayer(data.verticalPosition, 0);
+			this.gravity = (2.0 * (headY + pos.y - headStartY)) / (data.halfJumpDuration * data.halfJumpDuration);
 		} else {
 			this.startPos = new THREE.Vector3(
 				data.flip ? getHorizontalPosition(data.flipHorizontalPosition) : getHorizontalPosition(data.horizontalPosition),
@@ -604,6 +609,7 @@ AFRAME.registerComponent('beat', {
 			oldDots: oldDots,
 			proMode: proMode,
 			isDot: this.data.type == 'dot',
+			isChain: this.data.type === 'sliderchain',
 		};
 
 		this.updatePosition();
@@ -639,16 +645,28 @@ AFRAME.registerComponent('beat', {
 	},
 
 	toSmallBox: function (boxSettings) {
-		return this.toScaledBox(0.48, 0.48, 0.48, boxSettings);
+		if (boxSettings.isChain) {
+			return this.toScaledBox(0.35, 0.1, 0.35, boxSettings);
+		} else {
+			// Actual hitbox is 0.35x0.35x0.35 but it's smaller than note
+			return this.toScaledBox(0.4, 0.4, 0.4, boxSettings);
+		}
 	},
 
 	toBigBox: function (boxSettings) {
-		let height = boxSettings.isDot && !boxSettings.oldDots ? 0.8 : 0.5;
+		let height = 0.5;
+		if (boxSettings.isDot && !boxSettings.oldDots) {
+			height = 0.8;
+		}
+		if (boxSettings.isChain) {
+			height = 0.2;
+		}
 		return this.toScaledBox(0.8, height, 1.0, boxSettings);
 	},
 
 	toScaledBox: function (width, height, depth, boxSettings) {
-		let box = boxSettings.proMode ? new THREE.BoxGeometry(0.5, 0.5, 0.5) : new THREE.BoxGeometry(width, height, depth);
+		let box =
+			boxSettings.proMode && !boxSettings.isChain ? new THREE.BoxGeometry(0.5, 0.5, 0.5) : new THREE.BoxGeometry(width, height, depth);
 		box.scale(boxSettings.scale, boxSettings.scale, boxSettings.scale);
 		return box;
 	},
@@ -848,7 +866,12 @@ AFRAME.registerComponent('beat', {
 		} else {
 			setTimeout(scoreChanged, timeToScore * 1000);
 		}
-		if (this.data.type !== 'sliderchain' && settings.settings.realHitsounds && Math.abs(timeToScore) < 0.1 && (this.replayNote.eventType == 0 || this.replayNote.eventType == 1)) {
+		if (
+			this.data.type !== 'sliderchain' &&
+			settings.settings.realHitsounds &&
+			Math.abs(timeToScore) < 0.1 &&
+			(this.replayNote.eventType == 0 || this.replayNote.eventType == 1)
+		) {
 			hitSound.playSound();
 		}
 	},

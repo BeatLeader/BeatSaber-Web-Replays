@@ -261,7 +261,10 @@ AFRAME.registerComponent('beat', {
 
 		if (disableJumps) {
 			newX = this.endPos.x;
-			newY = this.endPos.y;
+			newY =
+				this.startPos.y +
+				this.startVerticalVelocity * data.halfJumpDuration -
+				this.gravity * data.halfJumpDuration * data.halfJumpDuration * 0.5;
 		}
 
 		position.y = newY;

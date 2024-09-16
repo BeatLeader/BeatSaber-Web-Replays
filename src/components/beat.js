@@ -267,8 +267,6 @@ AFRAME.registerComponent('beat', {
 				this.gravity * data.halfJumpDuration * data.halfJumpDuration * 0.5;
 		}
 
-		position.y = newY;
-
 		if (data.spawnRotation == 0) {
 			position.z = newPosition;
 			position.x = newX;
@@ -280,6 +278,8 @@ AFRAME.registerComponent('beat', {
 			position.z -= xDiff * Math.cos((90 - data.spawnRotation) * 0.0175);
 			position.x += xDiff * Math.sin((90 - data.spawnRotation) * 0.0175);
 		}
+
+		position.y = newY;
 
 		this.currentPositionZ = newPosition;
 

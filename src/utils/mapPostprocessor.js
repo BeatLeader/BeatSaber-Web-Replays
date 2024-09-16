@@ -78,13 +78,12 @@ function upgrade(map) {
 			});
 		});
 		map['rotationEvents'].forEach(event => {
-			var value = (zeroIfUndefined(event['r']) - 60) / -15;
-
+			var value = (Math.abs(zeroIfUndefined(event['r'])) - 60) / -15;
 			events.push({
 				_time: zeroIfUndefined(event['b']),
 				_type: zeroIfUndefined(event['e']) == 1 ? 15 : 14,
 				_value: value < 4 ? value : value - 1,
-				_inverted: true,
+				_inverted: event['r'] > 0,
 			});
 		});
 

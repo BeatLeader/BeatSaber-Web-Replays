@@ -211,6 +211,39 @@ AFRAME.registerComponent('replay-loader', {
 		});
 	},
 
+	tryFindingNotes: function (map, replay, noteStructs, mapnotes) {
+		this.setIds(map, replay);
+
+		let assignNote = (replaynote, mapnote) => {
+			const scoringType = mapnote._scoringType ? mapnote._scoringType + 2 : 3;
+			replaynote.index = mapnote._index;
+			replaynote.colorType = mapnote._type;
+			replaynote.lineIndex = mapnote._lineIndex;
+			replaynote.cutDirection = mapnote._cutDirection;
+			replaynote.lineLayer = mapnote._lineLayer;
+			replaynote.mapnote = mapnote;
+			replaynote.scoringType = scoringType - 2;
+			mapnote.found = true;
+		};
+
+		for (var j = 0; j < mapnotes.length; j++) {
+			const mapnote = mapnotes[j];
+			for (var m = 0; m < noteStructs.length; m++) {
+				const replaynote = noteStructs[m];
+
+				if (replaynote.index == undefined) {
+					if (
+						Math.abs(replaynote.spawnTime - mapnote._songTime) < 0.0005 &&
+						(replaynote.id == mapnote._id || replaynote.id == mapnote._idWithScoring || replaynote.id == mapnote._idWithAlternativeScoring)
+					) {
+						assignNote(replaynote, mapnote);
+						break;
+					}
+				}
+			}
+		}
+	},
+
 	processScores: function () {
 		const replay = this.replay;
 		const map = this.challenge.beatmaps[this.challenge.mode][this.challenge.difficulty];
@@ -225,9 +258,6 @@ AFRAME.registerComponent('replay-loader', {
 			})
 			.filter(a => (a._type == 0 || a._type == 1) && a._songTime >= firstReplayNoteTime);
 		this.applyModifiers(map, replay);
-		var leftHanded = this.applyLeftHanded(map, replay);
-
-		this.setIds(map, replay);
 
 		var noteStructs = new Array();
 		var bombStructs = new Array();
@@ -284,32 +314,40 @@ AFRAME.registerComponent('replay-loader', {
 			wallStructs.push(note);
 		}
 
-		let assignNote = (replaynote, mapnote) => {
-			const scoringType = mapnote._scoringType ? mapnote._scoringType + 2 : 3;
-			replaynote.index = mapnote._index;
-			replaynote.colorType = mapnote._type;
-			replaynote.lineIndex = mapnote._lineIndex;
-			replaynote.cutDirection = mapnote._cutDirection;
-			replaynote.lineLayer = mapnote._lineLayer;
-			replaynote.mapnote = mapnote;
-			replaynote.scoringType = scoringType - 2;
-			mapnote.found = true;
-		};
+		var leftHanded = false;
 
-		for (var j = 0; j < mapnotes.length; j++) {
-			const mapnote = mapnotes[j];
-			for (var m = 0; m < noteStructs.length; m++) {
-				const replaynote = noteStructs[m];
+		this.tryFindingNotes(map, replay, noteStructs, mapnotes);
 
-				if (replaynote.index == undefined) {
-					if (
-						Math.abs(replaynote.spawnTime - mapnote._songTime) < 0.0005 &&
-						(replaynote.id == mapnote._id || replaynote.id == mapnote._idWithScoring || replaynote.id == mapnote._idWithAlternativeScoring)
-					) {
-						assignNote(replaynote, mapnote);
-						break;
-					}
+		var brokenNotesCount = 0;
+		for (var i = 0; i < noteStructs.length; i++) {
+			if (noteStructs[i].index == undefined) {
+				brokenNotesCount++;
+			}
+		}
+
+		if (brokenNotesCount > 1) {
+			const mirrorAndRecalculate = () => {
+				Mirror_Horizontal(map, 4, true, false);
+				for (let i = 0; i < noteStructs.length; i++) {
+					const element = noteStructs[i];
+					element.index = undefined;
 				}
+				this.tryFindingNotes(map, replay, noteStructs, mapnotes);
+			};
+
+			mirrorAndRecalculate();
+
+			var mirroredbrokenNotesCount = 0;
+			for (var i = 0; i < noteStructs.length; i++) {
+				if (noteStructs[i].index == undefined) {
+					mirroredbrokenNotesCount++;
+				}
+			}
+			if (mirroredbrokenNotesCount < brokenNotesCount) {
+				leftHanded = true;
+				console.log('Applied left-handed mode');
+			} else {
+				mirrorAndRecalculate();
 			}
 		}
 
@@ -494,78 +532,6 @@ AFRAME.registerComponent('replay-loader', {
 		this.walls = wallStructs;
 
 		this.el.sceneEl.emit('replayloaded', {notes: allStructs, replay: replay, leftHanded}, null);
-	},
-
-	applyLeftHanded: function (map, replay) {
-		if (map && replay && replay.notes) {
-			const firstReplayNote = replay.notes[0];
-			const firstReplayNoteTime = firstReplayNote
-				? Math.min(floorToTwo(firstReplayNote.spawnTime), floorToTwo(firstReplayNote.eventTime))
-				: 0;
-			var mapnotes = [].concat(map._notes, map._chains);
-			mapnotes = mapnotes
-				.sort((a, b) => {
-					return a._time - b._time;
-				})
-				.filter(
-					a =>
-						(a._type == 0 || a._type == 1) &&
-						(floorToTwo(a._songTime) > firstReplayNoteTime || Math.abs(floorToTwo(a._songTime) - firstReplayNoteTime) < 0.01)
-				);
-
-			var replayNotes = replay.notes;
-			replayNotes = replayNotes
-				.sort((a, b) => {
-					return a.spawnTime - b.spawnTime;
-				})
-				.filter(a => a.eventType != NoteEventType.bomb);
-
-			let lastIndex = 0;
-			let firstIndex = 0;
-			for (let i = 0; i < mapnotes.length - 1; i++) {
-				if (mapnotes[firstIndex]._time.toFixed(2) != mapnotes[i]._time.toFixed(2)) {
-					if (i % 2 != 0) {
-						lastIndex = i;
-						break;
-					} else {
-						firstIndex = i;
-					}
-				}
-			}
-
-			let noteFound = 0;
-			for (let i = 0; i < lastIndex; i++) {
-				const mapNote = mapnotes[i];
-
-				let mirroredNote = Object.assign({}, mapNote);
-				Mirror_Horizontal_Note(mirroredNote, 4, true);
-
-				for (let j = 0; j < lastIndex; j++) {
-					const replayNote = replayNotes[j];
-					const replayNoteId = replayNote.noteID;
-					const mirroredNoteId =
-						mirroredNote._lineIndex * 1000 + mirroredNote._lineLayer * 100 + mirroredNote._type * 10 + mirroredNote._cutDirection;
-
-					const scoringType = mirroredNote._scoringType ? mirroredNote._scoringType + 2 : 3;
-					if (
-						!replayNote.foundForLeftHanded &&
-						Math.abs(replayNote.spawnTime - mapNote._songTime) < 0.01 &&
-						(replayNoteId == mirroredNoteId || replayNoteId == mirroredNoteId + scoringType * 10000)
-					) {
-						replayNote.foundForLeftHanded = true;
-						noteFound++;
-						break;
-					}
-				}
-
-				if (noteFound == lastIndex) {
-					Mirror_Horizontal(map, 4, true, false);
-					return true;
-				}
-			}
-
-			return false;
-		}
 	},
 
 	challengeloadend: function (event) {

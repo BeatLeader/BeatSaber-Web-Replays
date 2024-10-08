@@ -2,27 +2,20 @@ function checkBSOR(file, isLink, completion) {
 	if (isLink) {
 		const filename = file.split('?')[0];
 		if (filename.split('.').pop() == 'bsor' || filename.split('.').pop() == 'bsortemp') {
-			if (file.includes('/otherreplays/')) {
-				var linkxhr = new XMLHttpRequest();
-				linkxhr.withCredentials = true;
-				linkxhr.open('GET', file, true);
-				linkxhr.responseType = 'text';
+			file = file.replace('https://cdn.discordapp.com/attachments/', 'https://discord.beatleader.pro/');
+			var xhr = new XMLHttpRequest();
+			xhr.open('GET', file, true);
+			xhr.withCredentials = file.includes('/otherreplays/');
+			xhr.responseType = 'blob';
 
-				linkxhr.onload = function () {
-					checkBSOR(linkxhr.response, true, completion);
-				};
-				linkxhr.send();
-			} else {
-				file = file.replace('https://cdn.discordapp.com/attachments/', 'https://discord.beatleader.pro/');
-				var xhr = new XMLHttpRequest();
-				xhr.open('GET', file, true);
-				xhr.responseType = 'blob';
-
-				xhr.onload = function () {
+			xhr.onload = function () {
+				if (xhr.status == 200) {
 					checkBSORFile(xhr.response, completion);
-				};
-				xhr.send();
-			}
+				} else {
+					completion('Error: failed to download replay');
+				}
+			};
+			xhr.send();
 		} else {
 			completion('Error: wrong file format');
 		}

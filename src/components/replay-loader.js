@@ -10,6 +10,18 @@ function floorToTwo(num) {
 	return Math.floor(num * 100) / 100;
 }
 
+function assignNote(replaynote, mapnote) {
+	const scoringType = mapnote._scoringType ? mapnote._scoringType + 2 : 3;
+	replaynote.index = mapnote._index;
+	replaynote.colorType = mapnote._type;
+	replaynote.lineIndex = mapnote._lineIndex;
+	replaynote.cutDirection = mapnote._cutDirection;
+	replaynote.lineLayer = mapnote._lineLayer;
+	replaynote.mapnote = mapnote;
+	replaynote.scoringType = scoringType - 2;
+	mapnote.found = true;
+}
+
 AFRAME.registerComponent('replay-loader', {
 	schema: {
 		playerID: {default: getUrlParameter('playerID')},
@@ -213,18 +225,6 @@ AFRAME.registerComponent('replay-loader', {
 
 	tryFindingNotes: function (map, replay, noteStructs, mapnotes) {
 		this.setIds(map, replay);
-
-		let assignNote = (replaynote, mapnote) => {
-			const scoringType = mapnote._scoringType ? mapnote._scoringType + 2 : 3;
-			replaynote.index = mapnote._index;
-			replaynote.colorType = mapnote._type;
-			replaynote.lineIndex = mapnote._lineIndex;
-			replaynote.cutDirection = mapnote._cutDirection;
-			replaynote.lineLayer = mapnote._lineLayer;
-			replaynote.mapnote = mapnote;
-			replaynote.scoringType = scoringType - 2;
-			mapnote.found = true;
-		};
 
 		for (var j = 0; j < mapnotes.length; j++) {
 			const mapnote = mapnotes[j];

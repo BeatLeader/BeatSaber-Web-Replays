@@ -1,27 +1,20 @@
 function checkBSOR(file, isLink, completion) {
 	if (isLink) {
 		if (file.split('.').pop() == 'bsor' || file.split('.').pop() == 'bsortemp' || file.split('?')[0].split('.').pop() == 'bsor') {
-			if (file.includes('/otherreplays/')) {
-				var linkxhr = new XMLHttpRequest();
-				linkxhr.withCredentials = true;
-				linkxhr.open('GET', file, true);
-				linkxhr.responseType = 'text';
+			file = file.replace('https://cdn.discordapp.com/', '/cors/discord-cdn/');
+			var xhr = new XMLHttpRequest();
+			xhr.open('GET', file, true);
+			xhr.responseType = 'blob';
+			xhr.withCredentials = file.includes('/otherreplays/');
 
-				linkxhr.onload = function () {
-					checkBSOR(linkxhr.response, true, completion);
-				};
-				linkxhr.send();
-			} else {
-				file = file.replace('https://cdn.discordapp.com/', '/cors/discord-cdn/');
-				var xhr = new XMLHttpRequest();
-				xhr.open('GET', file, true);
-				xhr.responseType = 'blob';
-
-				xhr.onload = function () {
+			xhr.onload = function () {
+				if (xhr.status == 200) {
 					checkBSORFile(xhr.response, completion);
-				};
-				xhr.send();
-			}
+				} else {
+					completion('Error: failed to download replay');
+				}
+			};
+			xhr.send();
 		} else {
 			completion(null);
 		}

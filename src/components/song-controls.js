@@ -766,35 +766,6 @@ AFRAME.registerComponent('song-controls', {
 			});
 		};
 
-		const toggleFullscreen = () => {
-			if (fullscreen[0].classList.contains('inFullscreen')) {
-				if (this.data.isSafari) {
-					document.webkitCancelFullScreen();
-				} else {
-					document.exitFullscreen();
-				}
-				fullscreenHandler(false);
-			} else {
-				if (this.data.isSafari) {
-					document.body.webkitRequestFullScreen();
-				} else {
-					document.body.requestFullscreen();
-				}
-
-				fullscreenHandler(true);
-			}
-		};
-
-		fullscreen.forEach(element => {
-			element.addEventListener('click', () => {
-				toggleFullscreen();
-			});
-		});
-
-		document.addEventListener('fullscreenchange', () => {
-			fullscreenHandler(document.fullscreenElement);
-		});
-
 		const togglePlayback = () => {
 			if (this.song.data.isPlaying) {
 				this.el.sceneEl.emit('pausegame', null, false);
@@ -827,6 +798,133 @@ AFRAME.registerComponent('song-controls', {
 
 			doSeek(null, captureThis.beatData.timeConvertor(parseFloat(currentBeat) - step));
 		};
+
+		const toggleiosfullscreen = async () => {
+			if (!this.video) {
+				this.video = document.createElement('video');
+				this.video.muted = true;
+				this.video.playsInline = true;
+				this.video.style.position = 'fixed';
+				this.video.style.top = '0';
+				this.video.style.left = '0';
+				this.video.style.width = '100%';
+				this.video.style.height = '100%';
+				this.video.style.objectFit = 'contain';
+				this.video.style.backgroundColor = 'black';
+
+				this.video.addEventListener('seeked', function () {
+					seekLeft();
+				});
+				this.video.addEventListener('seekforward', function () {
+					seekRight();
+				});
+				const mainCanvas = document.getElementById('main-canvas');
+				this.video.srcObject = mainCanvas.captureStream(60);
+
+				document.body.appendChild(this.video);
+				await this.video.play();
+			}
+
+			try {
+				if (!this.song.data.isPlaying) {
+					this.video.pause();
+				}
+
+				const playbackListener = () => {
+					if (this.video.webkitDisplayingFullscreen) {
+						togglePlayback();
+					}
+				};
+
+				setTimeout(() => {
+					this.video.addEventListener('play', playbackListener);
+
+					this.video.addEventListener('pause', playbackListener);
+				}, 100);
+
+				this.video.webkitEnterFullscreen();
+
+				var exitFullscreen = null;
+				const leavepictureinpicture = () => {
+					setTimeout(() => {
+						if (this.video.webkitDisplayingFullscreen) {
+							document.body.appendChild(this.video);
+							this.video.addEventListener('webkitendfullscreen', exitFullscreen);
+							fullscreenHandler(true);
+						} else {
+							this.video.removeEventListener('play', playbackListener);
+							this.video.removeEventListener('pause', playbackListener);
+							this.video.pause();
+							this.video.srcObject = null;
+
+							this.video.removeEventListener('leavepictureinpicture', leavepictureinpicture);
+							this.video = null;
+						}
+					}, 200);
+				};
+
+				exitFullscreen = () => {
+					setTimeout(() => {
+						if (document.pictureInPictureElement === this.video) {
+							this.video.addEventListener('leavepictureinpicture', leavepictureinpicture);
+							document.body.removeChild(this.video);
+							this.video.removeEventListener('webkitendfullscreen', exitFullscreen);
+						} else {
+							this.video.removeEventListener('play', playbackListener);
+							this.video.removeEventListener('pause', playbackListener);
+							this.video.pause();
+							this.video.srcObject = null;
+
+							document.body.removeChild(this.video);
+							this.video.removeEventListener('webkitendfullscreen', exitFullscreen);
+							this.video = null;
+						}
+
+						fullscreenHandler(false);
+					}, 200);
+				};
+
+				this.video.addEventListener('webkitendfullscreen', exitFullscreen);
+			} catch (error) {
+				console.error('Error entering fullscreen:', error);
+				document.body.removeChild(this.video);
+			}
+		};
+
+		const toggleFullscreen = () => {
+			if (fullscreen[0].classList.contains('inFullscreen')) {
+				if (this.data.isSafari) {
+					document.webkitCancelFullScreen();
+				} else if (document.exitFullscreen) {
+					document.exitFullscreen();
+				} else if (document.webkitExitFullscreen) {
+					document.webkitExitFullscreen();
+				}
+				fullscreenHandler(false);
+			} else {
+				if (this.data.isSafari) {
+					try {
+						document.body.webkitRequestFullscreen();
+					} catch (error) {
+						toggleiosfullscreen();
+					}
+				} else if (document.body.requestFullscreen) {
+					document.body.requestFullscreen();
+				}
+
+				fullscreenHandler(true);
+			}
+		};
+
+		fullscreen.forEach(element => {
+			element.addEventListener('click', () => {
+				toggleFullscreen();
+			});
+		});
+
+		document.addEventListener('fullscreenchange', () => {
+			fullscreenHandler(document.fullscreenElement);
+		});
 
 		document.addEventListener('keydown', e => {
 			if (e.key === ' ' || e.keyCode == 75) {
@@ -872,10 +970,14 @@ AFRAME.registerComponent('song-controls', {
 
 		if ('mediaSession' in navigator) {
 			navigator.mediaSession.setActionHandler('play', function () {
-				togglePlayback();
+				if (!this.video) {
+					togglePlayback();
+				}
 			});
 			navigator.mediaSession.setActionHandler('pause', function () {
-				togglePlayback();
+				if (!this.video) {
+					togglePlayback();
+				}
 			});
 			navigator.mediaSession.setActionHandler('seekbackward', function () {
 				seekLeft();

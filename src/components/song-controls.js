@@ -1356,7 +1356,9 @@ AFRAME.registerComponent('song-controls', {
 			drawMarkers();
 		};
 
-		updateMarkers();
+		setTimeout(() => {
+			updateMarkers();
+		}, 200);
 
 		this.el.sceneEl.addEventListener('settingsChanged', e => {
 			updateMarkers();

@@ -1106,13 +1106,24 @@ AFRAME.registerComponent('song-controls', {
 
 		const canvas = document.createElement('canvas');
 		canvas.className = 'acc-canvas';
+		canvas.width = width;
 		canvas.style.width = width + 'px';
+
 		const canvas2 = document.createElement('canvas');
 		canvas2.className = 'acc-canvas-filter';
+		canvas2.width = width;
 		canvas2.style.width = width + 'px';
+
+		const markersCanvas = document.createElement('canvas');
+		markersCanvas.className = 'markers-canvas';
+		markersCanvas.width = width;
+		markersCanvas.height = height;
+		markersCanvas.style.width = width + 'px';
 
 		const context = canvas.getContext('2d');
 		const context2 = canvas2.getContext('2d');
+		const markersContext = markersCanvas.getContext('2d');
+
 		var minAcc = 100,
 			maxAcc = 0;
 
@@ -1126,13 +1137,28 @@ AFRAME.registerComponent('song-controls', {
 			}
 		}
 
-		context.scale(300 / width, 1);
 		context.beginPath();
 		context.moveTo(0, height);
 
-		context2.scale(300 / width, 1);
 		context2.beginPath();
 		context2.moveTo(0, height);
+
+		const markers = [];
+		const markerImages = {};
+		const markerTypes = ['pause', 'fail', 'start', 'maxStreak', 'miss', 'badCut', 'wall', 'bomb'];
+		let loadedImages = 0;
+
+		markerTypes.forEach(type => {
+			const img = new Image();
+			img.src = `assets/img/${type}-timeline.png`;
+			img.onload = () => {
+				loadedImages++;
+				if (loadedImages === markerTypes.length) {
+					drawMarkers();
+				}
+			};
+			markerImages[type] = img;
+		});
 
 		var unasignedPauseIndex = 0;
 		notes.forEach(note => {
@@ -1141,83 +1167,45 @@ AFRAME.registerComponent('song-controls', {
 				pause.accuracy = note.accuracy;
 				unasignedPauseIndex++;
 
-				const img = document.createElement('img');
-				img.src = 'assets/img/pause-timeline.png';
-				img.className = 'missMark pause-mark';
-				img.style.left = (pause.time / duration) * width - 6 + 'px';
-				img.style.setProperty('--hover-bottom', ((pause.accuracy - minAcc) / (maxAcc - minAcc)) * height + 5 + 'px');
-				img.title += 'Pause at ' + formatSeconds(pause.time) + ' for ' + formatSeconds(parseInt(pause.duration));
-				img.onclick = () => {
-					this.seek(pause.time - 0.3);
-				};
-
-				container.appendChild(img);
+				markers.push({
+					type: 'pause',
+					x: (pause.time / duration) * width,
+					y: height - ((pause.accuracy - minAcc) / (maxAcc - minAcc)) * height,
+					time: pause.time,
+					duration: pause.duration,
+				});
 			}
 
 			if (note.fail || note.start) {
-				const img = document.createElement('img');
-				img.className = 'missMark fail-mark';
-				img.style.left = (note.time / duration) * width - 6 + 'px';
-				img.style.setProperty('--hover-bottom', ((note.accuracy - minAcc) / (maxAcc - minAcc)) * height + 5 + 'px');
-
-				if (note.fail) {
-					img.src = 'assets/img/fail-timeline.png';
-					img.title += 'Failed at ' + formatSeconds(note.time);
-				} else {
-					img.src = 'assets/img/start-timeline.png';
-					img.title += 'Started at ' + formatSeconds(note.time);
-				}
-				img.onclick = () => {
-					this.seek(note.spawnTime - 0.3);
-				};
-
-				container.appendChild(img);
+				markers.push({
+					type: note.fail ? 'fail' : 'start',
+					x: (note.time / duration) * width,
+					y: height - ((note.accuracy - minAcc) / (maxAcc - minAcc)) * height,
+					time: note.time,
+					spawnTime: note.spawnTime,
+				});
 			}
 
 			if (note.maxStreak) {
-				const img = document.createElement('img');
-				img.className = 'missMark maxStreak-mark';
-				img.style.left = (note.time / duration) * width - 6 + 'px';
-				img.style.setProperty('--hover-bottom', ((note.accuracy - minAcc) / (maxAcc - minAcc)) * height + 5 + 'px');
-
-				img.src = 'assets/img/maxStreak-timeline.png';
-				img.title += `${note.maxStreak} streak of 115s at ` + formatSeconds(note.time);
-				img.onclick = () => {
-					this.seek(note.spawnTime - 0.3);
-				};
-
-				container.appendChild(img);
+				markers.push({
+					type: 'maxStreak',
+					x: (note.time / duration) * width,
+					y: height - ((note.accuracy - minAcc) / (maxAcc - minAcc)) * height,
+					time: note.time,
+					spawnTime: note.spawnTime,
+					maxStreak: note.maxStreak,
+				});
 			}
 
 			if (note.score < 0) {
-				const img = document.createElement('img');
-
-				img.style.left = (note.time / duration) * width - 6 + 'px';
-				img.style.setProperty('--hover-bottom', ((note.accuracy - minAcc) / (maxAcc - minAcc)) * height + 5 + 'px');
-
-				if (note.score == -3) {
-					img.className = 'missMark miss-mark';
-					img.title = 'Miss';
-					img.src = 'assets/img/miss-timeline.png';
-				} else if (note.score == -2) {
-					img.className = 'missMark badCut-mark';
-					img.title = 'Bad cut';
-					img.src = 'assets/img/badcut-timeline.png';
-				} else if (note.score == -5) {
-					img.className = 'missMark wall-mark';
-					img.title = 'Wall hit';
-					img.src = 'assets/img/wall-timeline.png';
-				} else if (note.score == -4) {
-					img.className = 'missMark bomb-mark';
-					img.title = 'Bomb hit';
-					img.src = 'assets/img/bomb-timeline.png';
-				}
-				img.title += ' at ' + formatSeconds(note.time);
-				img.onclick = () => {
-					this.seek(note.spawnTime - 0.3);
-				};
-
-				container.appendChild(img);
+				markers.push({
+					type:
+						note.score === -3 ? 'miss' : note.score === -2 ? 'badCut' : note.score === -5 ? 'wall' : note.score === -4 ? 'bomb' : 'unknown',
+					x: (note.time / duration) * width,
+					y: height - ((note.accuracy - minAcc) / (maxAcc - minAcc)) * height,
+					time: note.time,
+					spawnTime: note.spawnTime,
+				});
 			}
 
 			context.lineTo((note.time / duration) * width, height - (((note.accuracy - minAcc) / (maxAcc - minAcc)) * height + 5));
@@ -1243,29 +1231,133 @@ AFRAME.registerComponent('song-controls', {
 		filter.appendChild(canvas2);
 		container.appendChild(filter);
 		container.appendChild(canvas);
+		container.appendChild(markersCanvas);
 		timeline.appendChild(container);
 
 		target.minAcc = minAcc;
 		target.maxAcc = maxAcc;
 
-		const updateMarkers = settings => {
-			['pause', 'fail', 'miss', 'badCut', 'bomb', 'wall', 'maxStreak'].forEach(key => {
-				const marks = document.querySelectorAll(`.${key}-mark`);
-				const visible = settings[key + 'Markers'];
-				marks.forEach(element => {
-					if (visible && element.classList.contains('hiddenMark')) {
-						element.classList.remove('hiddenMark');
-					} else if (!visible && !element.classList.contains('hiddenMark')) {
-						element.classList.add('hiddenMark');
-					}
-				});
+		let hoveredMarker = null;
+		let isHovering = false;
+
+		const drawMarkers = () => {
+			markersContext.clearRect(0, 0, width, height);
+			markers.forEach(marker => {
+				if (this.settings.settings[marker.type + 'Markers']) {
+					const img = markerImages[marker.type];
+					const size = marker === hoveredMarker ? 15 : 10;
+					const y = isHovering ? marker.y : height - size / 2;
+					markersContext.drawImage(img, marker.x - size / 2, y - size / 2, size, size);
+				}
 			});
 		};
 
-		updateMarkers(this.settings.settings);
+		const animateMarkers = () => {
+			if (isHovering) {
+				let animationComplete = true;
+				markers.forEach(marker => {
+					if (Math.abs(marker.currentY - marker.y) > 0.01) {
+						marker.currentY += (marker.y - marker.currentY) * 0.01;
+						animationComplete = false;
+					} else {
+						marker.currentY = marker.y;
+					}
+				});
+				drawMarkers();
+				if (!animationComplete) {
+					requestAnimationFrame(animateMarkers);
+				}
+			}
+		};
+
+		const getTooltipContent = marker => {
+			switch (marker.type) {
+				case 'pause':
+					return `Pause at ${formatSeconds(marker.time)} for ${formatSeconds(parseInt(marker.duration))}`;
+				case 'fail':
+					return `Failed at ${formatSeconds(marker.time)}`;
+				case 'start':
+					return `Started at ${formatSeconds(marker.time)}`;
+				case 'maxStreak':
+					return `${marker.maxStreak} streak of 115s at ${formatSeconds(marker.time)}`;
+				case 'miss':
+					return `Miss at ${formatSeconds(marker.time)}`;
+				case 'badCut':
+					return `Bad cut at ${formatSeconds(marker.time)}`;
+				case 'wall':
+					return `Wall hit at ${formatSeconds(marker.time)}`;
+				case 'bomb':
+					return `Bomb hit at ${formatSeconds(marker.time)}`;
+				default:
+					return `Event at ${formatSeconds(marker.time)}`;
+			}
+		};
+
+		const handleHover = e => {
+			const rect = markersCanvas.getBoundingClientRect();
+			const x = e.clientX - rect.left;
+			const y = e.clientY - rect.top;
+
+			let newHoveredMarker = null;
+			for (let marker of markers) {
+				if (Math.abs(marker.x - x) < 7.5 && Math.abs(marker.currentY - y) < 7.5) {
+					newHoveredMarker = marker;
+					break;
+				}
+			}
+
+			if (newHoveredMarker !== hoveredMarker) {
+				hoveredMarker = newHoveredMarker;
+				drawMarkers();
+				if (hoveredMarker && this.settings.settings[hoveredMarker.type + 'Markers']) {
+					markersCanvas.title = getTooltipContent(hoveredMarker);
+				} else {
+					markersCanvas.removeAttribute('title');
+				}
+			}
+		};
+
+		const handleMouseEnter = () => {
+			isHovering = true;
+			markers.forEach(marker => {
+				marker.currentY = height - 5;
+			});
+			animateMarkers();
+		};
+
+		const handleMouseLeave = () => {
+			isHovering = false;
+			hoveredMarker = null;
+			markersCanvas.removeAttribute('title');
+			drawMarkers();
+		};
+
+		const handleClick = e => {
+			const rect = markersCanvas.getBoundingClientRect();
+			const x = e.clientX - rect.left;
+			const y = e.clientY - rect.top;
+
+			for (let marker of markers) {
+				if (Math.abs(marker.x - x) < 7.5 && Math.abs(marker.currentY - y) < 7.5) {
+					this.seek(marker.spawnTime ? marker.spawnTime - 0.3 : marker.time - 0.3);
+					break;
+				}
+			}
+		};
+
+		markersCanvas.addEventListener('mousemove', handleHover);
+		timeline.addEventListener('mouseenter', handleMouseEnter);
+		timeline.addEventListener('mouseleave', handleMouseLeave);
+		markersCanvas.addEventListener('click', handleClick);
+
+		const updateMarkers = () => {
+			drawMarkers();
+		};
+
+		updateMarkers();
 
 		this.el.sceneEl.addEventListener('settingsChanged', e => {
-			updateMarkers(e.detail.settings);
+			updateMarkers();
 		});
 	},
 

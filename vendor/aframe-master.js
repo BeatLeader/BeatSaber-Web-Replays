@@ -4926,10 +4926,6 @@ module.exports.Component = registerComponent('animation', {
     this.config = {
       complete: function () {
         self.animationIsPlaying = false;
-        self.el.emit('animationcomplete', self.eventDetail, false);
-        if (self.id) {
-          self.el.emit('animationcomplete__' + self.id, self.eventDetail, false);
-        }
       }
     };
   },
@@ -5023,7 +5019,6 @@ module.exports.Component = registerComponent('animation', {
     this.time = 0;
     this.animationIsPlaying = true;
     this.stopRelatedAnimations();
-    this.el.emit('animationbegin', this.eventDetail);
   },
 
   pauseAnimation: function () {
@@ -13206,16 +13201,16 @@ function isObjectOrArray(value) {
 }
 
 },{"../utils/":158,"./scene/scenes":94,"./schema":96,"./system":98}],87:[function(require,module,exports){
-require('../../vendor/effects/EffectComposer');
-require('../../vendor/effects/RenderPass');
+require("../../vendor/effects/EffectComposer");
+require("../../vendor/effects/RenderPass");
 
-var registerComponent = require('./component').registerComponent;
-var THREE = require('../lib/three');
-var warn = require('../utils/').debug('components:effect:warn');
+var registerComponent = require("./component").registerComponent;
+var THREE = require("../lib/three");
+var warn = require("../utils/").debug("components:effect:warn");
 
 var lastEffectInitialized;
 
-var effectOrder = ['render', 'bloom', 'sepia', 'ssao'];
+var effectOrder = ["render", "bloom", "sepia", "ssao"];
 var passes = {};
 
 var proto = {
@@ -13223,15 +13218,15 @@ var proto = {
   init: function () {
     var sceneEl = this.el;
     if (!this.el.isScene) {
-      warn('Effect components can only be applied to <a-scene>');
+      warn("Effect components can only be applied to <a-scene>");
       return;
     }
 
-    if (!sceneEl.camera) {
-      sceneEl.addEventListener('camera-set-active', this.init.bind(this));
-      return;
-    }
-    sceneEl.resize();
+    // if (!sceneEl.camera) {
+    //   sceneEl.addEventListener('camera-set-active', this.init.bind(this));
+    //   return;
+    // }
+    // sceneEl.resize();
     sceneEl.effectComposer || this.initEffectComposer();
     this.initPass();
     this.update();
@@ -13246,7 +13241,9 @@ var proto = {
     var effectComposer = this.el.effectComposer;
     effectComposer.passes = [];
     effectOrder.forEach(function (effect) {
-      if (!passes[effect]) { return; }
+      if (!passes[effect]) {
+        return;
+      }
       effectComposer.addPass(passes[effect]);
     });
     effectComposer.reset();
@@ -13259,13 +13256,17 @@ var proto = {
 
   initEffectComposer: function () {
     var sceneEl = this.el;
-    var effectComposer = sceneEl.effectComposer = new THREE.EffectComposer(sceneEl.renderer, undefined, sceneEl.mainRenderer);
+    var effectComposer = (sceneEl.effectComposer = new THREE.EffectComposer(
+      sceneEl.renderer,
+      undefined,
+      sceneEl.mainRenderer
+    ));
     var renderPass = new THREE.RenderPass(sceneEl.object3D, sceneEl.camera);
     effectComposer.addPass(renderPass);
     lastEffectInitialized = renderPass;
     passes.render = renderPass;
     return effectComposer;
-  }
+  },
 };
 
 /**
@@ -13280,8 +13281,9 @@ module.exports.registerEffect = function (name, definition) {
   });
 
   proto.effectName = name;
-
-  registerComponent('effect-' + name, proto);
+  // setTimeout(() => {
+  registerComponent("effect-" + name, proto);
+  // }, 100);
 };
 
 },{"../../vendor/effects/EffectComposer":171,"../../vendor/effects/RenderPass":173,"../lib/three":136,"../utils/":158,"./component":86}],88:[function(require,module,exports){
@@ -13674,12 +13676,12 @@ module.exports.AScene = registerElement("a-scene", {
         initWakelock(this);
 
         // Camera set up by camera system.
-        this.addEventListener("cameraready", function () {
+        this.addEventListener('cameraready', function () {
           self.attachedCallbackPostCamera();
         });
 
         this.initSystems();
-      },
+      }
     },
 
     attachedCallbackPostCamera: {
@@ -13740,8 +13742,10 @@ module.exports.AScene = registerElement("a-scene", {
         if (this.systems[name]) {
           return;
         }
-        this.systems[name] = new systems[name](this);
-        this.systemNames.push(name);
+        if (systems[name]) {
+          this.systems[name] = new systems[name](this);
+          this.systemNames.push(name);
+        }
       },
     },
 
@@ -14150,8 +14154,24 @@ module.exports.AScene = registerElement("a-scene", {
         }
 
         mainRenderer.requestAnimationFrame(this.render);
-        if (effectComposer) {
-          effectComposer.render();
+        if (this.getAttribute("bloom") === 'true' && effectComposer) {
+          
+          effectComposer.render(this.delta, this.object3D,
+            this.camera,
+            this.renderTarget,
+            false,
+            this.camera.el.components.camera.data);
+          if (this.additiveCameras) {
+            this.additiveCameras.forEach((element) => {
+              mainRenderer.render(
+                this.object3D,
+                element.getObject3D("camera"),
+                this.renderTarget,
+                false,
+                element.components["orthographic-camera"].data
+              );
+            });
+          }
         } else {
           mainRenderer.render(
             this.object3D,
@@ -28050,32 +28070,33 @@ THREE.CopyShader = {
  * @author alteredq / http://alteredqualia.com/
  */
 
-THREE.EffectComposer = function ( renderer, renderTarget, effect ) {
-
+THREE.EffectComposer = function (renderer, renderTarget, effect) {
   this.renderer = renderer;
 
-  window.addEventListener('vrdisplaypresentchange' , this.resize.bind(this));
+  window.addEventListener("vrdisplaypresentchange", this.resize.bind(this));
 
   this.effect = effect;
 
-  if ( renderTarget === undefined ) {
-
+  if (renderTarget === undefined) {
     var parameters = {
       minFilter: THREE.LinearFilter,
       magFilter: THREE.LinearFilter,
       format: THREE.RGBAFormat,
-      stencilBuffer: false
+      stencilBuffer: true,
     };
 
     var size = renderer.getDrawingBufferSize();
-    renderTarget = new THREE.WebGLRenderTarget( size.width, size.height, parameters );
-    renderTarget.texture.name = 'EffectComposer.rt1';
-
+    renderTarget = new THREE.WebGLRenderTarget(
+      size.width,
+      size.height,
+      parameters
+    );
+    renderTarget.texture.name = "EffectComposer.rt1";
   }
 
   this.renderTarget1 = renderTarget;
   this.renderTarget2 = renderTarget.clone();
-  this.renderTarget2.texture.name = 'EffectComposer.rt2';
+  this.renderTarget2.texture.name = "EffectComposer.rt2";
 
   this.writeBuffer = this.renderTarget1;
   this.readBuffer = this.renderTarget2;
@@ -28084,109 +28105,100 @@ THREE.EffectComposer = function ( renderer, renderTarget, effect ) {
 
   // dependencies
 
-  if ( THREE.CopyShader === undefined ) {
-
-    console.error( 'THREE.EffectComposer relies on THREE.CopyShader' );
-
+  if (THREE.CopyShader === undefined) {
+    console.error("THREE.EffectComposer relies on THREE.CopyShader");
   }
 
-  if ( THREE.ShaderPass === undefined ) {
-
-    console.error( 'THREE.EffectComposer relies on THREE.ShaderPass' );
-
+  if (THREE.ShaderPass === undefined) {
+    console.error("THREE.EffectComposer relies on THREE.ShaderPass");
   }
 
-  this.copyPass = new THREE.ShaderPass( THREE.CopyShader );
-
+  this.copyPass = new THREE.ShaderPass(THREE.CopyShader);
 };
 
-Object.assign( THREE.EffectComposer.prototype, {
-
+Object.assign(THREE.EffectComposer.prototype, {
   swapBuffers: function () {
-
     var tmp = this.readBuffer;
     this.readBuffer = this.writeBuffer;
     this.writeBuffer = tmp;
-
   },
 
-  addPass: function ( pass ) {
-
-    this.passes.push( pass );
+  addPass: function (pass) {
+    this.passes.push(pass);
     var size = this.renderer.getDrawingBufferSize();
-    pass.setSize( size.width, size.height );
-
+    pass.setSize(size.width, size.height);
   },
 
-  insertPass: function ( pass, index ) {
-
-    this.passes.splice( index, 0, pass );
-
+  insertPass: function (pass, index) {
+    this.passes.splice(index, 0, pass);
   },
 
-  render: function ( delta ) {
-
+  render: function (delta, object, camera, renderTarget, someBool, cameraData) {
     var maskActive = false;
 
-    var pass, i, il = this.passes.length;
+    var pass,
+      i,
+      il = this.passes.length;
 
-    for ( i = 0; i < il; i ++ ) {
+      this.renderer.setRenderTarget( this.readBuffer );
+    this.renderer.clear();
 
-      pass = this.passes[ i ];
+    for (i = 0; i < il; i++) {
+      pass = this.passes[i];
 
-      if ( pass.enabled === false ) continue;
+      // if (i != 0) return;
+      // pass.renderToScreen = true;
 
-      if (pass.renderToScreen) {
-        pass.render( this.renderer, this.writeBuffer, this.readBuffer, delta, maskActive );
-      } else {
-        pass.render( this.effect, this.writeBuffer, this.readBuffer, delta, maskActive );
-      }
+      if (pass.enabled === false) continue;
 
-      if ( pass.needsSwap ) {
+      // if (pass.renderToScreen) {
+      //   pass.render( this.renderer, this.writeBuffer, this.readBuffer, delta, maskActive );
+      // } else {
+      pass.render(
+        this.effect,
+        this.writeBuffer,
+        this.readBuffer,
+        delta,
+        maskActive,
+        object, camera, renderTarget, someBool, cameraData
+      );
+      // }
 
-        if ( maskActive ) {
+      // if (pass.needsSwap) {
+      //   if (maskActive) {
+      //     var context = this.renderer.context;
 
-          var context = this.renderer.context;
+      //     context.stencilFunc(context.NOTEQUAL, 1, 0xffffffff);
 
-          context.stencilFunc( context.NOTEQUAL, 1, 0xffffffff );
+      //     this.copyPass.render(
+      //       this.renderer,
+      //       this.writeBuffer,
+      //       this.readBuffer,
+      //       delta
+      //     );
 
-          this.copyPass.render( this.renderer, this.writeBuffer, this.readBuffer, delta );
+      //     context.stencilFunc(context.EQUAL, 1, 0xffffffff);
+      //   }
 
-          context.stencilFunc( context.EQUAL, 1, 0xffffffff );
+      //   this.swapBuffers();
+      // }
 
-        }
-
-        this.swapBuffers();
-
-      }
-
-      if ( THREE.MaskPass !== undefined ) {
-
-        if ( pass instanceof THREE.MaskPass ) {
-
-          maskActive = true;
-
-        } else if ( pass instanceof THREE.ClearMaskPass ) {
-
-          maskActive = false;
-
-        }
-
-      }
-
+      // if (THREE.MaskPass !== undefined) {
+      //   if (pass instanceof THREE.MaskPass) {
+      //     maskActive = true;
+      //   } else if (pass instanceof THREE.ClearMaskPass) {
+      //     maskActive = false;
+      //   }
+      // }
     }
-
   },
 
-  reset: function ( renderTarget ) {
-
-    if ( renderTarget === undefined ) {
-
+  reset: function (renderTarget) {
+    if (renderTarget === undefined) {
       var size = this.renderer.getDrawingBufferSize();
 
       renderTarget = this.renderTarget1.clone();
-      renderTarget.setSize( size.width, size.height );
-
+      renderTarget.setSize(size.width, size.height);
     }
 
     this.renderTarget1.dispose();
@@ -28196,34 +28208,24 @@ Object.assign( THREE.EffectComposer.prototype, {
 
     this.writeBuffer = this.renderTarget1;
     this.readBuffer = this.renderTarget2;
-
   },
 
-  setSize: function ( width, height ) {
+  setSize: function (width, height) {
+    this.renderTarget1.setSize(width, height);
+    this.renderTarget2.setSize(width, height);
 
-    this.renderTarget1.setSize( width, height );
-    this.renderTarget2.setSize( width, height );
-
-    for ( var i = 0; i < this.passes.length; i ++ ) {
-
-      this.passes[ i ].setSize( width, height );
-
+    for (var i = 0; i < this.passes.length; i++) {
+      this.passes[i].setSize(width, height);
     }
-
   },
 
-  resize: function ( ) {
-
+  resize: function () {
     var rendererSize = this.renderer.getDrawingBufferSize();
-    this.setSize( rendererSize.width, rendererSize.height );
-
-  }
-
-} );
-
+    this.setSize(rendererSize.width, rendererSize.height);
+  },
+});
 
 THREE.Pass = function () {
-
   // if set to true, the pass is processed by the composer
   this.enabled = true;
 
@@ -28235,20 +28237,15 @@ THREE.Pass = function () {
 
   // if set to true, the result of the pass is rendered to screen
   this.renderToScreen = false;
-
 };
 
-Object.assign( THREE.Pass.prototype, {
+Object.assign(THREE.Pass.prototype, {
+  setSize: function (width, height) {},
 
-  setSize: function ( width, height ) {},
-
-  render: function ( renderer, writeBuffer, readBuffer, delta, maskActive ) {
-
-    console.error( 'THREE.Pass: .render() must be implemented in derived pass.' );
-
-  }
-
-} );
+  render: function (renderer, writeBuffer, readBuffer, delta, maskActive) {
+    console.error("THREE.Pass: .render() must be implemented in derived pass.");
+  },
+});
 
 },{}],172:[function(require,module,exports){
 /**
@@ -28321,9 +28318,14 @@ THREE.LuminosityHighPassShader = {
  * @author alteredq / http://alteredqualia.com/
  */
 
-THREE.RenderPass = function ( scene, camera, overrideMaterial, clearColor, clearAlpha ) {
-
-  THREE.Pass.call( this );
+THREE.RenderPass = function (
+  scene,
+  camera,
+  overrideMaterial,
+  clearColor,
+  clearAlpha
+) {
+  THREE.Pass.call(this);
 
   this.scene = scene;
   this.camera = camera;
@@ -28331,55 +28333,60 @@ THREE.RenderPass = function ( scene, camera, overrideMaterial, clearColor, clear
   this.overrideMaterial = overrideMaterial;
 
   this.clearColor = clearColor;
-  this.clearAlpha = ( clearAlpha !== undefined ) ? clearAlpha : 0;
+  this.clearAlpha = clearAlpha !== undefined ? clearAlpha : 0;
 
   this.clear = true;
   this.clearDepth = false;
   this.needsSwap = false;
-
 };
 
-THREE.RenderPass.prototype = Object.assign( Object.create( THREE.Pass.prototype ), {
+THREE.RenderPass.prototype = Object.assign(
+  Object.create(THREE.Pass.prototype),
+  {
+    constructor: THREE.RenderPass,
 
-  constructor: THREE.RenderPass,
+    render: function (renderer, writeBuffer, readBuffer, delta, maskActive, object, camera, renderTarget, someBool, cameraData) {
+      // var oldAutoClear = renderer.autoClear;
+      // renderer.autoClear = true;
 
-  render: function ( renderer, writeBuffer, readBuffer, delta, maskActive ) {
+      // this.scene.overrideMaterial = this.overrideMaterial;
 
-    var oldAutoClear = renderer.autoClear;
-    renderer.autoClear = false;
+      // var oldClearColor, oldClearAlpha;
 
-    this.scene.overrideMaterial = this.overrideMaterial;
+      // if ( this.clearColor ) {
 
-    var oldClearColor, oldClearAlpha;
+      //   oldClearColor = renderer.getClearColor().getHex();
+      //   oldClearAlpha = renderer.getClearAlpha();
 
-    if ( this.clearColor ) {
+      //   renderer.setClearColor( this.clearColor, this.clearAlpha );
 
-      oldClearColor = renderer.getClearColor().getHex();
-      oldClearAlpha = renderer.getClearAlpha();
+      // }
 
-      renderer.setClearColor( this.clearColor, this.clearAlpha );
+      // if ( this.clearDepth ) {
 
-    }
+      //   renderer.clearDepth();
 
-    if ( this.clearDepth ) {
+      // }
 
-      renderer.clearDepth();
+      renderer.render(
+        object,
+        camera,
+        readBuffer,
+        true,
+        cameraData
+      );
 
-    }
+      // if ( this.clearColor ) {
 
-    renderer.render( this.scene, this.camera, this.renderToScreen ? null : readBuffer, this.clear );
+      //   renderer.setClearColor( oldClearColor, oldClearAlpha );
 
-    if ( this.clearColor ) {
+      // }
 
-      renderer.setClearColor( oldClearColor, oldClearAlpha );
-
-    }
-
-    this.scene.overrideMaterial = null;
-    renderer.autoClear = oldAutoClear;
+      // this.scene.overrideMaterial = null;
+      // renderer.autoClear = oldAutoClear;
+    },
   }
-
-} );
+);
 
 },{}],174:[function(require,module,exports){
 'use strict';
@@ -29085,7 +29092,7 @@ THREE.UnrealBloomPass.prototype = Object.assign( Object.create( THREE.Pass.proto
 
   },
 
-  render: function ( renderer, writeBuffer, readBuffer, delta, maskActive ) {
+  render: function ( renderer, writeBuffer, readBuffer, delta, maskActive, object, camera, renderTarget, someBool, cameraData) {
 
     this.oldClearColor.copy( renderer.getClearColor() );
     this.oldClearAlpha = renderer.getClearAlpha();

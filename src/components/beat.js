@@ -39,6 +39,8 @@ var song;
 var mineParticles;
 var hitSound;
 
+var scoreElements = 0;
+
 function initStatic(sceneEl) {
 	saberEls = sceneEl.querySelectorAll('[saber-controls]');
 	headset = sceneEl.querySelectorAll('.headset')[0];
@@ -863,7 +865,7 @@ AFRAME.registerComponent('beat', {
 		if (!this.replayNote.time) return;
 		const timeToScore = this.replayNote.time - getCurrentTime();
 		const payload = {index: this.replayNote.i};
-		const scoreChanged = () => this.el.emit('scoreChanged', payload, true);
+		const scoreChanged = () => this.el.sceneEl.systems.state.dispatch('scoreChanged', payload);
 		if (timeToScore < 0) {
 			scoreChanged();
 		} else {
@@ -1204,6 +1206,12 @@ AFRAME.registerComponent('beat', {
 	},
 
 	showScore: function (hand) {
+		if (scoreElements > 50) return;
+		scoreElements++;
+		setTimeout(() => {
+			scoreElements--;
+		}, 300);
+
 		let score = this.replayNote.score;
 		let data = this.data;
 		if (score < 0) {
@@ -1229,9 +1237,12 @@ AFRAME.registerComponent('beat', {
 					missEl.setAttribute('animation__motionz', 'to', -8);
 					missEl.setAttribute('animation__motionx', 'to', missEl.object3D.position.x);
 				}
-
 				missEl.play();
-				missEl.emit('beatmiss', null, true);
+				if (missEl.components.animation__alpha && missEl.components.animation__alpha.data) {
+					missEl.components.animation__alpha.onStartEvent();
+					missEl.components.animation__motionx.onStartEvent();
+					missEl.components.animation__motionz.onStartEvent();
+				}
 			} else if (score == -2) {
 				const wrongEl = this.el.sceneEl.components['pool__beatscorewrong'].requestEntity();
 				wrongEl.object3D.rotation.set(0, 0, 0);
@@ -1253,9 +1264,12 @@ AFRAME.registerComponent('beat', {
 					wrongEl.setAttribute('animation__motionz', 'to', -8);
 					wrongEl.setAttribute('animation__motionx', 'to', wrongEl.object3D.position.x);
 				}
-
 				wrongEl.play();
-				wrongEl.emit('beatwrong', null, true);
+				if (wrongEl.components.animation__alpha && wrongEl.components.animation__alpha.data) {
+					wrongEl.components.animation__alpha.onStartEvent();
+					wrongEl.components.animation__motionx.onStartEvent();
+					wrongEl.components.animation__motionz.onStartEvent();
+				}
 			}
 		} else {
 			const scoreEl = this.el.sceneEl.components['pool__beatscoreok'].requestEntity();
@@ -1302,7 +1316,13 @@ AFRAME.registerComponent('beat', {
 				scoreEl.setAttribute('animation__motionx', 'to', scoreEl.object3D.position.x);
 			}
 			scoreEl.play();
-			scoreEl.emit('beatscorestart', null, false);
+			if (scoreEl.components.animation__opacityin && scoreEl.components.animation__opacityin.data) {
+				scoreEl.components.animation__opacityin.onStartEvent();
+				scoreEl.components.animation__opacityout.onStartEvent();
+				scoreEl.components.animation__motionx.onStartEvent();
+				scoreEl.components.animation__motiony.onStartEvent();
+				scoreEl.components.animation__motionz.onStartEvent();
+			}
 		}
 	},
 

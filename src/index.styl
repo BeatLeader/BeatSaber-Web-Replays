@@ -940,6 +940,16 @@ input:checked + .slider:before {
      
 }
 
+.markers-canvas { 
+  position: absolute;
+  left: 0;
+  bottom: -10px;
+  height: 40px;
+  z-index: 8;
+  -webkit-transition: all 0.3s ease 0s;
+  transition: all 0.3s ease 0s;
+}
+
 #timeline:hover {
   .missMark {
     bottom: var(--hover-bottom);
@@ -962,6 +972,10 @@ input:checked + .slider:before {
 
   #timelineCursor {
     display: block;
+  }
+
+  .markers-canvas {
+    bottom: 16px;
   }
 }
 

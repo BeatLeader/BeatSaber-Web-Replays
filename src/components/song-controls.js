@@ -1156,8 +1156,8 @@ AFRAME.registerComponent('song-controls', {
 				if (loadedImages === markerTypes.length) {
 					drawMarkers();
 				}
+				markerImages[type] = img;
 			};
-			markerImages[type] = img;
 		});
 
 		var unasignedPauseIndex = 0;
@@ -1245,9 +1245,11 @@ AFRAME.registerComponent('song-controls', {
 			markers.forEach(marker => {
 				if (this.settings.settings[marker.type + 'Markers']) {
 					const img = markerImages[marker.type];
-					const size = marker === hoveredMarker ? 15 : 10;
-					const y = isHovering ? marker.y : height - size / 2;
-					markersContext.drawImage(img, marker.x - size / 2, y - size / 2, size, size);
+					if (img) {
+						const size = marker === hoveredMarker ? 15 : 10;
+						const y = isHovering ? marker.y : height - size / 2;
+						markersContext.drawImage(img, marker.x - size / 2, y - size / 2, size, size);
+					}
 				}
 			});
 		};

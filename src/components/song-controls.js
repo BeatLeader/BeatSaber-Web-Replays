@@ -1116,13 +1116,15 @@ AFRAME.registerComponent('song-controls', {
 
 		const markersCanvas = document.createElement('canvas');
 		markersCanvas.className = 'markers-canvas';
-		markersCanvas.width = width;
-		markersCanvas.height = height;
+		markersCanvas.width = width * window.devicePixelRatio;
+		markersCanvas.height = height * window.devicePixelRatio;
 		markersCanvas.style.width = width + 'px';
 
-		const context = canvas.getContext('2d');
-		const context2 = canvas2.getContext('2d');
+		const context = canvas.getContext('2d', {alpha: false});
+		const context2 = canvas2.getContext('2d', {alpha: false});
 		const markersContext = markersCanvas.getContext('2d');
+
+		markersContext.scale(window.devicePixelRatio, window.devicePixelRatio);
 
 		var minAcc = 100,
 			maxAcc = 0;
@@ -1237,7 +1239,7 @@ AFRAME.registerComponent('song-controls', {
 		target.minAcc = minAcc;
 		target.maxAcc = maxAcc;
 
-		let hoveredMarker = null;
+		let hoveredMarkers = [];
 		let isHovering = false;
 
 		const drawMarkers = () => {
@@ -1246,9 +1248,28 @@ AFRAME.registerComponent('song-controls', {
 				if (this.settings.settings[marker.type + 'Markers']) {
 					const img = markerImages[marker.type];
 					if (img) {
-						const size = marker === hoveredMarker ? 15 : 10;
+						const size = hoveredMarkers.includes(marker) ? 15 : 10;
 						const y = isHovering ? marker.y : height - size / 2;
-						markersContext.drawImage(img, marker.x - size / 2, y - size / 2, size, size);
+						if (hoveredMarkers.includes(marker)) {
+							markersContext.shadowColor = 'black';
+							markersContext.shadowBlur = 0;
+							markersContext.shadowOffsetX = 2;
+							markersContext.shadowOffsetY = 0;
+							markersContext.drawImage(img, marker.x - size / 2, y - size / 2, size, size);
+							markersContext.shadowOffsetX = -2;
+							markersContext.drawImage(img, marker.x - size / 2, y - size / 2, size, size);
+							markersContext.shadowOffsetX = 0;
+							markersContext.shadowOffsetY = 2;
+							markersContext.drawImage(img, marker.x - size / 2, y - size / 2, size, size);
+							markersContext.shadowOffsetY = -2;
+							markersContext.drawImage(img, marker.x - size / 2, y - size / 2, size, size);
+						} else {
+							markersContext.shadowColor = 'transparent';
+							markersContext.shadowBlur = 0;
+							markersContext.shadowOffsetX = 0;
+							markersContext.shadowOffsetY = 0;
+							markersContext.drawImage(img, marker.x - size / 2, y - size / 2, size, size);
+						}
 					}
 				}
 			});
@@ -1272,27 +1293,31 @@ AFRAME.registerComponent('song-controls', {
 			}
 		};
 
-		const getTooltipContent = marker => {
-			switch (marker.type) {
-				case 'pause':
-					return `Pause at ${formatSeconds(marker.time)} for ${formatSeconds(parseInt(marker.duration))}`;
-				case 'fail':
-					return `Failed at ${formatSeconds(marker.time)}`;
-				case 'start':
-					return `Started at ${formatSeconds(marker.time)}`;
-				case 'maxStreak':
-					return `${marker.maxStreak} streak of 115s at ${formatSeconds(marker.time)}`;
-				case 'miss':
-					return `Miss at ${formatSeconds(marker.time)}`;
-				case 'badCut':
-					return `Bad cut at ${formatSeconds(marker.time)}`;
-				case 'wall':
-					return `Wall hit at ${formatSeconds(marker.time)}`;
-				case 'bomb':
-					return `Bomb hit at ${formatSeconds(marker.time)}`;
-				default:
-					return `Event at ${formatSeconds(marker.time)}`;
-			}
+		const getTooltipContent = markers => {
+			return markers
+				.map(marker => {
+					switch (marker.type) {
+						case 'pause':
+							return `Pause at ${formatSeconds(marker.time)} for ${formatSeconds(parseInt(marker.duration))}`;
+						case 'fail':
+							return `Failed at ${formatSeconds(marker.time)}`;
+						case 'start':
+							return `Started at ${formatSeconds(marker.time)}`;
+						case 'maxStreak':
+							return `${marker.maxStreak} streak of 115s at ${formatSeconds(marker.time)}`;
+						case 'miss':
+							return `Miss at ${formatSeconds(marker.time)}`;
+						case 'badCut':
+							return `Bad cut at ${formatSeconds(marker.time)}`;
+						case 'wall':
+							return `Wall hit at ${formatSeconds(marker.time)}`;
+						case 'bomb':
+							return `Bomb hit at ${formatSeconds(marker.time)}`;
+						default:
+							return `Event at ${formatSeconds(marker.time)}`;
+					}
+				})
+				.join('\n');
 		};
 
 		const handleHover = e => {
@@ -1300,22 +1325,13 @@ AFRAME.registerComponent('song-controls', {
 			const x = e.clientX - rect.left;
 			const y = e.clientY - rect.top;
 
-			let newHoveredMarker = null;
-			for (let marker of markers) {
-				if (Math.abs(marker.x - x) < 7.5 && Math.abs(marker.currentY - y) < 7.5) {
-					newHoveredMarker = marker;
-					break;
-				}
-			}
+			hoveredMarkers = markers.filter(marker => Math.abs(marker.x - x) < 7.5 && Math.abs(marker.currentY - y) < 7.5);
 
-			if (newHoveredMarker !== hoveredMarker) {
-				hoveredMarker = newHoveredMarker;
-				drawMarkers();
-				if (hoveredMarker && this.settings.settings[hoveredMarker.type + 'Markers']) {
-					markersCanvas.title = getTooltipContent(hoveredMarker);
-				} else {
-					markersCanvas.removeAttribute('title');
-				}
+			drawMarkers();
+			if (hoveredMarkers.length > 0 && hoveredMarkers.every(marker => this.settings.settings[marker.type + 'Markers'])) {
+				markersCanvas.title = getTooltipContent(hoveredMarkers);
+			} else {
+				markersCanvas.removeAttribute('title');
 			}
 		};
 
@@ -1329,7 +1345,7 @@ AFRAME.registerComponent('song-controls', {
 
 		const handleMouseLeave = () => {
 			isHovering = false;
-			hoveredMarker = null;
+			hoveredMarkers = [];
 			markersCanvas.removeAttribute('title');
 			drawMarkers();
 		};
@@ -1339,11 +1355,10 @@ AFRAME.registerComponent('song-controls', {
 			const x = e.clientX - rect.left;
 			const y = e.clientY - rect.top;
 
-			for (let marker of markers) {
-				if (Math.abs(marker.x - x) < 7.5 && Math.abs(marker.currentY - y) < 7.5) {
-					this.seek(marker.spawnTime ? marker.spawnTime - 0.3 : marker.time - 0.3);
-					break;
-				}
+			const clickedMarker = markers.find(marker => Math.abs(marker.x - x) < 7.5 && Math.abs(marker.currentY - y) < 7.5);
+
+			if (clickedMarker) {
+				this.seek(clickedMarker.spawnTime ? clickedMarker.spawnTime - 0.3 : clickedMarker.time - 0.3);
 			}
 		};
 

@@ -1,7 +1,7 @@
 const dragDrop = require('drag-drop');
 import {checkBSOR, NoteEventType} from '../open-replay-decoder';
 import {checkSS} from '../ss-replay-decoder';
-import {Mirror_Horizontal, Mirror_Horizontal_Note} from '../chirality-support';
+import {Mirror_Horizontal, Mirror_Horizontal_Note} from '../utils/chirality-support';
 import {MultiplierCounter} from '../utils/MultiplierCounter';
 var queryParams = require('../query-params');
 

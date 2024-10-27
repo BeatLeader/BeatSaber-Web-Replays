@@ -1,8 +1,9 @@
 const utils = require('../utils');
 const dragDrop = require('drag-drop');
 import JSZip from 'jszip';
-import {Mirror_Inverse, Mirror_Horizontal, Mirror_Vertical} from '../chirality-support';
 import {postprocess, processNoodle} from '../utils/mapPostprocessor';
+
+const chiralityModes = ['VerticalStandard', 'HorizontalStandard', 'InverseStandard', 'InvertedStandard'];
 
 AFRAME.registerComponent('zip-loader', {
 	schema: {
@@ -90,7 +91,12 @@ AFRAME.registerComponent('zip-loader', {
 		try {
 			for (let index = 0; index < beatmapSets.length; index++) {
 				const set = beatmapSets[index];
-				const mode = set._beatmapCharacteristicName;
+				var mode = set._beatmapCharacteristicName;
+
+				if (mode == 'Standard' && this.data.mode && chiralityModes.includes(this.data.mode)) {
+					mode = this.data.mode;
+				}
+
 				event.beatmaps[mode] = {};
 				event.beatSpeeds[mode] = {};
 				event.beatOffsets[mode] = {};
@@ -111,7 +117,7 @@ AFRAME.registerComponent('zip-loader', {
 						var fileData = new TextDecoder('UTF-16LE').decode(fileArray);
 						mapJson = JSON.parse(fileData);
 					}
-					let map = postprocess(mapJson, event.info);
+					let map = postprocess(mapJson, event.info, mode);
 					event.beatmaps[mode][diff._difficulty] = map;
 					event.beatSpeeds[mode][diff._difficulty] = diff._noteJumpMovementSpeed;
 					event.beatOffsets[mode][diff._difficulty] = diff._noteJumpStartBeatOffset;
@@ -401,23 +407,6 @@ function generateMode(event, difficulty, mode) {
 			event.difficulties[mode] = event.difficulties[defaultMode];
 			event.customData[mode] = event.customData[defaultMode];
 
-			switch (mode) {
-				case 'VerticalStandard':
-					Mirror_Vertical(event.beatmaps[mode][difficulty], false, false);
-					break;
-				case 'HorizontalStandard':
-					Mirror_Horizontal(event.beatmaps[mode][difficulty], 4, false, false);
-					break;
-				case 'InverseStandard':
-					Mirror_Inverse(event.beatmaps[mode][difficulty], 4, true, true, false);
-					break;
-				case 'InvertedStandard':
-					Mirror_Inverse(event.beatmaps[mode][difficulty], 4, false, false, false);
-					break;
-
-				default:
-					break;
-			}
 			break;
 		}
 	}

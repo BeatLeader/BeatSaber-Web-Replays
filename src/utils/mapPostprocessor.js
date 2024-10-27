@@ -1,4 +1,5 @@
 const {get2DNoteOffset, directionVector, NoteCutDirection, signedAngleToLine, ScoringType, clone, LerpUnclamped} = require('../utils.js');
+const {Mirror_Inverse, Mirror_Horizontal, Mirror_Vertical} = require('./chirality-support.js');
 
 const ANY_CUT_DIRECTION = NoteCutDirection.Any;
 
@@ -540,8 +541,26 @@ function calculateSongTimes(map, info) {
 	});
 }
 
-function postprocess(map, info) {
+function postprocess(map, info, mode) {
 	var result = upgrade(map);
+
+	switch (mode) {
+		case 'VerticalStandard':
+			Mirror_Vertical(result, false, false);
+			break;
+		case 'HorizontalStandard':
+			Mirror_Horizontal(result, 4, false, false);
+			break;
+		case 'InverseStandard':
+			Mirror_Inverse(result, 4, true, true, false);
+			break;
+		case 'InvertedStandard':
+			Mirror_Inverse(result, 4, false, false, false);
+			break;
+
+		default:
+			break;
+	}
 
 	addScoringTypeAndChains(result);
 	processTimingGroups(result);

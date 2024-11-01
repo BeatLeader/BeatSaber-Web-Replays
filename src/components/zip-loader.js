@@ -117,7 +117,8 @@ AFRAME.registerComponent('zip-loader', {
 						var fileData = new TextDecoder('UTF-16LE').decode(fileArray);
 						mapJson = JSON.parse(fileData);
 					}
-					let map = postprocess(mapJson, event.info, mode);
+					mapJson.info = event.info;
+					let map = postprocess(mapJson, mode);
 					event.beatmaps[mode][diff._difficulty] = map;
 					event.beatSpeeds[mode][diff._difficulty] = diff._noteJumpMovementSpeed;
 					event.beatOffsets[mode][diff._difficulty] = diff._noteJumpStartBeatOffset;

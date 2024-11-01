@@ -488,7 +488,8 @@ function convertSongToBeatTime(songTime, bpm, bpmChangeDataList) {
 	return lastBpmTime + ((songTime - lastSongTime) * currentBpm) / 60.0;
 }
 
-function calculateSongTimes(map, info) {
+function calculateSongTimes(map) {
+	const info = map.info;
 	var startBpm = info._beatsPerMinute;
 	var bpmChangeDataList = [];
 
@@ -541,7 +542,18 @@ function calculateSongTimes(map, info) {
 	});
 }
 
-function postprocess(map, info, mode) {
+function updateScoringAndTypes(map) {
+	addScoringTypeAndChains(map);
+	processTimingGroups(map);
+
+	filterFakeNotes(map);
+	indexNotes(map);
+	calculateSongTimes(map);
+
+	return map;
+}
+
+function postprocess(map, mode) {
 	var result = upgrade(map);
 
 	switch (mode) {
@@ -562,15 +574,9 @@ function postprocess(map, info, mode) {
 			break;
 	}
 
-	addScoringTypeAndChains(result);
-	processTimingGroups(result);
-
-	filterFakeNotes(result);
-	indexNotes(result);
-	calculateSongTimes(result, info);
-
-	return result;
+	return updateScoringAndTypes(result);
 }
 
 module.exports.postprocess = postprocess;
 module.exports.processNoodle = processNoodle;
+module.exports.updateScoringAndTypes = updateScoringAndTypes;

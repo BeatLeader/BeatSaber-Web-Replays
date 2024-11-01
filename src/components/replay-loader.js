@@ -6,6 +6,7 @@ import {MultiplierCounter} from '../utils/MultiplierCounter';
 var queryParams = require('../query-params');
 
 import {NoteCutDirection, difficultyFromName, clamp, ScoringType, getUrlParameter, getApiUrl, getWebsiteUrl, getCookie} from '../utils';
+import {updateScoringAndTypes} from '../utils/mapPostprocessor';
 function floorToTwo(num) {
 	return Math.floor(num * 100) / 100;
 }
@@ -247,12 +248,13 @@ AFRAME.registerComponent('replay-loader', {
 	processScores: function () {
 		const replay = this.replay;
 		const map = this.challenge.beatmaps[this.challenge.mode][this.challenge.difficulty];
-		var mapnotes = [].concat(map._notes, map._chains);
+
 		const firstReplayNote = replay.notes[0];
 		const firstReplayNoteTime = firstReplayNote
 			? Math.min(floorToTwo(firstReplayNote.spawnTime), floorToTwo(firstReplayNote.eventTime))
 			: 0;
-		mapnotes = mapnotes
+		var mapnotes = []
+			.concat(map._notes, map._chains)
 			.sort((a, b) => {
 				return a._time - b._time;
 			})
@@ -328,6 +330,13 @@ AFRAME.registerComponent('replay-loader', {
 		if (brokenNotesCount > 1) {
 			const mirrorAndRecalculate = () => {
 				Mirror_Horizontal(map, 4, true, false);
+				updateScoringAndTypes(map);
+				mapnotes = []
+					.concat(map._notes, map._chains)
+					.sort((a, b) => {
+						return a._time - b._time;
+					})
+					.filter(a => (a._type == 0 || a._type == 1) && a._songTime >= firstReplayNoteTime);
 				for (let i = 0; i < noteStructs.length; i++) {
 					const element = noteStructs[i];
 					element.index = undefined;

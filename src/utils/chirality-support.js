@@ -43,7 +43,7 @@ function compareSlider(note, slider, tail) {
 
 function Mirror_Horizontal(beatmap, numberOfLines, flip_lines, remove_walls) {
 	beatmap._burstSliders.forEach(note => {
-		if (note._cutDirection != horizontal_cut_transform(note._cutDirection)) {
+		if (!flip_lines && note._cutDirection != horizontal_cut_transform(note._cutDirection)) {
 			var head = beatmap._notes.find(n => compareSlider(n, note));
 			if (head) {
 				head._lineIndex = note._tailLineIndex;
@@ -64,9 +64,6 @@ function Mirror_Horizontal(beatmap, numberOfLines, flip_lines, remove_walls) {
 			}
 		} else {
 			Mirror_Horizontal_Note(note, numberOfLines, flip_lines);
-			if (note.sliderhead) {
-				Mirror_Horizontal_Slider(note.sliderhead, numberOfLines, flip_lines);
-			}
 		}
 
 		if (note._customData && note._customData._position) {
@@ -98,7 +95,7 @@ function Mirror_Horizontal(beatmap, numberOfLines, flip_lines, remove_walls) {
 
 function Mirror_Vertical(beatmap, flip_rows, remove_walls) {
 	beatmap._burstSliders.forEach(note => {
-		if (note._cutDirection != vertical_cut_transform(note._cutDirection)) {
+		if (!flip_rows && note._cutDirection != vertical_cut_transform(note._cutDirection)) {
 			var head = beatmap._notes.find(n => compareSlider(n, note));
 			if (head) {
 				head._lineLayer = note._tailLineLayer;

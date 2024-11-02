@@ -85,19 +85,56 @@ AFRAME.registerComponent('song-controls', {
 				if (replay) {
 					let speedSlider = document.querySelectorAll('.speedSlider');
 					let speed = 1;
+
+					const addRangePoint = (modifier, speedValue) => {
+						const rangePoints = document.querySelector('.rangeTicks');
+						if (!rangePoints) return;
+
+						const svg = rangePoints.querySelector('svg');
+						const newPoint = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+						newPoint.setAttribute('class', 'range__point');
+						newPoint.setAttribute('x', `${(speedValue / 2) * 100}%`);
+						newPoint.setAttribute('y', '8');
+						newPoint.setAttribute('text-anchor', 'middle');
+						newPoint.style.fontSize = '8px';
+						newPoint.textContent = modifier;
+						svg.appendChild(newPoint);
+
+						newPoint.addEventListener('click', evt => {
+							speedSlider.forEach(element => {
+								element.value = speedValue;
+								element.dispatchEvent(new Event('input', {bubbles: true}));
+							});
+						});
+					};
+
 					if (replay.info.speed > 0.0001) {
 						speed = replay.info.speed;
 					} else {
-						if (replay.info.modifiers.includes('SS')) {
-							speed = 0.85;
-						}
-						if (replay.info.modifiers.includes('FS')) {
-							speed = 1.2;
-						}
-						if (replay.info.modifiers.includes('SF')) {
-							speed = 1.5;
+						const modifierSpeeds = {
+							SS: 0.85,
+							FS: 1.2,
+							SF: 1.5,
+						};
+
+						for (const [modifier, speedValue] of Object.entries(modifierSpeeds)) {
+							if (replay.info.modifiers.includes(modifier)) {
+								speed = speedValue;
+								if (modifier === 'SF') {
+									// Remove the 75% tick mark for SF
+									const rangeTicks = document.querySelector('.rangeTicks');
+									if (rangeTicks) {
+										const tickToRemove = rangeTicks.querySelector('rect[x="75%"]');
+										if (tickToRemove) {
+											tickToRemove.remove();
+										}
+									}
+								}
+								addRangePoint(modifier, speedValue);
+							}
 						}
 					}
+
 					this.el.addEventListener(
 						'songstartaudio',
 						() => {

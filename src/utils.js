@@ -10,6 +10,13 @@ function getWebsiteUrl() {
 	return location.host.includes('beatleader.net') ? 'https://beatleader.net' : 'https://beatleader.xyz';
 }
 
+function replaceCdnUrl(url) {
+	if (location.host.includes('beatleader.net')) {
+		return url.replace('beatleader.xyz', 'beatleader.net');
+	}
+	return url;
+}
+
 function getHorizontalPosition(lineIndex) {
 	return (-(_noteLinesCount - 1) * 0.5 + lineIndex) * _noteLinesDistance;
 }
@@ -325,6 +332,7 @@ function createSilence(seconds = 1) {
 
 module.exports.getApiUrl = getApiUrl;
 module.exports.getWebsiteUrl = getWebsiteUrl;
+module.exports.replaceCdnUrl = replaceCdnUrl;
 module.exports.getHorizontalPosition = getHorizontalPosition;
 module.exports.getHorizontalWallPosition = getHorizontalWallPosition;
 module.exports.getVerticalPosition = getVerticalPosition;

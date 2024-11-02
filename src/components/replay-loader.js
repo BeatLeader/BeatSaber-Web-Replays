@@ -5,7 +5,17 @@ import {Mirror_Horizontal, Mirror_Horizontal_Note} from '../utils/chirality-supp
 import {MultiplierCounter} from '../utils/MultiplierCounter';
 var queryParams = require('../query-params');
 
-import {NoteCutDirection, difficultyFromName, clamp, ScoringType, getUrlParameter, getApiUrl, getWebsiteUrl, getCookie} from '../utils';
+import {
+	NoteCutDirection,
+	difficultyFromName,
+	clamp,
+	ScoringType,
+	getUrlParameter,
+	getApiUrl,
+	getWebsiteUrl,
+	replaceCdnUrl,
+	getCookie,
+} from '../utils';
 import {updateScoringAndTypes} from '../utils/mapPostprocessor';
 function floorToTwo(num) {
 	return Math.floor(num * 100) / 100;
@@ -113,7 +123,7 @@ AFRAME.registerComponent('replay-loader', {
 					null
 				);
 
-				checkBSOR(data.replay, true, replay => {
+				checkBSOR(replaceCdnUrl(data.replay), true, replay => {
 					if (replay && replay.frames) {
 						if (replay.frames.length == 0) {
 							this.el.sceneEl.emit('replayloadfailed', {error: 'Replay broken, redownload and reinstall mod, please'}, null);
@@ -143,7 +153,7 @@ AFRAME.registerComponent('replay-loader', {
 					'userloaded',
 					{
 						name: this.user.name,
-						avatar: this.user.avatar,
+						avatar: replaceCdnUrl(this.user.avatar),
 						country: this.user.country,
 						countryIcon: `assets/flags/${this.user.country.toLowerCase()}.png`,
 						profileLink: `${getWebsiteUrl()}/u/${this.user.alias ? this.user.alias : this.user.id}`,
@@ -177,7 +187,7 @@ AFRAME.registerComponent('replay-loader', {
 
 	fetchByFile: function (file, itsLink) {
 		this.el.sceneEl.emit('replayloadstart', null);
-		checkBSOR(file, itsLink, replay => {
+		checkBSOR(itsLink ? replaceCdnUrl(file) : file, itsLink, replay => {
 			if (replay && replay.frames) {
 				this.replay = replay;
 				this.fetchPlayer(replay.info.playerID);
@@ -212,7 +222,7 @@ AFRAME.registerComponent('replay-loader', {
 					'userloaded',
 					{
 						name: this.user.name,
-						avatar: this.user.avatar,
+						avatar: replaceCdnUrl(this.user.avatar),
 						country: this.user.country,
 						countryIcon: `assets/flags/${this.user.country.toLowerCase()}.png`,
 						profileLink: `${getWebsiteUrl()}/u/${this.user.alias ? this.user.alias : this.user.id}`,

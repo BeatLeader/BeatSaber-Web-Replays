@@ -68,11 +68,11 @@ AFRAME.registerComponent('settings', {
 			// Narkers
 			pauseMarkers: true,
 			missMarkers: true,
-			badcutMarkers: true,
+			badCutMarkers: true,
 			bombMarkers: true,
 			wallMarkers: true,
 			failMarkers: true,
-			maxstreakMarkers: false,
+			maxStreakMarkers: true,
 
 			// HitSound
 			hitsoundName: '',

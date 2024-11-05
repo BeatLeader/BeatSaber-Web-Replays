@@ -128,6 +128,13 @@ AFRAME.registerComponent('audioanalyser', {
 		analyser.smoothingTimeConstant = data.smoothingTimeConstant;
 		this.levels = new Uint8Array(analyser.frequencyBinCount);
 		this.waveform = new Uint8Array(analyser.fftSize);
+
+		this.context.audioWorklet.addModule('vendor/phase-vocoder.js').then(() => {
+			this.phaseVocoderNode = new AudioWorkletNode(this.context, 'phase-vocoder-processor');
+			this.gainNode.disconnect();
+			this.gainNode.connect(this.phaseVocoderNode);
+			this.phaseVocoderNode.connect(this.analyser);
+		});
 	},
 
 	refreshSource: function () {
@@ -138,6 +145,35 @@ AFRAME.registerComponent('audioanalyser', {
 			this.getBufferSource().then(source => {
 				this.source = source;
 				this.source.connect(this.gainNode);
+
+				let originalPlaybackRate = source.playbackRate;
+				Object.defineProperty(source, 'playbackRate', {
+					get: function () {
+						return originalPlaybackRate;
+					},
+					set: val => {
+						const value = parseFloat(val);
+						originalPlaybackRate.value = value;
+						if (this.phaseVocoderNode) {
+							if (value > 0.05) {
+								let pitchFactor = 1 / value;
+
+								// Gradually move value closer to target
+								const lerp = (start, end, t) => start + (end - start) * t;
+
+								if (value < 0.5) {
+									// Lerp value towards 0.5 for slow speeds
+									const adjustedValue = lerp(value, 0.5, 0.5);
+									pitchFactor *= adjustedValue * 2; // Scale back up
+								}
+
+								this.phaseVocoderNode.parameters.get('pitchFactor').value = pitchFactor;
+							} else {
+								this.phaseVocoderNode.parameters.get('pitchFactor').value = 1;
+							}
+						}
+					},
+				});
 			});
 		} else {
 			this.source = this.getMediaSource();

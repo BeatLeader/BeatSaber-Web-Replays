@@ -1,6 +1,7 @@
 var sourceCreatedCallback;
 
 const isSafari = navigator.userAgent.toLowerCase().indexOf('safari') !== -1 && navigator.userAgent.toLowerCase().indexOf('chrome') === -1;
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
 AFRAME.registerComponent('beat-hit-sound', {
 	init: function () {
@@ -29,8 +30,30 @@ AFRAME.registerComponent('beat-hit-sound', {
 			this.beatIndex = -1;
 		});
 
+		// Handle visibility change only for iOS
+		this.checkInterval = null;
+		if (isIOS) {
+			document.addEventListener('visibilitychange', () => {
+				if (document.hidden) {
+					// Clear interval when app goes to background
+					if (this.checkInterval) {
+						clearInterval(this.checkInterval);
+						this.checkInterval = null;
+					}
+				} else {
+					// Restart interval when app comes to foreground
+					if (!this.checkInterval) {
+						this.checkInterval = setInterval(() => {
+							this.checkStaticHitsound();
+						}, 10);
+					}
+				}
+			});
+		}
+
 		this.refreshBuffer();
-		setInterval(() => {
+		// Start initial interval
+		this.checkInterval = setInterval(() => {
 			this.checkStaticHitsound();
 		}, 10);
 	},

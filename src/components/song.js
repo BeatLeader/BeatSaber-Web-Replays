@@ -255,7 +255,7 @@ AFRAME.registerComponent('song', {
 
 		this.lastCurrentTime = this.speed > 0.01 ? 0 : time;
 
-		this.source.playbackRate = this.speed;
+		this.source.customPlaybackRate = this.speed;
 
 		this.audio.currentTime = playTime;
 

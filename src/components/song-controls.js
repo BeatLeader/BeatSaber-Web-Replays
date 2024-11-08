@@ -737,7 +737,7 @@ AFRAME.registerComponent('song-controls', {
 
 		let speedHandler = value => {
 			firefoxHandler();
-			this.song.source.playbackRate = value;
+			this.song.source.customPlaybackRate = value;
 
 			this.song.speed = value;
 			speedSlider.forEach(element => {

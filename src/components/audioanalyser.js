@@ -142,31 +142,31 @@ AFRAME.registerComponent('audioanalyser', {
 		var data = this.data;
 
 		if (data.buffer && data.src.constructor === String) {
+			this.settings = this.el.sceneEl.components['settings'];
 			this.getBufferSource().then(source => {
 				this.source = source;
 				this.source.connect(this.gainNode);
 
-				let originalPlaybackRate = source.playbackRate;
-				Object.defineProperty(source, 'playbackRate', {
+				let originalPlaybackRate = source.customPlaybackRate;
+				Object.defineProperty(source, 'customPlaybackRate', {
 					get: function () {
-						return originalPlaybackRate;
+						return source.playbackRate.value;
 					},
 					set: val => {
 						const value = parseFloat(val);
-						originalPlaybackRate.value = value;
+						source.playbackRate.value = value;
 						if (this.phaseVocoderNode) {
-							if (value > 0.05) {
+							if (value > 0.001 && this.settings.settings.pitchCorrection) {
 								let pitchFactor = 1 / value;
 
 								// Gradually move value closer to target
 								const lerp = (start, end, t) => start + (end - start) * t;
 
-								if (value < 0.5) {
+								if (value < 0.4) {
 									// Lerp value towards 0.5 for slow speeds
-									const adjustedValue = lerp(value, 0.5, 0.5);
-									pitchFactor *= adjustedValue * 2; // Scale back up
+									const adjustedValue = lerp(value, 0.4, 0.4);
+									pitchFactor = 1 / adjustedValue;
 								}
-
 								this.phaseVocoderNode.parameters.get('pitchFactor').value = pitchFactor;
 							} else {
 								this.phaseVocoderNode.parameters.get('pitchFactor').value = 1;
@@ -174,6 +174,19 @@ AFRAME.registerComponent('audioanalyser', {
 						}
 					},
 				});
+				source.customPlaybackRate = originalPlaybackRate;
+			});
+
+			this.el.sceneEl.addEventListener('settingsChanged', e => {
+				let playbackRate = this.source.playbackRate.value;
+
+				if (this.phaseVocoderNode) {
+					if (playbackRate > 0.05 && this.settings.settings.pitchCorrection) {
+						this.phaseVocoderNode.parameters.get('pitchFactor').value = 1 / playbackRate;
+					} else {
+						this.phaseVocoderNode.parameters.get('pitchFactor').value = 1;
+					}
+				}
 			});
 		} else {
 			this.source = this.getMediaSource();

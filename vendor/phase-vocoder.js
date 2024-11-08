@@ -780,30 +780,8 @@ class PhaseVocoderProcessor extends OLAProcessor {
 		var i = 2;
 		let end = this.magnitudes.length - 2;
 
-		// Calculate average magnitude for adaptive thresholding
-		let sum = 0;
-		for (let j = 0; j < this.magnitudes.length; j++) {
-			sum += this.magnitudes[j];
-		}
-		const avgMagnitude = sum / this.magnitudes.length;
-		const threshold = avgMagnitude * 0.1; // Adaptive threshold
-
 		while (i < end) {
 			let mag = this.magnitudes[i];
-
-			// Skip if magnitude is below threshold
-			if (mag < threshold) {
-				i++;
-				continue;
-			}
-
-			// Apply frequency-dependent threshold for high frequencies
-			const freqThreshold = threshold * (1 + (i / end) * 2); // Increase threshold with frequency
-			if (mag < freqThreshold) {
-				i++;
-				continue;
-			}
-
 			if (this.magnitudes[i - 1] >= mag || this.magnitudes[i - 2] >= mag) {
 				i++;
 				continue;
@@ -823,6 +801,9 @@ class PhaseVocoderProcessor extends OLAProcessor {
 	shiftPeaks(pitchFactor) {
 		// zero-fill new spectrum
 		this.freqComplexBufferShifted.fill(0);
+
+		// Adjust window size based on pitch factor to reduce artifacts
+		const windowSizeMultiplier = Math.min(2, Math.max(1, 1 / pitchFactor));
 
 		for (var i = 0; i < this.nbPeaks; i++) {
 			let peakIndex = this.peakIndexes[i];
@@ -845,15 +826,21 @@ class PhaseVocoderProcessor extends OLAProcessor {
 				endIndex = peakIndex + Math.ceil((peakIndexAfter - peakIndex) / 2);
 			}
 
-			// Frequency-dependent region of influence width
+			// Adaptive window size based on frequency and pitch factor
 			const freqRatio = peakIndex / this.magnitudes.length;
-			const maxWidth = Math.max(4, Math.floor(32 * (1 - freqRatio))); // Narrower for high frequencies
+			const baseWidth = Math.floor(64 * windowSizeMultiplier);
+			const maxWidth = Math.max(8, Math.floor(baseWidth * Math.pow(1 - freqRatio, 0.7)));
 			startIndex = Math.max(startIndex, peakIndex - maxWidth / 2);
 			endIndex = Math.min(endIndex, peakIndex + maxWidth / 2);
 
 			// shift whole region of influence around peak to shifted peak
 			let startOffset = startIndex - peakIndex;
 			let endOffset = endIndex - peakIndex;
+
+			// Apply gaussian window for smoother blending
+			const windowCenter = (endOffset - startOffset) / 2;
+			const windowWidth = windowCenter * 1.5;
+
 			for (var j = startOffset; j < endOffset; j++) {
 				let binIndex = peakIndex + j;
 				let binIndexShifted = peakIndexShifted + j;
@@ -862,14 +849,26 @@ class PhaseVocoderProcessor extends OLAProcessor {
 					continue;
 				}
 
-				// Amplitude scaling based on frequency
-				let amplitudeScale = 1.0;
-				if (binIndexShifted > this.magnitudes.length * 0.75) {
-					// High frequencies
-					amplitudeScale = 0.5; // Reduce amplitude of high frequencies
+				// Gaussian window weight
+				const windowWeight = Math.exp(-0.5 * Math.pow((j - startOffset - windowCenter) / windowWidth, 2));
+
+				// Improved amplitude scaling
+				let amplitudeScale = windowWeight;
+				const freqPos = binIndexShifted / this.magnitudes.length;
+
+				// Progressive high frequency attenuation
+				if (freqPos > 0.4) {
+					amplitudeScale *= Math.pow(1 - (freqPos - 0.4) / 0.6, 1.5);
 				}
 
-				// apply phase correction
+				// Pitch-dependent amplitude adjustment
+				if (pitchFactor > 1) {
+					amplitudeScale *= Math.pow(1 / pitchFactor, 0.6);
+				} else {
+					amplitudeScale *= Math.pow(pitchFactor, 0.3);
+				}
+
+				// Smoother phase correction
 				let omegaDelta = (2 * Math.PI * (binIndexShifted - binIndex)) / this.fftSize;
 				let phaseShiftReal = Math.cos(omegaDelta * this.timeCursor);
 				let phaseShiftImag = Math.sin(omegaDelta * this.timeCursor);

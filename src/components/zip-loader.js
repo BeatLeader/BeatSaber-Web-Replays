@@ -35,6 +35,11 @@ AFRAME.registerComponent('zip-loader', {
 			}
 		};
 
+		this.el.sceneEl.addEventListener('replayloadstart', () => {
+			this.fetchedZip = '';
+			this.fetched = false;
+		});
+
 		if (!this.data.id && !this.data.hash) {
 			this.el.sceneEl.addEventListener('replayInfofetched', fetchCallback);
 			this.el.sceneEl.addEventListener('replayfetched', fetchCallback);

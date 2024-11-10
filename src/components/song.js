@@ -106,10 +106,10 @@ AFRAME.registerComponent('song', {
 			this.el.sceneEl.emit('songprocessingstart', null, false);
 			this.getAudio()
 				.then(source => {
-					this.el.sceneEl.emit('songprocessingfinish', null, false);
-					if (this.data.isPlaying && this.data.isBeatsPreloaded) {
+					if (this.data.isBeatsPreloaded) {
 						this.startAudio(queryParamTime);
 					}
+					this.el.sceneEl.emit('songprocessingfinish', null, false);
 				})
 				.catch(console.error);
 			return;
@@ -212,10 +212,11 @@ AFRAME.registerComponent('song', {
 				} else {
 					this.audio.src = this.audioAnalyser.data.src;
 				}
-				this.el.sceneEl.emit('songprocessingfinish', null, false);
+
 				if (this.data.isPlaying) {
 					this.startAudio();
 				}
+				this.el.sceneEl.emit('songprocessingfinish', null, false);
 			},
 			ONCE
 		);

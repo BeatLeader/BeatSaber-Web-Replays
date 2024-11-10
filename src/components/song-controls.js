@@ -56,9 +56,8 @@ AFRAME.registerComponent('song-controls', {
 		analyser.addEventListener('audioanalyserbuffersource', evt => {
 			const songDuration = evt.detail.buffer.duration;
 			document.getElementById('songDuration').innerHTML = formatSeconds(songDuration);
-			if (this.shouldShowMisses) {
+			if (this.replayData) {
 				this.makeTimelineOverlay(this.replayData, evt.detail.buffer, this);
-				this.shouldShowMisses = false;
 			}
 			if (queryParamTime >= 0 && queryParamTime <= songDuration) {
 				const percent = queryParamTime / songDuration;
@@ -73,8 +72,6 @@ AFRAME.registerComponent('song-controls', {
 		this.el.sceneEl.addEventListener('replayloaded', event => {
 			if (this.song.source && this.song.source.buffer) {
 				this.makeTimelineOverlay(event.detail, this.song.source.buffer, this);
-			} else {
-				this.shouldShowMisses = true;
 			}
 			this.replayData = event.detail;
 
@@ -1139,7 +1136,13 @@ AFRAME.registerComponent('song-controls', {
 		const width = timeline.getBoundingClientRect().width;
 		const duration = buffer.duration;
 
+		let containers = document.querySelectorAll('.timeline-container');
+		containers.forEach(element => {
+			timeline.removeChild(element);
+		});
+
 		const container = document.createElement('div');
+		container.className = 'timeline-container';
 
 		const canvas = document.createElement('canvas');
 		canvas.className = 'acc-canvas';

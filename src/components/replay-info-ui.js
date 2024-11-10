@@ -23,14 +23,16 @@ AFRAME.registerComponent('replay-info-ui', {
 	},
 
 	checkMapVersion: function () {
+		let outdatedMap = document.getElementById('outdatedMap');
 		if (
 			this.replayLoader.replay &&
 			this.zipLoader.fetchedZipUrl &&
 			this.zipLoader.fetchedZipUrl.includes('beatsaver') &&
 			!this.zipLoader.fetchedZipUrl.includes(this.replayLoader.replay.info.hash.substring(0, 40).toLowerCase())
 		) {
-			let outdatedMap = document.getElementById('outdatedMap');
 			outdatedMap.style.display = 'block';
+		} else {
+			outdatedMap.style.display = 'none';
 		}
 	},
 

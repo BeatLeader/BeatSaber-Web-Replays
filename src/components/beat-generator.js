@@ -38,17 +38,20 @@ AFRAME.registerComponent('beat-generator', {
 		this.beatData = null;
 		this.customData = null;
 		this.beatDataProcessed = false;
-		this.beatContainer = document.getElementById('beatContainer');
+
 		this.beatsTime = undefined;
+		this.eventsTime = undefined;
 		this.bpm = undefined;
-		this.stageColors = this.el.components['stage-colors'];
-		this.twister = document.getElementById('twister');
-		this.leftStageLasers = document.getElementById('leftStageLasers');
-		this.rightStageLasers = document.getElementById('rightStageLasers');
 		this.colors = {};
 		this.spawnRotation = {rotation: 0};
 		this.spawnRotationKeys = [];
 		this.spawnRotations = {};
+
+		this.beatContainer = document.getElementById('beatContainer');
+		this.stageColors = this.el.components['stage-colors'];
+		this.twister = document.getElementById('twister');
+		this.leftStageLasers = document.getElementById('leftStageLasers');
+		this.rightStageLasers = document.getElementById('rightStageLasers');
 
 		this.el.addEventListener('cleargame', this.clearBeats.bind(this));
 		this.el.addEventListener('challengeloadend', evt => {
@@ -71,6 +74,24 @@ AFRAME.registerComponent('beat-generator', {
 				this.noodleExtensions = this.customData._requirements.includes('Noodle Extensions');
 			}
 		});
+		this.el.addEventListener('replayloadstart', evt => {
+			this.replayFetched = false;
+			this.beatData = null;
+			this.customData = null;
+			this.beatDataProcessed = false;
+
+			this.beatsTime = undefined;
+			this.eventsTime = undefined;
+
+			this.bpm = undefined;
+			this.colors = {};
+			this.spawnRotation = {rotation: 0};
+			this.spawnRotationKeys = [];
+			this.spawnRotations = {};
+			this.beatData = null;
+			this.beatsPreloadTime = undefined;
+			this.clearBeats(true);
+		});
 		this.el.addEventListener('replayfetched', evt => {
 			if (evt.detail.jd != null) {
 				if (this.bpm) {
@@ -83,7 +104,7 @@ AFRAME.registerComponent('beat-generator', {
 			this.replayFetched = true;
 		});
 
-		this.el.addEventListener('replayloaded', evt => {
+		this.el.addEventListener('songprocessingfinish', evt => {
 			this.processBeats();
 		});
 		this.el.sceneEl.addEventListener('colorChanged', e => {
@@ -95,19 +116,6 @@ AFRAME.registerComponent('beat-generator', {
 		setInterval(() => {
 			this.manualTick();
 		}, 0);
-	},
-
-	update: function (oldData) {
-		if (!this.beatmaps) {
-			return;
-		}
-
-		if ((oldData.difficulty && oldData.difficulty !== this.data.difficulty) || (oldData.mode && oldData.mode !== this.data.mode)) {
-			this.beatData = this.beatmaps[this.data.mode][this.data.difficulty];
-			if (this.beatData) {
-				this.processBeats();
-			}
-		}
 	},
 
 	beatSpeedOrDefault: function () {

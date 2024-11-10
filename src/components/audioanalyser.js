@@ -209,11 +209,17 @@ AFRAME.registerComponent('audioanalyser', {
 
 	getBufferSource: function () {
 		var data = this.data;
+		if (this.audioSource) {
+			this.audioSource.stop();
+			this.audioSource.disconnect();
+		}
 		return this.fetchAudioBuffer(data.src)
 			.then(() => {
-				var source;
+				var source = this.audioSource;
+
 				source = this.context.createBufferSource();
 				source.buffer = audioBufferCache[data.src];
+				this.audioSource = source;
 				this.el.emit('audioanalyserbuffersource', source, false);
 				return source;
 			})

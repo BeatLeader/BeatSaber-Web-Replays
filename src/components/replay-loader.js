@@ -91,6 +91,8 @@ AFRAME.registerComponent('replay-loader', {
 
 	downloadReplay: function (hash, scoreId, error) {
 		this.el.sceneEl.emit('replayloadstart', null);
+		this.challenge = null;
+		this.notes = null;
 		fetch(
 			getApiUrl() +
 				'/score/' +
@@ -187,6 +189,8 @@ AFRAME.registerComponent('replay-loader', {
 
 	fetchByFile: function (file, itsLink) {
 		this.el.sceneEl.emit('replayloadstart', null);
+		this.challenge = null;
+		this.notes = null;
 		checkBSOR(itsLink ? replaceCdnUrl(file) : file, itsLink, replay => {
 			if (replay && replay.frames) {
 				this.replay = replay;

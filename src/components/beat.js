@@ -519,6 +519,7 @@ AFRAME.registerComponent('beat', {
 		if (data.type == 'mine') {
 			// Reset mine.
 			this.blockEl.getObject3D('mesh').material = this.el.sceneEl.systems.materials['mineMaterial' + this.data.color];
+			this.blockEl.getObject3D('mesh').material.color = new THREE.Color(settings.settings.bombColor);
 			this.resetMineFragments();
 
 			const bombs = replayLoader.bombs;
@@ -697,7 +698,7 @@ AFRAME.registerComponent('beat', {
 				roughness: 0.68,
 				metalness: 0.48,
 				sphericalEnvMap: '#mineTexture',
-				color: new THREE.Color(COLORS.MINE_RED),
+				color: new THREE.Color(settings.settings.bombColor),
 			});
 		} else {
 			if (blockEl.materialToReset) {
@@ -759,6 +760,7 @@ AFRAME.registerComponent('beat', {
 		var fragment;
 		var fragments = this.el.sceneEl.systems['mine-fragments-loader'].fragments.children;
 		var material = this.el.sceneEl.systems.materials['mineMaterial' + this.data.color];
+		material.color = new THREE.Color(settings.settings.bombColor);
 
 		this.mineFragments = [];
 		this.mineBroken = document.createElement('a-entity');

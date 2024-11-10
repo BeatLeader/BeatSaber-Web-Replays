@@ -33,6 +33,7 @@ AFRAME.registerComponent('settings', {
 			redBGColor: '#ff1f81',
 			redBrightBGColor: '#ff6bb0',
 			wallColor: '#f01978',
+			bombColor: '#000000',
 			backgroundColor: '#000000',
 
 			// Camera

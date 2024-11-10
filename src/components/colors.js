@@ -139,6 +139,13 @@ AFRAME.registerComponent('colors', {
 			this.settings.sync();
 		});
 
+		let bombColorInput = document.getElementById('bombsColor');
+		bombColorInput.value = this.settings.settings.bombColor;
+		bombColorInput.addEventListener('input', e => {
+			this.settings.settings.bombColor = e.target.value;
+			this.settings.sync();
+		});
+
 		let leftSaberColorInput = document.getElementById('leftSaberColor');
 		leftSaberColorInput.addEventListener('input', e => {
 			this.el.sceneEl.emit('colorChanged', {hand: 'left', color: e.target.value}, null);

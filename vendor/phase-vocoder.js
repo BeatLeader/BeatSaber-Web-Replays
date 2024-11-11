@@ -295,137 +295,113 @@ FFT.prototype._singleTransform4 = function _singleTransform4(outOff, off, step) 
 
 // Real input radix-4 implementation
 FFT.prototype._realTransform4 = function _realTransform4() {
-	var out = this._out;
-	var size = this._csize;
+	const out = this._out;
+	const size = this._csize;
+	const bitrev = this._bitrev;
+	const table = this.table;
+	const inv = this._inv ? -1 : 1;
 
 	// Initial step (permute and transform)
-	var width = this._width;
-	var step = 1 << width;
-	var len = (size / step) << 1;
+	let width = this._width;
+	let step = 1 << width;
+	let len = (size / step) << 1;
 
-	var outOff;
-	var t;
-	var bitrev = this._bitrev;
+	// Optimize initial transform based on length
 	if (len === 4) {
-		for (outOff = 0, t = 0; outOff < size; outOff += len, t++) {
+		for (let outOff = 0, t = 0; outOff < size; outOff += len, t++) {
 			const off = bitrev[t];
 			this._singleRealTransform2(outOff, off >>> 1, step >>> 1);
 		}
 	} else {
-		// len === 8
-		for (outOff = 0, t = 0; outOff < size; outOff += len, t++) {
+		for (let outOff = 0, t = 0; outOff < size; outOff += len, t++) {
 			const off = bitrev[t];
 			this._singleRealTransform4(outOff, off >>> 1, step >>> 1);
 		}
 	}
 
 	// Loop through steps in decreasing order
-	var inv = this._inv ? -1 : 1;
-	var table = this.table;
 	for (step >>= 2; step >= 2; step >>= 2) {
 		len = (size / step) << 1;
-		var halfLen = len >>> 1;
-		var quarterLen = halfLen >>> 1;
-		var hquarterLen = quarterLen >>> 1;
+		const halfLen = len >>> 1;
+		const quarterLen = halfLen >>> 1;
+		const hquarterLen = quarterLen >>> 1;
 
 		// Loop through offsets in the data
-		for (outOff = 0; outOff < size; outOff += len) {
-			for (var i = 0, k = 0; i <= hquarterLen; i += 2, k += step) {
-				var A = outOff + i;
-				var B = A + quarterLen;
-				var C = B + quarterLen;
-				var D = C + quarterLen;
+		for (let outOff = 0; outOff < size; outOff += len) {
+			for (let i = 0, k = 0; i <= hquarterLen; i += 2, k += step) {
+				const A = outOff + i;
+				const B = A + quarterLen;
+				const C = B + quarterLen;
+				const D = C + quarterLen;
 
-				// Original values
-				var Ar = out[A];
-				var Ai = out[A + 1];
-				var Br = out[B];
-				var Bi = out[B + 1];
-				var Cr = out[C];
-				var Ci = out[C + 1];
-				var Dr = out[D];
-				var Di = out[D + 1];
+				// Load values
+				const Ar = out[A],
+					Ai = out[A + 1];
+				const Br = out[B],
+					Bi = out[B + 1];
+				const Cr = out[C],
+					Ci = out[C + 1];
+				const Dr = out[D],
+					Di = out[D + 1];
 
-				// Middle values
-				var MAr = Ar;
-				var MAi = Ai;
+				// Table lookups
+				const tableBr = table[k],
+					tableBi = inv * table[k + 1];
+				const tableCr = table[k << 1],
+					tableCi = inv * table[(k << 1) + 1];
+				const tableDr = table[k * 3],
+					tableDi = inv * table[k * 3 + 1];
 
-				var tableBr = table[k];
-				var tableBi = inv * table[k + 1];
-				var MBr = Br * tableBr - Bi * tableBi;
-				var MBi = Br * tableBi + Bi * tableBr;
+				// Compute middle values
+				const MBr = Br * tableBr - Bi * tableBi;
+				const MBi = Br * tableBi + Bi * tableBr;
+				const MCr = Cr * tableCr - Ci * tableCi;
+				const MCi = Cr * tableCi + Ci * tableCr;
+				const MDr = Dr * tableDr - Di * tableDi;
+				const MDi = Dr * tableDi + Di * tableDr;
 
-				var tableCr = table[2 * k];
-				var tableCi = inv * table[2 * k + 1];
-				var MCr = Cr * tableCr - Ci * tableCi;
-				var MCi = Cr * tableCi + Ci * tableCr;
+				// Pre-final values
+				const T0r = Ar + MCr,
+					T0i = Ai + MCi;
+				const T1r = Ar - MCr,
+					T1i = Ai - MCi;
+				const T2r = MBr + MDr,
+					T2i = MBi + MDi;
+				const T3r = inv * (MBr - MDr),
+					T3i = inv * (MBi - MDi);
 
-				var tableDr = table[3 * k];
-				var tableDi = inv * table[3 * k + 1];
-				var MDr = Dr * tableDr - Di * tableDi;
-				var MDi = Dr * tableDi + Di * tableDr;
+				// Store final values
+				out[A] = T0r + T2r;
+				out[A + 1] = T0i + T2i;
+				out[B] = T1r + T3i;
+				out[B + 1] = T1i - T3r;
 
-				// Pre-Final values
-				var T0r = MAr + MCr;
-				var T0i = MAi + MCi;
-				var T1r = MAr - MCr;
-				var T1i = MAi - MCi;
-				var T2r = MBr + MDr;
-				var T2i = MBi + MDi;
-				var T3r = inv * (MBr - MDr);
-				var T3i = inv * (MBi - MDi);
-
-				// Final values
-				var FAr = T0r + T2r;
-				var FAi = T0i + T2i;
-
-				var FBr = T1r + T3i;
-				var FBi = T1i - T3r;
-
-				out[A] = FAr;
-				out[A + 1] = FAi;
-				out[B] = FBr;
-				out[B + 1] = FBi;
-
-				// Output final middle point
+				// Handle middle point
 				if (i === 0) {
-					var FCr = T0r - T2r;
-					var FCi = T0i - T2i;
-					out[C] = FCr;
-					out[C + 1] = FCi;
+					out[C] = T0r - T2r;
+					out[C + 1] = T0i - T2i;
 					continue;
 				}
 
-				// Do not overwrite ourselves
 				if (i === hquarterLen) continue;
 
-				// In the flipped case:
-				// MAi = -MAi
-				// MBr=-MBi, MBi=-MBr
-				// MCr=-MCr
-				// MDr=MDi, MDi=MDr
-				var ST0r = T1r;
-				var ST0i = -T1i;
-				var ST1r = T0r;
-				var ST1i = -T0i;
-				var ST2r = -inv * T3i;
-				var ST2i = -inv * T3r;
-				var ST3r = -inv * T2i;
-				var ST3i = -inv * T2r;
+				// Compute flipped case
+				const SA = outOff + quarterLen - i;
+				const SB = outOff + halfLen - i;
 
-				var SFAr = ST0r + ST2r;
-				var SFAi = ST0i + ST2i;
+				const ST0r = T1r,
+					ST0i = -T1i;
+				const ST1r = T0r,
+					ST1i = -T0i;
+				const ST2r = -inv * T3i,
+					ST2i = -inv * T3r;
+				const ST3r = -inv * T2i,
+					ST3i = -inv * T2r;
 
-				var SFBr = ST1r + ST3i;
-				var SFBi = ST1i - ST3r;
-
-				var SA = outOff + quarterLen - i;
-				var SB = outOff + halfLen - i;
-
-				out[SA] = SFAr;
-				out[SA + 1] = SFAi;
-				out[SB] = SFBr;
-				out[SB + 1] = SFBi;
+				out[SA] = ST0r + ST2r;
+				out[SA + 1] = ST0i + ST2i;
+				out[SB] = ST1r + ST3i;
+				out[SB + 1] = ST1i - ST3r;
 			}
 		}
 	}
@@ -693,9 +669,10 @@ class PhaseVocoderProcessor extends OLAProcessor {
 		this.fftSize = this.blockSize;
 		this.timeCursor = 0;
 
+		// Pre-calculate Hann window
 		this.hannWindow = genHannWindow(this.blockSize);
 
-		// prepare FFT and pre-allocate buffers
+		// Pre-allocate reusable arrays
 		this.fft = new FFT(this.fftSize);
 		this.freqComplexBuffer = this.fft.createComplexArray();
 		this.freqComplexBufferShifted = this.fft.createComplexArray();
@@ -703,16 +680,19 @@ class PhaseVocoderProcessor extends OLAProcessor {
 		this.magnitudes = new Float32Array(this.fftSize / 2 + 1);
 		this.peakIndexes = new Int32Array(this.magnitudes.length);
 		this.nbPeaks = 0;
+
+		// Pre-calculate constants
+		this.TWO_PI = 2 * Math.PI;
+		this.INV_FFT_SIZE = 1 / this.fftSize;
 	}
 
 	processOLA(inputs, outputs, parameters) {
-		// no automation, take last value
 		const pitchFactor = parameters.pitchFactor[parameters.pitchFactor.length - 1];
 
-		// If pitch factor is 1, just copy input to output
+		// Fast path for no pitch shift
 		if (Math.abs(pitchFactor - 1.0) < 0.001) {
-			for (var i = 0; i < this.nbInputs; i++) {
-				for (var j = 0; j < inputs[i].length; j++) {
+			for (let i = 0; i < this.nbInputs; i++) {
+				for (let j = 0; j < inputs[i].length; j++) {
 					outputs[i][j].set(inputs[i][j]);
 				}
 			}
@@ -720,32 +700,31 @@ class PhaseVocoderProcessor extends OLAProcessor {
 			return;
 		}
 
-		// Fixed volume compensation factor
 		const volumeCompensation = 4.0;
 
-		for (var i = 0; i < this.nbInputs; i++) {
-			for (var j = 0; j < inputs[i].length; j++) {
-				// big assumption here: output is symetric to input
-				var input = inputs[i][j];
-				var output = outputs[i][j];
+		for (let i = 0; i < this.nbInputs; i++) {
+			for (let j = 0; j < inputs[i].length; j++) {
+				const input = inputs[i][j];
+				const output = outputs[i][j];
 
 				this.applyHannWindow(input);
-
 				this.fft.realTransform(this.freqComplexBuffer, input);
-
 				this.computeMagnitudes();
 				this.findPeaks();
 				this.shiftPeaks(pitchFactor);
 
-				// Apply fixed volume compensation
-				for (let k = 0; k < this.freqComplexBufferShifted.length; k++) {
+				// Batch multiply for volume compensation
+				const len = this.freqComplexBufferShifted.length;
+				for (let k = 0; k < len; k += 4) {
 					this.freqComplexBufferShifted[k] *= volumeCompensation;
+					this.freqComplexBufferShifted[k + 1] *= volumeCompensation;
+					this.freqComplexBufferShifted[k + 2] *= volumeCompensation;
+					this.freqComplexBufferShifted[k + 3] *= volumeCompensation;
 				}
 
 				this.fft.completeSpectrum(this.freqComplexBufferShifted);
 				this.fft.inverseTransform(this.timeComplexBuffer, this.freqComplexBufferShifted);
 				this.fft.fromComplexArray(this.timeComplexBuffer, output);
-
 				this.applyHannWindow(output);
 			}
 		}
@@ -753,138 +732,97 @@ class PhaseVocoderProcessor extends OLAProcessor {
 		this.timeCursor += this.hopSize;
 	}
 
-	/** Apply Hann window in-place */
 	applyHannWindow(input) {
-		for (var i = 0; i < this.blockSize; i++) {
-			input[i] = input[i] * this.hannWindow[i];
+		const len = this.blockSize;
+		for (let i = 0; i < len; i += 4) {
+			input[i] *= this.hannWindow[i];
+			input[i + 1] *= this.hannWindow[i + 1];
+			input[i + 2] *= this.hannWindow[i + 2];
+			input[i + 3] *= this.hannWindow[i + 3];
 		}
 	}
 
-	/** Compute squared magnitudes for peak finding **/
 	computeMagnitudes() {
-		var i = 0,
+		let i = 0,
 			j = 0;
-		while (i < this.magnitudes.length) {
-			let real = this.freqComplexBuffer[j];
-			let imag = this.freqComplexBuffer[j + 1];
-			// no need to sqrt for peak finding
-			this.magnitudes[i] = real ** 2 + imag ** 2;
-			i += 1;
+		const len = this.magnitudes.length;
+		while (i < len) {
+			const real = this.freqComplexBuffer[j];
+			const imag = this.freqComplexBuffer[j + 1];
+			this.magnitudes[i] = real * real + imag * imag;
+			i++;
 			j += 2;
 		}
 	}
 
-	/** Find peaks in spectrum magnitudes **/
 	findPeaks() {
 		this.nbPeaks = 0;
-		var i = 2;
-		let end = this.magnitudes.length - 2;
+		let i = 2;
+		const end = this.magnitudes.length - 2;
 
 		while (i < end) {
-			let mag = this.magnitudes[i];
-			if (this.magnitudes[i - 1] >= mag || this.magnitudes[i - 2] >= mag) {
-				i++;
-				continue;
-			}
-			if (this.magnitudes[i + 1] >= mag || this.magnitudes[i + 2] >= mag) {
+			const mag = this.magnitudes[i];
+			if (
+				this.magnitudes[i - 1] >= mag ||
+				this.magnitudes[i - 2] >= mag ||
+				this.magnitudes[i + 1] >= mag ||
+				this.magnitudes[i + 2] >= mag
+			) {
 				i++;
 				continue;
 			}
 
-			this.peakIndexes[this.nbPeaks] = i;
-			this.nbPeaks++;
+			this.peakIndexes[this.nbPeaks++] = i;
 			i += 2;
 		}
 	}
 
-	/** Shift peaks and regions of influence by pitchFactor into new specturm */
 	shiftPeaks(pitchFactor) {
-		// zero-fill new spectrum
 		this.freqComplexBufferShifted.fill(0);
 
-		// Adjust window size based on pitch factor to reduce artifacts
 		const windowSizeMultiplier = Math.min(2, Math.max(1, 1 / pitchFactor));
+		const maxFreqIndex = this.magnitudes.length - 1;
 
-		for (var i = 0; i < this.nbPeaks; i++) {
-			let peakIndex = this.peakIndexes[i];
-			let peakIndexShifted = Math.round(peakIndex * pitchFactor);
+		for (let i = 0; i < this.nbPeaks; i++) {
+			const peakIndex = this.peakIndexes[i];
+			const peakIndexShifted = Math.round(peakIndex * pitchFactor);
 
-			// Skip if shifted peak would be beyond Nyquist frequency
-			if (peakIndexShifted >= this.magnitudes.length - 1) {
-				continue;
-			}
+			if (peakIndexShifted >= maxFreqIndex) continue;
 
-			// find region of influence
-			var startIndex = 0;
-			var endIndex = this.fftSize;
-			if (i > 0) {
-				let peakIndexBefore = this.peakIndexes[i - 1];
-				startIndex = peakIndex - Math.floor((peakIndex - peakIndexBefore) / 2);
-			}
-			if (i < this.nbPeaks - 1) {
-				let peakIndexAfter = this.peakIndexes[i + 1];
-				endIndex = peakIndex + Math.ceil((peakIndexAfter - peakIndex) / 2);
-			}
-
-			// Adaptive window size based on frequency and pitch factor
-			const freqRatio = peakIndex / this.magnitudes.length;
+			// Calculate window parameters
+			const freqRatio = peakIndex / maxFreqIndex;
 			const baseWidth = Math.floor(64 * windowSizeMultiplier);
 			const maxWidth = Math.max(8, Math.floor(baseWidth * Math.pow(1 - freqRatio, 0.7)));
-			startIndex = Math.max(startIndex, peakIndex - maxWidth / 2);
-			endIndex = Math.min(endIndex, peakIndex + maxWidth / 2);
+			const halfWidth = maxWidth >> 1;
 
-			// shift whole region of influence around peak to shifted peak
-			let startOffset = startIndex - peakIndex;
-			let endOffset = endIndex - peakIndex;
+			const startIndex = Math.max(0, peakIndex - halfWidth);
+			const endIndex = Math.min(this.fftSize, peakIndex + halfWidth);
 
-			// Apply gaussian window for smoother blending
-			const windowCenter = (endOffset - startOffset) / 2;
-			const windowWidth = windowCenter * 1.5;
+			// Pre-calculate phase shift values
+			const omegaDelta = this.TWO_PI * (peakIndexShifted - peakIndex) * this.INV_FFT_SIZE;
+			const phaseShiftReal = Math.cos(omegaDelta * this.timeCursor);
+			const phaseShiftImag = Math.sin(omegaDelta * this.timeCursor);
 
-			for (var j = startOffset; j < endOffset; j++) {
-				let binIndex = peakIndex + j;
-				let binIndexShifted = peakIndexShifted + j;
+			// Calculate amplitude scaling once
+			let amplitudeScale = 1.0;
+			const freqPos = peakIndexShifted / maxFreqIndex;
+			if (freqPos > 0.4) {
+				amplitudeScale *= Math.pow(1 - (freqPos - 0.4) / 0.6, 1.5);
+			}
+			amplitudeScale *= pitchFactor > 1 ? Math.pow(1 / pitchFactor, 0.6) : Math.pow(pitchFactor, 0.3);
 
-				if (binIndexShifted >= this.magnitudes.length || binIndexShifted < 0) {
-					continue;
-				}
+			for (let binIndex = startIndex; binIndex < endIndex; binIndex++) {
+				const binIndexShifted = Math.round(binIndex * pitchFactor);
+				if (binIndexShifted >= maxFreqIndex || binIndexShifted < 0) continue;
 
-				// Gaussian window weight
-				const windowWeight = Math.exp(-0.5 * Math.pow((j - startOffset - windowCenter) / windowWidth, 2));
+				const indexReal = binIndex << 1;
+				const indexShiftedReal = binIndexShifted << 1;
 
-				// Improved amplitude scaling
-				let amplitudeScale = windowWeight;
-				const freqPos = binIndexShifted / this.magnitudes.length;
+				const valueReal = this.freqComplexBuffer[indexReal] * amplitudeScale;
+				const valueImag = this.freqComplexBuffer[indexReal + 1] * amplitudeScale;
 
-				// Progressive high frequency attenuation
-				if (freqPos > 0.4) {
-					amplitudeScale *= Math.pow(1 - (freqPos - 0.4) / 0.6, 1.5);
-				}
-
-				// Pitch-dependent amplitude adjustment
-				if (pitchFactor > 1) {
-					amplitudeScale *= Math.pow(1 / pitchFactor, 0.6);
-				} else {
-					amplitudeScale *= Math.pow(pitchFactor, 0.3);
-				}
-
-				// Smoother phase correction
-				let omegaDelta = (2 * Math.PI * (binIndexShifted - binIndex)) / this.fftSize;
-				let phaseShiftReal = Math.cos(omegaDelta * this.timeCursor);
-				let phaseShiftImag = Math.sin(omegaDelta * this.timeCursor);
-
-				let indexReal = binIndex * 2;
-				let indexImag = indexReal + 1;
-				let valueReal = this.freqComplexBuffer[indexReal] * amplitudeScale;
-				let valueImag = this.freqComplexBuffer[indexImag] * amplitudeScale;
-
-				let valueShiftedReal = valueReal * phaseShiftReal - valueImag * phaseShiftImag;
-				let valueShiftedImag = valueReal * phaseShiftImag + valueImag * phaseShiftReal;
-
-				let indexShiftedReal = binIndexShifted * 2;
-				let indexShiftedImag = indexShiftedReal + 1;
-				this.freqComplexBufferShifted[indexShiftedReal] += valueShiftedReal;
-				this.freqComplexBufferShifted[indexShiftedImag] += valueShiftedImag;
+				this.freqComplexBufferShifted[indexShiftedReal] += valueReal * phaseShiftReal - valueImag * phaseShiftImag;
+				this.freqComplexBufferShifted[indexShiftedReal + 1] += valueReal * phaseShiftImag + valueImag * phaseShiftReal;
 			}
 		}
 	}

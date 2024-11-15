@@ -47,7 +47,6 @@ AFRAME.registerComponent('zip-loader', {
 	},
 
 	update: function (oldData) {
-		this.el.sceneEl.emit('cleargame', null, false);
 		if (this.fetched) return;
 		if (this.data.id && !this.data.hash) {
 			if (oldData.id !== this.data.id) {

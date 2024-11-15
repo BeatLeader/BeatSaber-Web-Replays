@@ -122,7 +122,7 @@ AFRAME.registerComponent('song', {
 
 		// Play if we have loaded and were waiting for beats to preload.
 		if (!oldData.isBeatsPreloaded && this.data.isBeatsPreloaded && this.source) {
-			this.startAudio();
+			this.startAudio(queryParamTime);
 			if (data.isPaused) {
 				this.audioAnalyser.suspendContext();
 				this.audio.pause();
@@ -252,7 +252,11 @@ AFRAME.registerComponent('song', {
 		this.isPlaying = true;
 		const playTime = time || skipDebug || 0;
 		this.songStartTime = (this.context.currentTime * this.speed - playTime) / (this.speed > 0.01 ? this.speed : 0.01);
-		this.source.start(0, playTime);
+		try {
+			this.source.start(0, playTime);
+		} catch (e) {
+			console.log(e);
+		}
 
 		this.lastCurrentTime = this.speed > 0.01 ? 0 : time;
 

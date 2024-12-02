@@ -392,10 +392,12 @@ AFRAME.registerComponent('beat-generator', {
 			beatObj.color = color;
 			beatObj.cutDirection = this.orientationsHumanized[note._cutDirection];
 
-			if (note._angleOffset) {
+			if (note.cutDirectionAngleOffset !== undefined) {
+				beatObj.rotationOffset = note.cutDirectionAngleOffset;
+			} else if (note._angleOffset !== undefined) {
 				beatObj.rotationOffset = note._angleOffset;
 			} else {
-				beatObj.rotationOffset = note.cutDirectionAngleOffset ? note.cutDirectionAngleOffset : 0;
+				beatObj.rotationOffset = 0;
 			}
 
 			beatObj.speed = this.beatSpeed;
@@ -698,10 +700,12 @@ AFRAME.registerComponent('beat-generator', {
 			beatObj.cutDirection = this.orientationsHumanized[note._cutDirection];
 			beatObj.tailCutDirection = this.orientationsHumanized[note._tailCutDirection];
 
-			if (note._angleOffset) {
+			if (note.cutDirectionAngleOffset !== undefined) {
+				beatObj.rotationOffset = note.cutDirectionAngleOffset;
+			} else if (note._angleOffset !== undefined) {
 				beatObj.rotationOffset = note._angleOffset;
 			} else {
-				beatObj.rotationOffset = note.cutDirectionAngleOffset ? note.cutDirectionAngleOffset : 0;
+				beatObj.rotationOffset = 0;
 			}
 			beatObj.speed = this.beatSpeed;
 			beatObj.warmupPosition = -data.moveTime * data.moveSpeed;

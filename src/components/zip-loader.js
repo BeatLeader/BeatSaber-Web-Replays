@@ -77,6 +77,21 @@ AFRAME.registerComponent('zip-loader', {
 			mappingExtensions: {isEnabled: false},
 		};
 
+		if (info._audioDataFile) {
+			const fileArray = await files[Object.keys(files).find(f => f.toLowerCase().endsWith(info._audioDataFile.toLowerCase()))].async(
+				'uint8array'
+			);
+			var audioDataJson;
+			try {
+				var fileData = new TextDecoder().decode(fileArray);
+				audioDataJson = JSON.parse(fileData);
+			} catch (e) {
+				var fileData = new TextDecoder('UTF-16LE').decode(fileArray);
+				audioDataJson = JSON.parse(fileData);
+			}
+			info.audioData = audioDataJson;
+		}
+
 		// See whether we need mapping extensions (per difficulty).
 		const customData = event.info._customData;
 		if (
@@ -122,6 +137,7 @@ AFRAME.registerComponent('zip-loader', {
 						mapJson = JSON.parse(fileData);
 					}
 					mapJson.info = event.info;
+					mapJson.audioData = info.audioData;
 					let map = postprocess(mapJson, mode);
 					event.beatmaps[mode][diff._difficulty] = map;
 					event.beatSpeeds[mode][diff._difficulty] = diff._noteJumpMovementSpeed;
@@ -196,7 +212,68 @@ AFRAME.registerComponent('zip-loader', {
 			if (filename.toLowerCase().endsWith('info.dat')) {
 				processed = true;
 				files[filename].async('string').then(function (fileData) {
-					captureSelf.processFiles(files, jsonParseClean(fileData));
+					let info = jsonParseClean(fileData);
+
+					if (info.version && info.version.startsWith('4')) {
+						let v2Info = {
+							_version: '2.1.0',
+							_songName: info.song.title,
+							_songSubName: info.song.subTitle || '',
+							_songAuthorName: info.song.author,
+							_levelAuthorName: info.difficultyBeatmaps[0].beatmapAuthors.mappers[0],
+							_beatsPerMinute: info.audio.bpm,
+							_audioDataFile: info.audio.audioDataFilename,
+							_songTimeOffset: 0,
+							_shuffle: 0,
+							_shufflePeriod: 0,
+							_previewStartTime: info.audio.previewStartTime,
+							_previewDuration: info.audio.previewDuration,
+							_songFilename: info.audio.songFilename,
+							_coverImageFilename: info.coverImageFilename,
+							_environmentName: info.environmentNames[0],
+							_allDirectionsEnvironmentName: info.environmentNames[1],
+							_environmentNames: info.environmentNames,
+							_colorSchemes: info.colorSchemes,
+							_difficultyBeatmapSets: info.difficultyBeatmaps.reduce((sets, diff) => {
+								const characteristic = diff.characteristic || 'Standard';
+								const existingSet = sets.find(set => set._beatmapCharacteristicName === characteristic);
+
+								const beatmap = {
+									_difficulty: diff.difficulty,
+									_difficultyRank:
+										diff.difficulty === 'Easy'
+											? 1
+											: diff.difficulty === 'Normal'
+											? 3
+											: diff.difficulty === 'Hard'
+											? 5
+											: diff.difficulty === 'Expert'
+											? 7
+											: diff.difficulty === 'ExpertPlus'
+											? 9
+											: 1,
+									_beatmapFilename: diff.beatmapDataFilename,
+									_noteJumpMovementSpeed: diff.noteJumpMovementSpeed,
+									_noteJumpStartBeatOffset: diff.noteJumpStartBeatOffset,
+									_beatmapColorSchemeIdx: diff.beatmapColorSchemeIdx,
+									_environmentNameIdx: diff.environmentNameIdx,
+								};
+
+								if (existingSet) {
+									existingSet._difficultyBeatmaps.push(beatmap);
+								} else {
+									sets.push({
+										_beatmapCharacteristicName: characteristic,
+										_difficultyBeatmaps: [beatmap],
+									});
+								}
+								return sets;
+							}, []),
+						};
+						captureSelf.processFiles(files, v2Info);
+					} else {
+						captureSelf.processFiles(files, info);
+					}
 				});
 			}
 		});

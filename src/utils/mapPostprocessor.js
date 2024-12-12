@@ -8,7 +8,167 @@ function zeroIfUndefined(value) {
 }
 
 function upgrade(map) {
-	if (map['version'] && parseInt(map['version'].split('.')[0]) == 3) {
+	if (map['version'] && parseInt(map['version'].split('.')[0]) == 4) {
+		let notes = [];
+		let colorNotesData = map['colorNotesData'] || [];
+		map['colorNotes'].forEach((note, index) => {
+			const noteData = colorNotesData[zeroIfUndefined(note['i'])] || {};
+			var resultNote = {
+				_time: zeroIfUndefined(note['b']),
+				_lineIndex: zeroIfUndefined(noteData['x']),
+				_lineLayer: zeroIfUndefined(noteData['y']),
+				_type: zeroIfUndefined(noteData['c']),
+				_cutDirection: zeroIfUndefined(noteData['d']),
+				_angleOffset: zeroIfUndefined(noteData['a']),
+				_scoringType: ScoringType.Normal,
+			};
+
+			if (noteData.customData) {
+				resultNote._customData = {
+					_position: noteData.customData.coordinates,
+				};
+			}
+
+			notes.push(resultNote);
+		});
+
+		let bombNotesData = map['bombNotesData'] || [];
+		map['bombNotes'].forEach(bomb => {
+			const bombData = bombNotesData[zeroIfUndefined(bomb['i'])] || {};
+			notes.push({
+				_time: zeroIfUndefined(bomb['b']),
+				_lineIndex: zeroIfUndefined(bombData['x']),
+				_lineLayer: zeroIfUndefined(bombData['y']),
+				_angleOffset: 0,
+				_type: 3,
+				_cutDirection: NoteCutDirection.Any,
+				_scoringType: ScoringType.NoScore,
+			});
+		});
+
+		map['_notes'] = notes;
+
+		let obstacles = [];
+		let obstaclesData = map['obstaclesData'] || [];
+		map['obstacles'].forEach(wall => {
+			const wallData = obstaclesData[zeroIfUndefined(wall['i'])] || {};
+			var resultWall = {
+				_time: zeroIfUndefined(wall['b']),
+				_lineIndex: zeroIfUndefined(wallData['x']),
+				_type: zeroIfUndefined(wallData['y']) / 2,
+				_duration: zeroIfUndefined(wallData['d']),
+				_width: zeroIfUndefined(wallData['w']),
+				_height: zeroIfUndefined(wallData['h']),
+			};
+
+			if (wallData.customData) {
+				resultWall._customData = {
+					_position: wallData.customData.coordinates,
+					_color: wallData.customData.color,
+					_scale: wallData.customData.size,
+					_localRotation: wallData.customData.localRotation,
+					_rotation: wallData.customData.worldRotation,
+				};
+			}
+			obstacles.push(resultWall);
+		});
+
+		map['_obstacles'] = obstacles;
+
+		let sliders = [];
+		let arcsData = map['arcsData'] || [];
+		map['arcs'].forEach(arc => {
+			const arcData = arcsData[zeroIfUndefined(arc['ai'])] || {};
+			const headNoteData = colorNotesData[zeroIfUndefined(arc['hi'])] || {};
+			const tailNoteData = colorNotesData[zeroIfUndefined(arc['ti'])] || {};
+
+			const resultSlider = {
+				_time: zeroIfUndefined(arc['hb']),
+				_lineIndex: zeroIfUndefined(headNoteData['x']),
+				_lineLayer: zeroIfUndefined(headNoteData['y']),
+				_type: zeroIfUndefined(headNoteData['c']),
+				_cutDirection: zeroIfUndefined(headNoteData['d']),
+				_tailTime: zeroIfUndefined(arc['tb']),
+				_tailLineIndex: zeroIfUndefined(tailNoteData['x']),
+				_tailLineLayer: zeroIfUndefined(tailNoteData['y']),
+				_headControlPointLengthMultiplier: zeroIfUndefined(arcData['m']),
+				_tailControlPointLengthMultiplier: zeroIfUndefined(arcData['tm']),
+				_tailCutDirection: zeroIfUndefined(tailNoteData['d']),
+				_arcMidAnchorMode: zeroIfUndefined(arcData['a']),
+			};
+
+			if (headNoteData.customData) {
+				resultSlider._customData = {
+					_position: headNoteData.customData.coordinates,
+					_tailPosition: tailNoteData.customData.coordinates,
+				};
+			}
+
+			sliders.push(resultSlider);
+		});
+
+		map['_sliders'] = sliders;
+
+		let burstSliders = [];
+		let chainsData = map['chainsData'] || [];
+		map['chains'].forEach(chain => {
+			const chainData = chainsData[zeroIfUndefined(chain['ci'])] || {};
+			const headNoteData = colorNotesData[zeroIfUndefined(chain['i'])] || {};
+
+			const resultSlider = {
+				_time: zeroIfUndefined(chain['hb']),
+				_lineIndex: zeroIfUndefined(headNoteData['x']),
+				_lineLayer: zeroIfUndefined(headNoteData['y']),
+				_type: zeroIfUndefined(headNoteData['c']),
+				_cutDirection: zeroIfUndefined(headNoteData['d']),
+				_tailTime: zeroIfUndefined(chain['tb']),
+				_tailLineIndex: zeroIfUndefined(chainData['tx']),
+				_tailLineLayer: zeroIfUndefined(chainData['ty']),
+				_sliceCount: zeroIfUndefined(chainData['c']),
+				_squishAmount: zeroIfUndefined(chainData['s']),
+			};
+
+			if (headNoteData.customData) {
+				resultSlider._customData = {
+					_position: headNoteData.customData.coordinates,
+					_tailPosition: chainData.customData && chainData.customData.tailCoordinates,
+				};
+			}
+
+			burstSliders.push(resultSlider);
+		});
+
+		map['_burstSliders'] = burstSliders;
+
+		let events = [];
+		if (map['spawnRotations']) {
+			let spawnRotationsData = map['spawnRotationsData'] || [];
+			map['spawnRotations'].forEach(rotation => {
+				const rotationData = spawnRotationsData[zeroIfUndefined(rotation['i'])] || {};
+				var value = (Math.abs(zeroIfUndefined(rotationData['r'])) - 60) / -15;
+				events.push({
+					_time: zeroIfUndefined(rotation['b']),
+					_type: rotationData['t'] == 1 ? 15 : 14,
+					_value: value < 4 ? value : value - 1,
+					_inverted: rotationData['r'] > 0,
+				});
+			});
+		}
+
+		map['_events'] = events;
+
+		let bpmevents = [];
+		if (map['bpmEvents']) {
+			map['bpmEvents'].forEach(event => {
+				bpmevents.push({
+					_time: zeroIfUndefined(event['b']),
+					_bpm: zeroIfUndefined(event['m']),
+				});
+			});
+		}
+
+		map['_bpmEvents'] = bpmevents;
+	} else if (map['version'] && parseInt(map['version'].split('.')[0]) == 3) {
 		let notes = [];
 		map['colorNotes'].forEach(note => {
 			var resultNote = {
@@ -146,12 +306,14 @@ function upgrade(map) {
 		map['_burstSliders'] = burstSliders;
 
 		let bpmevents = [];
-		map['bpmEvents'].forEach(event => {
-			bpmevents.push({
-				_time: zeroIfUndefined(event['b']),
-				_bpm: zeroIfUndefined(event['m']),
+		if (map['bpmEvents']) {
+			map['bpmEvents'].forEach(event => {
+				bpmevents.push({
+					_time: zeroIfUndefined(event['b']),
+					_bpm: zeroIfUndefined(event['m']),
+				});
 			});
-		});
+		}
 
 		map['_bpmEvents'] = bpmevents;
 	} else {
@@ -172,6 +334,26 @@ function upgrade(map) {
 			if (bpmevents.length) {
 				map['_bpmEvents'] = bpmevents;
 			}
+		}
+	}
+
+	if (map['audioData']) {
+		let bpmevents = [];
+		map.audioData.bpmData.forEach(bpmData => {
+			const bpmChangeStartTime = bpmData.si / map.audioData.songFrequency;
+			const startBeat = bpmData.sb;
+			const numSamples = bpmData.ei - bpmData.si;
+			const bpm = ((bpmData.eb - bpmData.sb) / (numSamples / map.audioData.songFrequency)) * 60.0;
+
+			bpmevents.push({
+				_time: startBeat,
+				_bpm: bpm,
+				_changeStartTime: bpmChangeStartTime,
+			});
+		});
+
+		if (bpmevents.length) {
+			map['_bpmEvents'] = bpmevents;
 		}
 	}
 
@@ -503,13 +685,16 @@ function calculateSongTimes(map) {
 			var bpmChangeData = bpmChangeDataList[bpmChangeDataList.length - 1];
 			const beat = bpmEvents[index]._time;
 			const bpm = bpmEvents[index]._bpm;
+			const changeStartTime = bpmEvents[index]._changeStartTime;
 
 			if (bpmChangeData == null) {
 				bpmChangeData = {bpmChangeStartTime: 0.0, bpmChangeStartBpmTime: 0.0, bpm: startBpm};
 			}
 
 			bpmChangeDataList.push({
-				bpmChangeStartTime: bpmChangeData.bpmChangeStartTime + ((beat - bpmChangeData.bpmChangeStartBpmTime) / bpmChangeData.bpm) * 60.0,
+				bpmChangeStartTime: changeStartTime
+					? changeStartTime
+					: bpmChangeData.bpmChangeStartTime + ((beat - bpmChangeData.bpmChangeStartBpmTime) / bpmChangeData.bpm) * 60.0,
 				bpmChangeStartBpmTime: beat,
 				bpm,
 			});

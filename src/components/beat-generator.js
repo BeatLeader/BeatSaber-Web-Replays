@@ -1,3 +1,5 @@
+import {EaseType, Interpolate} from '../utils';
+
 const BEAT_WARMUP_SPEED = 200;
 const BEAT_WARMUP_TIME = 0.3;
 
@@ -53,6 +55,40 @@ AFRAME.registerComponent('beat-generator', {
 		this.leftStageLasers = document.getElementById('leftStageLasers');
 		this.rightStageLasers = document.getElementById('rightStageLasers');
 
+		this.movementData = {
+			noteJumpMovementSpeed: 0,
+			targetNoteJumpMovementSpeed: 0,
+			beatOffset: 0,
+			jumpDistance: 0,
+			jumpDuration: 0,
+			halfJumpDuration: 0,
+			moveDuration: 0.5,
+			spawnAheadTime: 0,
+			interpolation: {
+				fromValue: 0,
+				toValue: 0,
+				fromTime: 0,
+				duration: 0,
+				easeType: EaseType.None,
+
+				setValues: function (fromValue, toValue, fromTime, toTime, easeType) {
+					this.fromValue = fromValue;
+					this.toValue = toValue;
+					this.fromTime = fromTime;
+					this.easeType = easeType;
+					this.duration = toTime - fromTime;
+				},
+
+				getValue: function (time) {
+					if (this.easeType !== EaseType.None) {
+						const t = this.duration > 0 ? Math.min(Math.max((time - this.fromTime) / this.duration, 0), 1) : 1;
+						return this.fromValue + (this.toValue - this.fromValue) * Interpolate(t, this.easeType);
+					}
+					return time >= this.fromTime + this.duration ? this.toValue : this.fromValue;
+				},
+			},
+		};
+
 		this.el.addEventListener('cleargame', this.clearBeats.bind(this));
 		this.el.addEventListener('challengeloadend', evt => {
 			this.beatmaps = evt.detail.beatmaps;
@@ -94,10 +130,9 @@ AFRAME.registerComponent('beat-generator', {
 		});
 		this.el.addEventListener('replayfetched', evt => {
 			if (evt.detail.jd != null) {
+				this.jdToSet = evt.detail.jd;
 				if (this.bpm) {
 					this.updateJD(evt.detail.jd);
-				} else {
-					this.jdToSet = evt.detail.jd;
 				}
 			}
 
@@ -151,6 +186,7 @@ AFRAME.registerComponent('beat-generator', {
 	 * Load the beat data into the game.
 	 */
 	processBeats: function () {
+		const data = this.data;
 		// Reset variables used during playback.
 		// Beats spawn ahead of the song and get to the user in sync with the music.
 		this.beatsTime = 0;
@@ -158,8 +194,13 @@ AFRAME.registerComponent('beat-generator', {
 		this.beatData._events.sort(lessThan);
 		this.beatData._obstacles.sort(lessThan);
 		this.beatData._notes.sort(lessThan);
-		this.beatSpeed = this.beatSpeedOrDefault();
-		this.beatOffset = this.beatOffsetOrDefault();
+		this.movementData.targetNoteJumpMovementSpeed =
+			this.movementData.noteJumpMovementSpeed =
+			this.movementData.baseNoteJumpMovementSpeed =
+				this.beatSpeedOrDefault();
+		this.movementData.beatOffset = this.beatOffsetOrDefault();
+		this.movementData.warmupPosition = -data.moveTime * data.moveSpeed;
+		this.movementData.warmupSpeed = data.moveSpeed;
 		this.bpm = this.info._beatsPerMinute;
 
 		this.updateJD(queryJD, true);
@@ -193,6 +234,7 @@ AFRAME.registerComponent('beat-generator', {
 	 */
 	manualTick: function () {
 		const song = this.el.components.song;
+		const data = this.data;
 		if (!this.data.isPlaying || !this.beatData || !this.replayFetched) {
 			return;
 		}
@@ -205,7 +247,7 @@ AFRAME.registerComponent('beat-generator', {
 			prevEventsTime = this.eventsTime + skipDebug;
 
 			// Get current song time.
-			this.beatsTime = song.getCurrentTime() + this.halfJumpDuration + this.data.moveTime;
+			this.beatsTime = song.getCurrentTime() + this.movementData.halfJumpDuration + this.data.moveTime;
 
 			this.eventsTime = song.getCurrentTime();
 		} else {
@@ -213,7 +255,7 @@ AFRAME.registerComponent('beat-generator', {
 			prevEventsTime = this.beatsPreloadTime;
 
 			// Song is not playing and is preloading beats, use maintained beat time.
-			this.beatsTime = this.beatsPreloadTime + this.halfJumpDuration + this.data.moveTime;
+			this.beatsTime = this.beatsPreloadTime + this.movementData.halfJumpDuration + this.data.moveTime;
 			this.eventsTime = song.getCurrentTime();
 		}
 
@@ -227,6 +269,41 @@ AFRAME.registerComponent('beat-generator', {
 		// Beats.
 		const beatsTime = this.beatsTime + skipDebug;
 		const eventsTime = this.eventsTime + skipDebug;
+
+		if (this.beatData._njsEvents && this.beatData._njsEvents.length > 0) {
+			const njsEvents = this.beatData._njsEvents;
+			for (let i = 0; i < njsEvents.length; i++) {
+				let event = njsEvents[i];
+				if (event._songTime > prevEventsTime && event._songTime <= eventsTime) {
+					const sameTypeEventData = i < njsEvents.length - 1 && njsEvents[i + 1];
+					const time = event._songTime;
+					let toTime = time;
+					const relativeNoteJumpSpeed = event._delta;
+					let toValue = relativeNoteJumpSpeed;
+					let easeType = EaseType.None;
+					if (sameTypeEventData && sameTypeEventData._easing !== EaseType.None) {
+						toTime = sameTypeEventData._songTime;
+						toValue = sameTypeEventData._delta;
+						easeType = sameTypeEventData._easing;
+					}
+					this.movementData.interpolation.setValues(relativeNoteJumpSpeed, toValue, time, toTime, easeType);
+				}
+			}
+
+			this.movementData.targetNoteJumpMovementSpeed = Math.max(
+				this.movementData.baseNoteJumpMovementSpeed + this.movementData.interpolation.getValue(eventsTime),
+				0.01
+			);
+
+			if (this.movementData.noteJumpMovementSpeed !== this.movementData.targetNoteJumpMovementSpeed) {
+				this.movementData.noteJumpMovementSpeed = this.movementData.targetNoteJumpMovementSpeed;
+				this.movementData.interpolation.updatedThisFrame = true;
+				this.updateJD(null, true);
+				if (this.jdToSet) {
+					this.updateJD(this.jdToSet);
+				}
+			}
+		}
 
 		var oldSpawnRotation = this.spawnRotation;
 		const rotations = this.spawnRotationKeys;
@@ -286,7 +363,6 @@ AFRAME.registerComponent('beat-generator', {
 
 		if (!this.data.noEffects && !this.isSeeking) {
 			// Stage events.
-			const eventsTime = this.eventsTime + skipDebug;
 			const events = this.beatData._events;
 			for (let i = 0; i < events.length; ++i) {
 				let noteTime = events[i]._songTime;
@@ -386,9 +462,7 @@ AFRAME.registerComponent('beat-generator', {
 
 		return function (beatEl, note, type, color) {
 			const data = this.data;
-
-			// Apply sword offset. Blocks arrive on beat in front of the user.
-			beatObj.halfJumpPosition = -this.halfJumpDuration * this.beatSpeed;
+			beatObj.movementData = this.movementData;
 			beatObj.color = color;
 			beatObj.cutDirection = this.orientationsHumanized[note._cutDirection];
 
@@ -400,16 +474,12 @@ AFRAME.registerComponent('beat-generator', {
 				beatObj.rotationOffset = 0;
 			}
 
-			beatObj.speed = this.beatSpeed;
 			beatObj.size = 0.4;
 			beatObj.type = type;
-			beatObj.warmupPosition = -data.moveTime * data.moveSpeed;
 			beatObj.index = note._index;
 			beatObj.time = note._songTime;
 			beatObj.spawnRotation = this.getRotation(note._songTime);
-			beatObj.halfJumpDuration = this.halfJumpDuration;
 			beatObj.moveTime = data.moveTime;
-			beatObj.warmupSpeed = data.moveSpeed;
 			beatObj.beforeJumpLineLayer = note._beforeJumpLineLayer;
 
 			if (note._sliceCount || note.sliderhead) {
@@ -532,15 +602,31 @@ AFRAME.registerComponent('beat-generator', {
 
 		return function (wallEl, wall) {
 			const data = this.data;
-			const speed = wall._customData && wall._customData._noteJumpMovementSpeed ? wall._customData._noteJumpMovementSpeed : this.beatSpeed;
 
-			const durationSeconds = wall._songDuration;
-			const halfJumpDuration =
-				wall._customData && wall._customData._noteJumpStartBeatOffset
-					? (60 / this.bpm) * this.calculateHalfJumpDuration(this.bpm, speed, wall._customData._noteJumpStartBeatOffset)
-					: this.halfJumpDuration;
-			wallObj.halfJumpPosition = -halfJumpDuration * speed;
-			wallObj.durationSeconds = durationSeconds;
+			if (wall._customData && (wall._customData._noteJumpMovementSpeed || wall._customData._noteJumpStartBeatOffset)) {
+				wallObj.movementData = {
+					noteJumpMovementSpeed: wall._customData._noteJumpMovementSpeed
+						? wall._customData._noteJumpMovementSpeed
+						: this.movementData.noteJumpMovementSpeed,
+					noteJumpStartBeatOffset: wall._customData._noteJumpStartBeatOffset
+						? wall._customData._noteJumpStartBeatOffset
+						: this.movementData.noteJumpStartBeatOffset,
+					halfJumpDuration:
+						(60 / this.bpm) *
+						this.calculateHalfJumpDuration(
+							this.bpm,
+							wallObj.movementData.noteJumpMovementSpeed,
+							wallObj.movementData.noteJumpStartBeatOffset
+						),
+					halfJumpPosition: -wallObj.movementData.noteJumpStartBeatOffset * wallObj.movementData.noteJumpMovementSpeed,
+					warmupPosition: -data.moveTime * data.moveSpeed,
+					warmupSpeed: data.moveSpeed,
+				};
+			} else {
+				wallObj.movementData = this.movementData;
+			}
+
+			wallObj.durationSeconds = wall._songDuration;
 			wallObj.horizontalPosition = wall._lineIndex;
 			if (wall._lineLayer != undefined) {
 				wallObj.verticalPosition = wall._lineLayer;
@@ -550,8 +636,6 @@ AFRAME.registerComponent('beat-generator', {
 				wallObj.isV3 = false;
 			}
 			wallObj.isCeiling = wall._type === 1;
-			wallObj.speed = speed;
-			wallObj.warmupPosition = -data.moveTime * data.moveSpeed;
 			if (wall._width < 0) {
 				wallObj.horizontalPosition += wall._width;
 			}
@@ -559,9 +643,7 @@ AFRAME.registerComponent('beat-generator', {
 
 			wallObj.spawnRotation = this.getRotation(wall._songTime);
 			wallObj.time = wall._songTime;
-			wallObj.halfJumpDuration = halfJumpDuration;
 			wallObj.moveTime = data.moveTime;
-			wallObj.warmupSpeed = data.moveSpeed;
 
 			if (this.customData && this.customData._obstacleColor) {
 				wallObj.color = this.customData._obstacleColor;
@@ -694,9 +776,8 @@ AFRAME.registerComponent('beat-generator', {
 		return function (beatEl, note, color) {
 			const data = this.data;
 
-			// Apply sword offset. Blocks arrive on beat in front of the user.
-			beatObj.halfJumpPosition = -this.halfJumpDuration * this.beatSpeed;
 			beatObj.color = color;
+			beatObj.movementData = this.movementData;
 			beatObj.cutDirection = this.orientationsHumanized[note._cutDirection];
 			beatObj.tailCutDirection = this.orientationsHumanized[note._tailCutDirection];
 
@@ -707,13 +788,10 @@ AFRAME.registerComponent('beat-generator', {
 			} else {
 				beatObj.rotationOffset = 0;
 			}
-			beatObj.speed = this.beatSpeed;
-			beatObj.warmupPosition = -data.moveTime * data.moveSpeed;
 
 			beatObj.time = note._songTime;
 			beatObj.tailTime = note._songTailTime;
 			beatObj.hasTailNote = note.tail != null;
-			beatObj.halfJumpDuration = this.halfJumpDuration;
 			beatObj.moveTime = data.moveTime;
 			beatObj.warmupSpeed = data.moveSpeed;
 
@@ -847,40 +925,38 @@ AFRAME.registerComponent('beat-generator', {
 		return halfjump;
 	},
 
+	setNewJD: function (newJD) {
+		this.jdToSet = newJD;
+		this.updateJD(newJD, false);
+	},
+
 	updateJD: function (newJD, itsDefault = false) {
-		const defaultHalfJumpDuration = this.calculateHalfJumpDuration(this.bpm, this.beatSpeed, this.beatOffset);
-		const defaultJumpDistance = (60 / this.bpm) * defaultHalfJumpDuration * this.beatSpeed * 2;
+		const movementData = this.movementData;
+		const defaultHalfJumpDuration = this.calculateHalfJumpDuration(
+			this.bpm,
+			movementData.baseNoteJumpMovementSpeed,
+			movementData.beatOffset
+		);
+		const defaultJumpDistance = (60 / this.bpm) * defaultHalfJumpDuration * movementData.noteJumpMovementSpeed * 2;
 
 		var jt, jd;
 		if (newJD != null) {
-			jt = newJD / (60 / this.bpm) / this.beatSpeed / 2;
+			jt = newJD / (60 / this.bpm) / movementData.noteJumpMovementSpeed / 2;
 			jd = newJD;
 		} else {
 			jt = defaultHalfJumpDuration;
 			jd = defaultJumpDistance;
 		}
 
-		this.jumpDistance = jd;
+		movementData.jumpDistance = jd;
+		movementData.halfJumpDuration = (60 / this.bpm) * jt;
+		movementData.jumpDuration = movementData.halfJumpDuration * 2;
+		movementData.halfJumpPosition = -movementData.halfJumpDuration * movementData.noteJumpMovementSpeed;
 
-		if (!itsDefault || this.halfJumpDuration == null) {
-			this.halfJumpDuration = (60 / this.bpm) * jt;
+		if (!itsDefault || movementData.halfJumpDuration == null) {
 			this.el.sceneEl.emit('jdCalculated', {jd, defaultJd: itsDefault ? defaultJumpDistance : null}, false);
 		} else if (itsDefault) {
 			this.el.sceneEl.emit('jdCalculated', {defaultJd: defaultJumpDistance}, false);
-		}
-
-		if (!itsDefault) {
-			for (let i = 0; i < this.beatContainer.children.length; i++) {
-				let child = this.beatContainer.children[i];
-				if (child.components.beat) {
-					child.components.beat.data.halfJumpDuration = this.halfJumpDuration;
-					child.components.beat.data.halfJumpPosition = -this.halfJumpDuration * this.beatSpeed;
-				}
-				if (child.components.wall) {
-					child.components.wall.data.halfJumpDuration = this.halfJumpDuration;
-					child.components.wall.data.halfJumpPosition = -this.halfJumpDuration * this.beatSpeed;
-				}
-			}
 		}
 	},
 

@@ -75,20 +75,16 @@ AFRAME.registerComponent('beat', {
 		horizontalPosition: {default: 1},
 		verticalPosition: {default: 1},
 		size: {default: 0.4},
-		warmupPosition: {default: 0},
 		time: {default: -1},
 		noteId: {default: 0},
 		noteIdWithScoring: {default: 0},
 
 		// Z Movement
 		time: {default: 0},
-		speed: {default: 8.0},
-		halfJumpPosition: {default: 0},
-		warmupPosition: {default: 0},
-		halfJumpDuration: {default: 0},
 		moveTime: {default: 0},
-		warmupSpeed: {default: 0},
 		beforeJumpLineLayer: {default: 0},
+
+		movementData: {default: {}},
 
 		// Colors
 		blue: {default: COLORS.BEAT_BLUE},
@@ -239,18 +235,22 @@ AFRAME.registerComponent('beat', {
 		var newPosition = 0;
 
 		const songTime = getCurrentTime();
+		const movementData = data.movementData;
+		if (movementData.interpolation.updatedThisFrame) {
+			this.initPositionData();
+		}
 
-		var num1 = songTime - (data.time - data.halfJumpDuration);
-		var t = num1 / (data.halfJumpDuration * 2);
+		var num1 = songTime - (data.time - movementData.halfJumpDuration);
+		var t = num1 / (movementData.halfJumpDuration * 2);
 
 		var newX = t < 0 ? this.startPos.x : t >= 0.25 ? this.endPos.x : this.startPos.x + (this.endPos.x - this.startPos.x) * InOutQuad(t * 4);
 		var newY = 0;
 
-		var timeOffset = data.time - songTime - data.halfJumpDuration - data.moveTime;
+		var timeOffset = data.time - songTime - movementData.halfJumpDuration - data.moveTime;
 		if (timeOffset <= -data.moveTime) {
 			newPosition = this.getZPos(
-				data.halfJumpPosition - SWORD_OFFSET,
-				-data.halfJumpPosition - SWORD_OFFSET,
+				movementData.halfJumpPosition - SWORD_OFFSET,
+				-movementData.halfJumpPosition - SWORD_OFFSET,
 				headset.object3D.position.z,
 				t
 			);
@@ -258,15 +258,15 @@ AFRAME.registerComponent('beat', {
 			newY = this.startPos.y + this.startVerticalVelocity * num1 - this.gravity * num1 * num1 * 0.5;
 		} else {
 			newY = this.startPos.y;
-			newPosition = data.halfJumpPosition + data.warmupPosition + data.warmupSpeed * -timeOffset - SWORD_OFFSET;
+			newPosition = movementData.halfJumpPosition + movementData.warmupPosition + movementData.warmupSpeed * -timeOffset - SWORD_OFFSET;
 		}
 
 		if (disableJumps) {
 			newX = this.endPos.x;
 			newY =
 				this.startPos.y +
-				this.startVerticalVelocity * data.halfJumpDuration -
-				this.gravity * data.halfJumpDuration * data.halfJumpDuration * 0.5;
+				this.startVerticalVelocity * movementData.halfJumpDuration -
+				this.gravity * movementData.halfJumpDuration * movementData.halfJumpDuration * 0.5;
 		}
 
 		if (data.spawnRotation == 0) {
@@ -398,12 +398,10 @@ AFRAME.registerComponent('beat', {
 		this.returnToPool();
 	},
 
-	/**
-	 * Called when summoned by beat-generator.
-	 */
-	onGenerate: function () {
+	initPositionData: function () {
 		const data = this.data;
 		const el = this.el;
+		const movementData = data.movementData;
 
 		if (!settings.settings.reducedDebris) {
 			if (this.data.type === 'mine' && !this.mineBroken) {
@@ -423,12 +421,12 @@ AFRAME.registerComponent('beat', {
 			const headStartY = getVerticalPosition(data.beforeJumpLineLayer);
 			var headY = headStartY;
 			const headGravity = this.noteJumpGravityForLineLayer(data.verticalPosition, data.beforeJumpLineLayer);
-			headY += headGravity * data.halfJumpDuration * data.halfJumpDuration * 0.5;
+			headY += headGravity * movementData.halfJumpDuration * movementData.halfJumpDuration * 0.5;
 
 			const tailX = getHorizontalPosition(data.tailHorizontalPosition);
 			var tailY = getVerticalPosition(0);
 			const tailGravity = this.noteJumpGravityForLineLayer(data.tailVerticalPosition, 0);
-			tailY += tailGravity * data.halfJumpDuration * data.halfJumpDuration * 0.5;
+			tailY += tailGravity * movementData.halfJumpDuration * movementData.halfJumpDuration * 0.5;
 
 			const p2 = new THREE.Vector2(tailX - headX, tailY - headY);
 			const magnitude = p2.length();
@@ -441,7 +439,11 @@ AFRAME.registerComponent('beat', {
 			const pos = curve[0];
 			const tangent = curve[1];
 
-			this.startPos = new THREE.Vector3(pos.x + headX, headStartY, data.halfJumpPosition + data.warmupPosition - SWORD_OFFSET);
+			this.startPos = new THREE.Vector3(
+				pos.x + headX,
+				headStartY,
+				movementData.halfJumpPosition + movementData.warmupPosition - SWORD_OFFSET
+			);
 			this.endPos = new THREE.Vector3(pos.x + headX, headStartY, -SWORD_OFFSET);
 
 			el.object3D.position.copy(this.startPos);
@@ -453,12 +455,12 @@ AFRAME.registerComponent('beat', {
 			this.endRotationEuler = endRotation;
 			this.endRotation = new THREE.Quaternion().setFromEuler(endRotation);
 			this.middleRotation = new THREE.Quaternion().setFromEuler(endRotation);
-			this.gravity = (2.0 * (headY + pos.y - headStartY)) / (data.halfJumpDuration * data.halfJumpDuration);
+			this.gravity = (2.0 * (headY + pos.y - headStartY)) / (movementData.halfJumpDuration * movementData.halfJumpDuration);
 		} else {
 			this.startPos = new THREE.Vector3(
 				data.flip ? getHorizontalPosition(data.flipHorizontalPosition) : getHorizontalPosition(data.horizontalPosition),
 				getVerticalPosition(data.beforeJumpLineLayer),
-				data.halfJumpPosition + data.warmupPosition - SWORD_OFFSET
+				movementData.halfJumpPosition + movementData.warmupPosition - SWORD_OFFSET
 			);
 
 			this.endPos = new THREE.Vector3(
@@ -487,6 +489,18 @@ AFRAME.registerComponent('beat', {
 			this.middleRotation = new THREE.Quaternion().setFromEuler(middleRotation);
 			this.gravity = this.noteJumpGravityForLineLayer(data.verticalPosition, data.beforeJumpLineLayer);
 		}
+		this.startVerticalVelocity = this.gravity * movementData.halfJumpDuration;
+	},
+
+	/**
+	 * Called when summoned by beat-generator.
+	 */
+	onGenerate: function () {
+		const data = this.data;
+		const el = this.el;
+		const movementData = data.movementData;
+
+		this.initPositionData();
 
 		if (data.spawnRotation) {
 			let axis = new THREE.Vector3(0, 1, 0);
@@ -508,7 +522,6 @@ AFRAME.registerComponent('beat', {
 		} else {
 			this.yAvoidance = 0;
 		}
-		this.startVerticalVelocity = this.gravity * data.halfJumpDuration;
 
 		// Reset the state properties.
 		this.returnToPoolTimeStart = undefined;
@@ -589,8 +602,10 @@ AFRAME.registerComponent('beat', {
 		}
 		if ((modifiers.includes('GN') || modifiers.includes('DA')) && settings.settings.showNoteModifierVisuals) {
 			const signMaterial = this.el.sceneEl.systems.materials.beatSignMaterial;
-			signMaterial.uniforms.start.value = data.halfJumpPosition + (headset.object3D.position.z - data.halfJumpPosition) * 0.3;
-			signMaterial.uniforms.finish.value = data.halfJumpPosition + (headset.object3D.position.z - data.halfJumpPosition) * 0.7;
+			signMaterial.uniforms.start.value =
+				movementData.halfJumpPosition + (headset.object3D.position.z - movementData.halfJumpPosition) * 0.3;
+			signMaterial.uniforms.finish.value =
+				movementData.halfJumpPosition + (headset.object3D.position.z - movementData.halfJumpPosition) * 0.7;
 		} else {
 			const signMaterial = this.el.sceneEl.systems.materials.beatSignMaterial;
 			signMaterial.uniforms.start.value = 10000;
@@ -1329,7 +1344,8 @@ AFRAME.registerComponent('beat', {
 	},
 
 	noteJumpGravityForLineLayer: function (lineLayer, beforeJumpLineLayer) {
-		var num = ((-2 * this.data.halfJumpPosition) / this.data.speed) * 0.5;
+		const movementData = this.data.movementData;
+		var num = ((-2 * movementData.halfJumpPosition) / movementData.noteJumpMovementSpeed) * 0.5;
 		return (2.0 * (highestJumpPosYForLineLayer(lineLayer) - getVerticalPosition(beforeJumpLineLayer))) / (num * num);
 	},
 

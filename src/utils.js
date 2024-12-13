@@ -74,6 +74,223 @@ const ScoringType = {
 	BurstSliderElement: 5,
 };
 
+const EaseType = {
+	None: -1,
+	Linear: 0,
+	InQuad: 1,
+	OutQuad: 2,
+	InOutQuad: 3,
+	InSine: 4,
+	OutSine: 5,
+	InOutSine: 6,
+	InCubic: 7,
+	OutCubic: 8,
+	InOutCubic: 9,
+	InQuart: 10,
+	OutQuart: 11,
+	InOutQuart: 12,
+	InQuint: 13,
+	OutQuint: 14,
+	InOutQuint: 15,
+	InExpo: 16,
+	OutExpo: 17,
+	InOutExpo: 18,
+	InCirc: 19,
+	OutCirc: 20,
+	InOutCirc: 21,
+	InBack: 22,
+	OutBack: 23,
+	InOutBack: 24,
+	InElastic: 25,
+	OutElastic: 26,
+	InOutElastic: 27,
+	InBounce: 28,
+	OutBounce: 29,
+	InOutBounce: 30,
+	BeatSaberInOutBack: 100,
+	BeatSaberInOutElastic: 101,
+	BeatSaberInOutBounce: 102,
+};
+
+const Easing = {
+	Linear: t => t,
+
+	InSine: t => 1 - Math.cos((t * Math.PI) / 2),
+
+	OutSine: t => Math.sin((t * Math.PI) / 2),
+
+	InOutSine: t => -(Math.cos(Math.PI * t) - 1) / 2,
+
+	InQuad: t => t * t,
+
+	OutQuad: t => 1 - (1 - t) * (1 - t),
+
+	InOutQuad: t => (t >= 0.5 ? (4 - 2 * t) * t - 1 : 2 * t * t),
+
+	InCubic: t => t * t * t,
+
+	OutCubic: t => 1 - Math.pow(1 - t, 3),
+
+	InOutCubic: t => (t >= 0.5 ? 1 - Math.pow(-2 * t + 2, 3) / 2 : 4 * t * t * t),
+
+	InQuart: t => t * t * t * t,
+
+	OutQuart: t => 1 - Math.pow(1 - t, 4),
+
+	InOutQuart: t => (t >= 0.5 ? 1 - Math.pow(-2 * t + 2, 4) / 2 : 8 * t * t * t * t),
+
+	InQuint: t => t * t * t * t * t,
+
+	OutQuint: t => 1 - Math.pow(1 - t, 5),
+
+	InOutQuint: t => (t >= 0.5 ? 1 - Math.pow(-2 * t + 2, 5) / 2 : 16 * t * t * t * t * t),
+
+	InExpo: t => (t === 0 ? 0 : Math.pow(2, 10 * t - 10)),
+
+	OutExpo: t => (t === 1 ? 1 : 1 - Math.pow(2, -10 * t)),
+
+	InOutExpo: t => {
+		if (t === 0) return 0;
+		if (t === 1) return 1;
+		return t >= 0.5 ? (2 - Math.pow(2, -20 * t + 10)) / 2 : Math.pow(2, 20 * t - 10) / 2;
+	},
+
+	InCirc: t => 1 - Math.sqrt(1 - Math.pow(t, 2)),
+
+	OutCirc: t => Math.sqrt(1 - Math.pow(t - 1, 2)),
+
+	InOutCirc: t => (t >= 0.5 ? (Math.sqrt(1 - Math.pow(-2 * t + 2, 2)) + 1) / 2 : (1 - Math.sqrt(1 - Math.pow(2 * t, 2))) / 2),
+
+	InBack: t => 2.70158 * t * t * t - 1.70158 * t * t,
+
+	OutBack: t => 1 + 2.70158 * Math.pow(t - 1, 3) + 1.70158 * Math.pow(t - 1, 2),
+
+	InOutBack: t =>
+		t >= 0.5
+			? (Math.pow(2 * t - 2, 2) * (3.5949094 * (2 * t - 2) + 2.5949094) + 2) / 2
+			: (Math.pow(2 * t, 2) * (7.189819 * t - 2.5949094)) / 2,
+
+	InElastic: t => {
+		if (t === 0) return 0;
+		if (t === 1) return 1;
+		return -Math.pow(2, 10 * t - 10) * Math.sin((t * 10 - 10.75) * 2.0944);
+	},
+
+	OutElastic: t => {
+		if (t === 0) return 0;
+		if (t === 1) return 1;
+		return Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * 2.0944) + 1;
+	},
+
+	InOutElastic: t => {
+		if (t === 0) return 0;
+		if (t === 1) return 1;
+		return t >= 0.5
+			? (Math.pow(2, -20 * t + 10) * Math.sin((20 * t - 11.125) * 1.3963)) / 2 + 1
+			: -(Math.pow(2, 20 * t - 10) * Math.sin((20 * t - 11.125) * 1.3963)) / 2;
+	},
+
+	InBounce: t => 1 - Easing.OutBounce(1 - t),
+
+	OutBounce: t => {
+		if (t < 0.36364) return (121 / 16) * t * t;
+		if (t < 0.72727) return (121 / 16) * (t -= 0.54545) * t + 0.75;
+		if (t < 0.90909) return (121 / 16) * (t -= 0.81818) * t + 15 / 16;
+		return (121 / 16) * (t -= 0.95455) * t + 63 / 64;
+	},
+
+	InOutBounce: t => (t >= 0.5 ? (1 + Easing.OutBounce(2 * t - 1)) / 2 : (1 - Easing.OutBounce(1 - 2 * t)) / 2),
+
+	BeatSaberInOutBack: t =>
+		t >= 0.517 ? 1 + 2.70158 * Math.pow(1.665 * (t - 0.4) - 1, 3) + 1.70158 * Math.pow(1.665 * (t - 0.4) - 1, 2) : 5.014 * t * t * t,
+
+	BeatSaberInOutElastic: t => (t >= 0.3 ? Math.pow(2, -10 * (t - 0.2)) * Math.sin(t * 10 * 2.0944) + 1 : 37.037 * t * t * t),
+
+	BeatSaberInOutBounce: t => {
+		if (t >= 0.72727) {
+			if (t < 0.90909) return (121 / 16) * (t -= 0.81818) * t + 15 / 16;
+			return (121 / 16) * (t -= 0.95455) * t + 63 / 64;
+		}
+		if (t < 0.36364) return 20.796 * t * t * t;
+		return (121 / 16) * (t -= 0.54545) * t + 0.75;
+	},
+};
+
+function Interpolate(t, easeType) {
+	switch (easeType) {
+		case EaseType.Linear:
+			return Easing.Linear(t);
+		case EaseType.InSine:
+			return Easing.InSine(t);
+		case EaseType.OutSine:
+			return Easing.OutSine(t);
+		case EaseType.InOutSine:
+			return Easing.InOutSine(t);
+		case EaseType.InQuad:
+			return Easing.InQuad(t);
+		case EaseType.OutQuad:
+			return Easing.OutQuad(t);
+		case EaseType.InOutQuad:
+			return Easing.InOutQuad(t);
+		case EaseType.InCubic:
+			return Easing.InCubic(t);
+		case EaseType.OutCubic:
+			return Easing.OutCubic(t);
+		case EaseType.InOutCubic:
+			return Easing.InOutCubic(t);
+		case EaseType.InQuart:
+			return Easing.InQuart(t);
+		case EaseType.OutQuart:
+			return Easing.OutQuart(t);
+		case EaseType.InOutQuart:
+			return Easing.InOutQuart(t);
+		case EaseType.InQuint:
+			return Easing.InQuint(t);
+		case EaseType.OutQuint:
+			return Easing.OutQuint(t);
+		case EaseType.InOutQuint:
+			return Easing.InOutQuint(t);
+		case EaseType.InExpo:
+			return Easing.InExpo(t);
+		case EaseType.OutExpo:
+			return Easing.OutExpo(t);
+		case EaseType.InOutExpo:
+			return Easing.InOutExpo(t);
+		case EaseType.InCirc:
+			return Easing.InCirc(t);
+		case EaseType.OutCirc:
+			return Easing.OutCirc(t);
+		case EaseType.InOutCirc:
+			return Easing.InOutCirc(t);
+		case EaseType.InBack:
+			return Easing.InBack(t);
+		case EaseType.OutBack:
+			return Easing.OutBack(t);
+		case EaseType.InOutBack:
+			return Easing.InOutBack(t);
+		case EaseType.InElastic:
+			return Easing.InElastic(t);
+		case EaseType.OutElastic:
+			return Easing.OutElastic(t);
+		case EaseType.InOutElastic:
+			return Easing.InOutElastic(t);
+		case EaseType.InBounce:
+			return Easing.InBounce(t);
+		case EaseType.OutBounce:
+			return Easing.OutBounce(t);
+		case EaseType.InOutBounce:
+			return Easing.InOutBounce(t);
+		case EaseType.BeatSaberInOutBack:
+			return Easing.BeatSaberInOutBack(t);
+		case EaseType.BeatSaberInOutElastic:
+			return Easing.BeatSaberInOutElastic(t);
+		case EaseType.BeatSaberInOutBounce:
+			return Easing.BeatSaberInOutBounce(t);
+		default:
+			return Easing.Linear(t);
+	}
+}
+
 const SWORD_OFFSET = 0.9;
 
 function mirrorDirection(cutDirection) {
@@ -341,6 +558,8 @@ module.exports.get2DNoteOffset = get2DNoteOffset;
 module.exports.directionVector = directionVector;
 module.exports.NoteCutDirection = NoteCutDirection;
 module.exports.NoteErrorType = NoteErrorType;
+module.exports.EaseType = EaseType;
+module.exports.Interpolate = Interpolate;
 module.exports.mirrorDirection = mirrorDirection;
 module.exports.signedAngle = signedAngle;
 module.exports.signedAngleToLine = signedAngleToLine;

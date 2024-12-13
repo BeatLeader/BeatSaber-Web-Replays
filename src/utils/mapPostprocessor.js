@@ -168,6 +168,24 @@ function upgrade(map) {
 		}
 
 		map['_bpmEvents'] = bpmevents;
+
+		let njsEvents = [];
+		if (map['njsEvents']) {
+			let njsEventsData = map['njsEventData'] || [];
+			var previousEvent = null;
+			map['njsEvents'].forEach(event => {
+				const eventData = njsEventsData[zeroIfUndefined(event['i'])] || {};
+				const resultEvent = {
+					_time: zeroIfUndefined(event['b']),
+					_delta: zeroIfUndefined(eventData['p']) && previousEvent ? previousEvent._delta : zeroIfUndefined(eventData['d']),
+					_easing: zeroIfUndefined(eventData['e']),
+				};
+				njsEvents.push(resultEvent);
+				previousEvent = resultEvent;
+			});
+		}
+
+		map['_njsEvents'] = njsEvents;
 	} else if (map['version'] && parseInt(map['version'].split('.')[0]) == 3) {
 		let notes = [];
 		map['colorNotes'].forEach(note => {
@@ -709,7 +727,7 @@ function calculateSongTimes(map) {
 		return convertSongToBeatTime(song_time, startBpm, bpmChangeDataList);
 	};
 
-	[map['_notes'], map['_obstacles'], map['_events']].forEach(collection => {
+	[map['_notes'], map['_obstacles'], map['_events'], map['_njsEvents']].forEach(collection => {
 		if (!collection) return;
 		collection.forEach(o => {
 			o._songTime = map.timeConvertor(o._time);

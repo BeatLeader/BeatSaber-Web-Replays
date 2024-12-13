@@ -1058,7 +1058,7 @@ AFRAME.registerComponent('song-controls', {
 		let jdPoint = document.getElementById('jdPoint');
 		let jdTick = document.getElementById('jdTick');
 		jd.addEventListener('input', () => {
-			this.el.components['beat-generator'].updateJD(jd.valueAsNumber);
+			this.el.components['beat-generator'].setNewJD(jd.valueAsNumber);
 			this.jdChanged = true;
 		});
 		this.el.sceneEl.addEventListener('jdCalculated', e => {
@@ -1080,7 +1080,7 @@ AFRAME.registerComponent('song-controls', {
 		});
 
 		jdPoint.addEventListener('click', evt => {
-			this.el.components['beat-generator'].updateJD(parseFloat(jdPoint.innerHTML));
+			this.el.components['beat-generator'].setNewJD(parseFloat(jdPoint.innerHTML));
 			this.jdChanged = false;
 		});
 

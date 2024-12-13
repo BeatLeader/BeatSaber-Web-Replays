@@ -11,27 +11,23 @@ const EMPTY_ROTATION = new THREE.Euler(0, 0, 0);
  */
 AFRAME.registerComponent('wall', {
 	schema: {
-		halfJumpPosition: {default: 0},
 		durationSeconds: {default: 0},
 		height: {default: 1.3},
 		horizontalPosition: {default: 1},
 		verticalPosition: {default: 0},
 		isV3: {default: false},
 		isCeiling: {default: false},
-		speed: {default: 1.0},
-		warmupPosition: {default: 0},
 		width: {default: 1},
 		positionOffset: {default: 0},
 		spawnRotation: {default: null},
 		time: {default: 0},
-		halfJumpDuration: {default: 0},
 		moveTime: {default: 0},
-		warmupSpeed: {default: 0},
 		color: {default: null},
 		scale: {default: null},
 		localRotation: {default: null},
 		customPosition: {default: null},
 		definitePosition: {default: null},
+		movementData: {default: {}},
 	},
 
 	init: function () {
@@ -49,8 +45,9 @@ AFRAME.registerComponent('wall', {
 
 	updatePosition: function () {
 		const data = this.data;
+		const movementData = data.movementData;
 		if (data.definitePosition) return;
-		const halfDepth = (data.durationSeconds * data.speed) / 2;
+		const halfDepth = (data.durationSeconds * movementData.noteJumpMovementSpeed) / 2;
 
 		// Move.
 		this.el.object3D.visible = true;
@@ -59,18 +56,18 @@ AFRAME.registerComponent('wall', {
 		var currentTime = this.getCurrentTime();
 		var moveTime = data.moveTime;
 
-		var timeOffset = data.time - currentTime - data.halfJumpDuration - moveTime;
+		var timeOffset = data.time - currentTime - movementData.halfJumpDuration - moveTime;
 
 		if (data.durationSeconds < 0) {
 			moveTime -= data.durationSeconds / 2;
 		}
 
 		if (timeOffset <= -moveTime) {
-			newPosition = data.halfJumpPosition - halfDepth;
+			newPosition = movementData.halfJumpPosition - halfDepth;
 			timeOffset += moveTime;
-			newPosition += -timeOffset * data.speed;
+			newPosition += -timeOffset * movementData.noteJumpMovementSpeed;
 		} else {
-			newPosition = data.halfJumpPosition - halfDepth + data.warmupPosition + data.warmupSpeed * -timeOffset;
+			newPosition = movementData.halfJumpPosition - halfDepth + movementData.warmupPosition + movementData.warmupSpeed * -timeOffset;
 		}
 
 		newPosition += this.headset.object3D.position.z - SWORD_OFFSET;
@@ -92,8 +89,9 @@ AFRAME.registerComponent('wall', {
 	update: function () {
 		const el = this.el;
 		const data = this.data;
+		const movementData = data.movementData;
 		var width = data.width;
-		var length = Math.abs(data.durationSeconds) * data.speed;
+		var length = Math.abs(data.durationSeconds) * movementData.noteJumpMovementSpeed;
 
 		this.hit = false;
 		const walls = this.replayLoader.walls;
@@ -113,7 +111,7 @@ AFRAME.registerComponent('wall', {
 		material.uniforms['highlight'].value = this.hit && this.settings.settings.highlightErrors;
 		material.uniforms['wallColor'].value = new THREE.Color(data.color ? data.color : this.settings.settings.wallColor);
 
-		const halfDepth = (data.durationSeconds * data.speed) / 2;
+		const halfDepth = (data.durationSeconds * movementData.noteJumpMovementSpeed) / 2;
 		var origin;
 		var height = data.height;
 		if (data.isV3) {
@@ -153,7 +151,7 @@ AFRAME.registerComponent('wall', {
 
 		el.object3D.scale.set(Math.max(width, 0.1), Math.max(height, 0.1), Math.max(length, 0.1));
 		if (!data.definitePosition) {
-			el.object3D.position.set(origin.x, origin.y, origin.z + data.halfJumpPosition + data.warmupPosition - halfDepth);
+			el.object3D.position.set(origin.x, origin.y, origin.z + movementData.halfJumpPosition + movementData.warmupPosition - halfDepth);
 		} else {
 			el.object3D.position.set(origin.x, origin.y, origin.z);
 		}
@@ -219,7 +217,8 @@ AFRAME.registerComponent('wall', {
 
 	tock: function (time, timeDelta) {
 		const data = this.data;
-		const halfDepth = (data.durationSeconds * data.speed) / 2;
+		const movementData = data.movementData;
+		const halfDepth = (data.durationSeconds * movementData.noteJumpMovementSpeed) / 2;
 		const currentTime = this.getCurrentTime();
 
 		this.updatePosition();

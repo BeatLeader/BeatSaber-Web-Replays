@@ -1079,6 +1079,13 @@ AFRAME.registerComponent('song-controls', {
 			}
 		});
 
+		this.el.sceneEl.addEventListener('jdDisabled', e => {
+			jd.disabled = true;
+			jdLabel.innerHTML = '-';
+			jd.title = 'JD changes are not yet supported with NJS events';
+			jd.style.filter = 'grayscale(1) opacity(0.3)';
+		});
+
 		jdPoint.addEventListener('click', evt => {
 			this.el.components['beat-generator'].setNewJD(parseFloat(jdPoint.innerHTML));
 			this.jdChanged = false;

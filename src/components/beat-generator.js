@@ -299,9 +299,6 @@ AFRAME.registerComponent('beat-generator', {
 				this.movementData.noteJumpMovementSpeed = this.movementData.targetNoteJumpMovementSpeed;
 				this.movementData.interpolation.updatedThisFrame = true;
 				this.updateJD(null, true);
-				if (this.jdToSet) {
-					this.updateJD(this.jdToSet);
-				}
 			}
 		}
 
@@ -931,6 +928,11 @@ AFRAME.registerComponent('beat-generator', {
 	},
 
 	updateJD: function (newJD, itsDefault = false) {
+		if (this.beatData._njsEvents && this.beatData._njsEvents.length > 0 && newJD != null) {
+			this.el.sceneEl.emit('jdDisabled', {}, false);
+			return;
+		}
+
 		const movementData = this.movementData;
 		const defaultHalfJumpDuration = this.calculateHalfJumpDuration(
 			this.bpm,

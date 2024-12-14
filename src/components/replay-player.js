@@ -134,7 +134,7 @@ AFRAME.registerComponent('replay-player', {
 		if (!!offsetInput) {
 			leftSaber.translateZ(-offsetInput.value);
 			rightSaber.translateZ(-offsetInput.value);
-			document.getElementById('saberOffsetLabel').innerHTML = offsetInput.value;
+			document.getElementById('saberOffsetLabel').textContent = offsetInput.value;
 		}
 
 		v1.set(frame.head.position.x, frame.head.position.y, frame.head.position.z);

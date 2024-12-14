@@ -90,8 +90,8 @@ AFRAME.registerComponent('random-replay', {
 					this.randomReplay.style.display = 'flex';
 					this.randomReplayImage.src = score.song.cover;
 
-					this.randomReplayPlayerName.innerHTML = score.player.name;
-					this.randomReplaySongName.innerHTML = score.song.name;
+					this.randomReplayPlayerName.textContent = score.player.name;
+					this.randomReplaySongName.textContent = score.song.name;
 					this.randomReplayNext.href = location.protocol + '//' + location.host + '?scoreId=' + score.id;
 
 					if (instant) {

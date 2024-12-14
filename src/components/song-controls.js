@@ -188,9 +188,9 @@ AFRAME.registerComponent('song-controls', {
 
 		if (data.songImage != oldData.songImage) {
 			document.getElementById('songImage').src = data.songImage;
-			document.getElementById('songName').innerHTML = data.songName;
+			document.getElementById('songName').textContent = data.songName;
 			document.getElementById('songName').setAttribute('title', data.songName);
-			document.getElementById('songSubName').innerHTML = data.songSubName;
+			document.getElementById('songSubName').textContent = data.songSubName;
 			document.getElementById('songSubName').setAttribute('title', data.songSubName);
 			if (data.leaderboardId.length) {
 				document.getElementById('songLink').setAttribute('href', utils.getWebsiteUrl() + '/leaderboard/global/' + data.leaderboardId);
@@ -231,7 +231,7 @@ AFRAME.registerComponent('song-controls', {
 
 			let diffInfo = getDiffInfo(this.data.difficulty);
 			let songDifficulty = document.getElementById('songDifficulty');
-			songDifficulty.innerHTML = diffInfo.name;
+			songDifficulty.textContent = diffInfo.name;
 			songDifficulty.setAttribute('title', diffInfo.name);
 			songDifficulty.style.backgroundColor = diffInfo.color;
 			document.getElementById('songInfoOverlay').style.display = 'flex';
@@ -239,13 +239,13 @@ AFRAME.registerComponent('song-controls', {
 			if (this.customDifficultyLabels[evt.detail.mode]) {
 				let customDiff = this.customDifficultyLabels[evt.detail.mode][evt.detail.difficulty];
 				if (customDiff) {
-					document.getElementById('songCustomDifficulty').innerHTML = customDiff;
+					document.getElementById('songCustomDifficulty').textContent = customDiff;
 					document.getElementById('songCustomDifficulty').setAttribute('title', customDiff);
 				}
 			}
 
 			if (evt.detail.mode != 'Standard') {
-				document.getElementById('songMode').innerHTML = evt.detail.mode;
+				document.getElementById('songMode').textContent = evt.detail.mode;
 				document.getElementById('songMode').style.display = 'block';
 			}
 
@@ -289,7 +289,7 @@ AFRAME.registerComponent('song-controls', {
 		this.el.sceneEl.addEventListener('userloaded', evt => {
 			const player = evt.detail;
 			document.getElementById('playerAvatar').src = player.avatar;
-			document.getElementById('playerName').innerHTML = player.name;
+			document.getElementById('playerName').textContent = player.name;
 			document.getElementById('playerName').setAttribute('title', player.name);
 			document.getElementById('playerCountry').src = player.countryIcon;
 			document.getElementById('playerCountry').setAttribute('title', player.country);
@@ -410,7 +410,7 @@ AFRAME.registerComponent('song-controls', {
 				timelineHover.style.bottom = ((note.accuracy - this.minAcc) / (this.maxAcc - this.minAcc)) * 40 + 5 + 'px';
 			}
 
-			timelineHover.innerHTML = hoverText;
+			timelineHover.textContent = hoverText;
 
 			timelineCursor.style.left = marginLeft + 'px';
 		});
@@ -743,7 +743,7 @@ AFRAME.registerComponent('song-controls', {
 			});
 
 			this.songSpeedPercent.forEach(element => {
-				element.innerHTML = Math.round(value * 10000) / 10000 + 'x';
+				element.textContent = Math.round(value * 10000) / 10000 + 'x';
 			});
 		};
 
@@ -764,7 +764,7 @@ AFRAME.registerComponent('song-controls', {
 			});
 
 			this.songSpeedPercent.forEach(element => {
-				element.innerHTML = this.song.speed + 'x';
+				element.textContent = this.song.speed + 'x';
 			});
 
 			element.value = this.song.speed;
@@ -1068,26 +1068,26 @@ AFRAME.registerComponent('song-controls', {
 				const newJDString = '' + newJD.toFixed(2);
 
 				jd.value = newJD;
-				jdLabel.innerHTML = newJDString;
+				jdLabel.textContent = newJDString;
 			}
 
 			if (e.detail.defaultJd != null) {
 				const percent = ((e.detail.defaultJd - jd.min) / (jd.max - jd.min)) * 100;
 				jdPoint.attributes.x.value = percent * 0.9 + (50 - percent) / 5 - 10 + '%';
-				jdPoint.innerHTML = '' + e.detail.defaultJd.toFixed(2);
+				jdPoint.textContent = '' + e.detail.defaultJd.toFixed(2);
 				jdTick.attributes.x.value = percent * 0.9 + '%';
 			}
 		});
 
 		this.el.sceneEl.addEventListener('jdDisabled', e => {
 			jd.disabled = true;
-			jdLabel.innerHTML = '-';
+			jdLabel.textContent = '-';
 			jd.title = 'JD changes are not yet supported with NJS events';
 			jd.style.filter = 'grayscale(1) opacity(0.3)';
 		});
 
 		jdPoint.addEventListener('click', evt => {
-			this.el.components['beat-generator'].setNewJD(parseFloat(jdPoint.innerHTML));
+			this.el.components['beat-generator'].setNewJD(parseFloat(jdPoint.textContent));
 			this.jdChanged = false;
 		});
 
@@ -1432,7 +1432,7 @@ AFRAME.registerComponent('song-controls', {
 			return;
 		}
 		this.updatePlayhead();
-		this.songProgress.innerHTML = formatSeconds(this.song.getCurrentTime());
+		this.songProgress.textContent = formatSeconds(this.song.getCurrentTime());
 	},
 
 	seek: function (time, clearBeats = true) {
@@ -1465,7 +1465,7 @@ AFRAME.registerComponent('song-controls', {
 		for (let i = 0; i < this.modeOptionEls.children.length; i++) {
 			const option = this.modeOptionEls.children[i];
 			option.style.display = 'none';
-			option.innerHTML = option.dataset.mode;
+			option.textContent = option.dataset.mode;
 		}
 		// Object.keys(this.beatmaps).forEach(mode => {
 		//   const option = this.modeOptionEls.querySelector(`[data-mode="${mode}"]`);

@@ -3,16 +3,28 @@ const _noteLinesCount = 4;
 const _noteLinesDistance = 0.6;
 
 function getApiUrl() {
-	return location.host.includes('beatleader.net') ? 'https://api.beatleader.net' : 'https://api.beatleader.xyz';
+	if (location.host.includes('beatleader.net')) {
+		return 'https://api.beatleader.net';
+	} else if (location.host.includes('beatleader.com')) {
+		return 'https://api.beatleader.com';
+	}
+	return 'https://api.beatleader.xyz';
 }
 
 function getWebsiteUrl() {
-	return location.host.includes('beatleader.net') ? 'https://beatleader.net' : 'https://beatleader.xyz';
+	if (location.host.includes('beatleader.net')) {
+		return 'https://beatleader.net';
+	} else if (location.host.includes('beatleader.com')) {
+		return 'https://beatleader.com';
+	}
+	return 'https://beatleader.xyz';
 }
 
 function replaceCdnUrl(url) {
 	if (location.host.includes('beatleader.net')) {
 		return url.replace('beatleader.xyz', 'beatleader.net');
+	} else if (location.host.includes('beatleader.com')) {
+		return url.replace('beatleader.xyz', 'beatleader.com');
 	}
 	return url;
 }

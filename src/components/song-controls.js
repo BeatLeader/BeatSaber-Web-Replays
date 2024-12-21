@@ -1132,6 +1132,45 @@ AFRAME.registerComponent('song-controls', {
 			hitSoundButton.innerText = 'Change hitsounds';
 			resetHitsounds.style.display = 'none';
 		});
+
+		let exportSettingsButton = document.getElementById('exportSettings');
+		exportSettingsButton.addEventListener('click', e => {
+			const settingsJson = JSON.stringify(this.settings.settings, null, 2);
+			const blob = new Blob([settingsJson], {type: 'application/json'});
+			const url = URL.createObjectURL(blob);
+
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = 'web-replays-settings.json';
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			URL.revokeObjectURL(url);
+		});
+
+		let importSettingsPicker = document.getElementById('importSettingsPicker');
+		importSettingsPicker.addEventListener('input', e => {
+			let settings = e.target.files[0];
+			if (!settings) return;
+
+			const dataArrayReader = new FileReader();
+			dataArrayReader.onload = e => {
+				const settings = JSON.parse(e.target.result);
+				const requiredSettings = ['headsetOpacity', 'reducedDebris', 'noEffects'];
+				const missingSettings = requiredSettings.filter(setting => !settings.hasOwnProperty(setting));
+
+				if (missingSettings.length > 0) {
+					alert(`Error: settings file appears to be corrupted.`);
+					return;
+				}
+
+				this.settings.settings = settings;
+				this.settings.sync();
+
+				alert('Settings imported successfully!');
+			};
+			dataArrayReader.readAsText(settings);
+		});
 	},
 
 	makeTimelineOverlay: function (replayData, buffer, target) {

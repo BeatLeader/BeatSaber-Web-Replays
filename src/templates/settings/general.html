@@ -86,6 +86,14 @@
 				</td>
 			</label>
 		</div>
+
+		<div class="exportButtons">
+			<button id="exportSettings" title="Export settings to a file."><i class="fas fa-file-export"></i>Export settings</button>
+			<button id="importSettings" title="Import settings from a file." onclick="document.getElementById('importSettingsPicker').click();">
+				<i class="fas fa-file-import"></i> Import settings
+			</button>
+		</div>
+		<input id="importSettingsPicker" style="display: none" type="file" accept=".json" />
 	</div>
 
 	<div class="sliders" style="display: flex; flex-direction: column; justify-content: space-between">

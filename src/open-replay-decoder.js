@@ -1,8 +1,20 @@
+function getApiUrl() {
+	if (location.host.includes('beatleader.net')) {
+		return 'https://api.beatleader.net';
+	} else if (location.host.includes('beatleader.com')) {
+		return 'https://api.beatleader.com';
+	}
+	return 'https://api.beatleader.xyz';
+}
+
 function checkBSOR(file, isLink, completion) {
 	if (isLink) {
 		const filename = file.split('?')[0];
 		if (filename.split('.').pop() == 'bsor' || filename.split('.').pop() == 'bsortemp') {
 			file = file.replace('https://cdn.discordapp.com/attachments/', 'https://discord.beatleader.pro/');
+			file = file.replace('https://api.beatleader.com', getApiUrl());
+			file = file.replace('https://api.beatleader.xyz', getApiUrl());
+			file = file.replace('https://api.beatleader.net', getApiUrl());
 			var xhr = new XMLHttpRequest();
 			xhr.open('GET', file, true);
 			xhr.withCredentials = file.includes('/otherreplays/');

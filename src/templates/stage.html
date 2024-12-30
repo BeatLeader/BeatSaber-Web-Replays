@@ -67,7 +67,7 @@
 	</a-entity>
 
 	<a-entity render-order="background" id="tree-container" bind__visible="treeLoaded && settings.showTree" rotation="0 -180 0">
-		<a-entity id="christmasTree" obj-model="obj: #christmasTreeObj" materials="name: christmasTree"></a-entity>
+		<a-entity id="christmasTree" rotation="0 -180 0" obj-model="obj: #christmasTreeObj" materials="name: christmasTree"></a-entity>
 		<a-gltf-model src="#christmasLightsObj" materials="name: christmasLights"></a-gltf-model>
 		<a-entity id="tree-loader" tree-loader="tree: #christmasTree"></a-entity>
 	</a-entity>

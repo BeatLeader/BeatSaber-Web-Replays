@@ -143,31 +143,27 @@ AFRAME.registerComponent('tree-loader', {
 
 		// Create mesh with geometry and material
 		const mesh = new THREE.Mesh(geometry, materials); // Assuming first material
+		mesh.renderOrder = 10;
+		mesh.scale.set(0.01, 0.01, 0.01);
 
-		// Set position
-		mesh.position.set(ornamentData.pose.position.x, ornamentData.pose.position.y, -ornamentData.pose.position.z);
+		// Create parent object for positioning
+		const parent = new THREE.Object3D();
+		parent.add(mesh);
+
+		// Set position on parent
+		parent.position.set(ornamentData.pose.position.x, ornamentData.pose.position.y, -ornamentData.pose.position.z);
 
 		const quaternion = new THREE.Quaternion(
-			ornamentData.pose.rotation.w,
-			ornamentData.pose.rotation.z,
+			ornamentData.pose.rotation.x,
 			ornamentData.pose.rotation.y,
-			ornamentData.pose.rotation.x
+			-ornamentData.pose.rotation.z,
+			-ornamentData.pose.rotation.w
 		);
 
-		var v = new THREE.Euler();
-		v.setFromQuaternion(quaternion);
+		parent.quaternion.copy(quaternion);
+		mesh.rotation.set(Math.PI / 2, 0, 0);
 
-		v.y += Math.PI; // Y is 180 degrees off
-		v.x -= Math.PI / 2;
-
-		v.z *= -1; // flip Z
-		mesh.rotation.set(v.x, v.y, v.z, 'YZX');
-		mesh.renderOrder = 10;
-
-		mesh.scale.set(0.01, 0.01, 0.01);
-		// mesh.localRotation.set(Math.PI / 2, 0, 0);
-
-		this.ornamentObjects.add(mesh);
+		this.ornamentObjects.add(parent);
 	},
 
 	remove: function () {

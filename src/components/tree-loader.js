@@ -161,7 +161,7 @@ AFRAME.registerComponent('tree-loader', {
 		);
 
 		parent.quaternion.copy(quaternion);
-		mesh.rotation.set(Math.PI / 2, 0, 0);
+		mesh.rotation.set(Math.PI / 2, 0, Math.PI, 'XYZ');
 
 		this.ornamentObjects.add(parent);
 	},

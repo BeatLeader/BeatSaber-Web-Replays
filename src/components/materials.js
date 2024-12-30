@@ -146,6 +146,230 @@ AFRAME.registerSystem('materials', {
 			transparent: true,
 		});
 
+		this.christmasTree = new THREE.ShaderMaterial({
+			uniforms: {
+				_MainTex: {value: new THREE.TextureLoader().load('assets/img/Tree-Albedo.png')},
+				_LightsMap: {value: new THREE.TextureLoader().load('assets/img/Tree-Lights.png')},
+				time: {value: 0},
+			},
+			vertexShader: `
+				varying vec2 vUv;
+				varying vec3 vNormal;
+				
+				void main() {
+					vUv = uv;
+					vNormal = normalize(normalMatrix * normal);
+					gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+				}
+			`,
+			fragmentShader: `
+				uniform sampler2D _MainTex;
+				uniform sampler2D _LightsMap;
+				uniform float time;
+				varying vec2 vUv;
+				varying vec3 vNormal;
+
+				const vec3 bulb_color_a = vec3(1.0, 0.3, 0.2);
+				const vec3 bulb_color_b = vec3(0.3, 0.5, 1.0); 
+				const vec3 bulb_color_c = vec3(1.0, 0.7, 0.24);
+
+				vec3 apply_direction_light(vec3 albedo, vec3 normal, vec3 light_direction, vec3 light_color) {
+					float intensity = -dot(normal, light_direction);
+					intensity *= float(intensity > 0.0);
+					return albedo * light_color * intensity;
+				}
+
+				vec3 apply_static_light(vec3 albedo, vec3 light_color) {
+					return albedo * light_color;
+				}
+
+				vec3 apply_fake_lights(vec3 albedo, vec3 normal) {
+					vec3 col = apply_direction_light(albedo, normal, vec3(0.0, -1.0, -1.0), vec3(0.6, 0.67, 0.79) * 0.3);
+					col += apply_direction_light(albedo, normal, vec3(0.0, 0.0, 1.0), vec3(0.016, 0.016, 0.22));
+					col += apply_static_light(albedo, vec3(0.04, 0.04, 0.06));
+					return col;
+				}
+
+				vec3 christmas_lights_cycle() {
+					float cycle_time = 5.0;
+					float total_cycle_time = cycle_time * 3.0;
+					float time_in_cycle = mod(time, total_cycle_time);
+					vec3 lights;
+
+					if (time_in_cycle < cycle_time) {
+						float t = time_in_cycle;
+						lights = vec3(
+							abs(sin(t)),
+							abs(sin(t + 1.0)),
+							abs(sin(t + 2.0))
+						);
+					} else if (time_in_cycle < 2.0 * cycle_time) {
+						float t = time_in_cycle - cycle_time;
+						lights = vec3(
+							smoothstep(-1.0, 1.0, sin(t)),
+							smoothstep(-1.0, 1.0, sin(t + 2.0)),
+							smoothstep(-1.0, 1.0, sin(t + 4.0))
+						);
+					} else {
+						float t = time_in_cycle - 2.0 * cycle_time;
+						lights = vec3(
+							step(0.5, fract(t)),
+							step(0.5, fract(t + 0.333)),
+							step(0.5, fract(t + 0.666))
+						);
+					}
+					return lights;
+				}
+
+				void main() {
+					vec3 albedo = texture2D(_MainTex, vUv).rgb;
+					vec3 lights = texture2D(_LightsMap, vUv).rgb;
+					lights *= christmas_lights_cycle();
+
+					vec3 col = apply_fake_lights(albedo, vNormal);
+					col += albedo * bulb_color_a * lights.r;
+					col += albedo * bulb_color_b * lights.g;
+					col += albedo * bulb_color_c * lights.b;
+
+					gl_FragColor = vec4(col, 1.0);
+				}
+			`,
+			transparent: false,
+		});
+
+		this.christmasLights = [
+			new THREE.ShaderMaterial({
+				uniforms: {
+					time: {value: 0},
+				},
+				vertexShader: `
+				varying vec3 vNormal;
+				varying vec3 vColor;
+				uniform float time;
+				
+				vec3 bulb_color_a = vec3(1.0, 0.3, 0.2);
+				vec3 bulb_color_b = vec3(0.3, 0.5, 1.0);
+				vec3 bulb_color_c = vec3(1.0, 0.7, 0.24);
+
+				vec3 christmas_lights_cycle() {
+					float cycle_time = 5.0;
+					float total_cycle_time = cycle_time * 3.0;
+					float time_in_cycle = mod(time, total_cycle_time);
+					vec3 lights;
+
+					if (time_in_cycle < cycle_time) {
+						float t = time_in_cycle;
+						lights = vec3(
+							abs(sin(t)),
+							abs(sin(t + 1.0)),
+							abs(sin(t + 2.0))
+						);
+					} else if (time_in_cycle < 2.0 * cycle_time) {
+						float t = time_in_cycle - cycle_time;
+						lights = vec3(
+							smoothstep(-1.0, 1.0, sin(t)),
+							smoothstep(-1.0, 1.0, sin(t + 2.0)),
+							smoothstep(-1.0, 1.0, sin(t + 4.0))
+						);
+					} else {
+						float t = time_in_cycle - 2.0 * cycle_time;
+						lights = vec3(
+							step(0.5, fract(t)),
+							step(0.5, fract(t + 0.333)),
+							step(0.5, fract(t + 0.666))
+						);
+					}
+					return lights;
+				}
+
+				vec3 get_bulb_color(vec3 intensities) {
+					vec3 result = vec3(0.0);
+					result += bulb_color_a * intensities.r;
+					result += bulb_color_b * intensities.g;
+					result += bulb_color_c * intensities.b;
+					return result;
+				}
+
+				void main() {
+					vec3 l = color * christmas_lights_cycle();
+					float i = l.r + l.g + l.b;
+					i *= i;
+
+					vColor = get_bulb_color(l) * i;
+					vNormal = normalize(normalMatrix * normal);
+					gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+				}
+			`,
+				fragmentShader: `
+				varying vec3 vNormal;
+				varying vec3 vColor;
+
+				void main() {
+					gl_FragColor = vec4(vColor, 1.0);
+				}
+			`,
+				vertexColors: true,
+				depthWrite: true,
+				transparent: true,
+			}),
+			new THREE.ShaderMaterial({
+				uniforms: {
+					time: {value: 0},
+					color: {value: new THREE.Color(0.27, 0.05, 0)},
+				},
+				vertexShader: `
+				varying vec3 vNormal;
+				
+				void main() {
+					vNormal = normalize(normalMatrix * normal);
+					gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+				}
+			`,
+				fragmentShader: `
+				uniform vec3 color;
+				uniform float time;
+				varying vec3 vNormal;
+
+				vec3 bulb_color_a = vec3(1.0, 0.3, 0.2);
+				vec3 bulb_color_b = vec3(0.3, 0.5, 1.0);
+				vec3 bulb_color_c = vec3(1.0, 0.7, 0.24);
+
+				vec3 get_bulb_color(vec3 intensities) {
+					vec3 result = vec3(0.0);
+					result += bulb_color_a * intensities.r;
+					result += bulb_color_b * intensities.g;
+					result += bulb_color_c * intensities.b;
+					return result;
+				}
+
+				vec3 apply_direction_light(vec3 albedo, vec3 normal, vec3 light_direction, vec3 light_color) {
+					float intensity = -dot(normal, light_direction);
+					intensity *= float(intensity > 0.0);
+					return albedo * light_color * intensity;
+				}
+
+				vec3 apply_static_light(vec3 albedo, vec3 light_color) {
+					return albedo * light_color;
+				}
+
+				vec3 apply_fake_lights(vec3 albedo, vec3 normal) {
+					vec3 col = apply_direction_light(albedo, normal, vec3(0.0, -1.0, -1.0), vec3(0.6, 0.67, 0.79));
+					col += apply_direction_light(albedo, normal, vec3(0.0, 0.0, 1.0), vec3(0.08, 0.08, 0.34));
+					col += apply_static_light(albedo, vec3(0.04, 0.04, 0.06));
+					return col;
+				}
+
+				void main() {
+					vec3 col = apply_fake_lights(color, vNormal);
+					gl_FragColor = vec4(col, 1.0);
+				}
+			`,
+				vertexColors: true,
+				depthWrite: true,
+				transparent: true,
+			}),
+		];
+
 		this.beatSignMaterial = new THREE.ShaderMaterial({
 			uniforms: {
 				start: {value: 10000},

@@ -66,11 +66,18 @@
 		<a-entity light="type: point; intensity: 10" position="8 4 2"> </a-entity>
 	</a-entity>
 
+	<a-entity render-order="background" id="tree-container" bind__visible="treeLoaded && settings.showTree" rotation="0 -180 0">
+		<a-entity id="christmasTree" obj-model="obj: #christmasTreeObj" materials="name: christmasTree"></a-entity>
+		<a-gltf-model src="#christmasLightsObj" materials="name: christmasLights"></a-gltf-model>
+		<a-entity id="tree-loader" tree-loader="tree: #christmasTree"></a-entity>
+	</a-entity>
+
 	<a-entity
 		id="floor"
 		data-saber-particles
 		bind__visible="settings.showFloor"
 		geometry="primitive: plane; width: 3; height: 2"
+		bind__geometry="width: floorWidth"
 		rotation="-90 0 0"
 		material="shader: floorShader; normalMap: #floorNormalsImg; envMap: #floorEnvImg; hitLeft: -999 0 0; hitRight: -999 0 0"
 		raycastable-game></a-entity>

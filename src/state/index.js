@@ -118,6 +118,9 @@ AFRAME.registerState({
 		settings: {headsetOpacity: 0, volume: 0.0},
 		localReplay: !AFRAME.utils.getUrlParameter('id') && !AFRAME.utils.getUrlParameter('hash'),
 		hiddenSaber: '',
+
+		treeLoaded: false,
+		floorWidth: 3,
 	},
 
 	handlers: {
@@ -238,6 +241,11 @@ AFRAME.registerState({
 
 		scoreChanged: (state, payload) => {
 			updateScore(state, {index: payload.index}, false);
+		},
+
+		treeLoaded: (state, payload) => {
+			state.treeLoaded = true;
+			state.floorWidth = state.settings.showTree ? 6 : 3;
 		},
 
 		victory: function (state) {
@@ -374,6 +382,7 @@ AFRAME.registerState({
 			state.saberGlowScale = new THREE.Vector3(saberScale, 1.1, saberScale);
 
 			document.body.style.backgroundColor = payload.settings.backgroundColor;
+			state.floorWidth = payload.settings.showTree && state.treeLoaded ? 6 : 3;
 		},
 
 		povchanged: (state, payload) => {

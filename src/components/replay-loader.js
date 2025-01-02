@@ -249,7 +249,10 @@ AFRAME.registerComponent('replay-loader', {
 				if (replaynote.index == undefined) {
 					if (
 						Math.abs(replaynote.spawnTime - mapnote._songTime) < 0.0005 &&
-						(replaynote.id == mapnote._id || replaynote.id == mapnote._idWithScoring || replaynote.id == mapnote._idWithAlternativeScoring)
+						(replaynote.id == mapnote._id ||
+							replaynote.id == mapnote._idWithScoring ||
+							replaynote.id == mapnote._idWithAlternativeScoring ||
+							replaynote.id == mapnote._idWithLegacyScoring)
 					) {
 						assignNote(replaynote, mapnote);
 						break;
@@ -384,7 +387,8 @@ AFRAME.registerComponent('replay-loader', {
 						if (
 							replaynote.id == mapnote._id ||
 							replaynote.id == mapnote._idWithScoring ||
-							replaynote.id == mapnote._idWithAlternativeScoring
+							replaynote.id == mapnote._idWithAlternativeScoring ||
+							replaynote.id == mapnote._idWithLegacyScoring
 						) {
 							assignNote(replaynote, mapnote);
 							break;
@@ -596,6 +600,7 @@ AFRAME.registerComponent('replay-loader', {
 			}
 
 			var altscoringType = scoringType;
+			var legacyScoringType = scoringType;
 			if (mapnote._scoringType == ScoringType.BurstSliderHead) {
 				altscoringType = ScoringType.SliderHead + 2;
 			} else if (mapnote._scoringType == ScoringType.SliderHead) {
@@ -607,32 +612,50 @@ AFRAME.registerComponent('replay-loader', {
 			) {
 				id = mapnote._tailLineIndex * 1000 + mapnote._tailLineLayer * 100 + colorType * 10 + cutDirection;
 			}
+
+			if (mapnote._scoringType == ScoringType.SliderHeadSliderTail) {
+				legacyScoringType = ScoringType.SliderTail + 2;
+			} else if (mapnote._scoringType == ScoringType.BurstSliderHeadSliderTail) {
+				legacyScoringType = ScoringType.BurstSliderHead + 2;
+			} else if (mapnote._scoringType == ScoringType.BurstSliderElementSliderHead) {
+				legacyScoringType = ScoringType.BurstSliderElement + 2;
+			}
+
 			mapnote._idWithAlternativeScoring = id + altscoringType * 10000;
+			mapnote._idWithLegacyScoring = id + legacyScoringType * 10000;
 		});
 	},
 });
 
 function CutScoresForNote(cut, scoringType) {
 	var beforeCutRawScore = 0;
-	if (scoringType != ScoringType.BurstSliderElement) {
-		if (scoringType == ScoringType.SliderTail) {
+	if (scoringType != ScoringType.BurstSliderElement && scoringType != ScoringType.BurstSliderElementSliderHead) {
+		if (
+			scoringType == ScoringType.SliderTail ||
+			scoringType == ScoringType.SliderHeadSliderTail ||
+			scoringType == ScoringType.BurstSliderHeadSliderTail
+		) {
 			beforeCutRawScore = 70;
 		} else {
 			beforeCutRawScore = clamp(Math.round(70 * cut.beforeCutRating), 0, 70);
 		}
 	}
 	var afterCutRawScore = 0;
-	if (scoringType != ScoringType.BurstSliderElement) {
+	if (scoringType != ScoringType.BurstSliderElement && scoringType != ScoringType.BurstSliderElementSliderHead) {
 		if (scoringType == ScoringType.BurstSliderHead) {
 			afterCutRawScore = 0;
-		} else if (scoringType == ScoringType.SliderHead) {
+		} else if (
+			scoringType == ScoringType.SliderHead ||
+			scoringType == ScoringType.SliderHeadSliderTail ||
+			scoringType == ScoringType.BurstSliderHeadSliderTail
+		) {
 			afterCutRawScore = 30;
 		} else {
 			afterCutRawScore = clamp(Math.round(30 * cut.afterCutRating), 0, 30);
 		}
 	}
 	var cutDistanceRawScore = 0;
-	if (scoringType == ScoringType.BurstSliderElement) {
+	if (scoringType == ScoringType.BurstSliderElement || scoringType == ScoringType.BurstSliderElementSliderHead) {
 		cutDistanceRawScore = 20;
 	} else {
 		var num = 1 - clamp(cut.cutDistanceToCenter / 0.3, 0, 1);

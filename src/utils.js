@@ -84,6 +84,9 @@ const ScoringType = {
 	SliderTail: 3,
 	BurstSliderHead: 4,
 	BurstSliderElement: 5,
+	SliderHeadSliderTail: 6,
+	BurstSliderHeadSliderTail: 7,
+	BurstSliderElementSliderHead: 8,
 };
 
 const EaseType = {

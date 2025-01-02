@@ -590,8 +590,12 @@ function addScoringTypeAndChains(map) {
 
 	map._sliders.forEach(slider => {
 		var head = mapnotes.find(n => compareSlider(n, slider));
-		if (head && head._scoringType == ScoringType.Normal) {
-			head._scoringType = ScoringType.SliderHead;
+		if (head) {
+			if (head._scoringType == ScoringType.Normal) {
+				head._scoringType = ScoringType.SliderHead;
+			} else if (head._scoringType == ScoringType.SliderTail) {
+				head._scoringType = ScoringType.SliderHeadSliderTail;
+			}
 		}
 		var tail = mapnotes.find(n => compareSlider(n, slider, true));
 		if (head) {
@@ -599,8 +603,12 @@ function addScoringTypeAndChains(map) {
 		}
 
 		slider.tail = tail;
-		if (tail && tail._scoringType == ScoringType.Normal) {
-			tail._scoringType = ScoringType.SliderTail;
+		if (tail) {
+			if (tail._scoringType == ScoringType.Normal) {
+				tail._scoringType = ScoringType.SliderTail;
+			} else if (tail._scoringType == ScoringType.SliderHead) {
+				tail._scoringType = ScoringType.SliderHeadSliderTail;
+			}
 		}
 	});
 
@@ -611,6 +619,8 @@ function addScoringTypeAndChains(map) {
 		if (head) {
 			if (head._scoringType == ScoringType.Normal) {
 				head._scoringType = ScoringType.BurstSliderHead;
+			} else if (head._scoringType == ScoringType.SliderTail) {
+				head._scoringType = ScoringType.BurstSliderHeadSliderTail;
 			}
 			if (head._scoringType == ScoringType.SliderHead && head.tail) {
 				let nextHead = map._burstSliders.find(n => compareSlider(n, head.tail));
@@ -628,6 +638,11 @@ function addScoringTypeAndChains(map) {
 			chain._sliceIndex = i;
 
 			chain._time = LerpUnclamped(chain._time, chain._tailTime, chain._sliceIndex / (slider._sliceCount - 1));
+
+			const arcSlider = map._sliders.find(n => compareSlider(chain, n));
+			if (arcSlider) {
+				chain._scoringType = ScoringType.BurstSliderElementSliderHead;
+			}
 
 			chains.push(chain);
 		}

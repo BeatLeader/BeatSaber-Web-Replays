@@ -1233,6 +1233,7 @@ AFRAME.registerComponent('song-controls', {
 
 		const markers = [];
 		const markerImages = {};
+		const hoverMarkerImages = {};
 		const markerTypes = ['pause', 'fail', 'start', 'maxStreak', 'miss', 'badCut', 'wall', 'bomb'];
 		let loadedImages = 0;
 
@@ -1245,6 +1246,14 @@ AFRAME.registerComponent('song-controls', {
 					drawMarkers();
 				}
 				markerImages[type] = img;
+			};
+		});
+
+		markerTypes.forEach(type => {
+			const img = new Image();
+			img.src = `assets/img/${type}-timeline-hover.png`;
+			img.onload = () => {
+				hoverMarkerImages[type] = img;
 			};
 		});
 
@@ -1332,30 +1341,12 @@ AFRAME.registerComponent('song-controls', {
 			markersContext.clearRect(0, 0, width, height);
 			markers.forEach(marker => {
 				if (this.settings.settings[marker.type + 'Markers']) {
-					const img = markerImages[marker.type];
+					const hovered = hoveredMarkers.includes(marker);
+					const img = hovered && hoverMarkerImages[marker.type] ? hoverMarkerImages[marker.type] : markerImages[marker.type];
 					if (img) {
-						const size = hoveredMarkers.includes(marker) ? 15 : 10;
+						const size = hovered ? 15 : 10;
 						const y = isHovering ? marker.y : height - size / 2;
-						if (hoveredMarkers.includes(marker)) {
-							markersContext.shadowColor = 'black';
-							markersContext.shadowBlur = 0;
-							markersContext.shadowOffsetX = 2;
-							markersContext.shadowOffsetY = 0;
-							markersContext.drawImage(img, marker.x - size / 2, y - size / 2, size, size);
-							markersContext.shadowOffsetX = -2;
-							markersContext.drawImage(img, marker.x - size / 2, y - size / 2, size, size);
-							markersContext.shadowOffsetX = 0;
-							markersContext.shadowOffsetY = 2;
-							markersContext.drawImage(img, marker.x - size / 2, y - size / 2, size, size);
-							markersContext.shadowOffsetY = -2;
-							markersContext.drawImage(img, marker.x - size / 2, y - size / 2, size, size);
-						} else {
-							markersContext.shadowColor = 'transparent';
-							markersContext.shadowBlur = 0;
-							markersContext.shadowOffsetX = 0;
-							markersContext.shadowOffsetY = 0;
-							markersContext.drawImage(img, marker.x - size / 2, y - size / 2, size, size);
-						}
+						markersContext.drawImage(img, marker.x - size / 2, y - size / 2, size, size);
 					}
 				}
 			});
@@ -1411,11 +1402,11 @@ AFRAME.registerComponent('song-controls', {
 			const x = e.clientX - rect.left;
 			const y = e.clientY - rect.top;
 
-			hoveredMarkers = markers.filter(marker => Math.abs(marker.x - x) < 7.5 && Math.abs(marker.currentY - y) < 7.5);
+			hoveredMarkers = markers.filter(marker => Math.abs(marker.x - x) < 2 && Math.abs(marker.currentY - y) < 5);
 
 			drawMarkers();
-			if (hoveredMarkers.length > 0 && hoveredMarkers.every(marker => this.settings.settings[marker.type + 'Markers'])) {
-				markersCanvas.title = getTooltipContent(hoveredMarkers);
+			if (hoveredMarkers.length > 0 && hoveredMarkers.some(marker => this.settings.settings[marker.type + 'Markers'])) {
+				markersCanvas.title = getTooltipContent(hoveredMarkers.filter(marker => this.settings.settings[marker.type + 'Markers']));
 			} else {
 				markersCanvas.removeAttribute('title');
 			}

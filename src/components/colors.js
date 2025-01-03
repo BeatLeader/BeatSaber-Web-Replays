@@ -205,14 +205,21 @@ AFRAME.registerComponent('colors', {
 		this.getColors(data => {
 			if (data.player) {
 				let roles = data.player.role;
-				if (roles.includes('tipper') || roles.includes('supporter') || roles.includes('supporter')) {
-					this.currentPlayer = data.player.id;
+				if (
+					roles.includes('tipper') ||
+					roles.includes('supporter') ||
+					roles.includes('supporter') ||
+					roles.includes('admin') ||
+					roles.includes('ranked') ||
+					roles.includes('quality')
+				) {
+					this.currentPlayerId = data.player.id;
 				}
 			}
 		});
 	},
 
-	getColors: completion => {
+	getColors: function (completion) {
 		fetch(getApiUrl() + '/user', {credentials: 'include'})
 			.then(response => response.json())
 			.then(async data => {
@@ -220,8 +227,8 @@ AFRAME.registerComponent('colors', {
 			});
 	},
 
-	changeColor: (hand, color) => {
-		if (this.playerId == this.replayPlayerId) {
+	changeColor: function (hand, color) {
+		if (this.currentPlayerId == this.replayPlayerId) {
 			this.start = new Date().getTime();
 			setTimeout(() => {
 				if (new Date().getTime() - this.start > 999) {

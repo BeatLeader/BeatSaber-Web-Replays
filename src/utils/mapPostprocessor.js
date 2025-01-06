@@ -26,6 +26,7 @@ function upgrade(map) {
 			if (noteData.customData) {
 				resultNote._customData = {
 					_position: noteData.customData.coordinates,
+					_rotation: noteData.customData.worldRotation,
 				};
 			}
 
@@ -202,6 +203,7 @@ function upgrade(map) {
 			if (note.customData) {
 				resultNote._customData = {
 					_position: note.customData.coordinates,
+					_rotation: note.customData.worldRotation,
 				};
 			}
 

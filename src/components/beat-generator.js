@@ -538,6 +538,14 @@ AFRAME.registerComponent('beat-generator', {
 				if (note._customData._cutDirection || note._customData._cutDirection === 0) {
 					beatObj.rotationOffset = note._customData._cutDirection;
 				}
+
+				if (note._customData._rotation) {
+					if (Array.isArray(note._customData._rotation)) {
+						beatObj.spawnRotation = -note._customData._rotation[1];
+					} else {
+						beatObj.spawnRotation = note._customData._rotation;
+					}
+				}
 			}
 
 			beatObj.flip = note._flipLineIndex !== undefined;

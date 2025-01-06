@@ -61,6 +61,7 @@
   },
   "devDependencies": {
     "cross-env": "4.0.0",
+    "extract-text-webpack-plugin": "^2.1.2",
     "ghpages": "0.0.10",
     "semistandard": "10.0.0",
     "shx": "^0.2.2",

@@ -6,6 +6,7 @@ var ip = require('ip');
 var path = require('path');
 var webpack = require('webpack');
 const COLORS = require('./src/constants/colors.js');
+const ExtractTextPlugin = require('extract-text-webpack-plugin');
 
 // Set up templating.
 var nunjucks = Nunjucks.configure(path.resolve(__dirname, 'src'), {
@@ -17,6 +18,10 @@ nunjucks.addGlobal('DEBUG_INSPECTOR', !!process.env.DEBUG_INSPECTOR);
 nunjucks.addGlobal('HOST', ip.address());
 nunjucks.addGlobal('IS_PRODUCTION', process.env.NODE_ENV === 'production');
 nunjucks.addGlobal('COLORS', COLORS);
+
+// Generate timestamp
+const timestamp = Math.floor(Date.now() / 1000);
+nunjucks.addGlobal('BUILD_TIMESTAMP', timestamp);
 
 // Initial Nunjucks render.
 fs.writeFileSync('index.html', nunjucks.render('index.html'));
@@ -39,7 +44,8 @@ if (process.env.NODE_ENV !== 'production') {
 	});
 }
 
-PLUGINS = [new webpack.EnvironmentPlugin(['NODE_ENV'])];
+PLUGINS = [new webpack.EnvironmentPlugin(['NODE_ENV']), new ExtractTextPlugin(`build/style.${timestamp}.css`)];
+
 if (process.env.NODE_ENV === 'production') {
 	PLUGINS.push(
 		new MinifyPlugin({
@@ -77,7 +83,7 @@ module.exports = {
 	entry: './src/index.js',
 	output: {
 		path: __dirname,
-		filename: 'build/build.js',
+		filename: `build/build.${timestamp}.js`,
 	},
 	plugins: PLUGINS,
 	module: {
@@ -99,21 +105,23 @@ module.exports = {
 			{
 				test: /\.styl$/,
 				exclude: /(node_modules)/,
-				loaders: [
-					'style-loader',
-					{
-						loader: 'css-loader',
-						options: {url: false},
-					},
-					{
-						loader: 'postcss-loader',
-						options: {
-							ident: 'postcss',
-							plugins: loader => [require('autoprefixer')()],
+				use: ExtractTextPlugin.extract({
+					fallback: 'style-loader',
+					use: [
+						{
+							loader: 'css-loader',
+							options: {url: false},
 						},
-					},
-					'stylus-loader',
-				],
+						{
+							loader: 'postcss-loader',
+							options: {
+								ident: 'postcss',
+								plugins: loader => [require('autoprefixer')()],
+							},
+						},
+						'stylus-loader',
+					],
+				}),
 			},
 		],
 	},

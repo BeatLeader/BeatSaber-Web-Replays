@@ -1,372 +1,370 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Beat Saber web replays</title>
-    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="assets/img/apple-touch-icon-57x57.png" />
-    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="assets/img/apple-touch-icon-114x114.png" />
-    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="assets/img/apple-touch-icon-72x72.png" />
-    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="assets/img/apple-touch-icon-144x144.png" />
-    <link rel="apple-touch-icon-precomposed" sizes="60x60" href="assets/img/apple-touch-icon-60x60.png" />
-    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="assets/img/apple-touch-icon-120x120.png" />
-    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="assets/img/apple-touch-icon-76x76.png" />
-    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="assets/img/apple-touch-icon-152x152.png" />
-    <link rel="icon" type="image/png" href="assets/img/favicon-196x196.png" sizes="196x196" />
-    <link rel="icon" type="image/png" href="assets/img/favicon-96x96.png" sizes="96x96" />
-    <link rel="icon" type="image/png" href="assets/img/favicon-32x32.png" sizes="32x32" />
-    <link rel="icon" type="image/png" href="assets/img/favicon-16x16.png" sizes="16x16" />
-    <link rel="icon" type="image/png" href="assets/img/favicon-128.png" sizes="128x128" />
-    <meta name="application-name" content="Beat Saber web replays"/>
-    <meta name="msapplication-TileColor" content="#FFFFFF" />
-    <meta name="msapplication-TileImage" content="assets/img/mstile-144x144.png" />
-    <meta name="msapplication-square70x70logo" content="assets/img/mstile-70x70.png" />
-    <meta name="msapplication-square150x150logo" content="assets/img/mstile-150x150.png" />
-    <meta name="msapplication-wide310x150logo" content="assets/img/mstile-310x150.png" />
-    <meta name="msapplication-square310x310logo" content="assets/img/mstile-310x310.png" />
+	<head>
+		<title>Beat Saber web replays</title>
+		<link rel="apple-touch-icon-precomposed" sizes="57x57" href="assets/img/apple-touch-icon-57x57.png" />
+		<link rel="apple-touch-icon-precomposed" sizes="114x114" href="assets/img/apple-touch-icon-114x114.png" />
+		<link rel="apple-touch-icon-precomposed" sizes="72x72" href="assets/img/apple-touch-icon-72x72.png" />
+		<link rel="apple-touch-icon-precomposed" sizes="144x144" href="assets/img/apple-touch-icon-144x144.png" />
+		<link rel="apple-touch-icon-precomposed" sizes="60x60" href="assets/img/apple-touch-icon-60x60.png" />
+		<link rel="apple-touch-icon-precomposed" sizes="120x120" href="assets/img/apple-touch-icon-120x120.png" />
+		<link rel="apple-touch-icon-precomposed" sizes="76x76" href="assets/img/apple-touch-icon-76x76.png" />
+		<link rel="apple-touch-icon-precomposed" sizes="152x152" href="assets/img/apple-touch-icon-152x152.png" />
+		<link rel="icon" type="image/png" href="assets/img/favicon-196x196.png" sizes="196x196" />
+		<link rel="icon" type="image/png" href="assets/img/favicon-96x96.png" sizes="96x96" />
+		<link rel="icon" type="image/png" href="assets/img/favicon-32x32.png" sizes="32x32" />
+		<link rel="icon" type="image/png" href="assets/img/favicon-16x16.png" sizes="16x16" />
+		<link rel="icon" type="image/png" href="assets/img/favicon-128.png" sizes="128x128" />
+		<meta name="application-name" content="Beat Saber web replays" />
+		<meta name="msapplication-TileColor" content="#FFFFFF" />
+		<meta name="msapplication-TileImage" content="assets/img/mstile-144x144.png" />
+		<meta name="msapplication-square70x70logo" content="assets/img/mstile-70x70.png" />
+		<meta name="msapplication-square150x150logo" content="assets/img/mstile-150x150.png" />
+		<meta name="msapplication-wide310x150logo" content="assets/img/mstile-310x150.png" />
+		<meta name="msapplication-square310x310logo" content="assets/img/mstile-310x310.png" />
 
-    <meta property="og:title" content="Beat Saber replay">
-    <meta name="twitter:title" content="Beat Saber replay">
-    <meta name="twitter:site" content="replay.beatleader.xyz">
-    <meta name="twitter:image:alt" content="Beat Saber replay">
+		<meta property="og:title" content="Beat Saber replay" />
+		<meta name="twitter:title" content="Beat Saber replay" />
+		<meta name="twitter:site" content="replay.beatleader.xyz" />
+		<meta name="twitter:image:alt" content="Beat Saber replay" />
 
-    <meta name="twitter:player:width" content="700" />
-    <meta name="twitter:player:height" content="400" />
-    <meta name="twitter:card" content="summary_large_image">
+		<meta name="twitter:player:width" content="700" />
+		<meta name="twitter:player:height" content="400" />
+		<meta name="twitter:card" content="summary_large_image" />
 
-    <meta property="og:type" content="website">
-    <meta property="og:image:width" content="700">
-    <meta property="og:image:height" content="400">
+		<meta property="og:type" content="website" />
+		<meta property="og:image:width" content="700" />
+		<meta property="og:image:height" content="400" />
 
-    <script>
-      ["og:url", "og:video:url", "og:video:secure_url", "twitter:player"].forEach(attribute => {
-        var link = document.createElement('meta');  
-        link.setAttribute('property', attribute);   
-        link.content = document.location;  
-        document.getElementsByTagName('head')[0].appendChild(link);
-      });
-      ["twitter:image", "og:image"].forEach(attribute => {
-        var link = document.createElement('meta');  
-        link.setAttribute('property', attribute);
-        link.content = document.location.protocol + "//" + document.location.host + "/preview.png" + window.location.search;
-        if (attribute == "twitter:image")  {
-          link.content += "&twitter=true";
-        }
-        document.getElementsByTagName('head')[0].appendChild(link);
-      });
-    </script>
+		<script>
+			['og:url', 'og:video:url', 'og:video:secure_url', 'twitter:player'].forEach(attribute => {
+				var link = document.createElement('meta');
+				link.setAttribute('property', attribute);
+				link.content = document.location;
+				document.getElementsByTagName('head')[0].appendChild(link);
+			});
+			['twitter:image', 'og:image'].forEach(attribute => {
+				var link = document.createElement('meta');
+				link.setAttribute('property', attribute);
+				link.content = document.location.protocol + '//' + document.location.host + '/preview.png' + window.location.search;
+				if (attribute == 'twitter:image') {
+					link.content += '&twitter=true';
+				}
+				document.getElementsByTagName('head')[0].appendChild(link);
+			});
+		</script>
 
-    <script type="text/javascript">
-      window.vrDisabled = true;
-    </script>
-    {% if DEBUG_AFRAME %}
-      <script src="http://{{ HOST }}:9000/dist/aframe-master.js"></script>
-    {% elif IS_PRODUCTION %}
-      <script src="vendor/aframe-master.min.js"></script>
-    {% else %}
-      <script src="vendor/aframe-master.js"></script>
-    {% endif %}
-    <script src="build/build.js"></script>
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.0/css/all.css" />
-  </head>
-  <body id="body" class="showControls">
-    {% include './animations.html' %}
-    
-    <canvas id="main-canvas"></canvas>
-    {% include './templates/controls.html' %}
-    <a-scene
-      settings
-      bind__pixelRatio="settings.pixelRatio"
-      precision="mediump"
-      mixin="bgColorAnimation tunnelColorAnimation leftLaserColorAnimation rightLaserColorAnimation textGlowColorAnimation floorColorAnimation"
-      bind__beat-generator="difficulty: challenge.difficulty; mode: challenge.mode; isPlaying: isPlaying || isPaused; beatSpeed: challenge.beatSpeed; noEffects: settings.noEffects"
-      
-      bind__song="audio: challenge.audio; difficulty: challenge.difficulty; mode: challenge.mode; isPaused: isPaused; isFinished: isFinished; isPlaying: isPlaying; isBeatsPreloaded: challenge.isBeatsPreloaded"
-      beat-hit-sound
-      bind__song-controls="difficulty: challenge.difficulty; mode: challenge.mode; isSafari: isSafari; isPlaying: isPlaying; songName: challenge.songName; songSubName: challenge.author; songImage: challenge.image; showControls: showControls; leaderboardId: challenge.leaderboardId; songId: challenge.id; autoplayOnLoad: settings.autoplayOnLoad"
-      bind__zip-loader="difficulty: challenge.difficulty; id: challenge.id; mode: challenge.mode"
-      bind__replay-loader="difficulty: challenge.difficulty; mode: challenge.mode"
-      bind__intro-skip="difficulty: challenge.difficulty"
-      bind__fps-counter="enabled: settings.showFps"
-      hack
-      {% if DEBUG_INSPECTOR %}
-        inspector="url: http://localhost:3333/dist/aframe-inspector.js"
-      {% else %}
-        inspector="url: https://cdn.jsdelivr.net/gh/aframevr/aframe-inspector@master/dist/aframe-inspector.min.js"
-      {% endif %}
-      iframe-url
-      loading-screen="backgroundColor: #000;"
-      pool__beat-arrow-blue="mixin: arrowBlueBeat; size: 5; container: #beatContainer; dynamic: true"
-      pool__beat-arrow-red="mixin: arrowRedBeat; size: 5; container: #beatContainer; dynamic: true"
-      pool__beat-dot-blue="mixin: dotBlueBeat; size: 5; container: #beatContainer; dynamic: true"
-      pool__beat-dot-red="mixin: dotRedBeat; size: 5; container: #beatContainer; dynamic: true"
-      pool__beat-sliderhead-blue="mixin: blueHead; size: 5; container: #beatContainer; dynamic: true"
-      pool__beat-sliderhead-red="mixin: redHead; size: 5; container: #beatContainer; dynamic: true"
-      pool__beat-sliderchain-blue="mixin: blueChain; size: 5; container: #beatContainer; dynamic: true"
-      pool__beat-sliderchain-red="mixin: redChain; size: 5; container: #beatContainer; dynamic: true"
-      pool__beat-mine="mixin: mine; size: 5; container: #beatContainer; dynamic: true"
-      pool__beatscoreok="mixin: beatScoreOk; size: 50; container: #beatContainer; dynamic: true"
-      pool__beatscorewrong="mixin: beatScoreWrong; size: 10; container: #beatContainer; dynamic: true"
-      pool__beatscoremiss="mixin: beatScoreMiss; size: 10; container: #beatContainer; dynamic: true"
-      pool__wall="mixin: wall; size: 5; container: #beatContainer; dynamic: true"
-      pool__slider-blue="mixin: slider; size: 5; container: #beatContainer; dynamic: true"
-      pool__slider-red="mixin: slider; size: 5; container: #beatContainer; dynamic: true"
-      proxy-event__cleargame="event: gamemenurestart; as: cleargame; to: a-scene"
-      proxy-event__pausegame="event: pausegame; as: textglowoff; to: a-scene"
-      proxy-event__resumegame="event: gamemenuresume; as: textglownormal; to: a-scene"
-      stage-colors="color: blue"
-      stats-param
-      user-gesture
-      replay-loader
-      bind__pauser="enabled: isPlaying; pauseOnUnfocus: settings.pauseOnUnfocus"
-      replay-player
-      replay-info-ui
-      camera-mover
-      fps-counter
-      intro-skip
-      random-replay
-      colors
-      render-order="background, additive, middle, hud, walls, splines, headset">
+		<script type="text/javascript">
+			window.vrDisabled = true;
+		</script>
+		{% if DEBUG_AFRAME %}
+		<script src="http://{{ HOST }}:9000/dist/aframe-master.js"></script>
+		{% elif IS_PRODUCTION %}
+		<script src="vendor/aframe-master.min.js"></script>
+		{% else %}
+		<script src="vendor/aframe-master.js"></script>
+		{% endif %}
+		<script src="build/build.{{ BUILD_TIMESTAMP }}.js"></script>
+		<link rel="stylesheet" href="build/style.{{ BUILD_TIMESTAMP }}.css" />
+		<link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.0/css/all.css" />
+	</head>
+	<body id="body" class="showControls">
+		{% include './animations.html' %}
 
-      <a-assets timeout="10000">
-        {% include './assets.html' %}
-      </a-assets>
+		<canvas id="main-canvas"></canvas>
+		{% include './templates/controls.html' %}
+		<a-scene
+			settings
+			bind__pixelRatio="settings.pixelRatio"
+			precision="mediump"
+			mixin="bgColorAnimation tunnelColorAnimation leftLaserColorAnimation rightLaserColorAnimation textGlowColorAnimation floorColorAnimation"
+			bind__beat-generator="difficulty: challenge.difficulty; mode: challenge.mode; isPlaying: isPlaying || isPaused; beatSpeed: challenge.beatSpeed; noEffects: settings.noEffects"
+			bind__song="audio: challenge.audio; difficulty: challenge.difficulty; mode: challenge.mode; isPaused: isPaused; isFinished: isFinished; isPlaying: isPlaying; isBeatsPreloaded: challenge.isBeatsPreloaded"
+			beat-hit-sound
+			bind__song-controls="difficulty: challenge.difficulty; mode: challenge.mode; isSafari: isSafari; isPlaying: isPlaying; songName: challenge.songName; songSubName: challenge.author; songImage: challenge.image; showControls: showControls; leaderboardId: challenge.leaderboardId; songId: challenge.id; autoplayOnLoad: settings.autoplayOnLoad"
+			bind__zip-loader="difficulty: challenge.difficulty; id: challenge.id; mode: challenge.mode"
+			bind__replay-loader="difficulty: challenge.difficulty; mode: challenge.mode"
+			bind__intro-skip="difficulty: challenge.difficulty"
+			bind__fps-counter="enabled: settings.showFps"
+			hack
+			{%
+			if
+			DEBUG_INSPECTOR
+			%}
+			inspector="url: http://localhost:3333/dist/aframe-inspector.js"
+			{%
+			else
+			%}
+			inspector="url: https://cdn.jsdelivr.net/gh/aframevr/aframe-inspector@master/dist/aframe-inspector.min.js"
+			{%
+			endif
+			%}
+			iframe-url
+			loading-screen="backgroundColor: #000;"
+			pool__beat-arrow-blue="mixin: arrowBlueBeat; size: 5; container: #beatContainer; dynamic: true"
+			pool__beat-arrow-red="mixin: arrowRedBeat; size: 5; container: #beatContainer; dynamic: true"
+			pool__beat-dot-blue="mixin: dotBlueBeat; size: 5; container: #beatContainer; dynamic: true"
+			pool__beat-dot-red="mixin: dotRedBeat; size: 5; container: #beatContainer; dynamic: true"
+			pool__beat-sliderhead-blue="mixin: blueHead; size: 5; container: #beatContainer; dynamic: true"
+			pool__beat-sliderhead-red="mixin: redHead; size: 5; container: #beatContainer; dynamic: true"
+			pool__beat-sliderchain-blue="mixin: blueChain; size: 5; container: #beatContainer; dynamic: true"
+			pool__beat-sliderchain-red="mixin: redChain; size: 5; container: #beatContainer; dynamic: true"
+			pool__beat-mine="mixin: mine; size: 5; container: #beatContainer; dynamic: true"
+			pool__beatscoreok="mixin: beatScoreOk; size: 50; container: #beatContainer; dynamic: true"
+			pool__beatscorewrong="mixin: beatScoreWrong; size: 10; container: #beatContainer; dynamic: true"
+			pool__beatscoremiss="mixin: beatScoreMiss; size: 10; container: #beatContainer; dynamic: true"
+			pool__wall="mixin: wall; size: 5; container: #beatContainer; dynamic: true"
+			pool__slider-blue="mixin: slider; size: 5; container: #beatContainer; dynamic: true"
+			pool__slider-red="mixin: slider; size: 5; container: #beatContainer; dynamic: true"
+			proxy-event__cleargame="event: gamemenurestart; as: cleargame; to: a-scene"
+			proxy-event__pausegame="event: pausegame; as: textglowoff; to: a-scene"
+			proxy-event__resumegame="event: gamemenuresume; as: textglownormal; to: a-scene"
+			stage-colors="color: blue"
+			stats-param
+			user-gesture
+			replay-loader
+			bind__pauser="enabled: isPlaying; pauseOnUnfocus: settings.pauseOnUnfocus"
+			replay-player
+			replay-info-ui
+			camera-mover
+			fps-counter
+			intro-skip
+			random-replay
+			colors
+			render-order="background, additive, middle, hud, walls, splines, headset">
+			<a-assets timeout="10000"> {% include './assets.html' %} </a-assets>
 
-      <a-entity id="beatObjTemplate" obj-model="obj: #beatObj" visible="false"></a-entity>
-      <a-entity id="sliderheadObjTemplate" obj-model="obj: #sliderheadObj" visible="false"></a-entity>
-      <a-entity id="sliderchainObjTemplate" obj-model="obj: #sliderchainObj" visible="false"></a-entity>
-      <a-entity id="arrowRedObjTemplate" obj-model="obj: #arrowObj" visible="false"></a-entity>
-      <a-entity id="arrowBlueObjTemplate" obj-model="obj: #arrowObj" visible="false"></a-entity>
-      <a-entity id="dotRedObjTemplate" obj-model="obj: #dotObj" visible="false"></a-entity>
-      <a-entity id="dotBlueObjTemplate" obj-model="obj: #dotObj" visible="false"></a-entity>
-      <a-entity id="mineObjTemplate" obj-model="obj: #mineObj" visible="false"></a-entity>
+			<a-entity id="beatObjTemplate" obj-model="obj: #beatObj" visible="false"></a-entity>
+			<a-entity id="sliderheadObjTemplate" obj-model="obj: #sliderheadObj" visible="false"></a-entity>
+			<a-entity id="sliderchainObjTemplate" obj-model="obj: #sliderchainObj" visible="false"></a-entity>
+			<a-entity id="arrowRedObjTemplate" obj-model="obj: #arrowObj" visible="false"></a-entity>
+			<a-entity id="arrowBlueObjTemplate" obj-model="obj: #arrowObj" visible="false"></a-entity>
+			<a-entity id="dotRedObjTemplate" obj-model="obj: #dotObj" visible="false"></a-entity>
+			<a-entity id="dotBlueObjTemplate" obj-model="obj: #dotObj" visible="false"></a-entity>
+			<a-entity id="mineObjTemplate" obj-model="obj: #mineObj" visible="false"></a-entity>
 
-      <a-entity 
-        id="beatContainer"></a-entity>
+			<a-entity id="beatContainer"></a-entity>
 
-      <a-entity
-        id="audioAnalyser"
-        audioanalyser="fftSize: 64; enableBeatDetection: true; enableLevels: false; enableWaveform: false; beatDetectionThrottle: 5000; unique: true"
-        bind__audioanalyser="beatDetectionThrottle: menuActive && 5000 || 1000; isSafari: isSafari"></a-entity>
+			<a-entity
+				id="audioAnalyser"
+				audioanalyser="fftSize: 64; enableBeatDetection: true; enableLevels: false; enableWaveform: false; beatDetectionThrottle: 5000; unique: true"
+				bind__audioanalyser="beatDetectionThrottle: menuActive && 5000 || 1000; isSafari: isSafari"></a-entity>
 
-      {% include './templates/stage.html' %}
-      {% include './templates/gameMenu.html' %}
-      {% include './templates/score.html' %}
-      {% include './templates/loading.html' %}
+			{% include './templates/stage.html' %} {% include './templates/gameMenu.html' %} {% include './templates/score.html' %} {% include
+			'./templates/loading.html' %}
 
-      <a-entity id="glowContainer"></a-entity>
+			<a-entity id="glowContainer"></a-entity>
 
-      <a-entity
-        render-order="wall"
-        id="mineParticles"
-        particleplayer="src: assets/models/mineparticles.json; pscale: 0.5; interpolate: true; scale: 1.4; loop: false; on: explode; img: #sparkImg; count: 20%; animateScale: true; initialScale: 3 1 1; finalScale: 0.2 0.2 1"></a-entity>
+			<a-entity
+				render-order="wall"
+				id="mineParticles"
+				particleplayer="src: assets/models/mineparticles.json; pscale: 0.5; interpolate: true; scale: 1.4; loop: false; on: explode; img: #sparkImg; count: 20%; animateScale: true; initialScale: 3 1 1; finalScale: 0.2 0.2 1"></a-entity>
 
-      <a-entity
-        id="controllerRig"
-        proxy-event="event: recentered; to: #headRig; captureBubbles: true; as: recenter">
-        {% macro saber (hand, otherHand, bladeColor, beamColor) %}
-          <a-entity id="{{ hand }}Hand"
-            render-order="wall"
-            class="saber"
-            bind__trail="trailType: settings.trailType; lifetime: settings.trailLength; hiddenSaber: hiddenSaber; goodTdColor: settings.goodTdColor; badTdColor: settings.badTdColor"
-            bind__cut-plane="enabled: isPlaying"
-            saber-controls="hand: {{ hand }}"
-            bind__saber-controls="hiddenSaber: hiddenSaber"
-            trail="color: {{ bladeColor }}; hand: {{ hand }}"
-            cut-plane="hand: {{ hand }}">
+			<a-entity id="controllerRig" proxy-event="event: recentered; to: #headRig; captureBubbles: true; as: recenter">
+				{% macro saber (hand, otherHand, bladeColor, beamColor) %}
+				<a-entity
+					id="{{ hand }}Hand"
+					render-order="wall"
+					class="saber"
+					bind__trail="trailType: settings.trailType; lifetime: settings.trailLength; hiddenSaber: hiddenSaber; goodTdColor: settings.goodTdColor; badTdColor: settings.badTdColor"
+					bind__cut-plane="enabled: isPlaying"
+					saber-controls="hand: {{ hand }}"
+					bind__saber-controls="hiddenSaber: hiddenSaber"
+					trail="color: {{ bladeColor }}; hand: {{ hand }}"
+					cut-plane="hand: {{ hand }}">
+					<a-entity class="saberContainer" rotation="90 0 0">
+						<a-entity
+							class="bladeContainer"
+							animation="property: scale; from: 0 0 0; to: 1 1 1; dur: 750; easing: linear; startEvents: drawblade"
+							scale="0.001 0.001 0.001">
+							<a-entity
+								class="blade blade{{ hand }}"
+								geometry="primitive: box; height: 1.0; depth: 0.02; width: 0.02"
+								material="shader: flat; color: #fff"
+								scale="1 1 1"
+								bind__scale="saberScale"
+								position="0 -0.5 0"></a-entity>
+							<a-entity
+								render-order="wall"
+								class="saberglow"
+								obj-model="obj: #saberGlowObj"
+								material="shader: flat; color: {{ bladeColor }}; blending: additive; opacity: 0.08; depthWrite: false"
+								scale="1 1 1"
+								bind__scale="saberGlowScale"
+								position="0 -0.5 0"></a-entity>
+						</a-entity>
+						<a-entity
+							class="saberHandle"
+							geometry="primitive: cylinder; radius: 0.02; height: 0.15;"
+							scale="1 1 1"
+							bind__scale="saberScale"
+							material="shader: flat; color: {{ bladeColor }}"
+							position="0 0.08 0">
+							<a-entity
+								class="highlightTop"
+								geometry="primitive: cylinder; radius: 0.02; height: 0.01;"
+								material="shader: flat; color: #FFFFFF"
+								position="0 -0.08 0"></a-entity>
+							<a-entity
+								class="highlightBottom"
+								geometry="primitive: cylinder; radius: 0.02; height: 0.01;"
+								material="shader: flat; color: #FFFFFF"
+								position="0 0.08 0.0"></a-entity>
+						</a-entity>
 
-            <a-entity class="saberContainer" rotation="90 0 0">
-              <a-entity
-                class="bladeContainer"
-                animation="property: scale; from: 0 0 0; to: 1 1 1; dur: 750; easing: linear; startEvents: drawblade"
-                scale="0.001 0.001 0.001">
-                <a-entity
-                  class="blade blade{{ hand }}"
-                  geometry="primitive: box; height: 1.0; depth: 0.02; width: 0.02"
-                  material="shader: flat; color: #fff"
-                  scale="1 1 1"
-                  bind__scale="saberScale"
-                  position="0 -0.5 0"></a-entity>
-                <a-entity
-                  render-order="wall"
-                  class="saberglow"
-                  obj-model="obj: #saberGlowObj"
-                  material="shader: flat; color: {{ bladeColor }}; blending: additive; opacity: 0.08; depthWrite: false"
-                  scale="1 1 1"
-                  bind__scale="saberGlowScale"
-                  position="0 -0.5 0"></a-entity>
-              </a-entity>
-              <a-entity
-                class="saberHandle"
-                geometry="primitive: cylinder; radius: 0.02; height: 0.15;"
-                scale="1 1 1"
-                bind__scale="saberScale"
-                material="shader: flat; color: {{ bladeColor }}"
-                position="0 0.08 0">
-                <a-entity
-                class="highlightTop"
-                geometry="primitive: cylinder; radius: 0.02; height: 0.01;"
-                material="shader: flat; color: #FFFFFF"
-                position="0 -0.08 0"></a-entity>
-              <a-entity
-                class="highlightBottom"
-                geometry="primitive: cylinder; radius: 0.02; height: 0.01;"
-                material="shader: flat; color: #FFFFFF"
-                position="0 0.08 0.0"></a-entity>
-              </a-entity>
+						<a-entity class="axisContainer" rotation="0 -90 0" bind__visible="settings.showSaberAxes">
+							<a-entity
+								class="xSaberAxis"
+								geometry="primitive: cylinder; radius: 0.003; height: 0.2;"
+								material="shader: flat; color: #FF0000"
+								position="0.0 0.0 0.1"
+								rotation="90 0 0"></a-entity>
+							<a-entity
+								class="xSaberAxisCone"
+								geometry="primitive: cone; radius-top: 0.0; radius-bottom: 0.01; height: 0.03"
+								material="shader: flat; color: #FF0000"
+								position="0.0 0.0 0.2"
+								rotation="90 0 0"></a-entity>
+						</a-entity>
 
-              <a-entity class="axisContainer" rotation="0 -90 0" bind__visible="settings.showSaberAxes">
-                <a-entity
-                  class="xSaberAxis"
-                  geometry="primitive: cylinder; radius: 0.003; height: 0.2;"
-                  material="shader: flat; color: #FF0000"
-                  position="0.0 0.0 0.1"
-                  rotation="90 0 0"></a-entity>
-                <a-entity
-                  class="xSaberAxisCone"
-                  geometry="primitive: cone; radius-top: 0.0; radius-bottom: 0.01; height: 0.03"
-                  material="shader: flat; color: #FF0000"
-                  position="0.0 0.0 0.2"
-                  rotation="90 0 0"></a-entity>
-              </a-entity>
+						<a-entity class="axisContainer" rotation="0 0 90" bind__visible="settings.showSaberAxes">
+							<a-entity
+								class="ySaberAxis"
+								geometry="primitive: cylinder; radius: 0.003; height: 0.2;"
+								material="shader: flat; color: #00FF00"
+								position="0.0 0.0 0.1"
+								rotation="90 0 0"></a-entity>
+							<a-entity
+								class="ySaberAxisCone"
+								geometry="primitive: cone; radius-top: 0.0; radius-bottom: 0.01; height: 0.03;"
+								material="shader: flat; color: #00FF00"
+								position="0.0 0.0 0.2"
+								rotation="90 0 0"></a-entity>
+						</a-entity>
+					</a-entity>
+				</a-entity>
 
-              <a-entity class="axisContainer" rotation="0 0 90" bind__visible="settings.showSaberAxes">
-                <a-entity
-                  class="ySaberAxis"
-                  geometry="primitive: cylinder; radius: 0.003; height: 0.2;"
-                  material="shader: flat; color: #00FF00"
-                  position="0.0 0.0 0.1"
-                  rotation="90 0 0"></a-entity>
-                <a-entity
-                  class="ySaberAxisCone"
-                  geometry="primitive: cone; radius-top: 0.0; radius-bottom: 0.01; height: 0.03;"
-                  material="shader: flat; color: #00FF00"
-                  position="0.0 0.0 0.2"
-                  rotation="90 0 0"></a-entity>
-              </a-entity>
-            </a-entity>
-          </a-entity>
-
-          <!-- <a-entity
+				<!-- <a-entity
             id="{{ hand }}CursorMesh"
             mixin="cursorMesh"
             bind__cursor-mesh="active: {{ hand }}RaycasterActive && !isPlaying"
             cursor-mesh="cursorEl: #{{ hand }}Hand"
             material="color: {{ beamColor }}"
             scale="1.3 1.3 1.3"></a-entity> -->
-        {% endmacro %}
-
-        {{ saber('left', 'right', '#bf2121', 'pink') }}
-        {{ saber('right', 'left', '#335aff', 'cyan') }}
-      </a-entity>
-      <!-- <a-mixin
+				{% endmacro %} {{ saber('left', 'right', '#bf2121', 'pink') }} {{ saber('right', 'left', '#335aff', 'cyan') }}
+			</a-entity>
+			<!-- <a-mixin
         id="cursorMesh"
         material="shader: flat; transparent: true; src: #cursorMeshImg; depthTest: false"
         ></a-mixin> -->
 
-            <!-- Player. -->
-      <a-entity id="defaultRig" class="floatingCamera">
-        <a-entity id="mainCamera" class="mainCamera" position="0 1.75 2.0" camera="active: true" look-controls wasd-controls>
-        </a-entity>
-      </a-entity>
-      <a-entity id="headRig" class="headCamera">
-        <a-entity id="povCamera" class="povCamera" rotation="0 0 -1" camera="fov: 60; active: false"
-        bind__camera="fov: settings.fov"
-        bind__aabb-collider="enabled: isPlaying"
-        aabb-collider="objects: [data-collidable-head]; interval: 50; collideNonVisible: false"
-        proxy-event__wallhitstart="event: hitstart; to: a-scene; as: wallhitstart"
-        proxy-event__wallhitend="event: hitend; to: a-scene; as: wallhitend">
-        </a-entity>
-      </a-entity>
-      <a-entity 
-        id="head" 
-        class="headset"
-        obj-model="obj: #questObj"
-        bind__visible="hasReceivedUserGesture && settings.headsetOpacity > 0 && !pov"
-        bind__material="transparent: settings.headsetOpacity &lt; 100; opacity: settings.headsetOpacity / 100"
-        render-order="headset"
-        position="0 1.7 0.0">
-        <a-entity
-          class="coord-center"
-          geometry="primitive: sphere; radius: 0.003;"
-          material="shader: flat; color: #FFFFFF"
-          position="0.0 0.0 0.0"
-          rotation="0 0 0"></a-entity>
+			<!-- Player. -->
+			<a-entity id="defaultRig" class="floatingCamera">
+				<a-entity id="mainCamera" class="mainCamera" position="0 1.75 2.0" camera="active: true" look-controls wasd-controls> </a-entity>
+			</a-entity>
+			<a-entity id="headRig" class="headCamera">
+				<a-entity
+					id="povCamera"
+					class="povCamera"
+					rotation="0 0 -1"
+					camera="fov: 60; active: false"
+					bind__camera="fov: settings.fov"
+					bind__aabb-collider="enabled: isPlaying"
+					aabb-collider="objects: [data-collidable-head]; interval: 50; collideNonVisible: false"
+					proxy-event__wallhitstart="event: hitstart; to: a-scene; as: wallhitstart"
+					proxy-event__wallhitend="event: hitend; to: a-scene; as: wallhitend">
+				</a-entity>
+			</a-entity>
+			<a-entity
+				id="head"
+				class="headset"
+				obj-model="obj: #questObj"
+				bind__visible="hasReceivedUserGesture && settings.headsetOpacity > 0 && !pov"
+				bind__material="transparent: settings.headsetOpacity &lt; 100; opacity: settings.headsetOpacity / 100"
+				render-order="headset"
+				position="0 1.7 0.0">
+				<a-entity
+					class="coord-center"
+					geometry="primitive: sphere; radius: 0.003;"
+					material="shader: flat; color: #FFFFFF"
+					position="0.0 0.0 0.0"
+					rotation="0 0 0"></a-entity>
 
-        <a-entity class="axisContainer" rotation="0 90 0" bind__visible="settings.showSaberAxes">
-          <a-entity
-            class="xSaberAxis"
-            geometry="primitive: cylinder; radius: 0.003; height: 0.2;"
-            material="shader: flat; color: #FF0000"
-            position="0.0 0.0 0.1"
-            rotation="90 0 0"></a-entity>
-          <a-entity
-            class="xSaberAxisCone"
-            geometry="primitive: cone; radius-top: 0.0; radius-bottom: 0.01; height: 0.03"
-            material="shader: flat; color: #FF0000"
-            position="0.0 0.0 0.2"
-            rotation="90 0 0"></a-entity>
-        </a-entity>
+				<a-entity class="axisContainer" rotation="0 90 0" bind__visible="settings.showSaberAxes">
+					<a-entity
+						class="xSaberAxis"
+						geometry="primitive: cylinder; radius: 0.003; height: 0.2;"
+						material="shader: flat; color: #FF0000"
+						position="0.0 0.0 0.1"
+						rotation="90 0 0"></a-entity>
+					<a-entity
+						class="xSaberAxisCone"
+						geometry="primitive: cone; radius-top: 0.0; radius-bottom: 0.01; height: 0.03"
+						material="shader: flat; color: #FF0000"
+						position="0.0 0.0 0.2"
+						rotation="90 0 0"></a-entity>
+				</a-entity>
 
-        <a-entity class="axisContainer" rotation="-90 0 0" bind__visible="settings.showSaberAxes">
-          <a-entity
-            class="ySaberAxis"
-            geometry="primitive: cylinder; radius: 0.003; height: 0.2;"
-            material="shader: flat; color: #00FF00"
-            position="0.0 0.0 0.1"
-            rotation="90 0 0"></a-entity>
-          <a-entity
-            class="ySaberAxisCone"
-            geometry="primitive: cone; radius-top: 0.0; radius-bottom: 0.01; height: 0.03;"
-            material="shader: flat; color: #00FF00"
-            position="0.0 0.0 0.2"
-            rotation="90 0 0"></a-entity>
-        </a-entity>
+				<a-entity class="axisContainer" rotation="-90 0 0" bind__visible="settings.showSaberAxes">
+					<a-entity
+						class="ySaberAxis"
+						geometry="primitive: cylinder; radius: 0.003; height: 0.2;"
+						material="shader: flat; color: #00FF00"
+						position="0.0 0.0 0.1"
+						rotation="90 0 0"></a-entity>
+					<a-entity
+						class="ySaberAxisCone"
+						geometry="primitive: cone; radius-top: 0.0; radius-bottom: 0.01; height: 0.03;"
+						material="shader: flat; color: #00FF00"
+						position="0.0 0.0 0.2"
+						rotation="90 0 0"></a-entity>
+				</a-entity>
 
-        <a-entity class="axisContainer" rotation="180 0 0" bind__visible="settings.showSaberAxes">
-          <a-entity
-            class="zSaberAxis"
-            geometry="primitive: cylinder; radius: 0.003; height: 0.2;"
-            material="shader: flat; color: #0000FF"
-            position="0.0 0.0 0.1"
-            rotation="90 0 0"></a-entity>
-          <a-entity
-            class="zSaberAxisCone"
-            geometry="primitive: cone; radius-top: 0.0; radius-bottom: 0.01; height: 0.03;"
-            material="shader: flat; color: #0000FF"
-            position="0.0 0.0 0.2"
-            rotation="90 0 0"></a-entity>
-        </a-entity>
-      </a-entity>
+				<a-entity class="axisContainer" rotation="180 0 0" bind__visible="settings.showSaberAxes">
+					<a-entity
+						class="zSaberAxis"
+						geometry="primitive: cylinder; radius: 0.003; height: 0.2;"
+						material="shader: flat; color: #0000FF"
+						position="0.0 0.0 0.1"
+						rotation="90 0 0"></a-entity>
+					<a-entity
+						class="zSaberAxisCone"
+						geometry="primitive: cone; radius-top: 0.0; radius-bottom: 0.01; height: 0.03;"
+						material="shader: flat; color: #0000FF"
+						position="0.0 0.0 0.2"
+						rotation="90 0 0"></a-entity>
+				</a-entity>
+			</a-entity>
 
-      <a-entity 
-        id="orthographicBack" 
-        class="orthographicBack" 
-        position="0 1.4 4.0" 
-        orthographic-camera="viewportPosition: 2; far: 25; aspect: 1.333"
-        bind__orthographic-camera="active: settings.orthographicBackEnabled; far: settings.orthographicBackFar; frustum: settings.orthographicBackFrustum">
-      </a-entity>
-      <a-entity 
-        id="orthographicRight" 
-        class="orthographicRight" 
-        position="2.0 1.4 0.0" 
-        rotation="0 90 0" 
-        orthographic-camera="viewportPosition: 1; far: 10; aspect: 1.333"
-        bind__orthographic-camera="active: settings.orthographicRightEnabled; far: settings.orthographicRightFar; frustum: settings.orthographicRightFrustum">
-      </a-entity>
-      <a-entity 
-        id="orthographicTop" 
-        class="orthographicTop" 
-        position="0.0 4.0 0.0" 
-        rotation="-90 0 0" 
-        orthographic-camera="viewportPosition: 3; far: 10; aspect: 1.333"
-        bind__orthographic-camera="active: settings.orthographicTopEnabled; far: settings.orthographicTopFar; frustum: settings.orthographicTopFrustum">
-      </a-entity>
-    </a-scene>
-    
-    <audio id="dummyAudio" autoplay>
+			<a-entity
+				id="orthographicBack"
+				class="orthographicBack"
+				position="0 1.4 4.0"
+				orthographic-camera="viewportPosition: 2; far: 25; aspect: 1.333"
+				bind__orthographic-camera="active: settings.orthographicBackEnabled; far: settings.orthographicBackFar; frustum: settings.orthographicBackFrustum">
+			</a-entity>
+			<a-entity
+				id="orthographicRight"
+				class="orthographicRight"
+				position="2.0 1.4 0.0"
+				rotation="0 90 0"
+				orthographic-camera="viewportPosition: 1; far: 10; aspect: 1.333"
+				bind__orthographic-camera="active: settings.orthographicRightEnabled; far: settings.orthographicRightFar; frustum: settings.orthographicRightFrustum">
+			</a-entity>
+			<a-entity
+				id="orthographicTop"
+				class="orthographicTop"
+				position="0.0 4.0 0.0"
+				rotation="-90 0 0"
+				orthographic-camera="viewportPosition: 3; far: 10; aspect: 1.333"
+				bind__orthographic-camera="active: settings.orthographicTopEnabled; far: settings.orthographicTopFar; frustum: settings.orthographicTopFrustum">
+			</a-entity>
+		</a-scene>
+
+		<audio id="dummyAudio" autoplay>
 			<source src="assets/sounds/silence.mp3" type="audio/mpeg" />
 		</audio>
-    
 
-    <span id="iframeUrl"></span>
-  </body>
+		<span id="iframeUrl"></span>
+	</body>
 </html>

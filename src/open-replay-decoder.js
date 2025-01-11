@@ -55,6 +55,8 @@ const StructType = {
 	walls: 3,
 	heights: 4,
 	pauses: 5,
+	offset: 6,
+	customData: 7,
 };
 
 const NoteEventType = {
@@ -74,7 +76,7 @@ function decode(arrayBuffer, completion) {
 	if (version == 1 && magic == 0x442d3d69) {
 		var replay = {};
 
-		for (var a = 0; a < StructType.pauses + 1; a++) {
+		for (var a = 0; a < StructType.customData + 1; a++) {
 			const type = DecodeUint8(dataView);
 			switch (type) {
 				case StructType.info:
@@ -95,8 +97,17 @@ function decode(arrayBuffer, completion) {
 				case StructType.pauses:
 					replay.pauses = DecodePauses(dataView);
 					break;
+				case StructType.offset:
+					replay.offset = DecodeOffsets(dataView);
+					break;
+				case StructType.customData:
+					replay.customData = DecodeCustomData(dataView);
+					ParseKnownCustomData(replay);
+					break;
 			}
 		}
+
+		console.log(replay);
 
 		completion(replay);
 	} else {
@@ -207,6 +218,50 @@ function DecodePauses(dataView) {
 		result.push(pause);
 	}
 	return result;
+}
+
+function DecodeOffsets(dataView) {
+	var result = {};
+	result.leftSaberPos = DecodeVector3(dataView);
+	result.leftSaberRot = DecodeQuaternion(dataView);
+	result.rightSaberPos = DecodeVector3(dataView);
+	result.rightSaberRot = DecodeQuaternion(dataView);
+	return result;
+}
+
+function DecodeCustomData(dataView) {
+	var result = {};
+	const length = DecodeInt(dataView);
+	for (var i = 0; i < length; i++) {
+		const key = DecodeString(dataView);
+		const customDataLength = DecodeInt(dataView);
+		const value = new Int8Array(dataView.buffer.slice(dataView.pointer, customDataLength + dataView.pointer));
+		result[key] = value;
+	}
+	return result;
+}
+
+function ParseKnownCustomData(replay) {
+	replay.parsedCustomData = {};
+	if (replay.customData && replay.customData['HeartBeatQuest']) {
+		var result = {};
+		const dataView = new DataView(replay.customData['HeartBeatQuest'].buffer);
+		dataView.pointer = 0;
+
+		const version = DecodeInt(dataView);
+		if (version == 1) {
+			const length = DecodeInt(dataView);
+			result.frames = [];
+			for (var i = 0; i < length; i++) {
+				var frame = {};
+				frame.time = DecodeFloat(dataView);
+				frame.heartrate = DecodeInt(dataView);
+				result.frames.push(frame);
+			}
+			result.device = DecodeString(dataView);
+			replay.parsedCustomData['HeartBeatQuest'] = result;
+		}
+	}
 }
 
 function DecodeNote(dataView) {

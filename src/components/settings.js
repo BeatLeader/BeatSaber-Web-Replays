@@ -13,6 +13,7 @@ AFRAME.registerComponent('settings', {
 			saberWidth: 100,
 			showHud: true,
 			showFps: false,
+			showHeartrate: true,
 			showNoteModifierVisuals: true,
 			savedCameraDefault: false,
 			highlightErrors: false,

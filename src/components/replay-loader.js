@@ -605,6 +605,12 @@ AFRAME.registerComponent('replay-loader', {
 				altscoringType = ScoringType.SliderHead + 2;
 			} else if (mapnote._scoringType == ScoringType.SliderHead) {
 				altscoringType = ScoringType.BurstSliderHead + 2;
+			} else if (mapnote._scoringType == ScoringType.BurstSliderHeadSliderTail) {
+				altscoringType = ScoringType.SliderTail + 2;
+			} else if (mapnote._scoringType == ScoringType.BurstSliderElementSliderHead) {
+				altscoringType = ScoringType.BurstSliderElement + 2;
+			} else if (mapnote._scoringType == ScoringType.SliderHeadSliderTail) {
+				altscoringType = ScoringType.SliderHead + 2;
 			} else if (
 				gameVersion >= 29 &&
 				mapnote._scoringType == ScoringType.BurstSliderElement &&

@@ -208,7 +208,7 @@ AFRAME.registerComponent('colors', {
 				if (
 					roles.includes('tipper') ||
 					roles.includes('supporter') ||
-					roles.includes('supporter') ||
+					roles.includes('sponsor') ||
 					roles.includes('admin') ||
 					roles.includes('ranked') ||
 					roles.includes('quality')

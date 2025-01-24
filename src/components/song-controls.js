@@ -674,6 +674,10 @@ AFRAME.registerComponent('song-controls', {
 				baseParams += '&mapLink=' + utils.getUrlParameter('mapLink');
 			}
 
+			if (utils.getUrlParameter('forceFpv')) {
+				baseParams += '&forceFpv=true';
+			}
+
 			let base = location.protocol + '//' + location.host + '/' + baseParams;
 			input.value =
 				base + (time ? `&time=${Math.round(this.song.getCurrentTime() * 1000)}&speed=${Math.round(this.song.speed * 100)}` : '');

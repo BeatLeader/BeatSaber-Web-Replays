@@ -11,6 +11,8 @@ var queryPositionValid = false;
 	}
 });
 
+const forceFpv = AFRAME.utils.getUrlParameter('forceFpv');
+
 AFRAME.registerComponent('camera-mover', {
 	schema: {},
 
@@ -55,7 +57,10 @@ AFRAME.registerComponent('camera-mover', {
 			});
 		});
 
-		if (this.settings.settings.saveFpvToggle) {
+		if (forceFpv) {
+			this.pov = false;
+			powHandler(true);
+		} else if (this.settings.settings.saveFpvToggle) {
 			if (this.settings.settings.fpvCameraIsOn) {
 				powHandler(true);
 			}

@@ -56,7 +56,7 @@ AFRAME.registerComponent('song-controls', {
 		analyser.addEventListener('audioanalyserbuffersource', evt => {
 			const songDuration = evt.detail.buffer.duration;
 			document.getElementById('songDuration').innerHTML = formatSeconds(songDuration);
-			if (this.replayData) {
+			if (this.replayData && !this.timelineFilter) {
 				this.makeTimelineOverlay(this.replayData, evt.detail.buffer, this);
 			}
 			if (queryParamTime >= 0 && queryParamTime <= songDuration) {
@@ -70,7 +70,7 @@ AFRAME.registerComponent('song-controls', {
 		});
 
 		this.el.sceneEl.addEventListener('replayloaded', event => {
-			if (this.song.source && this.song.source.buffer) {
+			if (this.song.source && this.song.source.buffer && !this.timelineFilter) {
 				this.makeTimelineOverlay(event.detail, this.song.source.buffer, this);
 			}
 			this.replayData = event.detail;
@@ -1404,8 +1404,8 @@ AFRAME.registerComponent('song-controls', {
 
 			hoveredMarkers = markers.filter(marker => Math.abs(marker.x - x) < 2 && Math.abs(marker.currentY - y) < 5);
 
-			drawMarkers();
 			if (hoveredMarkers.length > 0 && hoveredMarkers.some(marker => this.settings.settings[marker.type + 'Markers'])) {
+				drawMarkers();
 				markersCanvas.title = getTooltipContent(hoveredMarkers.filter(marker => this.settings.settings[marker.type + 'Markers']));
 			} else {
 				markersCanvas.removeAttribute('title');

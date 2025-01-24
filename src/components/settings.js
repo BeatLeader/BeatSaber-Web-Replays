@@ -95,8 +95,6 @@ AFRAME.registerComponent('settings', {
 			randomScoreEmptyPlayer: true,
 
 			showSaberAxes: false,
-
-			showTree: true,
 		};
 
 		this.units = {

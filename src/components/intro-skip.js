@@ -7,6 +7,7 @@ AFRAME.registerComponent('intro-skip', {
 	init: function () {
 		this.songControls = this.el.sceneEl.components['song-controls'];
 		this.song = this.songControls.song;
+		this.settings = this.el.sceneEl.components.settings;
 
 		const skipIntroButton = document.getElementById('skipIntro');
 		this.skipIntroButton = skipIntroButton;
@@ -80,18 +81,26 @@ AFRAME.registerComponent('intro-skip', {
 		let button = this.skipIntroButton;
 		const song = this.song;
 		if (this.introSkipTime && song.isPlaying && song.getCurrentTime() <= this.introSkipTime) {
-			button.style.display = 'block';
-			button.classList = ['intro'];
-			button.innerHTML = 'Skip intro (i)';
+			if (this.settings.settings.autoSkipIntro) {
+				this.songControls.seek(this.introSkipTime);
+			} else {
+				button.style.display = 'block';
+				button.classList = ['intro'];
+				button.innerHTML = 'Skip intro (i)';
+			}
 		} else if (
 			this.lastObjectSkipTime &&
 			song.isPlaying &&
 			song.getCurrentTime() >= this.lastObjectSkipTime &&
 			song.getCurrentTime() < this.outroSkipTime
 		) {
-			button.style.display = 'block';
-			button.classList = ['outro'];
-			button.innerHTML = 'Skip outro (i)';
+			if (this.settings.settings.autoSkipOutro) {
+				this.songControls.seek(this.outroSkipTime);
+			} else {
+				button.style.display = 'block';
+				button.classList = ['outro'];
+				button.innerHTML = 'Skip outro (i)';
+			}
 		} else if (button.classList.length) {
 			button.style.display = 'none';
 			button.classList = [];

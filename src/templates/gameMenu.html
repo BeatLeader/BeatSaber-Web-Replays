@@ -1,39 +1,31 @@
 <a-mixin
-  id="gameMenuButton"
-  render-order="hud"
-  mixin="bigMenuButton"
-  animation__mouseenter="property: components.slice9.material.color; type: color; from: #CCC; to: #FAFAFA; startEvents: mouseenter; pauseEvents: mouseleave; dur: 150"
-  animation__mouseleave="property: components.slice9.material.color; type: color; from: #FAFAFA; to: #CCC; startEvents: mouseleave; pauseEvents: mouseenter; dur: 150"
-  slice9="width: 1; height: 0.27;"></a-mixin>
+	id="gameMenuButton"
+	render-order="hud"
+	mixin="bigMenuButton"
+	animation__mouseenter="property: components.slice9.material.color; type: color; from: #CCC; to: #FAFAFA; startEvents: mouseenter; pauseEvents: mouseleave; dur: 150"
+	animation__mouseleave="property: components.slice9.material.color; type: color; from: #FAFAFA; to: #CCC; startEvents: mouseleave; pauseEvents: mouseenter; dur: 150"
+	slice9="width: 1; height: 0.27;"></a-mixin>
 
 <a-mixin
-  render-order="hud"  
-  id="gameMenuButtonText"
-  mixin="font"
-  position="0 -0.08 0.01"
-  text="align: center; wrapCount: 17; color: #FFF"></a-mixin>
+	render-order="hud"
+	id="gameMenuButtonText"
+	mixin="font"
+	position="0 -0.08 0.01"
+	text="align: center; wrapCount: 17; color: #FFF"></a-mixin>
 
 <!-- Titles. -->
-<a-entity 
-  id="inGameMenuTitles"
-  render-order="hud"
-  position="0 3 -2.3">
-    <a-entity mixin="gameMenuButtonText" text="value: PAUSED; color: #FAFAFA; width: 4" bind__visible="isPaused && !isFinished"></a-entity>
-    <a-entity mixin="gameMenuButtonText" text="value: THE END; color: #FAFAFA; width: 4" bind__visible="isFinished"></a-entity>
+<a-entity id="inGameMenuTitles" render-order="hud" position="0 3 -2.3">
+	<a-entity mixin="gameMenuButtonText" text="value: PAUSED; color: #FAFAFA; width: 4" bind__visible="isPaused && !isFinished"></a-entity>
+	<a-entity mixin="gameMenuButtonText" text="value: THE END; color: #FAFAFA; width: 4" bind__visible="isFinished"></a-entity>
 </a-entity>
 
-<a-entity
-  id="gameMenu"
-  render-order="hud"
-  bind__visible="isFinished"
-  position="0 1.1 -2">
-
-  <a-entity
-    id="restartButton"
-    render-order="hud"
-    mixin="gameMenuButton"
-    bind__visible-raycastable="isFinished"
-    proxy-event="event: click; to: a-scene; as: gamemenurestart">
-    <a-entity mixin="gameMenuButtonText" text="value: RESTART SONG"></a-entity>
-  </a-entity>
+<a-entity id="gameMenu" render-order="hud" bind__visible="isFinished" position="0 1.1 -2">
+	<a-entity
+		id="restartButton"
+		render-order="hud"
+		mixin="gameMenuButton"
+		bind__visible-raycastable="isFinished"
+		proxy-event="event: click; to: a-scene; as: gamemenurestart">
+		<a-entity mixin="gameMenuButtonText" text="value: RESTART SONG"></a-entity>
+	</a-entity>
 </a-entity>

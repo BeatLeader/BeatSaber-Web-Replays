@@ -3,6 +3,7 @@ if (typeof AFRAME === 'undefined') {
 }
 
 var audioBufferCache = {};
+const isSamsung = navigator.userAgent.toLowerCase().indexOf('samsung') !== -1;
 
 /**
  * Audio visualizer component for A-Frame using AnalyserNode.
@@ -119,7 +120,16 @@ AFRAME.registerComponent('audioanalyser', {
 		var analyser;
 		var gainNode;
 
-		this.context = new (window.webkitAudioContext || window.AudioContext)();
+		const contextConfig = {
+			latencyHint: 'interactive',
+			sinkId: 'default',
+		};
+		if (typeof AudioContext !== 'undefined') {
+			contextConfig.sampleRate = isSamsung ? 22050 : 44100;
+		}
+
+		this.context = new (window.webkitAudioContext || window.AudioContext)(contextConfig);
+
 		analyser = this.analyser = this.context.createAnalyser();
 		gainNode = this.gainNode = this.context.createGain();
 		gainNode.connect(analyser);

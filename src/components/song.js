@@ -58,8 +58,9 @@ AFRAME.registerComponent('song', {
 		this.hasReceivedUserGesture = false;
 		this.audio = document.createElement('audio');
 		this.audio.volume = utils.isFirefox() ? 0.0001 : 0; // Firefox really does not like zeros
+		this.settings = this.el.sceneEl.components.settings;
 
-		this.audioAnalyser.gainNode.gain.value = this.el.sceneEl.components.settings.settings.volume || BASE_VOLUME;
+		this.audioAnalyser.gainNode.gain.value = this.settings.settings.volume || BASE_VOLUME;
 
 		this.el.addEventListener('gamemenurestart', this.onRestart.bind(this));
 		this.el.addEventListener('wallhitstart', this.onWallHitStart.bind(this));
@@ -290,6 +291,6 @@ AFRAME.registerComponent('song', {
 		this.lastCurrentTime = newCurrent;
 		this.lastContextTime = currentTime;
 
-		return newCurrent;
+		return Math.max(0, newCurrent + parseFloat(this.settings.settings.soundDelay));
 	},
 });

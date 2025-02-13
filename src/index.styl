@@ -378,6 +378,23 @@ html
   margin-right 1em
   width 10px
 
+.delaySliderContainer {
+  height: 6px;
+  margin-top: 4px;
+  margin-bottom: -7px;
+}
+
+.songDelay
+  color $gray
+  font-size 11px
+  align-self baseline
+  margin-right 1em
+  width 10px
+  position absolute
+  bottom 9px
+  left 21px
+  transform rotateZ(90deg)
+
 #mobileContainer
   background rgba(0, 0, 0, 0.85)
   border-radius 5px
@@ -1096,6 +1113,13 @@ input:checked + .slider:before {
   &:hover
     fill: red
 
+.range__point_delay
+  fill: #a0a0a0;
+  font-size: 10px
+  white-space: pre
+  &:hover
+    fill: red
+
 .rangeTicks {
   position: absolute
   bottom: 35px
@@ -1150,6 +1174,21 @@ input:checked + .slider:before {
   white-space: pre
   &:hover
     fill: red
+
+.rangeTicksDelay {
+  position: absolute;
+  bottom: 20px;
+  margin-left: 1.5px;
+  width: 100px;
+}
+
+.rangePointsDelay {
+  position: absolute
+  bottom: -13px
+  margin-left: 1.5px
+  width: 100px;
+  z-index: 1;
+}
 
 #jdRangePoint {
   -webkit-transform: translateY(-8px);

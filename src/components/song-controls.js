@@ -148,6 +148,7 @@ AFRAME.registerComponent('song-controls', {
 
 		this.songProgress = document.getElementById('songProgress');
 		this.songSpeedPercent = document.querySelectorAll('.songSpeedPercent');
+		this.songDelayPercent = document.querySelectorAll('.songDelayPercent');
 	},
 
 	update: function (oldData) {
@@ -1568,6 +1569,7 @@ AFRAME.registerComponent('song-controls', {
 		let hitsoundSlider = document.getElementById('hitsoundSlider');
 		let musicSlider = document.getElementById('musicSlider');
 		let mixerButton = document.getElementById('mixer');
+		let delaySlider = document.getElementById('delaySlider');
 		const captureThis = this;
 
 		let volumeHandler = () => {
@@ -1599,10 +1601,35 @@ AFRAME.registerComponent('song-controls', {
 			volumeHandler();
 		});
 
+		const updateDelayPercent = value => {
+			this.settings.settings.soundDelay = parseFloat(value);
+			this.settings.sync();
+			this.songDelayPercent.forEach(el => {
+				el.textContent = parseFloat(this.settings.settings.soundDelay).toFixed(2) + 's';
+			});
+		};
+
+		delaySlider.addEventListener('input', evt => {
+			updateDelayPercent(evt.target.value);
+		});
+
+		const rangePoints = document.querySelectorAll('.range__point_delay');
+		rangePoints.forEach((el, i) => {
+			el.addEventListener('click', evt => {
+				const value = i - 1; // -1, 0, 1
+
+				delaySlider.value = value;
+				updateDelayPercent(value);
+			});
+		});
+
 		volumeSlider.value = this.settings.settings.volume;
 		musicSlider.value = this.settings.settings.volume;
 		hitsoundSlider.value = this.settings.settings.hitSoundVolume;
 		this.soundKoeff = hitsoundSlider.value / Math.max(musicSlider.value, 0.01);
+
+		delaySlider.value = this.settings.settings.soundDelay;
+		updateDelayPercent(this.settings.settings.soundDelay);
 
 		[volumeSlider, hitsoundSlider, musicSlider].forEach(el => {
 			el.addEventListener('wheel', function (e) {

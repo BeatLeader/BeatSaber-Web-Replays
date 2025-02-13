@@ -65,6 +65,7 @@ AFRAME.registerComponent('settings', {
 			volume: 0.3,
 			hitSoundVolume: 0.3,
 			volumeMixed: false,
+			soundDelay: 0,
 
 			// Narkers
 			pauseMarkers: true,

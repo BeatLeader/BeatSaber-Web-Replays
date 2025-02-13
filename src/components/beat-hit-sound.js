@@ -129,7 +129,7 @@ AFRAME.registerComponent('beat-hit-sound', {
 
 			const notes = this.beatGenerator.beatData._notes;
 			for (let i = this.beatIndex + 1; i < notes.length; ++i) {
-				let noteTime = notes[i]._songTime - 0.2 * playbackSpeedPercent;
+				let noteTime = notes[i]._songTime - 0.2 * playbackSpeedPercent - this.settings.settings.soundDelay;
 
 				if (noteTime > currentTime + 1 * playbackSpeedPercent) {
 					break;

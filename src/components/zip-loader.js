@@ -105,7 +105,14 @@ AFRAME.registerComponent('zip-loader', {
 		}
 
 		// Index beatmaps (modes + difficulties).
-		const beatmapSets = event.info._difficultyBeatmapSets;
+		const beatmapSets = event.info._difficultyBeatmapSets.reduce((acc, curr) => {
+			const existing = acc.find(x => x._beatmapCharacteristicName === curr._beatmapCharacteristicName);
+			if (!existing || curr._difficultyBeatmaps.length > existing._difficultyBeatmaps.length) {
+				const filtered = acc.filter(x => x._beatmapCharacteristicName !== curr._beatmapCharacteristicName);
+				return [...filtered, curr];
+			}
+			return acc;
+		}, []);
 		if (!beatmapSets) return;
 		try {
 			for (let index = 0; index < beatmapSets.length; index++) {

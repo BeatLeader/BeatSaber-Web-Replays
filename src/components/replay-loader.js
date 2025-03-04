@@ -451,9 +451,9 @@ AFRAME.registerComponent('replay-loader', {
 			let note = allStructs[i];
 
 			var scoreForMaxScore = 115;
-			if (note.scoringType == ScoringType.BurstSliderHead) {
+			if (note.scoringType == ScoringType.BurstSliderHead || note.scoringType == ScoringType.BurstSliderHeadSliderTail) {
 				scoreForMaxScore = 85;
-			} else if (note.scoringType == ScoringType.BurstSliderElement) {
+			} else if (note.scoringType == ScoringType.BurstSliderElement || note.scoringType == ScoringType.BurstSliderElementSliderHead) {
 				scoreForMaxScore = 20;
 			}
 
@@ -609,6 +609,9 @@ AFRAME.registerComponent('replay-loader', {
 				altscoringType = ScoringType.SliderTail + 2;
 			} else if (mapnote._scoringType == ScoringType.BurstSliderElementSliderHead) {
 				altscoringType = ScoringType.BurstSliderElement + 2;
+				if (gameVersion >= 29 && mapnote._sliceIndex == mapnote._sliceCount - 1) {
+					id = mapnote._tailLineIndex * 1000 + mapnote._tailLineLayer * 100 + colorType * 10 + cutDirection;
+				}
 			} else if (mapnote._scoringType == ScoringType.SliderHeadSliderTail) {
 				altscoringType = ScoringType.SliderHead + 2;
 			} else if (

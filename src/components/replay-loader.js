@@ -451,7 +451,7 @@ AFRAME.registerComponent('replay-loader', {
 			let note = allStructs[i];
 
 			var scoreForMaxScore = 115;
-			if (note.scoringType == ScoringType.BurstSliderHead || note.scoringType == ScoringType.BurstSliderHeadSliderTail) {
+			if (note.scoringType == ScoringType.BurstSliderHead) {
 				scoreForMaxScore = 85;
 			} else if (note.scoringType == ScoringType.BurstSliderElement || note.scoringType == ScoringType.BurstSliderElementSliderHead) {
 				scoreForMaxScore = 20;

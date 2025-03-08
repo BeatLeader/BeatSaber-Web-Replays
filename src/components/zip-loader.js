@@ -104,6 +104,8 @@ AFRAME.registerComponent('zip-loader', {
 			event.mappingExtensions = event.info._customData._editorSettings.modSettings.mappingExtensions;
 		}
 
+		if (!event.info._difficultyBeatmapSets) return;
+
 		// Index beatmaps (modes + difficulties).
 		const beatmapSets = event.info._difficultyBeatmapSets.reduce((acc, curr) => {
 			const existing = acc.find(x => x._beatmapCharacteristicName === curr._beatmapCharacteristicName);
@@ -113,7 +115,7 @@ AFRAME.registerComponent('zip-loader', {
 			}
 			return acc;
 		}, []);
-		if (!beatmapSets) return;
+
 		try {
 			for (let index = 0; index < beatmapSets.length; index++) {
 				const set = beatmapSets[index];

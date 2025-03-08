@@ -7,7 +7,7 @@ const WALL_HL_COLOR = new THREE.Color('yellow');
 AFRAME.registerShader('wallShader', {
 	schema: {
 		highlight: {type: 'bool', is: 'uniform', default: false},
-    thickness: {type: 'float', is: 'uniform', default: 3.0},
+		thickness: {type: 'float', is: 'uniform', default: 3.0},
 		wallColor: {type: 'vec3', is: 'uniform', default: new THREE.Color(COLORS.NEON_RED)},
 	},
 
@@ -20,7 +20,6 @@ AFRAME.registerShader('wallShader', {
   `,
 
 	fragmentShader: `
-  #extension GL_OES_standard_derivatives : enable
     varying vec2 vUv;
     uniform vec3 wallColor;
     uniform bool highlight;

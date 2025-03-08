@@ -12,7 +12,6 @@ module.exports = {
     `,
 
 	fragmentShader: `
-        #extension GL_OES_standard_derivatives : enable
         #define PI 3.14159265358979
 
         uniform vec3 mainColor;

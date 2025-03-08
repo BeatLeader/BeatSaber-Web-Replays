@@ -171,6 +171,7 @@ AFRAME.registerSystem('materials', {
 			depthWrite: false,
 			fog: false,
 			transparent: true,
+			flatShading: true,
 		});
 
 		this.splinematerialblue = new THREE.ShaderMaterial({
@@ -185,6 +186,7 @@ AFRAME.registerSystem('materials', {
 			depthWrite: false,
 			fog: false,
 			transparent: true,
+			flatShading: true,
 		});
 
 		this.mineMaterialred = new THREE.MeshStandardMaterial({

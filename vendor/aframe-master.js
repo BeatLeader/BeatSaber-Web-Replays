@@ -7144,8 +7144,16 @@ module.exports.Component = registerComponent("look-controls", {
     var movementX;
     var movementY;
     var pitchObject = this.pitchObject;
-    var previousMouseEvent = this.previousMouseEvent;
+    var previousMouseCoordinates = this.previousMouseCoordinates;
     var yawObject = this.yawObject;
+
+    if (!previousMouseCoordinates) {
+      this.previousMouseCoordinates = {
+        x: event.clientX,
+        y: event.clientY,
+      };
+      return;
+    }
 
     // Not dragging or not enabled.
     if (!this.data.enabled || (!this.mouseDown && !this.pointerLocked)) {
@@ -7157,10 +7165,13 @@ module.exports.Component = registerComponent("look-controls", {
       movementX = event.movementX || event.mozMovementX || 0;
       movementY = event.movementY || event.mozMovementY || 0;
     } else {
-      movementX = event.screenX - previousMouseEvent.screenX;
-      movementY = event.screenY - previousMouseEvent.screenY;
+      movementX = event.clientX - previousMouseCoordinates.x;
+      movementY = event.clientY - previousMouseCoordinates.y;
     }
-    this.previousMouseEvent = event;
+    this.previousMouseCoordinates = {
+      x: event.clientX,
+      y: event.clientY,
+    };
 
     // Calculate rotation.
     direction = this.data.reverseMouseDrag ? 1 : -1;
@@ -7188,7 +7199,7 @@ module.exports.Component = registerComponent("look-controls", {
     var canvasEl = sceneEl && sceneEl.canvas;
 
     this.mouseDown = true;
-    this.previousMouseEvent = evt;
+    this.previousMouseCoordinates = null;
     this.showGrabbingCursor();
 
     if (this.data.pointerLockEnabled && !this.pointerLocked) {

@@ -798,7 +798,6 @@ AFRAME.registerComponent('beat-generator', {
 			beatObj.tailTime = note._songTailTime;
 			beatObj.hasTailNote = note.tail != null;
 			beatObj.moveTime = data.moveTime;
-			beatObj.warmupSpeed = data.moveSpeed;
 
 			beatObj.spawnRotation = this.getRotation(note._songTime);
 			beatObj.tailSpawnRotation = this.getRotation(note._songTailTime);
@@ -840,7 +839,6 @@ AFRAME.registerComponent('beat-generator', {
 				}
 			}
 
-			beatObj.flip = note._flipLineIndex !== undefined;
 			beatObj.flipHorizontalPosition = note._flipLineIndex;
 			beatObj.flipYSide = note._flipYSide;
 

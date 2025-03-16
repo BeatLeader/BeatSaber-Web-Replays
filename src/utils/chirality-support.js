@@ -238,6 +238,10 @@ function Mirror_Horizontal_Obstacle(obstacle, numberOfLines, flip_lines) {
 				obstacle._width *= -1;
 				obstacle._customData._position[0] += 1;
 			}
+
+			if (obstacle._customData._scale && obstacle._customData._scale[0] > 1) {
+				obstacle._customData._position[0] += -1 * (obstacle._customData._scale[0] - 1);
+			}
 		}
 	}
 }

@@ -207,7 +207,10 @@ AFRAME.registerComponent('audioanalyser', {
 					audioBufferCache[src] = audioBuffer;
 					resolve(audioBuffer);
 				}
-				const res = this.context[this.data.isSafari ? 'decodeOggData' : 'decodeAudioData'](xhr.response, cb);
+				var res = this.context[this.data.isSafari ? 'decodeOggData' : 'decodeAudioData'](xhr.response, cb);
+				if (!res && this.data.isSafari) {
+					res = this.context['decodeAudioData'](xhr.response, cb);
+				}
 				if (res && res.constructor === Promise) {
 					res.then(cb).catch(console.error);
 				}

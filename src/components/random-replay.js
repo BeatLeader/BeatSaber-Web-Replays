@@ -42,8 +42,8 @@ AFRAME.registerComponent('random-replay', {
 			!this.canceled &&
 			this.settings.settings.autoplayRandomScore &&
 			!this.settings.settings.loopReplays &&
-			((source && song.getCurrentTime() >= source.buffer.duration - 10) ||
-				(this.settings.settings.randomScoreEmptyPlayer && this.replayLoader.cleanup))
+			((source && Math.abs(song.getCurrentTime() - source.buffer.duration) < 0.1) ||
+				(this.settings.settings.randomScoreEmptyPlayer && !this.replayLoader.replay))
 		) {
 			this.fetchRandomReplay();
 		} else if (this.randomReplay.style.display == 'flex') {

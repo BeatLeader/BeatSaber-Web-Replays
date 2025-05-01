@@ -7843,7 +7843,7 @@ module.exports.Component = registerComponent('orthographic-camera', {
     var data = this.data;
     var camera = this.camera;
     const frustum = data.frustum;
-    const aspect = data.aspect && !data.fullscreen ? data.aspect : (window.innerWidth / window.innerHeight);
+    const aspect = data.aspect;
 
     // Update properties.
     camera.fov = data.fov;
@@ -27208,7 +27208,11 @@ THREE.MainRenderer = function( renderer, onError ) {
       }
       renderer.setViewport(x, y, width, height );
     } else {
-      renderer.setViewport( 0, 0, size.width, size.height );
+      if (cameraData.aspect) {
+        renderer.setViewport( -(size.width / cameraData.aspect - size.width) / 2.0, 0, size.width / cameraData.aspect, size.height);
+      } else {
+        renderer.setViewport( 0, 0, size.width, size.height );
+      }
     }
 
     renderer.render( scene, camera, renderTarget, forceClear );

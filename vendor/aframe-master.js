@@ -27209,7 +27209,11 @@ THREE.MainRenderer = function( renderer, onError ) {
       renderer.setViewport(x, y, width, height );
     } else {
       if (cameraData.aspect) {
-        renderer.setViewport( -(size.width / cameraData.aspect - size.width) / 2.0, 0, size.width / cameraData.aspect, size.height);
+        if (size.width > size.height) {
+          renderer.setViewport( -(size.height * cameraData.aspect - size.width) / 2.0, 0, size.height * cameraData.aspect, size.height);
+        } else {
+          renderer.setViewport( 0, -(size.width / cameraData.aspect - size.height) / 2.0, size.width, size.width / cameraData.aspect);
+        }
       } else {
         renderer.setViewport( 0, 0, size.width, size.height );
       }

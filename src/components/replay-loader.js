@@ -237,6 +237,10 @@ AFRAME.registerComponent('replay-loader', {
 					},
 					null
 				);
+				let profileSettings = data.profileSettings;
+				if (profileSettings) {
+					this.el.sceneEl.emit('colorsFetched', {playerId: data.id, features: profileSettings}, null);
+				}
 			});
 		});
 	},

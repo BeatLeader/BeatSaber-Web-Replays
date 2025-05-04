@@ -5,10 +5,10 @@ const _noteLinesDistance = 0.6;
 function getApiUrl() {
 	if (location.host.includes('beatleader.net')) {
 		return 'https://api.beatleader.net';
-	} else if (location.host.includes('beatleader.com')) {
-		return 'https://api.beatleader.com';
+	} else if (location.host.includes('beatleader.xyz')) {
+		return 'https://api.beatleader.xyz';
 	}
-	return 'https://api.beatleader.xyz';
+	return 'https://api.beatleader.com';
 }
 
 function getWebsiteUrl() {

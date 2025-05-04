@@ -54,6 +54,7 @@ AFRAME.registerComponent('replay-loader', {
 		} else if (this.data.scoreId.length) {
 			captureThis.downloadReplay(null, this.data.scoreId);
 		} else if (!this.data.playerID.length) {
+			this.empty = true;
 			this.cleanup = dragDrop('#body', files => {
 				if (files[0].name.includes('.bsor') || files[0].name.includes('.dat')) {
 					this.fetchByFile(files[0]);
@@ -115,6 +116,7 @@ AFRAME.registerComponent('replay-loader', {
 						leaderboardId: data.leaderboardId,
 						difficulty: data.difficulty.value,
 						mode: data.difficulty.modeName,
+						playerId: data.playerId,
 						metadata: {
 							songName: data.song.name,
 							songAuthorName: data.song.author,
@@ -139,6 +141,7 @@ AFRAME.registerComponent('replay-loader', {
 									difficulty: difficultyFromName(replay.info.difficulty),
 									mode: replay.info.mode,
 									jd,
+									playerId: data.playerId,
 								},
 								null
 							);
@@ -416,6 +419,10 @@ AFRAME.registerComponent('replay-loader', {
 		allStructs.sort(function (a, b) {
 			if (a.time < b.time) return -1;
 			if (a.time > b.time) return 1;
+			if (a.time === b.time && a.cutPoint && b.cutPoint) {
+				if (a.cutPoint.z < b.cutPoint.z) return -1;
+				if (a.cutPoint.z > b.cutPoint.z) return 1;
+			}
 			return 0;
 		});
 

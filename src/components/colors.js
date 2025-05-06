@@ -228,7 +228,7 @@ AFRAME.registerComponent('colors', {
 	},
 
 	changeColor: function (hand, color) {
-		if (this.currentPlayerId == this.replayPlayerId) {
+		if (this.currentPlayerId && this.replayPlayerId && this.currentPlayerId == this.replayPlayerId) {
 			this.start = new Date().getTime();
 			setTimeout(() => {
 				if (new Date().getTime() - this.start > 999) {

@@ -95,7 +95,9 @@ AFRAME.registerComponent('settings', {
 			randomScoreFromFriends: true,
 			randomScoreEmptyPlayer: true,
 
+			// Saber
 			showSaberAxes: false,
+			saberOffset: 0,
 
 			autoSkipIntro: false,
 			autoSkipOutro: false,

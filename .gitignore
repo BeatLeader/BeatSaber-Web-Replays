@@ -50,3 +50,6 @@ play.html
 
 # IDE
 .vs/
+
+# Local Netlify folder
+.netlify

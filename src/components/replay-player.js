@@ -92,8 +92,6 @@ AFRAME.registerComponent('replay-player', {
 		const headset = this.headset.object3D;
 		const povCamera = this.povCameraRig.object3D;
 
-		const offsetInput = document.getElementById('saberOffset');
-
 		const v1 = this.v1;
 		const v2 = this.v2;
 
@@ -131,11 +129,11 @@ AFRAME.registerComponent('replay-player', {
 		rrotation = euler.setFromQuaternion(rquat);
 		rightSaber.rotation.set(rrotation.x, rrotation.y + Math.PI, -rrotation.z);
 
-		if (!!offsetInput) {
-			leftSaber.translateZ(-offsetInput.value);
-			rightSaber.translateZ(-offsetInput.value);
-			document.getElementById('saberOffsetLabel').textContent = offsetInput.value;
-		}
+		// Saber offset
+		const saberOffset = Number(this.el.sceneEl.components['settings'].settings.saberOffset);
+		leftSaber.translateZ(-saberOffset);
+		rightSaber.translateZ(-saberOffset);
+		document.getElementById('saberOffsetLabel').textContent = saberOffset;
 
 		v1.set(frame.head.position.x, frame.head.position.y, frame.head.position.z);
 		v2.set(nextFrame.head.position.x, nextFrame.head.position.y, nextFrame.head.position.z);

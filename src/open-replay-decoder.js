@@ -107,8 +107,6 @@ function decode(arrayBuffer, completion) {
 			}
 		}
 
-		console.log(replay);
-
 		completion(replay);
 	} else {
 		completion('Error: failed to decode replay');
@@ -243,25 +241,99 @@ function DecodeCustomData(dataView) {
 
 function ParseKnownCustomData(replay) {
 	replay.parsedCustomData = {};
-	if (replay.customData && replay.customData['HeartBeatQuest']) {
-		var result = {};
-		const dataView = new DataView(replay.customData['HeartBeatQuest'].buffer);
-		dataView.pointer = 0;
+	if (replay.customData) {
+		if (replay.customData['HeartBeatQuest']) {
+			var result = {};
+			const dataView = new DataView(replay.customData['HeartBeatQuest'].buffer);
+			dataView.pointer = 0;
 
-		const version = DecodeInt(dataView);
-		if (version == 1) {
-			const length = DecodeInt(dataView);
-			result.frames = [];
-			for (var i = 0; i < length; i++) {
-				var frame = {};
-				frame.time = DecodeFloat(dataView);
-				frame.heartrate = DecodeInt(dataView);
-				result.frames.push(frame);
+			const version = DecodeInt(dataView);
+			if (version == 1) {
+				const length = DecodeInt(dataView);
+				result.frames = [];
+				for (var i = 0; i < length; i++) {
+					var frame = {};
+					frame.time = DecodeFloat(dataView);
+					frame.heartrate = DecodeInt(dataView);
+					result.frames.push(frame);
+				}
+				result.device = DecodeString(dataView);
+				replay.parsedCustomData['HeartBeatQuest'] = result;
 			}
-			result.device = DecodeString(dataView);
-			replay.parsedCustomData['HeartBeatQuest'] = result;
+		}
+		if (replay.customData['reesabers:tricks-replay']) {
+			var result = {};
+			const dataView = new DataView(replay.customData['reesabers:tricks-replay'].buffer);
+			dataView.pointer = 0;
+
+			const magic = DecodeInt(dataView);
+			if (magic === 1630166513) {
+				const version = DecodeInt(dataView);
+				result.version = version;
+
+				// Decode left hand
+				result.left = DecodeHandReplay(dataView);
+				// Decode right hand
+				result.right = DecodeHandReplay(dataView);
+
+				replay.parsedCustomData['reesabers:tricks-replay'] = result;
+
+				// Apply tricks to all frames
+				ApplyTricksToReplay(replay, result);
+			}
 		}
 	}
+}
+
+function ApplyTricksToReplay(replay, tricksReplay) {
+	if (!replay.frames || !replay.frames.length) return;
+
+	// Process left hand tricks
+	if (tricksReplay.left) {
+		let frameIndex = 0;
+		for (const segment of tricksReplay.left.segmentsArray) {
+			for (const trickFrame of segment.framesArray) {
+				// Find appropriate frame
+				while (frameIndex < replay.frames.length - 1 && replay.frames[frameIndex + 1].time <= trickFrame.songTime) {
+					frameIndex++;
+				}
+
+				if (frameIndex < replay.frames.length) {
+					// Apply pose to frame
+					ApplyPoseToFrame(replay.frames[frameIndex].left, trickFrame);
+				}
+			}
+		}
+	}
+
+	// Process right hand tricks
+	if (tricksReplay.right) {
+		let frameIndex = 0;
+		for (const segment of tricksReplay.right.segmentsArray) {
+			for (const trickFrame of segment.framesArray) {
+				// Find appropriate frame
+				while (frameIndex < replay.frames.length - 1 && replay.frames[frameIndex + 1].time <= trickFrame.songTime) {
+					frameIndex++;
+				}
+
+				if (frameIndex < replay.frames.length) {
+					// Apply pose to frame
+					ApplyPoseToFrame(replay.frames[frameIndex].right, trickFrame);
+				}
+			}
+		}
+	}
+}
+
+function ApplyPoseToFrame(framePose, trickPose) {
+	framePose.position.x = trickPose.posX;
+	framePose.position.y = trickPose.posY;
+	framePose.position.z = trickPose.posZ;
+
+	framePose.rotation.x = trickPose.rotX;
+	framePose.rotation.y = trickPose.rotY;
+	framePose.rotation.z = trickPose.rotZ;
+	framePose.rotation.w = trickPose.rotW;
 }
 
 function DecodeNote(dataView) {
@@ -387,6 +459,43 @@ function DecodeFloat(dataView) {
 function DecodeBool(dataView) {
 	const result = dataView.getUint8(dataView.pointer, true) != 0;
 	dataView.pointer++;
+	return result;
+}
+
+function DecodeHandReplay(dataView) {
+	var result = {};
+	result.segmentsCount = DecodeInt(dataView);
+	result.segmentsArray = [];
+
+	for (var i = 0; i < result.segmentsCount; i++) {
+		result.segmentsArray.push(DecodeSegment(dataView));
+	}
+
+	return result;
+}
+
+function DecodeSegment(dataView) {
+	var result = {};
+	result.framesCount = DecodeInt(dataView);
+	result.framesArray = [];
+
+	for (var i = 0; i < result.framesCount; i++) {
+		result.framesArray.push(DecodeTrickFrame(dataView));
+	}
+
+	return result;
+}
+
+function DecodeTrickFrame(dataView) {
+	var result = {};
+	result.songTime = DecodeFloat(dataView);
+	result.posX = DecodeFloat(dataView);
+	result.posY = DecodeFloat(dataView);
+	result.posZ = DecodeFloat(dataView);
+	result.rotX = DecodeFloat(dataView);
+	result.rotY = DecodeFloat(dataView);
+	result.rotZ = DecodeFloat(dataView);
+	result.rotW = DecodeFloat(dataView);
 	return result;
 }
 

@@ -42,7 +42,7 @@ AFRAME.registerComponent('heartrate-counter', {
 				for (let i = 0; i < frames.length; i++) {
 					const frame = frames[i];
 					if (frame.time >= songTime) {
-						captureThis.label.setAttribute('text', 'value', frame.heartrate + '❤️');
+						captureThis.label.setAttribute('text', 'value', frame.heartrate);
 						break;
 					}
 				}

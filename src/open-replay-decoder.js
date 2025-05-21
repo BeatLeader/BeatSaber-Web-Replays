@@ -76,7 +76,7 @@ function decode(arrayBuffer, completion) {
 	if (version == 1 && magic == 0x442d3d69) {
 		var replay = {};
 
-		for (var a = 0; a < StructType.customData + 1; a++) {
+		for (var a = 0; a < StructType.customData + 1 && dataView.pointer < dataView.byteLength; a++) {
 			const type = DecodeUint8(dataView);
 			switch (type) {
 				case StructType.info:

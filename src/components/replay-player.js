@@ -91,20 +91,25 @@ AFRAME.registerComponent('replay-player', {
 		const rightHitboxSaber = this.secondSaberControl.hitboxSaber;
 		const headset = this.headset.object3D;
 		const povCamera = this.povCameraRig.object3D;
+		const showTreecks = this.settings.settings.showTreecks;
 
 		const offsetInput = document.getElementById('saberOffset');
 
 		const v1 = this.v1;
 		const v2 = this.v2;
 
-		v1.set(frame.left.position.x, frame.left.position.y, frame.left.position.z);
-		v2.set(nextFrame.left.position.x, nextFrame.left.position.y, nextFrame.left.position.z);
+		const leftPosition = showTreecks && frame.left.trickPosition ? frame.left.trickPosition : frame.left.position;
+		v1.set(leftPosition.x, leftPosition.y, leftPosition.z);
+		const leftNextPosition = showTreecks && nextFrame.left.trickPosition ? nextFrame.left.trickPosition : nextFrame.left.position;
+		v2.set(leftNextPosition.x, leftNextPosition.y, leftNextPosition.z);
 		leftHitboxSaber.position.set(v1.x, v1.y - height, -v1.z);
 		const lposition = v1.lerp(v2, slerpValue);
 		leftSaber.position.set(lposition.x, lposition.y - height, -lposition.z);
 
-		v1.set(frame.right.position.x, frame.right.position.y, frame.right.position.z);
-		v2.set(nextFrame.right.position.x, nextFrame.right.position.y, nextFrame.right.position.z);
+		const rightPosition = showTreecks && frame.right.trickPosition ? frame.right.trickPosition : frame.right.position;
+		v1.set(rightPosition.x, rightPosition.y, rightPosition.z);
+		const rightNextPosition = showTreecks && nextFrame.right.trickPosition ? nextFrame.right.trickPosition : nextFrame.right.position;
+		v2.set(rightNextPosition.x, rightNextPosition.y, rightNextPosition.z);
 		rightHitboxSaber.position.set(v1.x, v1.y - height, -v1.z);
 		const rposition = v1.lerp(v2, slerpValue);
 		rightSaber.position.set(rposition.x, rposition.y - height, -rposition.z);
@@ -113,8 +118,10 @@ AFRAME.registerComponent('replay-player', {
 		const q1 = this.q1;
 		const q2 = this.q2;
 
-		q1.set(frame.left.rotation.w, frame.left.rotation.z, frame.left.rotation.y, frame.left.rotation.x);
-		q2.set(nextFrame.left.rotation.w, nextFrame.left.rotation.z, nextFrame.left.rotation.y, nextFrame.left.rotation.x);
+		const leftRotation = showTreecks && frame.left.trickRotation ? frame.left.trickRotation : frame.left.rotation;
+		q1.set(leftRotation.w, leftRotation.z, leftRotation.y, leftRotation.x);
+		const leftNextRotation = showTreecks && nextFrame.left.trickRotation ? nextFrame.left.trickRotation : nextFrame.left.rotation;
+		q2.set(leftNextRotation.w, leftNextRotation.z, leftNextRotation.y, leftNextRotation.x);
 		let lrotation = euler.setFromQuaternion(q1);
 		leftHitboxSaber.rotation.set(lrotation.x, lrotation.y + Math.PI, -lrotation.z);
 
@@ -122,8 +129,10 @@ AFRAME.registerComponent('replay-player', {
 		lrotation = euler.setFromQuaternion(lquat);
 		leftSaber.rotation.set(lrotation.x, lrotation.y + Math.PI, -lrotation.z);
 
-		q1.set(frame.right.rotation.w, frame.right.rotation.z, frame.right.rotation.y, frame.right.rotation.x);
-		q2.set(nextFrame.right.rotation.w, nextFrame.right.rotation.z, nextFrame.right.rotation.y, nextFrame.right.rotation.x);
+		const rightRotation = showTreecks && frame.right.trickRotation ? frame.right.trickRotation : frame.right.rotation;
+		q1.set(rightRotation.w, rightRotation.z, rightRotation.y, rightRotation.x);
+		const rightNextRotation = showTreecks && nextFrame.right.trickRotation ? nextFrame.right.trickRotation : nextFrame.right.rotation;
+		q2.set(rightNextRotation.w, rightNextRotation.z, rightNextRotation.y, rightNextRotation.x);
 		let rrotation = euler.setFromQuaternion(q1);
 		rightHitboxSaber.rotation.set(rrotation.x, rrotation.y + Math.PI, -rrotation.z);
 

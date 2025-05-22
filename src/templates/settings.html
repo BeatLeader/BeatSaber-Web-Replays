@@ -23,6 +23,9 @@
 			<button class="settings-tab-button tab-button" onclick="changeTab(3)"><i class="fas fa-palette"></i> Colors</button>
 			<button class="settings-tab-button tab-button" onclick="changeTab(4)"><i class="fas fa-wand-sparkles"></i> Sabers</button>
 			<button class="settings-tab-button tab-button" onclick="changeTab(5)"><i class="fas fa-circle-play"></i> Playback</button>
+			<button class="settings-tab-button tab-button" id="extensionsTab" style="display: none" onclick="changeTab(6)">
+				<i class="fas fa-puzzle-piece"></i> Mods
+			</button>
 		</div>
 		<div class="tab-content">
 			<div class="settings-tab-pane tab-pane active">{% include './settings/general.html' %}</div>
@@ -31,6 +34,7 @@
 			<div class="settings-tab-pane tab-pane">{% include './settings/colors.html' %}</div>
 			<div class="settings-tab-pane tab-pane">{% include './settings/sabers.html' %}</div>
 			<div class="settings-tab-pane tab-pane">{% include './settings/playback.html' %}</div>
+			<div class="settings-tab-pane tab-pane">{% include './settings/customdata.html' %}</div>
 		</div>
 	</div>
 </div>

@@ -13,7 +13,6 @@ AFRAME.registerComponent('settings', {
 			saberWidth: 100,
 			showHud: true,
 			showFps: false,
-			showHeartrate: true,
 			showNoteModifierVisuals: true,
 			savedCameraDefault: false,
 			highlightErrors: false,
@@ -100,6 +99,10 @@ AFRAME.registerComponent('settings', {
 
 			autoSkipIntro: false,
 			autoSkipOutro: false,
+
+			// Extensions (custom data)
+			showHeartrate: true,
+			showTreecks: true,
 		};
 
 		this.units = {

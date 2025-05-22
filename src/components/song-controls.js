@@ -74,11 +74,11 @@ AFRAME.registerComponent('song-controls', {
 				this.makeTimelineOverlay(event.detail, this.song.source.buffer, this);
 			}
 			this.replayData = event.detail;
+			let replay = event.detail.replay;
 
 			if (utils.getUrlParameter('speed')) {
 				// keep speed from url param
 			} else {
-				let replay = event.detail.replay;
 				if (replay) {
 					let speedSlider = document.querySelectorAll('.speedSlider');
 					let speed = 1;
@@ -143,6 +143,16 @@ AFRAME.registerComponent('song-controls', {
 						{once: true}
 					);
 				}
+			}
+
+			if (replay.parsedCustomData) {
+				document.getElementById('extensionsTab').style.display = 'block';
+				Object.keys(replay.parsedCustomData).forEach(key => {
+					var toggle = document.getElementById(key);
+					if (toggle) {
+						toggle.style.display = 'block';
+					}
+				});
 			}
 		});
 

@@ -271,24 +271,20 @@ function ParseKnownCustomData(replay) {
 				const version = DecodeInt(dataView);
 				result.version = version;
 
-				// Decode left hand
 				result.left = DecodeHandReplay(dataView);
-				// Decode right hand
 				result.right = DecodeHandReplay(dataView);
 
 				replay.parsedCustomData['reesabers:tricks-replay'] = result;
 
-				// Apply tricks to all frames
-				ApplyTricksToReplay(replay, result);
+				AddTricksToReplay(replay, result);
 			}
 		}
 	}
 }
 
-function ApplyTricksToReplay(replay, tricksReplay) {
+function AddTricksToReplay(replay, tricksReplay) {
 	if (!replay.frames || !replay.frames.length) return;
 
-	// Process left hand tricks
 	if (tricksReplay.left) {
 		let frameIndex = 0;
 		for (const segment of tricksReplay.left.segmentsArray) {
@@ -300,13 +296,12 @@ function ApplyTricksToReplay(replay, tricksReplay) {
 
 				if (frameIndex < replay.frames.length) {
 					// Apply pose to frame
-					ApplyPoseToFrame(replay.frames[frameIndex].left, trickFrame);
+					AddPoseToFrame(replay.frames[frameIndex].left, trickFrame);
 				}
 			}
 		}
 	}
 
-	// Process right hand tricks
 	if (tricksReplay.right) {
 		let frameIndex = 0;
 		for (const segment of tricksReplay.right.segmentsArray) {
@@ -318,22 +313,26 @@ function ApplyTricksToReplay(replay, tricksReplay) {
 
 				if (frameIndex < replay.frames.length) {
 					// Apply pose to frame
-					ApplyPoseToFrame(replay.frames[frameIndex].right, trickFrame);
+					AddPoseToFrame(replay.frames[frameIndex].right, trickFrame);
 				}
 			}
 		}
 	}
 }
 
-function ApplyPoseToFrame(framePose, trickPose) {
-	framePose.position.x = trickPose.posX;
-	framePose.position.y = trickPose.posY;
-	framePose.position.z = trickPose.posZ;
+function AddPoseToFrame(framePose, trickPose) {
+	framePose.trickPosition = {
+		x: trickPose.posX,
+		y: trickPose.posY,
+		z: trickPose.posZ,
+	};
 
-	framePose.rotation.x = trickPose.rotX;
-	framePose.rotation.y = trickPose.rotY;
-	framePose.rotation.z = trickPose.rotZ;
-	framePose.rotation.w = trickPose.rotW;
+	framePose.trickRotation = {
+		x: trickPose.rotX,
+		y: trickPose.rotY,
+		z: trickPose.rotZ,
+		w: trickPose.rotW,
+	};
 }
 
 function DecodeNote(dataView) {

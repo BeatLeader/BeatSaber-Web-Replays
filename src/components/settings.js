@@ -101,6 +101,10 @@ AFRAME.registerComponent('settings', {
 
 			autoSkipIntro: false,
 			autoSkipOutro: false,
+
+			// Extensions (custom data)
+			showHeartrate: true,
+			showTreecks: true,
 		};
 
 		this.units = {

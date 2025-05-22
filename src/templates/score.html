@@ -18,6 +18,10 @@
 		<a-entity id="fps" mixin="scoreText" bind__visible="settings.showFps" text="width: 4; color: #FAFAFA"> </a-entity>
 	</a-entity>
 
+	<a-entity id="heartrateTextContainer" position="1.8 2.5 -4">
+		<a-entity id="heartrate" mixin="scoreText" bind__visible="settings.showHeartrate" text="width: 4; color: #FF0000"> </a-entity>
+	</a-entity>
+
 	<a-entity
 		id="misses"
 		mixin="scoreText"

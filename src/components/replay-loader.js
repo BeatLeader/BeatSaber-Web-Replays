@@ -12,6 +12,7 @@ AFRAME.registerComponent('replay-loader', {
 		players: {default: AFRAME.utils.getUrlParameter('players')},
 		links: {default: AFRAME.utils.getUrlParameter('links')},
 		hash: {default: AFRAME.utils.getUrlParameter('hash')},
+		context: {default: AFRAME.utils.getUrlParameter('context') || 'general'},
 		isSafari: {default: false},
 		difficulty: {
 			default: AFRAME.utils.getUrlParameter('difficulty') || 'ExpertPlus',
@@ -53,7 +54,9 @@ AFRAME.registerComponent('replay-loader', {
 	downloadReplay: function (hash) {
 		this.el.sceneEl.emit('replayloadstart', null);
 		this.userIds.forEach((playerID, index) => {
-			fetch(`https://api.beatleader.xyz/score/${playerID}/${hash}/${this.data.difficulty}/${this.data.mode}`).then(async response => {
+			fetch(
+				`https://api.beatleader.xyz/score/${playerID}/${hash}/${this.data.difficulty}/${this.data.mode}?leaderboardContext=${this.data.context}`
+			).then(async response => {
 				let data = response.status == 200 ? await response.json() : null;
 				if (data && data.playerId) {
 					checkBSOR(data.replay, true, replay => {

@@ -99,7 +99,7 @@ AFRAME.registerComponent('replay-player', {
 		const euler = this.euler;
 		const q1 = this.q1;
 		const q2 = this.q2;
-    
+
 		v1.set(frame.head.position.x, frame.head.position.y, frame.head.position.z);
 		v2.set(nextFrame.head.position.x, nextFrame.head.position.y, nextFrame.head.position.z);
 		const hpostion = v1.lerp(v2, slerpValue);
@@ -190,8 +190,8 @@ AFRAME.registerComponent('replay-player', {
 		const lquat = q1.slerp(q2, slerpValue);
 		const slerpRotation = euler.setFromQuaternion(lquat);
 		saber.rotation.set(slerpRotation.x, slerpRotation.y + Math.PI, -slerpRotation.z);
-    
-    const saberOffset = Number(this.settings.settings.saberOffset);
+
+		const saberOffset = Number(this.settings.settings.saberOffset);
 		saber.translateZ(-saberOffset);
 	},
 

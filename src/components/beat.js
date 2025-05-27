@@ -8,6 +8,7 @@ import {
 	rotateAboutPoint,
 	NoteLineLayer,
 	LerpUnclamped,
+	LeaderboardContexts,
 } from '../utils';
 const COLORS = require('../constants/colors.js');
 
@@ -594,6 +595,8 @@ AFRAME.registerComponent('beat', {
 
 		const replay = replayLoader.replay;
 		const modifiers = replay.info.modifiers;
+
+		this.replayContexts = replay.leaderboardContexts;
 
 		if (modifiers.includes('GN') && settings.settings.showNoteModifierVisuals) {
 			this.blockEl.setAttribute('material', 'visible: ' + (this.data.index == 0));
@@ -1355,7 +1358,11 @@ AFRAME.registerComponent('beat', {
 		return function (replayNote) {
 			const judgments = HSVConfig['judgments'];
 			let judgment;
-			const score = (replayNote.score / replayNote.maxScore) * 115;
+			var score = (replayNote.score / replayNote.maxScore) * 115;
+
+			if (this.replayContexts && (this.replayContexts & LeaderboardContexts.Golf) == LeaderboardContexts.Golf) {
+				score = 115 - score;
+			}
 
 			for (var i = 0; i <= judgments.length - 1; i++) {
 				if (judgments[i].threshold <= score) {

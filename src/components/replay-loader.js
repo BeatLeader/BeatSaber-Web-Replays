@@ -132,6 +132,7 @@ AFRAME.registerComponent('replay-loader', {
 						if (replay.frames.length == 0) {
 							this.el.sceneEl.emit('replayloadfailed', {error: 'Replay broken, redownload and reinstall mod, please'}, null);
 						} else {
+							replay.leaderboardContexts = data.validContexts;
 							this.replay = replay;
 							const jd = replay.info.jumpDistance > 5 ? replay.info.jumpDistance : undefined;
 							this.el.sceneEl.emit(

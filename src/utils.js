@@ -29,6 +29,18 @@ function replaceCdnUrl(url) {
 	return url;
 }
 
+const LeaderboardContexts = {
+	None: 0,
+	General: 1 << 1,
+	NoMods: 1 << 2,
+	NoPause: 1 << 3,
+	Golf: 1 << 4,
+	SCPM: 1 << 5,
+	Speedrun: 1 << 6,
+	SpeedrunBackup: 1 << 7,
+	Funny: 1 << 8,
+};
+
 function getHorizontalPosition(lineIndex) {
 	return (-(_noteLinesCount - 1) * 0.5 + lineIndex) * _noteLinesDistance;
 }
@@ -565,6 +577,7 @@ function createSilence(seconds = 1) {
 module.exports.getApiUrl = getApiUrl;
 module.exports.getWebsiteUrl = getWebsiteUrl;
 module.exports.replaceCdnUrl = replaceCdnUrl;
+module.exports.LeaderboardContexts = LeaderboardContexts;
 module.exports.getHorizontalPosition = getHorizontalPosition;
 module.exports.getHorizontalWallPosition = getHorizontalWallPosition;
 module.exports.getVerticalPosition = getVerticalPosition;

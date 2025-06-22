@@ -235,6 +235,7 @@ function DecodeCustomData(dataView) {
 		const customDataLength = DecodeInt(dataView);
 		const value = new Int8Array(dataView.buffer.slice(dataView.pointer, customDataLength + dataView.pointer));
 		result[key] = value;
+		dataView.pointer += customDataLength;
 	}
 	return result;
 }

@@ -78,9 +78,7 @@ AFRAME.registerComponent('zip-loader', {
 		};
 
 		if (info._audioDataFile) {
-			const fileArray = await files[Object.keys(files).find(f => f.toLowerCase().endsWith(info._audioDataFile.toLowerCase()))].async(
-				'uint8array'
-			);
+			const fileArray = await files[Object.keys(files).find(f => f.toLowerCase() == info._audioDataFile.toLowerCase())].async('uint8array');
 			var audioDataJson;
 			try {
 				var fileData = new TextDecoder().decode(fileArray);
@@ -133,7 +131,7 @@ AFRAME.registerComponent('zip-loader', {
 				const diffBeatmaps = set._difficultyBeatmaps.sort(d => d._difficultyRank);
 				for (let index = 0; index < diffBeatmaps.length; index++) {
 					const diff = diffBeatmaps[index];
-					const fileArray = await files[Object.keys(files).find(f => f.toLowerCase().endsWith(diff._beatmapFilename.toLowerCase()))].async(
+					const fileArray = await files[Object.keys(files).find(f => f.toLowerCase() == diff._beatmapFilename.toLowerCase())].async(
 						'uint8array'
 					);
 

@@ -1,4 +1,5 @@
 const defaultHitSound = require('../../assets/sounds/defaulthitsound.js');
+const {getUrlParameter, pageInIframe} = require('../utils.js');
 
 AFRAME.registerComponent('settings', {
 	schema: {},
@@ -162,5 +163,29 @@ AFRAME.registerComponent('settings', {
 		this.settings.hitSound = defaultHitSound;
 		this.settings.hitsoundName = '';
 		this.sync();
+	},
+
+	shouldLoopReplays: function () {
+		if (pageInIframe()) {
+			const loopQuery = getUrlParameter('loop');
+			if (loopQuery == 'true') {
+				return true;
+			} else if (loopQuery == 'false') {
+				return false;
+			}
+		}
+		return this.settings.loopReplays;
+	},
+
+	shouldAutoplayOnLoad: function () {
+		if (pageInIframe()) {
+			const autoplayQuery = getUrlParameter('autoplay');
+			if (autoplayQuery == 'true') {
+				return true;
+			} else if (autoplayQuery == 'false') {
+				return false;
+			}
+		}
+		return this.settings.autoplayOnLoad;
 	},
 });

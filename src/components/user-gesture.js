@@ -10,7 +10,7 @@ AFRAME.registerComponent('user-gesture', {
 		this.settings = this.el.sceneEl.components['settings'];
 
 		checkAutoplay().then(canAutoplay => {
-			if (this.settings.settings.autoplayOnLoad || getCookie('autoplayReplay')) {
+			if (this.settings.shouldAutoplayOnLoad() || getCookie('autoplayReplay')) {
 				if (canAutoplay) {
 					setTimeout(() => {
 						this.el.sceneEl.emit('usergesturereceive', null, false);

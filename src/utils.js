@@ -492,6 +492,10 @@ function getUrlParameter(name, url = window.location.href) {
 	return decodeURIComponent(value.replace(/\+/g, ' '));
 }
 
+function pageInIframe() {
+	return window.location !== window.parent.location;
+}
+
 function setCookie(name, value, seconds) {
 	var expires = '';
 	if (seconds) {
@@ -602,6 +606,7 @@ module.exports.rotateAboutPoint = rotateAboutPoint;
 module.exports.LerpUnclamped = LerpUnclamped;
 module.exports.hasTouchScreen = hasTouchScreen;
 module.exports.getUrlParameter = getUrlParameter;
+module.exports.pageInIframe = pageInIframe;
 module.exports.setCookie = setCookie;
 module.exports.getCookie = getCookie;
 module.exports.checkAutoplay = checkAutoplay;

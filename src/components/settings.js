@@ -117,10 +117,30 @@ AFRAME.registerComponent('settings', {
 
 		try {
 			let storedSettings = JSON.parse(localStorage.getItem('settings'));
-			Object.keys(storedSettings).forEach(key => {
-				this.settings[key] = storedSettings[key];
-			});
-		} catch (e) {}
+
+			let loadFromStored = true;
+			let parsedQueryParamSettings;
+
+			let queryParamSettings = AFRAME.utils.getUrlParameter('tempSettings').trim();
+			if (queryParamSettings) {
+				loadFromStored = false;
+				parsedQueryParamSettings = JSON.parse(queryParamSettings);
+			}
+
+			if(loadFromStored) {
+				console.log("Loading data from localStorage")
+				Object.keys(storedSettings).forEach(key => {
+					this.settings[key] = storedSettings[key];
+				});
+			} else {
+				console.log("Loading data from externally defined settings")
+				Object.keys(parsedQueryParamSettings).forEach(key => {
+					this.settings[key] = parsedQueryParamSettings[key];
+				})
+			}
+		} catch (e) {
+			console.error("Error loading settings:", e)
+		}
 
 		this.el.sceneEl.emit('settingsChanged', {settings: this.settings}, false);
 

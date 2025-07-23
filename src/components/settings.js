@@ -115,6 +115,8 @@ AFRAME.registerComponent('settings', {
 			cameraXRotation: '°',
 		};
 
+		this.isTemporary = false;
+
 		try {
 			let storedSettings = JSON.parse(localStorage.getItem('settings'));
 
@@ -133,6 +135,7 @@ AFRAME.registerComponent('settings', {
 					this.settings[key] = storedSettings[key];
 				});
 			} else {
+				this.isTemporary = true;
 				console.log("Loading data from externally defined settings")
 				Object.keys(parsedQueryParamSettings).forEach(key => {
 					this.settings[key] = parsedQueryParamSettings[key];
@@ -150,7 +153,9 @@ AFRAME.registerComponent('settings', {
 			if (toggle.type == 'checkbox') {
 				toggle.addEventListener('input', event => {
 					this.settings[key] = event.srcElement.checked;
-					localStorage.setItem('settings', JSON.stringify(this.settings));
+					if(!this.isTemporary) {
+						localStorage.setItem('settings', JSON.stringify(this.settings));
+					}
 					this.el.sceneEl.emit('settingsChanged', {settings: this.settings}, false);
 				});
 				toggle.checked = this.settings[key];
@@ -159,7 +164,9 @@ AFRAME.registerComponent('settings', {
 				toggle.addEventListener('input', event => {
 					this.settings[key] = event.srcElement.value;
 					label.textContent = this.settings[key] + (this.units[key] ? this.units[key] : '');
-					localStorage.setItem('settings', JSON.stringify(this.settings));
+					if(!this.isTemporary) {
+						localStorage.setItem('settings', JSON.stringify(this.settings));
+					}
 					this.el.sceneEl.emit('settingsChanged', {settings: this.settings}, false);
 				});
 				toggle.value = this.settings[key];
@@ -167,7 +174,9 @@ AFRAME.registerComponent('settings', {
 			} else if (toggle.type == 'select-one') {
 				toggle.addEventListener('change', event => {
 					this.settings[key] = event.srcElement.value;
-					localStorage.setItem('settings', JSON.stringify(this.settings));
+					if(!this.isTemporary) {
+						localStorage.setItem('settings', JSON.stringify(this.settings));
+					}
 					this.el.sceneEl.emit('settingsChanged', {settings: this.settings}, false);
 				});
 				toggle.value = this.settings[key];
@@ -175,7 +184,9 @@ AFRAME.registerComponent('settings', {
 		});
 	},
 	sync: function () {
-		localStorage.setItem('settings', JSON.stringify(this.settings));
+		if(!this.isTemporary) {
+			localStorage.setItem('settings', JSON.stringify(this.settings));
+		}
 		this.el.sceneEl.emit('settingsChanged', {settings: this.settings}, false);
 	},
 	resetHitsound: function () {

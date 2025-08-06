@@ -578,6 +578,20 @@ function createSilence(seconds = 1) {
 	return url;
 }
 
+const DEFAULT_COLORS = {
+	blueEventColor: '#2064a8',
+	blueBrightEventColor: '#87c2ff',
+	redEventColor: '#f01978',
+	redBrightEventColor: '#ff70b5',
+	blueBGColor: '#2851b8',
+	blueBrightBGColor: '#58bbed',
+	redBGColor: '#ff1f81',
+	redBrightBGColor: '#ff6bb0',
+	wallColor: '#f01978',
+	bombColor: '#000000',
+	backgroundColor: '#000000',
+};
+
 module.exports.getApiUrl = getApiUrl;
 module.exports.getWebsiteUrl = getWebsiteUrl;
 module.exports.replaceCdnUrl = replaceCdnUrl;
@@ -612,3 +626,4 @@ module.exports.getCookie = getCookie;
 module.exports.checkAutoplay = checkAutoplay;
 module.exports.isFirefox = isFirefox;
 module.exports.createSilence = createSilence;
+module.exports.DEFAULT_COLORS = DEFAULT_COLORS;

@@ -1,4 +1,4 @@
-const {getApiUrl} = require('../utils');
+const {getApiUrl, DEFAULT_COLORS} = require('../utils');
 
 function hexToHSL(hex) {
 	let r = parseInt(hex.slice(1, 3), 16);
@@ -103,6 +103,21 @@ AFRAME.registerComponent('colors', {
 				animationsContainer.setAttribute(`animation__${eventType}${colorType}fade`, 'to', settings[colorType + 'BGColor']);
 			});
 		});
+
+		let backgroundColorInput = document.getElementById('backgroundColor');
+		backgroundColorInput.value = this.settings.settings['backgroundColor'];
+
+		let wallColorInput = document.getElementById('wallsColor');
+		wallColorInput.value = this.settings.settings.wallColor;
+
+		let bombColorInput = document.getElementById('bombsColor');
+		bombColorInput.value = this.settings.settings.bombColor;
+
+		let goodTdColorInput = document.getElementById('goodTdColor');
+		goodTdColorInput.value = this.settings.settings.goodTdColor;
+
+		let badTdColorInput = document.getElementById('badTdColor');
+		badTdColorInput.value = this.settings.settings.badTdColor;
 	},
 
 	init: function () {
@@ -110,6 +125,22 @@ AFRAME.registerComponent('colors', {
 		this.materials = this.el.sceneEl.systems.materials;
 
 		this.updateColors();
+
+		const resetButton = document.getElementById('resetColors');
+
+		let leftSaberColorInput = document.getElementById('leftSaberColor');
+		let rightSaberColorInput = document.getElementById('rightSaberColor');
+
+		const refreshResetButtonVisibility = () => {
+			resetButton.style.display =
+				Object.keys(DEFAULT_COLORS).some(color => DEFAULT_COLORS[color] !== this.settings.settings[color]) ||
+				leftSaberColorInput.value !== '#bf2121' ||
+				rightSaberColorInput.value !== '#335aff'
+					? 'block'
+					: 'none';
+		};
+
+		refreshResetButtonVisibility();
 
 		['Event', 'BG'].forEach(type => {
 			['red', 'blue'].forEach(element => {
@@ -121,55 +152,71 @@ AFRAME.registerComponent('colors', {
 					this.settings.settings[element + `Bright${type}Color`] = brighten(this.settings.settings[key]);
 					this.updateColors();
 					this.settings.sync();
+					refreshResetButtonVisibility();
 				});
 			});
 		});
 
+		resetButton.addEventListener('click', () => {
+			Object.keys(DEFAULT_COLORS).forEach(color => {
+				this.settings.settings[color] = DEFAULT_COLORS[color];
+			});
+			leftSaberColorInput.value = '#bf2121';
+			rightSaberColorInput.value = '#335aff';
+
+			this.el.sceneEl.emit('colorReset', {hand: 'left', color: '#bf2121'}, null);
+			this.el.sceneEl.emit('colorReset', {hand: 'right', color: '#335aff'}, null);
+
+			this.updateColors();
+			this.settings.sync();
+			resetButton.style.display = 'none';
+		});
+
 		let backgroundColorInput = document.getElementById('backgroundColor');
-		backgroundColorInput.value = this.settings.settings['backgroundColor'];
 		backgroundColorInput.addEventListener('input', e => {
 			this.settings.settings['backgroundColor'] = e.target.value;
 			this.settings.sync();
+			refreshResetButtonVisibility();
 		});
 
 		let wallColorInput = document.getElementById('wallsColor');
-		wallColorInput.value = this.settings.settings.wallColor;
 		wallColorInput.addEventListener('input', e => {
 			this.settings.settings.wallColor = e.target.value;
 			this.settings.sync();
+			refreshResetButtonVisibility();
 		});
 
 		let bombColorInput = document.getElementById('bombsColor');
-		bombColorInput.value = this.settings.settings.bombColor;
 		bombColorInput.addEventListener('input', e => {
 			this.settings.settings.bombColor = e.target.value;
 			this.settings.sync();
+			refreshResetButtonVisibility();
 		});
 
-		let leftSaberColorInput = document.getElementById('leftSaberColor');
 		leftSaberColorInput.addEventListener('input', e => {
 			this.el.sceneEl.emit('colorChanged', {hand: 'left', color: e.target.value}, null);
 			this.changeColor('leftSaberColor', e.target.value);
+			refreshResetButtonVisibility();
 		});
 
-		let rightSaberColorInput = document.getElementById('rightSaberColor');
 		rightSaberColorInput.addEventListener('input', e => {
 			this.el.sceneEl.emit('colorChanged', {hand: 'right', color: e.target.value}, null);
 			this.changeColor('rightSaberColor', e.target.value);
+			refreshResetButtonVisibility();
 		});
 
 		let goodTdColorInput = document.getElementById('goodTdColor');
-		goodTdColorInput.value = this.settings.settings.goodTdColor;
 		goodTdColorInput.addEventListener('input', e => {
 			this.settings.settings.goodTdColor = e.target.value;
 			this.settings.sync();
+			refreshResetButtonVisibility();
 		});
 
 		let badTdColorInput = document.getElementById('badTdColor');
-		badTdColorInput.value = this.settings.settings.badTdColor;
 		badTdColorInput.addEventListener('input', e => {
 			this.settings.settings.badTdColor = e.target.value;
 			this.settings.sync();
+			refreshResetButtonVisibility();
 		});
 
 		const updateTdColorPickers = () => {

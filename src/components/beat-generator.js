@@ -1,4 +1,5 @@
 import {EaseType, Interpolate} from '../utils';
+const COLORS = require('../constants/colors.js');
 
 const BEAT_WARMUP_SPEED = 200;
 const BEAT_WARMUP_TIME = 0.3;
@@ -145,6 +146,13 @@ AFRAME.registerComponent('beat-generator', {
 		this.el.sceneEl.addEventListener('colorChanged', e => {
 			if (e.detail.color) {
 				this.colors[e.detail.hand] = e.detail.color;
+			}
+		});
+		this.el.sceneEl.addEventListener('colorReset', e => {
+			if (e.detail.hand == 'left') {
+				this.colors.left = COLORS.BEAT_RED;
+			} else {
+				this.colors.right = COLORS.BEAT_BLUE;
 			}
 		});
 

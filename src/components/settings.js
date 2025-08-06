@@ -1,5 +1,5 @@
 const defaultHitSound = require('../../assets/sounds/defaulthitsound.js');
-const {getUrlParameter, pageInIframe} = require('../utils.js');
+const {getUrlParameter, pageInIframe, DEFAULT_COLORS} = require('../utils.js');
 
 AFRAME.registerComponent('settings', {
 	schema: {},
@@ -25,17 +25,17 @@ AFRAME.registerComponent('settings', {
 			timeInBeats: false,
 
 			// Colors
-			blueEventColor: '#2064a8',
-			blueBrightEventColor: '#87c2ff',
-			redEventColor: '#f01978',
-			redBrightEventColor: '#ff70b5',
-			blueBGColor: '#2851b8',
-			blueBrightBGColor: '#58bbed',
-			redBGColor: '#ff1f81',
-			redBrightBGColor: '#ff6bb0',
-			wallColor: '#f01978',
-			bombColor: '#000000',
-			backgroundColor: '#000000',
+			blueEventColor: DEFAULT_COLORS.blueEventColor,
+			blueBrightEventColor: DEFAULT_COLORS.blueBrightEventColor,
+			redEventColor: DEFAULT_COLORS.redEventColor,
+			redBrightEventColor: DEFAULT_COLORS.redBrightEventColor,
+			blueBGColor: DEFAULT_COLORS.blueBGColor,
+			blueBrightBGColor: DEFAULT_COLORS.blueBrightBGColor,
+			redBGColor: DEFAULT_COLORS.redBGColor,
+			redBrightBGColor: DEFAULT_COLORS.redBrightBGColor,
+			wallColor: DEFAULT_COLORS.wallColor,
+			bombColor: DEFAULT_COLORS.bombColor,
+			backgroundColor: DEFAULT_COLORS.backgroundColor,
 
 			// Camera
 			cameraZPosition: 1,

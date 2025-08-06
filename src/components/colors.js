@@ -167,6 +167,9 @@ AFRAME.registerComponent('colors', {
 			this.el.sceneEl.emit('colorReset', {hand: 'left', color: '#bf2121'}, null);
 			this.el.sceneEl.emit('colorReset', {hand: 'right', color: '#335aff'}, null);
 
+			this.changeColor('leftSaberColor', '');
+			this.changeColor('rightSaberColor', '');
+
 			this.updateColors();
 			this.settings.sync();
 			resetButton.style.display = 'none';
@@ -245,6 +248,8 @@ AFRAME.registerComponent('colors', {
 				rightSaberColorInput.value = profileSettings.rightSaberColor;
 				this.el.sceneEl.emit('colorChanged', {hand: 'right', color: profileSettings.rightSaberColor}, null);
 			}
+
+			refreshResetButtonVisibility();
 
 			this.replayPlayerId = e.detail.playerId;
 		});

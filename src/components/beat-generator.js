@@ -616,29 +616,20 @@ AFRAME.registerComponent('beat-generator', {
 		return function (wallEl, wall) {
 			const data = this.data;
 
-			if (wall._customData && (wall._customData._noteJumpMovementSpeed || wall._customData._noteJumpStartBeatOffset)) {
-				wallObj.movementData = {
-					noteJumpMovementSpeed: wall._customData._noteJumpMovementSpeed
-						? wall._customData._noteJumpMovementSpeed
-						: this.movementData.noteJumpMovementSpeed,
-					noteJumpStartBeatOffset: wall._customData._noteJumpStartBeatOffset
-						? wall._customData._noteJumpStartBeatOffset
-						: this.movementData.noteJumpStartBeatOffset,
-					halfJumpDuration:
-						(60 / this.bpm) *
-						this.calculateHalfJumpDuration(
-							this.bpm,
-							wallObj.movementData.noteJumpMovementSpeed,
-							wallObj.movementData.noteJumpStartBeatOffset
-						),
-					halfJumpPosition: -wallObj.movementData.noteJumpStartBeatOffset * wallObj.movementData.noteJumpMovementSpeed,
-					warmupPosition: -data.moveTime * data.moveSpeed,
-					warmupSpeed: data.moveSpeed,
-				};
-			} else {
-				wallObj.movementData = this.movementData;
+			const movementData = Object.assign({}, this.movementData);
+
+			if (wall._customData && wall._customData._noteJumpMovementSpeed) {
+				movementData.noteJumpMovementSpeed = wall._customData._noteJumpMovementSpeed;
+			}
+			if (wall._customData && wall._customData._noteJumpStartBeatOffset) {
+				movementData.beatOffset = wall._customData._noteJumpStartBeatOffset;
 			}
 
+			movementData.halfJumpDuration =
+				(60 / this.bpm) * this.calculateHalfJumpDuration(this.bpm, movementData.noteJumpMovementSpeed, movementData.beatOffset);
+			movementData.halfJumpPosition = -movementData.beatOffset * movementData.noteJumpMovementSpeed;
+
+			wallObj.movementData = movementData;
 			wallObj.durationSeconds = wall._songDuration;
 			wallObj.horizontalPosition = wall._lineIndex;
 			if (wall._lineLayer != undefined) {

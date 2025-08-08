@@ -38,7 +38,7 @@ AFRAME.registerComponent('pauser', {
 		}
 
 		if (song.isPlaying && song.getCurrentTime() >= source.buffer.duration) {
-			if (this.settings.settings.loopReplays) {
+			if (this.settings.shouldLoopReplays()) {
 				this.songControls.seek(0);
 			} else {
 				this.el.sceneEl.emit('finishgame', null, false);
@@ -47,7 +47,7 @@ AFRAME.registerComponent('pauser', {
 
 		const replay = this.replayLoader.replay;
 		if (replay && replay.info.failTime && song.getCurrentTime() >= replay.info.failTime) {
-			if (this.settings.settings.loopReplays) {
+			if (this.settings.shouldLoopReplays()) {
 				this.songControls.seek(0);
 			} else {
 				this.el.sceneEl.emit('finishgame', null, false);

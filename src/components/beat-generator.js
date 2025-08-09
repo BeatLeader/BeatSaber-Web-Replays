@@ -626,8 +626,12 @@ AFRAME.registerComponent('beat-generator', {
 			}
 
 			movementData.halfJumpDuration =
-				(60 / this.bpm) * this.calculateHalfJumpDuration(this.bpm, movementData.noteJumpMovementSpeed, movementData.beatOffset);
-			movementData.halfJumpPosition = -movementData.beatOffset * movementData.noteJumpMovementSpeed;
+				(60 / this.bpm) *
+				(movementData.customJumpDuration
+					? movementData.customJumpDuration
+					: this.calculateHalfJumpDuration(this.bpm, movementData.noteJumpMovementSpeed, movementData.beatOffset));
+			movementData.jumpDuration = movementData.halfJumpDuration * 2;
+			movementData.halfJumpPosition = -movementData.halfJumpDuration * movementData.noteJumpMovementSpeed;
 
 			wallObj.movementData = movementData;
 			wallObj.durationSeconds = wall._songDuration;
@@ -950,9 +954,11 @@ AFRAME.registerComponent('beat-generator', {
 		if (newJD != null) {
 			jt = newJD / (60 / this.bpm) / movementData.noteJumpMovementSpeed / 2;
 			jd = newJD;
+			movementData.customJumpDuration = jt;
 		} else {
 			jt = defaultHalfJumpDuration;
 			jd = defaultJumpDistance;
+			movementData.customJumpDuration = null;
 		}
 
 		movementData.jumpDistance = jd;

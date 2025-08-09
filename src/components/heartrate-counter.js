@@ -36,7 +36,7 @@ AFRAME.registerComponent('heartrate-counter', {
 		if (captureThis.data.enabled) {
 			const replay = captureThis.replayLoader.replay;
 			const song = captureThis.el.sceneEl.components.song;
-			if (replay && replay.parsedCustomData['HeartBeatQuest']) {
+			if (replay && replay.parsedCustomData && replay.parsedCustomData['HeartBeatQuest']) {
 				const frames = replay.parsedCustomData['HeartBeatQuest'].frames;
 				const songTime = song.getCurrentTime();
 				for (let i = 0; i < frames.length; i++) {

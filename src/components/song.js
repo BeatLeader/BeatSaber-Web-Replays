@@ -192,6 +192,8 @@ AFRAME.registerComponent('song', {
 	onRestart: function () {
 		this.isPlaying = false;
 		this.lastCurrentTime = null;
+		this.lastContextTime = null;
+		this.lastFrameNow = null;
 		this.songStartTime = undefined;
 
 		// Restart, get new buffer source node and play.
@@ -239,7 +241,7 @@ AFRAME.registerComponent('song', {
 	playMediaSession: function () {
 		if (!this.metadataAudioLoading) {
 			this.metadataAudioLoading = true;
-			
+
 			this.audio.play().then(_ => {
 				navigator.mediaSession.metadata = new MediaMetadata({});
 				this.metadataAudioLoading = false;
@@ -260,6 +262,8 @@ AFRAME.registerComponent('song', {
 		}
 
 		this.lastCurrentTime = this.speed > 0.01 ? 0 : time;
+		this.lastContextTime = null;
+		this.lastFrameNow = null;
 
 		this.source.playbackRate.value = this.speed;
 
@@ -280,7 +284,15 @@ AFRAME.registerComponent('song', {
 		if (this.songStartTime === undefined) return queryParamTime;
 
 		let lastCurrentTime = this.lastCurrentTime;
-		const currentTime = this.context.currentTime;
+		let currentTime = this.context.currentTime;
+
+		const nowSeconds = performance.now() / 1000;
+		const frameDelta = this.lastFrameNow != null ? Math.max(0, nowSeconds - this.lastFrameNow) : 0;
+
+		if (this.source && this.source.context.state === 'running' && this.lastContextTime && currentTime - this.lastContextTime < 1e-6) {
+			currentTime = this.lastContextTime + frameDelta;
+		}
+
 		var newCurrent;
 		if (lastCurrentTime) {
 			newCurrent = lastCurrentTime + (currentTime - this.lastContextTime) * this.speed;
@@ -290,6 +302,7 @@ AFRAME.registerComponent('song', {
 
 		this.lastCurrentTime = newCurrent;
 		this.lastContextTime = currentTime;
+		this.lastFrameNow = nowSeconds;
 
 		return Math.max(0, newCurrent + parseFloat(this.settings.settings.soundDelay));
 	},

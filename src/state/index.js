@@ -44,7 +44,6 @@ const emptyScore = {
 };
 
 const isSafari = navigator.userAgent.toLowerCase().indexOf('safari') !== -1 && navigator.userAgent.toLowerCase().indexOf('chrome') === -1;
-const isSamsung = navigator.userAgent.toLowerCase().indexOf('samsung') !== -1;
 
 if (isSafari) {
 	var module = require('../lib/oggdec');
@@ -109,7 +108,6 @@ AFRAME.registerState({
 		isPlaying: false, // Actively playing.
 		isFinished: false,
 		isSafari: isSafari,
-		isSamsung: isSamsung,
 		isSongBufferProcessing: false,
 		useractive: false,
 		showControls: true,

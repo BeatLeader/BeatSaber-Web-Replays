@@ -509,10 +509,13 @@ AFRAME.registerComponent('replay-loader', {
 				normalCounter.Increase();
 				score += normalCounter.Multiplier * note.score;
 				fcScore += maxCounter.Multiplier * note.score;
-				if (note.scoringType == ScoringType.BurstSliderElement) {
-					energy += 1 / 500;
-				} else {
-					energy += 0.01;
+
+				if (energy > 0 || (!replay.info.modifiers.includes('NF') && !replay.info.failTime)) {
+					if (note.scoringType == ScoringType.BurstSliderElement) {
+						energy += 1 / 500;
+					} else {
+						energy += 0.01;
+					}
 				}
 				if (energy > 1) {
 					energy = 1;

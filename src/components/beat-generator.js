@@ -680,10 +680,10 @@ AFRAME.registerComponent('beat-generator', {
 
 				if (wall._customData._localRotation) {
 					wallObj.localRotation = new THREE.Euler(
-						wall._customData._localRotation[0] * 0.0175,
-						wall._customData._localRotation[1] * 0.0175,
+						-wall._customData._localRotation[0] * 0.0175,
+						-wall._customData._localRotation[1] * 0.0175,
 						wall._customData._localRotation[2] * 0.0175,
-						'YZX'
+						'YXZ'
 					);
 				}
 

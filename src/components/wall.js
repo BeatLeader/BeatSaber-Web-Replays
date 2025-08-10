@@ -47,7 +47,6 @@ AFRAME.registerComponent('wall', {
 		const data = this.data;
 		const movementData = data.movementData;
 		if (data.definitePosition) return;
-		const halfDepth = (data.durationSeconds * movementData.noteJumpMovementSpeed) / 2;
 
 		// Move.
 		this.el.object3D.visible = true;
@@ -63,11 +62,11 @@ AFRAME.registerComponent('wall', {
 		}
 
 		if (timeOffset <= -moveTime) {
-			newPosition = movementData.halfJumpPosition - halfDepth;
+			newPosition = movementData.halfJumpPosition;
 			timeOffset += moveTime;
 			newPosition += -timeOffset * movementData.noteJumpMovementSpeed;
 		} else {
-			newPosition = movementData.halfJumpPosition - halfDepth + movementData.warmupPosition + movementData.warmupSpeed * -timeOffset;
+			newPosition = movementData.halfJumpPosition + movementData.warmupPosition + movementData.warmupSpeed * -timeOffset;
 		}
 
 		newPosition += this.headset.object3D.position.z - SWORD_OFFSET;
@@ -146,12 +145,10 @@ AFRAME.registerComponent('wall', {
 			origin = data.definitePosition;
 		}
 
-		origin.y += height / 2;
 		origin.x += width / 2;
-
-		el.object3D.scale.set(Math.max(width, 0.1), Math.max(height, 0.1), Math.max(length, 0.1));
+		el.object3D.scale.set(width, height, length);
 		if (!data.definitePosition) {
-			el.object3D.position.set(origin.x, origin.y, origin.z + movementData.halfJumpPosition + movementData.warmupPosition - halfDepth);
+			el.object3D.position.set(origin.x, origin.y, origin.z + movementData.halfJumpPosition + movementData.warmupPosition);
 		} else {
 			el.object3D.position.set(origin.x, origin.y, origin.z);
 		}
@@ -174,9 +171,11 @@ AFRAME.registerComponent('wall', {
 		el.object3D.lookAt(origin);
 
 		if (data.localRotation) {
-			el.object3D.rotateX(data.localRotation.x);
-			el.object3D.rotateY(data.localRotation.y);
-			el.object3D.rotateZ(data.localRotation.z);
+			const obj = el.object3D;
+
+			const q = new THREE.Quaternion().setFromEuler(data.localRotation);
+			obj.quaternion.multiply(q);
+		}
 		}
 
 		this.startPosition = el.object3D.position.clone();
@@ -218,7 +217,6 @@ AFRAME.registerComponent('wall', {
 	tock: function (time, timeDelta) {
 		const data = this.data;
 		const movementData = data.movementData;
-		const halfDepth = (data.durationSeconds * movementData.noteJumpMovementSpeed) / 2;
 		const currentTime = this.getCurrentTime();
 
 		this.updatePosition();
@@ -228,7 +226,7 @@ AFRAME.registerComponent('wall', {
 			this.el.emit('scoreChanged', {index: this.hitWall.i}, true);
 		}
 
-		if (this.lastPosition > this.maxZ + halfDepth) {
+		if (this.lastPosition > this.maxZ) {
 			this.returnToPool();
 			return;
 		}

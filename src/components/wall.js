@@ -176,7 +176,6 @@ AFRAME.registerComponent('wall', {
 			const q = new THREE.Quaternion().setFromEuler(data.localRotation);
 			obj.quaternion.multiply(q);
 		}
-		}
 
 		this.startPosition = el.object3D.position.clone();
 	},

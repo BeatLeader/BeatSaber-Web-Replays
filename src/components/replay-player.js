@@ -1,4 +1,25 @@
 import {clamp} from '../utils';
+function FindFrameIndexByTime(frames, songTime, startFrom = 0) {
+	var index = startFrom;
+
+	if (songTime >= frames[index].time) {
+		//Search forwards
+		for (var i = index; i < frames.length; ++i) {
+			if (songTime < frames[i].time) break;
+			index = i;
+		}
+
+		return index;
+	}
+
+	//Search backwards
+	for (var i = index; i >= 0; --i) {
+		if (songTime > frames[i].time) break;
+		index = i;
+	}
+
+	return index;
+}
 AFRAME.registerComponent('replay-player', {
 	schema: {},
 
@@ -34,6 +55,7 @@ AFRAME.registerComponent('replay-player', {
 
 		this.q1 = new THREE.Quaternion();
 		this.q2 = new THREE.Quaternion();
+		this._frameIndex = 0;
 	},
 
 	play: function () {
@@ -53,10 +75,7 @@ AFRAME.registerComponent('replay-player', {
 		if (this.song.isPlaying && replay) {
 			const currentTime = this.song.getCurrentTime();
 			const frames = this.replayDecoder.replay.frames;
-			var frameIndex = 0;
-			while (frameIndex < frames.length - 2 && frames[frameIndex + 1].time < currentTime) {
-				frameIndex++;
-			}
+			var frameIndex = FindFrameIndexByTime(frames, currentTime, this._frameIndex);
 			const frame = frames[frameIndex];
 			const nextFrame = frames[frameIndex + 1];
 

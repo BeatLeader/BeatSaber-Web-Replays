@@ -240,7 +240,7 @@ AFRAME.registerComponent('trail', {
 		hand: {type: 'string'},
 		trailType: {default: 'bright'},
 		hiddenSaber: {default: ''},
-		lifetime: {default: 20}, //frames
+		lifetime: {default: 20}, // length expressed as number of frames at 60 FPS
 	},
 
 	init: function () {
@@ -371,7 +371,9 @@ AFRAME.registerComponent('trail', {
 		}
 
 		this.trailType = TRAILS[this.data.trailType];
-		this.lifetime = this.data.lifetime;
+		// Base trail duration in milliseconds derived from 60 FPS frame-equivalent length
+		this.baseTrailDurationMs = (this.data.lifetime / 60) * 1000;
+		this.trailDurationMs = this.baseTrailDurationMs;
 
 		this.previousTipPosition = new THREE.Vector3(0, 0, 0);
 		this.material = this.createMaterial();
@@ -402,24 +404,29 @@ AFRAME.registerComponent('trail', {
 			this.mesh.visible = true;
 		}
 
+		// Cache current time for timestamping nodes/segments
+		this._now = time;
+
 		const song = this.el.sceneEl.components.song;
 		if (song) {
-			this.hotUpdateLifetime(this.data.lifetime / song.speed);
+			const speed = song.speed || 1;
+			this.hotUpdateTrailDurationMs(this.baseTrailDurationMs / speed);
+		} else {
+			this.hotUpdateTrailDurationMs(this.baseTrailDurationMs);
 		}
 
 		if (!this.addNewNode()) return;
+		this.pruneOldSegments();
 		this.updateMesh(this.calculateRowNodes());
 	},
 
-	hotUpdateLifetime: function (newLifetime) {
-		if (newLifetime < 1) newLifetime = 1;
-		if (newLifetime > 200) newLifetime = 200;
-		if (this.lifetime === newLifetime) return;
-		this.lifetime = newLifetime;
-
-		if (this.curvedSegmentsArray.length > this.lifetime) {
-			this.curvedSegmentsArray = this.curvedSegmentsArray.slice(0, this.lifetime);
-		}
+	hotUpdateTrailDurationMs: function (newDurationMs) {
+		const minMs = 1000 / 60; // ~16.67ms (1 frame at 60 FPS)
+		const maxMs = (200 / 60) * 1000; // cap equivalent to previous 200 frames @60 FPS
+		if (newDurationMs < minMs) newDurationMs = minMs;
+		if (newDurationMs > maxMs) newDurationMs = maxMs;
+		if (this.trailDurationMs === newDurationMs) return;
+		this.trailDurationMs = newDurationMs;
 	},
 
 	updateMesh: function (rowNodes) {
@@ -492,6 +499,7 @@ AFRAME.registerComponent('trail', {
 			position: hiltPosition,
 			forward: tipPosition.subVectors(tipPosition, hiltPosition),
 			timeDependence: Math.abs(cutPlane.normal.z),
+			timestamp: this._now || this.el.sceneEl.time,
 		};
 
 		if (this.lastAddedNode) {
@@ -511,9 +519,6 @@ AFRAME.registerComponent('trail', {
 		if (handlesArray.length < 3) return false;
 
 		const newSegment = this.createCurvedSegment(handlesArray[0], handlesArray[1], handlesArray[2]);
-		if (this.curvedSegmentsArray.length >= this.lifetime) {
-			this.curvedSegmentsArray.shift();
-		}
 		this.curvedSegmentsArray.push(newSegment);
 		return true;
 	},
@@ -536,7 +541,17 @@ AFRAME.registerComponent('trail', {
 			p01: p01,
 			v00: v00,
 			v01: v01,
+			createdAtMs: handleB.timestamp,
 		};
+	},
+
+	pruneOldSegments: function () {
+		const now = this._now || this.el.sceneEl.time;
+		const cutoff = now - this.trailDurationMs;
+		const segments = this.curvedSegmentsArray;
+		while (segments.length > 0 && segments[0].createdAtMs < cutoff) {
+			segments.shift();
+		}
 	},
 
 	calculateRowNodes: function () {

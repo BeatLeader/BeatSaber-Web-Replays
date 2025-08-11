@@ -106,9 +106,13 @@ AFRAME.registerComponent('wall', {
 			}
 		}
 
-		const material = el.getObject3D('mesh').material;
+		const mesh = el.getObject3D('mesh');
+		const material = mesh.material;
+
 		material.uniforms['highlight'].value = this.hit && this.settings.settings.highlightErrors;
 		material.uniforms['wallColor'].value = new THREE.Color(data.color ? data.color : this.settings.settings.wallColor);
+
+		mesh.frustumCulled = false;
 
 		const halfDepth = (data.durationSeconds * movementData.noteJumpMovementSpeed) / 2;
 		var origin;

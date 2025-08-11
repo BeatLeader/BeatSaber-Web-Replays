@@ -215,7 +215,6 @@ AFRAME.registerComponent('wall', {
 
 	tock: function (time, timeDelta) {
 		const data = this.data;
-		const movementData = data.movementData;
 		const currentTime = this.getCurrentTime();
 
 		this.updatePosition();
@@ -225,12 +224,7 @@ AFRAME.registerComponent('wall', {
 			this.el.emit('scoreChanged', {index: this.hitWall.i}, true);
 		}
 
-		if (this.lastPosition > this.maxZ) {
-			this.returnToPool();
-			return;
-		}
-
-		if (data.definitePosition && currentTime > data.time + data.durationSeconds) {
+		if (currentTime > data.time + data.durationSeconds + data.movementData.halfJumpDuration) {
 			this.returnToPool();
 			return;
 		}

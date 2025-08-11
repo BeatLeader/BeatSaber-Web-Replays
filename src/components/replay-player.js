@@ -55,7 +55,9 @@ AFRAME.registerComponent('replay-player', {
 
 		this.q1 = new THREE.Quaternion();
 		this.q2 = new THREE.Quaternion();
+
 		this._frameIndex = 0;
+		this._heightFrameIndex = 0;
 	},
 
 	play: function () {
@@ -75,7 +77,7 @@ AFRAME.registerComponent('replay-player', {
 		if (this.song.isPlaying && replay) {
 			const currentTime = this.song.getCurrentTime();
 			const frames = this.replayDecoder.replay.frames;
-			var frameIndex = FindFrameIndexByTime(frames, currentTime, this._frameIndex);
+			const frameIndex = (this._frameIndex = FindFrameIndexByTime(frames, currentTime, this._frameIndex));
 			const frame = frames[frameIndex];
 			const nextFrame = frames[frameIndex + 1];
 
@@ -88,10 +90,7 @@ AFRAME.registerComponent('replay-player', {
 
 			var replayHeight;
 			if (replay.heights.length) {
-				var heightFrameIndex = 0;
-				while (heightFrameIndex < replay.heights.length - 2 && replay.heights[heightFrameIndex + 1].time < currentTime) {
-					heightFrameIndex++;
-				}
+				const heightFrameIndex = (this._heightFrameIndex = FindFrameIndexByTime(replay.heights, currentTime, this._heightFrameIndex));
 				replayHeight = replay.heights[heightFrameIndex].height;
 			} else {
 				replayHeight = replay.info.height;

@@ -150,7 +150,7 @@ AFRAME.registerComponent('wall', {
 		}
 
 		origin.x += width / 2;
-		el.object3D.scale.set(width, height, length);
+		el.object3D.scale.set(Math.max(width, 0.0001), Math.max(height, 0.0001), Math.max(length, 0.0001));
 		if (!data.definitePosition) {
 			el.object3D.position.set(origin.x, origin.y, origin.z + movementData.halfJumpPosition + movementData.warmupPosition);
 		} else {

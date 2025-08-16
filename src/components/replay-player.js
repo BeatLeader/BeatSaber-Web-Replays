@@ -81,7 +81,7 @@ AFRAME.registerComponent('replay-player', {
 			const frame = frames[frameIndex];
 			const nextFrame = frames[frameIndex + 1];
 
-			if (frame.time == 0 && nextFrame.time == 0) return;
+			if (!frame || !nextFrame || (frame.time == 0 && nextFrame.time == 0)) return;
 
 			this.fpsCounter.replayFps = frame.fps;
 			this.firstSaberControl.frameIndex = frameIndex;

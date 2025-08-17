@@ -378,6 +378,15 @@ html
   margin-right 1em
   width 10px
 
+.songEffectiveSpeed
+  color: #ffcf66;
+  font-size: 11px;
+  align-self: baseline;
+  width: auto;
+  position: absolute;
+  top: 0;
+  right: 101px;
+
 .delaySliderContainer {
   height: 6px;
   margin-top: 4px;
@@ -1318,6 +1327,38 @@ input:checked + .slider:before {
 .tab-pane.active {
   display: block;
 }
+
+.playback-tab-container
+  display: flex
+  flex-direction: column
+
+.playback-tab-buttons
+  display: flex
+  gap: 4px
+  border-bottom: 1px solid #3f3f3f
+  margin-bottom: 6px
+
+.playback-tab-button
+  padding: 6px 8px
+  border: none
+  color: white
+  background-color: transparent
+  cursor: pointer
+  transition: background-color 0.3s
+  font-size: 11px
+
+.playback-tab-button.active
+  background-color: rgba(142,84,233,0.70)
+  border-radius: 4px 4px 0 0
+
+.playback-tab-content
+  flex-grow: 1
+
+.playback-tab-pane
+  display: none
+
+.playback-tab-pane.active
+  display: block
 
 .orthoSettingsContainer {
   display: flex;

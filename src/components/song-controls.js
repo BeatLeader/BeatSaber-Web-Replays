@@ -36,6 +36,9 @@ AFRAME.registerComponent('song-controls', {
 		this.hitSound = this.el.components['beat-hit-sound'];
 		this.tick = AFRAME.utils.throttleTick(this.tick.bind(this), 100);
 
+		// Store user-set base speed to combine with slow-mode multiplier.
+		this.baseSongSpeed = this.el.components.song.speed || 1;
+
 		// Seek to ?time if specified.
 		if (queryParamTime !== undefined) {
 			this.el.sceneEl.addEventListener(
@@ -75,6 +78,7 @@ AFRAME.registerComponent('song-controls', {
 			}
 			this.replayData = event.detail;
 			let replay = event.detail.replay;
+			this.computeMissWindows();
 
 			if (utils.getUrlParameter('speed')) {
 				// keep speed from url param
@@ -159,6 +163,15 @@ AFRAME.registerComponent('song-controls', {
 		this.songProgress = document.getElementById('songProgress');
 		this.songSpeedPercent = document.querySelectorAll('.songSpeedPercent');
 		this.songDelayPercent = document.querySelectorAll('.songDelayPercent');
+		this.baseSongSpeed = this.song.speed || 1;
+		this.effectiveSpeedLabels = document.querySelectorAll('.songEffectiveSpeed');
+		this.missWindows = [];
+		this.wasInMissZone = false;
+
+		this.el.sceneEl.addEventListener('settingsChanged', () => {
+			this.computeMissWindows();
+			this.updateAutoSpeedState();
+		});
 	},
 
 	update: function (oldData) {
@@ -691,7 +704,7 @@ AFRAME.registerComponent('song-controls', {
 
 			let base = location.protocol + '//' + location.host + '/' + baseParams;
 			input.value =
-				base + (time ? `&time=${Math.round(this.song.getCurrentTime() * 1000)}&speed=${Math.round(this.song.speed * 100)}` : '');
+				base + (time ? `&time=${Math.round(this.song.getCurrentTime() * 1000)}&speed=${Math.round((this.baseSongSpeed || 1) * 100)}` : '');
 			input.select();
 			document.execCommand('copy');
 			target.removeChild(input);
@@ -749,9 +762,10 @@ AFRAME.registerComponent('song-controls', {
 
 		let speedHandler = value => {
 			firefoxHandler();
-			this.song.source.playbackRate.value = value;
-
-			this.song.speed = value;
+			this.baseSongSpeed = parseFloat(value);
+			const effectiveSpeed = this.getCurrentEffectiveSpeed();
+			this.song.source.playbackRate.value = effectiveSpeed;
+			this.song.speed = effectiveSpeed;
 			speedSlider.forEach(element => {
 				element.value = value;
 				element.style.setProperty('--value', element.value);
@@ -779,11 +793,12 @@ AFRAME.registerComponent('song-controls', {
 			});
 
 			this.songSpeedPercent.forEach(element => {
-				element.textContent = this.song.speed + 'x';
+				const base = this.baseSongSpeed || this.song.speed || 1;
+				element.textContent = base + 'x';
 			});
 
-			element.value = this.song.speed;
-			element.style.setProperty('--value', this.song.speed);
+			element.value = this.baseSongSpeed;
+			element.style.setProperty('--value', this.baseSongSpeed);
 		});
 
 		const rangePoints = document.querySelectorAll('.range__point');
@@ -1477,6 +1492,7 @@ AFRAME.registerComponent('song-controls', {
 			return;
 		}
 		this.updatePlayhead();
+		this.updateAutoSpeedState();
 		this.songProgress.textContent = formatSeconds(this.song.getCurrentTime());
 	},
 
@@ -1503,6 +1519,7 @@ AFRAME.registerComponent('song-controls', {
 		);
 
 		this.song.audioAnalyser.refreshSource();
+		this.updateAutoSpeedState();
 	},
 
 	updateModeOptions: function () {
@@ -1567,8 +1584,94 @@ AFRAME.registerComponent('song-controls', {
 		if (this.song.speed > 0 && 'mediaSession' in navigator) {
 			navigator.mediaSession.setPositionState({
 				duration: this.song.source.buffer.duration,
-				playbackRate: this.song.speed,
+				playbackRate: this.getCurrentEffectiveSpeed ? this.getCurrentEffectiveSpeed() : this.song.speed,
 				position: Math.min(this.song.getCurrentTime(), this.song.source.buffer.duration),
+			});
+		}
+	},
+
+	computeMissWindows: function () {
+		this.missWindows = [];
+		if (!this.replayData || !this.replayData.notes) return;
+		const s = this.settings && this.settings.settings ? this.settings.settings : {};
+		if (!s.autoSpeedControls) return;
+		const startOffset = parseFloat(s.offsetSlowBeginning || 0);
+		const endOffset = parseFloat(s.offsetSlowEnding || 0);
+
+		for (let i = 0; i < this.replayData.notes.length; i++) {
+			const n = this.replayData.notes[i];
+			if (!n) continue;
+			if ((n.score === -3 && s.slowOnMiss) || (n.score === -2 && s.slowOnBadCut) || (n.score === -4 && s.slowOnBomb)) {
+				const center = n.time;
+				const wStart = Math.max(0, center + startOffset);
+				const wEnd = Math.max(wStart, center + endOffset);
+				this.missWindows.push([wStart, wEnd]);
+			}
+		}
+		// Merge overlapping windows
+		if (!this.missWindows.length) return;
+		this.missWindows.sort((a, b) => a[0] - b[0]);
+		const merged = [];
+		let cur = this.missWindows[0].slice();
+		for (let i = 1; i < this.missWindows.length; i++) {
+			const w = this.missWindows[i];
+			if (w[0] <= cur[1]) {
+				cur[1] = Math.max(cur[1], w[1]);
+			} else {
+				merged.push(cur);
+				cur = w.slice();
+			}
+		}
+		merged.push(cur);
+		this.missWindows = merged;
+	},
+
+	getCurrentEffectiveSpeed: function () {
+		const s = this.settings && this.settings.settings ? this.settings.settings : {};
+		if (!s.autoSpeedControls) return this.baseSongSpeed || this.song.speed || 1;
+		const slowMult = Math.max(0.01, parseFloat(s.speedSlow || 0.2));
+		const now = this.song.getCurrentTime ? this.song.getCurrentTime() : 0;
+		const [inZone, secondsIntoWindow] = this.isInMissWindow(now);
+		if (!inZone) return this.baseSongSpeed || 1;
+
+		const rampDurationSecs = Math.abs(parseFloat(s.offsetSlowBeginning || 0)) / 3;
+
+		const speedMult =
+			secondsIntoWindow < rampDurationSecs
+				? (secondsIntoWindow / rampDurationSecs) * slowMult + (1 - secondsIntoWindow / rampDurationSecs)
+				: slowMult;
+
+		return (this.baseSongSpeed || 1) * speedMult;
+	},
+
+	isInMissWindow: function (t) {
+		if (!this.missWindows || !this.missWindows.length) return [false, 0];
+		for (let i = 0; i < this.missWindows.length; i++) {
+			const w = this.missWindows[i];
+			if (t >= w[0] && t <= w[1]) {
+				const secondsIntoWindow = t - w[0];
+				return [true, secondsIntoWindow];
+			}
+		}
+		return [false, 0];
+	},
+
+	updateAutoSpeedState: function () {
+		const effective = this.getCurrentEffectiveSpeed();
+		if (this.song && this.song.source) {
+			this.song.source.playbackRate.value = effective;
+			this.song.speed = effective;
+		}
+		// Update effective speed label without changing the main slider value
+		if (this.effectiveSpeedLabels && this.effectiveSpeedLabels.length) {
+			const [inZone, _] = this.isInMissWindow(this.song.getCurrentTime());
+			this.effectiveSpeedLabels.forEach(label => {
+				if (inZone) {
+					label.style.display = 'block';
+					label.textContent = `${Math.round(effective * 100) / 100}x`;
+				} else {
+					label.style.display = 'none';
+				}
 			});
 		}
 	},

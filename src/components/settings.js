@@ -106,6 +106,16 @@ AFRAME.registerComponent('settings', {
 			// Extensions (custom data)
 			showHeartrate: true,
 			showTreecks: true,
+
+			// Misses slow-mode
+			autoSpeedControls: false,
+			speedSlow: 0.2,
+			offsetSlowBeginning: -0.4,
+			offsetSlowEnding: 0,
+
+			slowOnMiss: true,
+			slowOnBadCut: true,
+			slowOnBomb: true,
 		};
 
 		this.units = {

@@ -1,87 +1,195 @@
-<div class="toggleButton" title="Start the replay on the tab load">
-	<label class="switch">
-		<input type="checkbox" id="autoplayOnLoad" />
-		<span class="slider round"></span>
-	</label>
-	<label class="toggleButtonLabel"
-		><td><nobr>Autoplay on load</nobr></td></label
-	>
-</div>
+<script>
+	function changePlaybackTab(index) {
+		let buttons = Array.from(document.getElementsByClassName('playback-tab-button'));
+		let panes = Array.from(document.getElementsByClassName('playback-tab-pane'));
 
-<div id="autoplayWarning" style="display: none">
-	<span> Please allow autoplay in your browser permissions settings. (refresh page after permissions change to update) </span>
-	<img id="firefoxAutoplayWarning" src="/assets/img/firefoxautoplay.jpg" style="display: none; height: 90px" />
-</div>
+		buttons.forEach((button, buttonIndex) => {
+			if (buttonIndex === index) {
+				button.classList.add('active');
+				panes[buttonIndex].classList.add('active');
+			} else {
+				button.classList.remove('active');
+				panes[buttonIndex].classList.remove('active');
+			}
+		});
+	}
+</script>
 
-<div class="toggleButton" style="border-bottom: 1px solid white; margin-bottom: 4px" title="Pause player when tab loses focus">
-	<label class="switch">
-		<input type="checkbox" id="pauseOnUnfocus" />
-		<span class="slider round"></span>
-	</label>
-	<label class="toggleButtonLabel"
-		><td><nobr>Pause on focus lose</nobr></td></label
-	>
-</div>
+<div class="playback-tab-container">
+	<div class="playback-tab-buttons">
+		<button class="playback-tab-button active" onclick="changePlaybackTab(0)">General</button>
+		<button class="playback-tab-button" onclick="changePlaybackTab(1)">Mistakes<br />slow-mo</button>
+		<button class="playback-tab-button" onclick="changePlaybackTab(2)">Random replay</button>
+	</div>
+	<div class="playback-tab-content">
+		<div class="playback-tab-pane active">
+			<div class="toggleButton" title="Start the replay on the tab load">
+				<label class="switch">
+					<input type="checkbox" id="autoplayOnLoad" />
+					<span class="slider round"></span>
+				</label>
+				<label class="toggleButtonLabel"
+					><td><nobr>Autoplay on load</nobr></td></label
+				>
+			</div>
 
-<div class="toggleButton" title="Automatically play a random replay at the end">
-	<label class="switch">
-		<input type="checkbox" id="autoplayRandomScore" />
-		<span class="slider round"></span>
-	</label>
-	<label class="toggleButtonLabel"
-		><td><nobr>Random replay</nobr></td></label
-	>
-</div>
+			<div id="autoplayWarning" style="display: none">
+				<span> Please allow autoplay in your browser permissions settings. (refresh page after permissions change to update) </span>
+				<img id="firefoxAutoplayWarning" src="/assets/img/firefoxautoplay.jpg" style="display: none; height: 90px" />
+			</div>
 
-<div class="toggleButton" title="Play random replay from your friends (this will work only if you are logged in on the main website)">
-	<label class="switch">
-		<input type="checkbox" id="randomScoreFromFriends" />
-		<span class="slider round"></span>
-	</label>
-	<label class="toggleButtonLabel"
-		><td><nobr>Random replay from friends</nobr></td></label
-	>
-</div>
+			<div class="toggleButton" style="border-bottom: 1px solid white; margin-bottom: 4px" title="Pause player when tab loses focus">
+				<label class="switch">
+					<input type="checkbox" id="pauseOnUnfocus" />
+					<span class="slider round"></span>
+				</label>
+				<label class="toggleButtonLabel"
+					><td><nobr>Pause on focus lose</nobr></td></label
+				>
+			</div>
 
-<div
-	class="toggleButton"
-	style="border-bottom: 1px solid white; margin-bottom: 4px"
-	title="Play random replays from the replayer page with no params (to view files)">
-	<label class="switch">
-		<input type="checkbox" id="randomScoreEmptyPlayer" />
-		<span class="slider round"></span>
-	</label>
-	<label class="toggleButtonLabel"
-		><td><nobr>Random replay in empty player</nobr></td></label
-	>
-</div>
+			<div class="toggleButton" style="border-bottom: 1px solid white; margin-bottom: 4px" title="Auto restart replay on finish">
+				<label class="switch">
+					<input type="checkbox" id="loopReplays" />
+					<span class="slider round"></span>
+				</label>
+				<label class="toggleButtonLabel"
+					><td><nobr>Loop</nobr></td></label
+				>
+			</div>
 
-<div class="toggleButton" style="border-bottom: 1px solid white; margin-bottom: 4px" title="Auto restart replay on finish">
-	<label class="switch">
-		<input type="checkbox" id="loopReplays" />
-		<span class="slider round"></span>
-	</label>
-	<label class="toggleButtonLabel"
-		><td><nobr>Loop</nobr></td></label
-	>
-</div>
+			<div class="toggleButton" title="Automatically skip start of replay with no elements">
+				<label class="switch">
+					<input type="checkbox" id="autoSkipIntro" />
+					<span class="slider round"></span>
+				</label>
+				<label class="toggleButtonLabel"
+					><td><nobr>Auto Skip Intro</nobr></td></label
+				>
+			</div>
 
-<div class="toggleButton" title="Automatically skip start of replay with no elements">
-	<label class="switch">
-		<input type="checkbox" id="autoSkipIntro" />
-		<span class="slider round"></span>
-	</label>
-	<label class="toggleButtonLabel"
-		><td><nobr>Auto Skip Intro</nobr></td></label
-	>
-</div>
+			<div class="toggleButton" title="Automatically skip end of replay with no elements">
+				<label class="switch">
+					<input type="checkbox" id="autoSkipOutro" />
+					<span class="slider round"></span>
+				</label>
+				<label class="toggleButtonLabel"
+					><td><nobr>Auto Skip Outro</nobr></td></label
+				>
+			</div>
+		</div>
 
-<div class="toggleButton" title="Automatically skip end of replay with no elements">
-	<label class="switch">
-		<input type="checkbox" id="autoSkipOutro" />
-		<span class="slider round"></span>
-	</label>
-	<label class="toggleButtonLabel"
-		><td><nobr>Auto Skip Outro</nobr></td></label
-	>
+		<div class="playback-tab-pane">
+			<div class="toggleButton" tile="Automatically change speed around missed notes">
+				<label class="switch">
+					<input type="checkbox" id="autoSpeedControls" />
+					<span class="slider round"></span>
+				</label>
+				<label class="toggleButtonLabel"
+					><td><nobr>Change speed around mistakes</nobr></td></label
+				>
+			</div>
+			<div class="toggleButton" title="Speed multiplier around misses">
+				<label>
+					<div class="toggleButtonContainer">
+						<label class="toggleButtonLabel" style="margin-left: 5px"
+							><td><nobr>Speed multiplier:</nobr></td></label
+						>
+						<label id="speedSlowLabel" class="toggleButtonLabel" style="margin-left: 50px">0.2</label>
+					</div>
+					<input id="speedSlow" class="settingRange" type="range" min="0.01" max="2" step="0.01" value="0.2" />
+				</label>
+			</div>
+			<div class="toggleButton" title="Offset seconds for slow-mode-beginning">
+				<label>
+					<div class="toggleButtonContainer">
+						<label class="toggleButtonLabel" style="margin-left: 5px"
+							><td><nobr>Offset seconds before mistakes:</nobr></td></label
+						>
+						<label id="offsetSlowBeginningLabel" class="toggleButtonLabel" style="margin-left: 127px">-0.3</label>
+					</div>
+					<input id="offsetSlowBeginning" class="settingRange" type="range" min="-1" max="1" step="0.01" value="-0.3" />
+				</label>
+			</div>
+			<div class="toggleButton" title="Offset seconds for slow-mode-ending">
+				<label>
+					<div class="toggleButtonContainer">
+						<label class="toggleButtonLabel" style="margin-left: 5px"
+							><td><nobr>Offset seconds after mistakes:</nobr></td></label
+						>
+						<label id="offsetSlowEndingLabel" class="toggleButtonLabel" style="margin-left: 127px">0</label>
+					</div>
+					<input id="offsetSlowEnding" class="settingRange" type="range" min="-1" max="1" step="0.01" value="0" />
+				</label>
+			</div>
+			<div class="toggleButton" title="Slow-mode on misses">
+				<label class="switch">
+					<input type="checkbox" id="slowOnMiss" />
+					<span class="slider round"></span>
+				</label>
+				<label class="toggleButtonLabel">
+					<td>
+						<nobr>Slow-mode on misses</nobr>
+					</td>
+				</label>
+			</div>
+			<div class="toggleButton" title="Slow-mode on bad cuts">
+				<label class="switch">
+					<input type="checkbox" id="slowOnBadCut" />
+					<span class="slider round"></span>
+				</label>
+				<label class="toggleButtonLabel">
+					<td>
+						<nobr>Slow-mode on bad cuts</nobr>
+					</td>
+				</label>
+			</div>
+			<div class="toggleButton" title="Slow-mode on bombs">
+				<label class="switch">
+					<input type="checkbox" id="slowOnBomb" />
+					<span class="slider round"></span>
+				</label>
+				<label class="toggleButtonLabel">
+					<td>
+						<nobr>Slow-mode on bombs</nobr>
+					</td>
+				</label>
+			</div>
+		</div>
+
+		<div class="playback-tab-pane">
+			<div class="toggleButton" title="Automatically play a random replay at the end">
+				<label class="switch">
+					<input type="checkbox" id="autoplayRandomScore" />
+					<span class="slider round"></span>
+				</label>
+				<label class="toggleButtonLabel"
+					><td><nobr>Random replay</nobr></td></label
+				>
+			</div>
+
+			<div class="toggleButton" title="Play random replay from your friends (this will work only if you are logged in on the main website)">
+				<label class="switch">
+					<input type="checkbox" id="randomScoreFromFriends" />
+					<span class="slider round"></span>
+				</label>
+				<label class="toggleButtonLabel"
+					><td><nobr>Random replay from friends</nobr></td></label
+				>
+			</div>
+
+			<div
+				class="toggleButton"
+				style="border-bottom: 1px solid white; margin-bottom: 4px"
+				title="Play random replays from the replayer page with no params (to view files)">
+				<label class="switch">
+					<input type="checkbox" id="randomScoreEmptyPlayer" />
+					<span class="slider round"></span>
+				</label>
+				<label class="toggleButtonLabel"
+					><td><nobr>Random replay in empty player</nobr></td></label
+				>
+			</div>
+		</div>
+	</div>
 </div>

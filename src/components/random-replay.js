@@ -32,6 +32,32 @@ AFRAME.registerComponent('random-replay', {
 			this.canceled = true;
 			clearInterval(this.interval);
 		};
+
+		const randomSourceSelect = document.getElementById('randomScoreSource');
+		if (randomSourceSelect) {
+			randomSourceSelect.disabled = true;
+
+			const handleAuth = () => {
+				if (this.settings.settings.randomScoreSource !== 'all') {
+					this.settings.settings.randomScoreSource = 'all';
+					randomSourceSelect.value = 'all';
+					this.settings.sync();
+				}
+				randomSourceSelect.disabled = true;
+			};
+			fetch(getApiUrl() + '/user', {credentials: 'include'})
+				.then(r => (r.ok ? r.json() : null))
+				.then(data => {
+					if (data && data.player) {
+						randomSourceSelect.disabled = false;
+					} else {
+						handleAuth();
+					}
+				})
+				.catch(() => {
+					handleAuth();
+				});
+		}
 	},
 
 	manualTick: function () {
@@ -80,10 +106,18 @@ AFRAME.registerComponent('random-replay', {
 			}
 		} else if (!this.loadingScore) {
 			this.loadingScore = true;
-			fetch(`${getApiUrl()}/score/random?scoreSource=${this.settings.settings.randomScoreFromFriends ? 'friends' : 'general'}`, {
+			let source = this.settings.settings.randomScoreSource || 'all';
+			// Map UI values to backend values
+			const sourceToApi = {
+				all: 'general',
+				friends: 'friends',
+				me: 'self',
+			};
+			let apiSource = sourceToApi[source] || 'general';
+			fetch(`${getApiUrl()}/score/random?scoreSource=${apiSource}`, {
 				credentials: 'include',
 			})
-				.then(r => r.json())
+				.then(r => (r.ok ? r.json() : Promise.reject()))
 				.then(score => {
 					this.score = score;
 					this.loadingScore = false;
@@ -97,6 +131,25 @@ AFRAME.registerComponent('random-replay', {
 					if (instant) {
 						this.playScore(score);
 					}
+				})
+				.catch(() => {
+					// Fallback to general if request failed (e.g., not authenticated for friends/self)
+					fetch(`${getApiUrl()}/score/random?scoreSource=general`, {credentials: 'include'})
+						.then(r => (r.ok ? r.json() : Promise.reject()))
+						.then(score => {
+							this.score = score;
+							this.loadingScore = false;
+							this.randomReplay.style.display = 'flex';
+							this.randomReplayImage.src = score.song.cover;
+
+							this.randomReplayPlayerName.textContent = score.player.name;
+							this.randomReplaySongName.textContent = score.song.name;
+							this.randomReplayNext.href = location.protocol + '//' + location.host + '?scoreId=' + score.id;
+
+							if (instant) {
+								this.playScore(score);
+							}
+						});
 				});
 		}
 	},

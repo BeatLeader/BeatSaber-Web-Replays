@@ -168,14 +168,19 @@
 				>
 			</div>
 
-			<div class="toggleButton" title="Play random replay from your friends (this will work only if you are logged in on the main website)">
-				<label class="switch">
-					<input type="checkbox" id="randomScoreFromFriends" />
-					<span class="slider round"></span>
+			<div class="toggleButton" title="Select source for random replays (friends/me require being logged in on the main website)">
+				<label style="display: flex">
+					<div class="toggleButtonContainer">
+						<label class="toggleButtonLabel" style="margin-left: 5px; top: 0; width: unset"
+							><td><nobr>Random replay source:</nobr></td></label
+						>
+					</div>
+					<select id="randomScoreSource" class="settingButton" style="margin-left: 5px; margin-bottom: 5px; font-size: 0.7em">
+						<option value="all">All</option>
+						<option value="friends">Friends</option>
+						<option value="me">Me</option>
+					</select>
 				</label>
-				<label class="toggleButtonLabel"
-					><td><nobr>Random replay from friends</nobr></td></label
-				>
 			</div>
 
 			<div

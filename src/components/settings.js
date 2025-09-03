@@ -93,7 +93,7 @@ AFRAME.registerComponent('settings', {
 			loopReplays: false,
 
 			autoplayRandomScore: true,
-			randomScoreFromFriends: true,
+			randomScoreSource: 'all',
 			randomScoreEmptyPlayer: true,
 
 			// Saber
@@ -131,6 +131,11 @@ AFRAME.registerComponent('settings', {
 			Object.keys(storedSettings).forEach(key => {
 				this.settings[key] = storedSettings[key];
 			});
+
+			// Migrate legacy boolean randomScoreFromFriends -> randomScoreSource
+			if (!this.settings.randomScoreSource && storedSettings.hasOwnProperty('randomScoreFromFriends')) {
+				this.settings.randomScoreSource = storedSettings.randomScoreFromFriends ? 'friends' : 'all';
+			}
 		} catch (e) {}
 
 		this.el.sceneEl.emit('settingsChanged', {settings: this.settings}, false);

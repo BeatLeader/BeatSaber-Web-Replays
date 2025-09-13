@@ -558,6 +558,12 @@ AFRAME.registerComponent('beat-generator', {
 
 			beatObj.flip = note._flipLineIndex !== undefined;
 			beatObj.flipHorizontalPosition = note._flipLineIndex;
+			if (this.mappingExtensions) {
+				if (beatObj.flipHorizontalPosition <= -1000 || beatObj.flipHorizontalPosition >= 1000) {
+					beatObj.flipHorizontalPosition =
+						beatObj.flipHorizontalPosition < 0 ? beatObj.flipHorizontalPosition / 1000 + 1 : beatObj.flipHorizontalPosition / 1000 - 1;
+				}
+			}
 			beatObj.flipYSide = note._flipYSide;
 
 			beatEl.setAttribute('beat', beatObj);
@@ -843,6 +849,12 @@ AFRAME.registerComponent('beat-generator', {
 			}
 
 			beatObj.flipHorizontalPosition = note._flipLineIndex;
+			if (this.mappingExtensions) {
+				if (beatObj.flipHorizontalPosition <= -1000 || beatObj.flipHorizontalPosition >= 1000) {
+					beatObj.flipHorizontalPosition =
+						beatObj.flipHorizontalPosition < 0 ? beatObj.flipHorizontalPosition / 1000 + 1 : beatObj.flipHorizontalPosition / 1000 - 1;
+				}
+			}
 			beatObj.flipYSide = note._flipYSide;
 
 			beatEl.setAttribute('slider', beatObj);

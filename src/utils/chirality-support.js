@@ -178,7 +178,14 @@ function Mirror_Horizontal_Note(note, numberOfLines, flip_lines) {
 	if (note._flipLineIndex !== undefined) {
 		let h_flip_line;
 		if (flip_lines) {
-			h_flip_line = numberOfLines - 1 - note._flipLineIndex;
+			if (note._flipLineIndex <= -1000 || note._flipLineIndex >= 1000) {
+				h_flip_line = (numberOfLines - 1) * 1000 - note._flipLineIndex;
+				if (h_flip_line >= 0 && h_flip_line < numberOfLines * 1000) {
+					h_flip_line += 2000;
+				}
+			} else {
+				h_flip_line = numberOfLines - 1 - note._flipLineIndex;
+			}
 		} else {
 			h_flip_line = note._flipLineIndex;
 		}

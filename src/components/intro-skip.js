@@ -2,20 +2,24 @@ AFRAME.registerComponent('intro-skip', {
 	schema: {
 		enabled: {default: true},
 		difficulty: {type: 'string'},
+		seekCooldownMs: {default: 1000},
 	},
 
 	init: function () {
 		this.songControls = this.el.sceneEl.components['song-controls'];
 		this.song = this.songControls.song;
 		this.settings = this.el.sceneEl.components.settings;
+		this.seekCooldownUntil = 0;
 
 		const skipIntroButton = document.getElementById('skipIntro');
 		this.skipIntroButton = skipIntroButton;
 		let skipIntroHanler = () => {
 			if (skipIntroButton.classList.contains('intro')) {
 				this.songControls.seek(this.introSkipTime);
+				this.seekCooldownUntil = Date.now() + this.data.seekCooldownMs;
 			} else if (skipIntroButton.classList.contains('outro')) {
 				this.songControls.seek(this.outroSkipTime);
+				this.seekCooldownUntil = Date.now() + this.data.seekCooldownMs;
 			}
 
 			skipIntroButton.style.display = 'none';
@@ -80,9 +84,13 @@ AFRAME.registerComponent('intro-skip', {
 	tick: function () {
 		let button = this.skipIntroButton;
 		const song = this.song;
-		if (this.introSkipTime && song.isPlaying && song.getCurrentTime() <= this.introSkipTime) {
+		if (this.seekCooldownUntil && Date.now() < this.seekCooldownUntil) {
+			return;
+		}
+		if (this.introSkipTime && song.isPlaying && song.getCurrentTime() <= this.introSkipTime && song.getCurrentTime() > 0.5) {
 			if (this.settings.settings.autoSkipIntro) {
 				this.songControls.seek(this.introSkipTime);
+				this.seekCooldownUntil = Date.now() + this.data.seekCooldownMs;
 			} else {
 				button.style.display = 'block';
 				button.classList = ['intro'];
@@ -96,6 +104,7 @@ AFRAME.registerComponent('intro-skip', {
 		) {
 			if (this.settings.settings.autoSkipOutro) {
 				this.songControls.seek(this.outroSkipTime);
+				this.seekCooldownUntil = Date.now() + this.data.seekCooldownMs;
 			} else {
 				button.style.display = 'block';
 				button.classList = ['outro'];

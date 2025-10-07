@@ -1087,6 +1087,8 @@ AFRAME.registerComponent('song-controls', {
 		let jdLabel = document.getElementById('jdLabel');
 		let jdPoint = document.getElementById('jdPoint');
 		let jdTick = document.getElementById('jdTick');
+		let vnjsjdPoint = document.getElementById('vnjsjdPoint');
+		let vnjsjdTick = document.getElementById('vnjsjdTick');
 		jd.addEventListener('input', () => {
 			this.el.components['beat-generator'].setNewJD(jd.valueAsNumber);
 			this.jdChanged = true;
@@ -1109,11 +1111,14 @@ AFRAME.registerComponent('song-controls', {
 			}
 		});
 
-		this.el.sceneEl.addEventListener('jdDisabled', e => {
-			jd.disabled = true;
-			jdLabel.textContent = '-';
-			jd.title = 'JD changes are not yet supported with NJS events';
-			jd.style.filter = 'grayscale(1) opacity(0.3)';
+		this.el.sceneEl.addEventListener('vnjsjdCalculated', e => {
+			const newJD = e.detail.jd;
+			const percent = ((newJD - jd.min) / (jd.max - jd.min)) * 100;
+			vnjsjdPoint.parentNode.parentNode.style.display = 'block';
+			vnjsjdPoint.attributes.x.value = percent * 0.9 + (50 - percent) / 5 - 10 + '%';
+			vnjsjdPoint.textContent = '' + newJD.toFixed(2);
+			vnjsjdTick.parentNode.parentNode.style.display = 'block';
+			vnjsjdTick.attributes.x.value = percent * 0.9 + '%';
 		});
 
 		jdPoint.addEventListener('click', evt => {

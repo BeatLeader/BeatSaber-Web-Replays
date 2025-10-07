@@ -48,11 +48,17 @@ AFRAME.registerComponent('wall', {
 		const movementData = data.movementData;
 		if (data.definitePosition) return;
 
+		var currentTime = this.getCurrentTime();
+
+		if (currentTime - (data.time - movementData.spawnAheadTime) < movementData.waitingDuration) {
+			return;
+		}
+
 		// Move.
 		this.el.object3D.visible = true;
 
 		var newPosition = 0;
-		var currentTime = this.getCurrentTime();
+		
 		var moveTime = data.moveTime;
 
 		var timeOffset = data.time - currentTime - movementData.halfJumpDuration - moveTime;

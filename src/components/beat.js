@@ -241,6 +241,10 @@ AFRAME.registerComponent('beat', {
 			this.initPositionData();
 		}
 
+		if (songTime - (data.time - movementData.spawnAheadTime) < movementData.waitingDuration) {
+			return;
+		}
+
 		var num1 = songTime - (data.time - movementData.halfJumpDuration);
 		var t = num1 / (movementData.halfJumpDuration * 2);
 

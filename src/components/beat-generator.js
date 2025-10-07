@@ -65,6 +65,8 @@ AFRAME.registerComponent('beat-generator', {
 			halfJumpDuration: 0,
 			moveDuration: 0.5,
 			spawnAheadTime: 0,
+			waitingDuration: 0,
+
 			interpolation: {
 				fromValue: 0,
 				toValue: 0,
@@ -133,7 +135,7 @@ AFRAME.registerComponent('beat-generator', {
 			if (evt.detail.jd != null) {
 				this.jdToSet = evt.detail.jd;
 				if (this.bpm) {
-					this.updateJD(evt.detail.jd);
+					this.initJD(evt.detail.jd);
 				}
 			}
 
@@ -183,7 +185,7 @@ AFRAME.registerComponent('beat-generator', {
 
 	beatOffsetOrDefault: function () {
 		const result = this.beatOffsets[this.data.mode][this.data.difficulty];
-		if (result <= 0) {
+		if (result === undefined) {
 			return 0.5;
 		} else {
 			return result;
@@ -211,9 +213,9 @@ AFRAME.registerComponent('beat-generator', {
 		this.movementData.warmupSpeed = data.moveSpeed;
 		this.bpm = this.info._beatsPerMinute;
 
-		this.updateJD(queryJD, true);
+		this.initJD(queryJD, true);
 		if (this.jdToSet && !queryJD) {
-			this.updateJD(this.jdToSet);
+			this.initJD(this.jdToSet);
 		}
 
 		// Some events have negative time stamp to initialize the stage.
@@ -255,7 +257,7 @@ AFRAME.registerComponent('beat-generator', {
 			prevEventsTime = this.eventsTime + skipDebug;
 
 			// Get current song time.
-			this.beatsTime = song.getCurrentTime() + this.movementData.halfJumpDuration + this.data.moveTime;
+			this.beatsTime = song.getCurrentTime() + this.movementData.spawnAheadTime;
 
 			this.eventsTime = song.getCurrentTime();
 		} else {
@@ -263,7 +265,7 @@ AFRAME.registerComponent('beat-generator', {
 			prevEventsTime = this.beatsPreloadTime;
 
 			// Song is not playing and is preloading beats, use maintained beat time.
-			this.beatsTime = this.beatsPreloadTime + this.movementData.halfJumpDuration + this.data.moveTime;
+			this.beatsTime = this.beatsPreloadTime + this.movementData.spawnAheadTime;
 			this.eventsTime = song.getCurrentTime();
 		}
 
@@ -306,7 +308,7 @@ AFRAME.registerComponent('beat-generator', {
 			if (this.movementData.noteJumpMovementSpeed !== this.movementData.targetNoteJumpMovementSpeed) {
 				this.movementData.noteJumpMovementSpeed = this.movementData.targetNoteJumpMovementSpeed;
 				this.movementData.interpolation.updatedThisFrame = true;
-				this.updateJD(null, true);
+				this.updateJD(true);
 			}
 		}
 
@@ -622,24 +624,24 @@ AFRAME.registerComponent('beat-generator', {
 		return function (wallEl, wall) {
 			const data = this.data;
 
-			const movementData = Object.assign({}, this.movementData);
+			// const movementData = Object.assign({}, this.movementData);
 
-			if (wall._customData && wall._customData._noteJumpMovementSpeed) {
-				movementData.noteJumpMovementSpeed = wall._customData._noteJumpMovementSpeed;
-			}
-			if (wall._customData && wall._customData._noteJumpStartBeatOffset) {
-				movementData.beatOffset = wall._customData._noteJumpStartBeatOffset;
-			}
+			// if (wall._customData && wall._customData._noteJumpMovementSpeed) {
+			// 	movementData.noteJumpMovementSpeed = wall._customData._noteJumpMovementSpeed;
+			// }
+			// if (wall._customData && wall._customData._noteJumpStartBeatOffset) {
+			// 	movementData.beatOffset = wall._customData._noteJumpStartBeatOffset;
+			// }
 
-			movementData.halfJumpDuration =
-				(60 / this.bpm) *
-				(movementData.customJumpDuration
-					? movementData.customJumpDuration
-					: this.calculateHalfJumpDuration(this.bpm, movementData.noteJumpMovementSpeed, movementData.beatOffset));
-			movementData.jumpDuration = movementData.halfJumpDuration * 2;
-			movementData.halfJumpPosition = -movementData.halfJumpDuration * movementData.noteJumpMovementSpeed;
+			// movementData.halfJumpDuration =
+			// 	(60 / this.bpm) *
+			// 	(movementData.customJumpDuration
+			// 		? movementData.customJumpDuration
+			// 		: this.calculateHalfJumpDuration(this.bpm, movementData.noteJumpMovementSpeed, movementData.beatOffset));
+			// movementData.jumpDuration = movementData.halfJumpDuration * 2;
+			// movementData.halfJumpPosition = -movementData.halfJumpDuration * movementData.noteJumpMovementSpeed;
 
-			wallObj.movementData = movementData;
+			wallObj.movementData = this.movementData;
 			wallObj.durationSeconds = wall._songDuration;
 			wallObj.horizontalPosition = wall._lineIndex;
 			if (wall._lineLayer != undefined) {
@@ -945,14 +947,10 @@ AFRAME.registerComponent('beat-generator', {
 
 	setNewJD: function (newJD) {
 		this.jdToSet = newJD;
-		this.updateJD(newJD, false);
+		this.initJD(newJD, false);
 	},
 
-	updateJD: function (newJD, itsDefault = false) {
-		if (this.beatData._njsEvents && this.beatData._njsEvents.length > 0 && newJD != null) {
-			this.el.sceneEl.emit('jdDisabled', {}, false);
-			return;
-		}
+	initJD: function (newJD, itsDefault = false) {
 
 		const movementData = this.movementData;
 		const defaultHalfJumpDuration = this.calculateHalfJumpDuration(
@@ -960,28 +958,57 @@ AFRAME.registerComponent('beat-generator', {
 			movementData.baseNoteJumpMovementSpeed,
 			movementData.beatOffset
 		);
-		const defaultJumpDistance = (60 / this.bpm) * defaultHalfJumpDuration * movementData.noteJumpMovementSpeed * 2;
+		const defaultJumpDistance = (60 / this.bpm) * defaultHalfJumpDuration * movementData.baseNoteJumpMovementSpeed * 2;
 
 		var jt, jd;
 		if (newJD != null) {
-			jt = newJD / (60 / this.bpm) / movementData.noteJumpMovementSpeed / 2;
+			jt = newJD / (60 / this.bpm) / movementData.baseNoteJumpMovementSpeed / 2;
 			jd = newJD;
+
 			movementData.customJumpDuration = jt;
 		} else {
 			jt = defaultHalfJumpDuration;
 			jd = defaultJumpDistance;
+			
 			movementData.customJumpDuration = null;
 		}
 
+		movementData.spawnAheadTime = (60 / this.bpm) * jt + 0.5;
+
+		if (itsDefault) {
+			this.el.sceneEl.emit('jdCalculated', {defaultJd: defaultJumpDistance}, false);
+		} else {
+			this.el.sceneEl.emit('jdCalculated', {jd, defaultJd: itsDefault ? defaultJumpDistance : null}, false);
+		}
+
+		this.updateJD();
+	},
+
+	updateJD: function (fromVNJS = false) {
+
+		const movementData = this.movementData;
+
+		var jt, jd;
+		if (movementData.customJumpDuration != null) {
+			jt = movementData.customJumpDuration;
+		} else {
+			jt = this.calculateHalfJumpDuration(
+				this.bpm,
+				movementData.noteJumpMovementSpeed,
+				movementData.beatOffset
+			);
+			
+		}
+		jd = (60 / this.bpm) * jt * movementData.noteJumpMovementSpeed * 2;
+
 		movementData.jumpDistance = jd;
 		movementData.halfJumpDuration = (60 / this.bpm) * jt;
+		movementData.waitingDuration = movementData.spawnAheadTime - 0.5 - movementData.halfJumpDuration;
 		movementData.jumpDuration = movementData.halfJumpDuration * 2;
 		movementData.halfJumpPosition = -movementData.halfJumpDuration * movementData.noteJumpMovementSpeed;
 
-		if (!itsDefault || movementData.halfJumpDuration == null) {
-			this.el.sceneEl.emit('jdCalculated', {jd, defaultJd: itsDefault ? defaultJumpDistance : null}, false);
-		} else if (itsDefault) {
-			this.el.sceneEl.emit('jdCalculated', {defaultJd: defaultJumpDistance}, false);
+		if (fromVNJS) {
+			this.el.sceneEl.emit('vnjsjdCalculated', {jd}, false);
 		}
 	},
 

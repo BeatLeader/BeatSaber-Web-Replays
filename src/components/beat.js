@@ -241,7 +241,7 @@ AFRAME.registerComponent('beat', {
 			this.initPositionData();
 		}
 
-		if (songTime - (data.time - movementData.spawnAheadTime) < movementData.waitingDuration) {
+		if (song.getCurrentTime() - (data.time - movementData.spawnAheadTime) < movementData.waitingDuration) {
 			return;
 		}
 

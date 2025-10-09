@@ -163,9 +163,24 @@ function Mirror_Horizontal_Note(note, numberOfLines, flip_lines) {
 	let h_line;
 	if (flip_lines) {
 		if (note._lineIndex <= -1000 || note._lineIndex >= 1000) {
-			h_line = (numberOfLines - 1) * 1000 - note._lineIndex;
-			if (h_line >= 0 && h_line < numberOfLines * 1000) {
+			let leftSide = false;
+			h_line = note._lineIndex;
+
+			if (h_line <= -1000)
+			{
 				h_line += 2000;
+			}
+
+			if (h_line >= 4000)
+			{
+				leftSide = true;
+			}
+
+			h_line = 5000 - h_line;
+
+			if (leftSide)
+			{
+				h_line -= 2000;
 			}
 		} else {
 			h_line = numberOfLines - 1 - note._lineIndex;
@@ -179,9 +194,20 @@ function Mirror_Horizontal_Note(note, numberOfLines, flip_lines) {
 		let h_flip_line;
 		if (flip_lines) {
 			if (note._flipLineIndex <= -1000 || note._flipLineIndex >= 1000) {
-				h_flip_line = (numberOfLines - 1) * 1000 - note._flipLineIndex;
-				if (h_flip_line >= 0 && h_flip_line < numberOfLines * 1000) {
+				let leftSide = false;
+				h_flip_line = note._flipLineIndex;
+				if (h_flip_line <= -1000)
+				{
 					h_flip_line += 2000;
+				}
+				if (h_flip_line >= 4000)
+				{
+					leftSide = true;
+				}
+				h_flip_line = 5000 - h_flip_line;
+				if (leftSide)
+				{
+					h_flip_line -= 2000;
 				}
 			} else {
 				h_flip_line = numberOfLines - 1 - note._flipLineIndex;

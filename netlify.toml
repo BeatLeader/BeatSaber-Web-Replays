@@ -27,7 +27,7 @@
 
 [[redirects]]
     from = "/preview.png"
-    to = "https://api.beatleader.xyz/preview/royale/"
+    to = "https://api.beatleader.com/preview/royale/"
     status = 200
     force = true
     headers = {X-From = "Netlify", origin = "Netlify"}

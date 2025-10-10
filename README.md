@@ -3,13 +3,13 @@
 [![Netlify Status](https://api.netlify.com/api/v1/badges/08ead0d0-ade4-4f38-8af4-9b6c3c679234/deploy-status)](https://app.netlify.com/sites/musing-aryabhata-6ae6ea/deploys)
 
 [A-Frame]: https://github.com/nsgolova/ngoframe
-[visit]: https://www.replay.beatleader.xyz/?id=c32d&difficulty=ExpertPlus&playerID=76561198333869741
+[visit]: https://www.replay.beatleader.com/?id=c32d&difficulty=ExpertPlus&playerID=76561198333869741
 
 Web-based viewer for Beat Saber replays, built with [A-Frame] and JavaScript.
 
 **[CLICK TO VIEW][visit]**
 
-![https://www.replay.beatleader.xyz/?id=c32d&difficulty=ExpertPlus&playerID=76561198333869741](assets/img/preview.png)
+![https://www.replay.beatleader.com/?id=c32d&difficulty=ExpertPlus&playerID=76561198333869741](assets/img/preview.png)
 
 ## Community
 
@@ -20,12 +20,12 @@ affiliated with Beat Saber.*
 
 ## Usage
 
-Go to the [BeatLeader](https://beatleader.xyz) and click on dancing pepe icon in the leaderboard.
+Go to the [BeatLeader](https://beatleader.com) and click on dancing pepe icon in the leaderboard.
 
 Or if you have a site, you can I-Frame the viewer and pass a query parameter
 containing the song ID, difficulty and playerID:
 
-`https://www.replay.beatleader.xyz/?id=c32d&difficulty=ExpertPlus&playerID=76561198333869741`
+`https://www.replay.beatleader.com/?id=c32d&difficulty=ExpertPlus&playerID=76561198333869741`
 
 id - BeatSaver song ID. ("Ov Sacrament" in this case)
 difficulty - Easy, Normal, Hard, Expert, ExpertPlus
@@ -33,23 +33,23 @@ playerID - player's ScoreSaber or BeatLeader id (cerret in this case)
 
 To directly link to a sought time, use the `?time` parameter in the URL (milliseconds, int, 0 to song duration):
 
-`https://www.replay.beatleader.xyz/?id=c32d&difficulty=ExpertPlus&playerID=76561198333869741&time=15000` - 15 sec
+`https://www.replay.beatleader.com/?id=c32d&difficulty=ExpertPlus&playerID=76561198333869741&time=15000` - 15 sec
 
 To specify replay speed use the `?speed` parameter in the URL (percent, int, 0 to 200):
 
-`https://www.replay.beatleader.xyz/?id=c32d&difficulty=ExpertPlus&playerID=76561198333869741&speed=50` - 50% speed
+`https://www.replay.beatleader.com/?id=c32d&difficulty=ExpertPlus&playerID=76561198333869741&speed=50` - 50% speed
 
 To specify notes jump distance use the `?jd` parameter in the URL (meters, float, 5 to 50):
 
-`https://www.replay.beatleader.xyz/?id=c32d&difficulty=ExpertPlus&playerID=76561198333869741&jd=18.6` - 18.6 JD
+`https://www.replay.beatleader.com/?id=c32d&difficulty=ExpertPlus&playerID=76561198333869741&jd=18.6` - 18.6 JD
 
 To specify replay download link use the `?link` parameter in the URL. Make sure the link(name of the file) contains playerID:
 
-`https://www.replay.beatleader.xyz/?link=https://cdn.discordapp.com/attachments/921820046345523314/934953493624660058/76561198059961776-Cheshires_dance-ExpertPlus-Standard-A2B943FE75E48394352B4FD912CEE8306788D0B1.dat`
+`https://www.replay.beatleader.com/?link=https://cdn.discordapp.com/attachments/921820046345523314/934953493624660058/76561198059961776-Cheshires_dance-ExpertPlus-Standard-A2B943FE75E48394352B4FD912CEE8306788D0B1.dat`
 
 It can also use BeatLeader's scoreId:
 
-`https://www.replay.beatleader.xyz/?scoreId=442819`
+`https://www.replay.beatleader.com/?scoreId=442819`
 
 ## Development
 

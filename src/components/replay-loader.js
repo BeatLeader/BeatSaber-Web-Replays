@@ -55,7 +55,7 @@ AFRAME.registerComponent('replay-loader', {
 		this.el.sceneEl.emit('replayloadstart', null);
 		this.userIds.forEach((playerID, index) => {
 			fetch(
-				`https://api.beatleader.xyz/score/${playerID}/${hash}/${this.data.difficulty}/${this.data.mode}?leaderboardContext=${this.data.context}`
+				`https://api.beatleader.com/score/${playerID}/${hash}/${this.data.difficulty}/${this.data.mode}?leaderboardContext=${this.data.context}`
 			).then(async response => {
 				let data = response.status == 200 ? await response.json() : null;
 				if (data && data.playerId) {
@@ -103,7 +103,7 @@ AFRAME.registerComponent('replay-loader', {
 						avatar: data.player.avatar,
 						country: data.player.country,
 						countryIcon: `assets/flags/${data.player.country.toLowerCase()}.png`,
-						profileLink: `https://beatleader.xyz/u/${data.player.id}`,
+						profileLink: `https://beatleader.com/u/${data.player.id}`,
 						id: data.player.id,
 					};
 					this.users.push(user);
@@ -200,14 +200,14 @@ AFRAME.registerComponent('replay-loader', {
 	},
 
 	fetchPlayer: function (playerID, index) {
-		fetch(`https://api.beatleader.xyz/player/${playerID}`).then(res => {
+		fetch(`https://api.beatleader.com/player/${playerID}`).then(res => {
 			res.json().then(data => {
 				const user = {
 					name: data.name,
 					avatar: data.avatar,
 					country: data.country,
 					countryIcon: `assets/flags/${data.country.toLowerCase()}.png`,
-					profileLink: `https://beatleader.xyz/u/${data.id}`,
+					profileLink: `https://beatleader.com/u/${data.id}`,
 					id: data.id + index,
 				};
 				this.users.push(user);

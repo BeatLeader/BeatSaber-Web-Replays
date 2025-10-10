@@ -196,7 +196,7 @@ AFRAME.registerComponent('zip-loader', {
 	},
 
 	fetchDataBl: function (id, byHash) {
-		return fetch(`https://api.beatleader.xyz/map/${byHash ? 'hash' : 'id'}/${id}`).then(res => {
+		return fetch(`https://api.beatleader.com/map/${byHash ? 'hash' : 'id'}/${id}`).then(res => {
 			res.json().then(data => {
 				if (data.hash) {
 					const currentVersion = data;

@@ -50,10 +50,6 @@ AFRAME.registerComponent('wall', {
 
 		var currentTime = this.getCurrentTime();
 
-		if (currentTime - (data.time - movementData.spawnAheadTime) < movementData.waitingDuration) {
-			return;
-		}
-
 		// Move.
 		this.el.object3D.visible = true;
 
@@ -120,7 +116,6 @@ AFRAME.registerComponent('wall', {
 
 		mesh.frustumCulled = false;
 
-		const halfDepth = (data.durationSeconds * movementData.noteJumpMovementSpeed) / 2;
 		var origin;
 		var height = data.height;
 		if (data.isV3) {
@@ -226,6 +221,10 @@ AFRAME.registerComponent('wall', {
 	tock: function (time, timeDelta) {
 		const data = this.data;
 		const currentTime = this.getCurrentTime();
+
+		if (data.movementData.interpolation.updatedThisFrame) {
+			this.el.object3D.scale.set(this.el.object3D.scale.x, this.el.object3D.scale.y, Math.abs(data.durationSeconds) * data.movementData.noteJumpMovementSpeed);
+		}
 
 		this.updatePosition();
 

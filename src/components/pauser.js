@@ -32,12 +32,12 @@ AFRAME.registerComponent('pauser', {
 
 	checkSongFinish: function () {
 		const song = this.el.sceneEl.components.song;
-		const source = song.source;
-		if (!source) {
+
+		if (!song.getDuration()) {
 			return;
 		}
 
-		if (song.isPlaying && song.getCurrentTime() >= source.buffer.duration) {
+		if (song.isPlaying && song.getCurrentTime() >= song.getDuration()) {
 			if (this.settings.shouldLoopReplays()) {
 				this.songControls.seek(0);
 			} else {

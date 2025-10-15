@@ -37,8 +37,8 @@ AFRAME.registerComponent('intro-skip', {
 		});
 
 		const analyser = document.getElementById('audioAnalyser');
-		analyser.addEventListener('audioanalyserbuffersource', evt => {
-			this.readMap(evt.detail.buffer.duration);
+		analyser.addEventListener('audioanalysersource', evt => {
+			this.readMap(evt.detail.duration);
 		});
 
 		document.addEventListener('keydown', e => {

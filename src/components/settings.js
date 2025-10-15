@@ -91,6 +91,7 @@ AFRAME.registerComponent('settings', {
 			pauseOnUnfocus: false,
 			autoplayOnLoad: false,
 			loopReplays: false,
+			pitchCompensation: true,
 
 			autoplayRandomScore: true,
 			randomScoreSource: 'all',
@@ -143,6 +144,15 @@ AFRAME.registerComponent('settings', {
 		Object.keys(this.settings).forEach(key => {
 			let toggle = document.getElementById(key);
 			if (!toggle) return; // Someone else handling setting.
+			// Hide Pitch compensation on macOS
+			if (key === 'pitchCompensation') {
+				const isMac = /Macintosh|Mac OS X/.test(navigator.userAgent);
+				if (isMac) {
+					const container = document.getElementById('pitchCompensationContainer');
+					if (container) container.style.display = 'none';
+					return; // Do not bind hidden control
+				}
+			}
 			if (toggle.type == 'checkbox') {
 				toggle.addEventListener('input', event => {
 					this.settings[key] = event.srcElement.checked;

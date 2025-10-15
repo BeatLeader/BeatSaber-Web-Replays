@@ -187,14 +187,18 @@ AFRAME.registerComponent('zip-loader', {
 		for (let index = 0; index < keys.length; index++) {
 			const filename = keys[index];
 			if (!event.audio) {
-				if (filename.endsWith('egg') || filename.endsWith('ogg')) {
-					event.audio = await extractAsBlobUrl(filename, 'audio/ogg');
-				}
-				if (filename.endsWith('wav')) {
-					event.audio = await extractAsBlobUrl(filename, 'audio/wav');
-				}
-				if (filename.endsWith('mp3')) {
-					event.audio = await extractAsBlobUrl(filename, 'audio/mp3');
+				if (utils.getUrlParameter('songLink')) {
+					event.audio = utils.getUrlParameter('songLink').replace('https://cdn.discordapp.com/attachments/', 'https://discord.beatleader.pro/');
+				} else {
+					if (filename.endsWith('egg') || filename.endsWith('ogg')) {
+						event.audio = await extractAsBlobUrl(filename, 'audio/ogg');
+					}
+					if (filename.endsWith('wav')) {
+						event.audio = await extractAsBlobUrl(filename, 'audio/wav');
+					}
+					if (filename.endsWith('mp3')) {
+						event.audio = await extractAsBlobUrl(filename, 'audio/mp3');
+					}
 				}
 			}
 			if (!event.image) {

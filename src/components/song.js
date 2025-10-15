@@ -5,6 +5,8 @@ const GAME_OVER_LENGTH = 3.5;
 const ONCE = {once: true};
 const BASE_VOLUME = 0.35;
 const isSafari = navigator.userAgent.toLowerCase().indexOf('safari') !== -1 && navigator.userAgent.toLowerCase().indexOf('chrome') === -1;
+const isMac = /Macintosh|Mac OS X/.test(navigator.userAgent);
+const isMacFirefox = isMac && utils.isFirefox();
 
 let skipDebug = AFRAME.utils.getUrlParameter('skip');
 if (!!skipDebug) {
@@ -45,11 +47,12 @@ AFRAME.registerComponent('song', {
 		isPaused: {default: queryParamTime != 0},
 		isPlaying: {default: false},
 		isFinished: {default: false},
+		pitchCompensation: {default: true},
 		mode: {default: 'Standard'},
 	},
 
 	init: function () {
-		this.analyserSetter = {buffer: true};
+		this.analyserSetter = {};
 		this.audioAnalyser = this.data.analyserEl.components.audioanalyser;
 		this.context = this.audioAnalyser.context;
 		this.isPlaying = false;
@@ -88,6 +91,18 @@ AFRAME.registerComponent('song', {
 		this.el.addEventListener('usergesturereceive', gestureListener);
 	},
 
+	pauseAudio: function () {
+		if (this.playRequest) {
+			this.playRequest.then(_ => {
+				if (!this.isPlaying) {
+					this.audio.pause();
+				}
+			});
+		} else {
+			this.audio.pause();
+		}
+	},
+
 	update: function (oldData) {
 		const data = this.data;
 
@@ -95,10 +110,14 @@ AFRAME.registerComponent('song', {
 			return;
 		}
 
+		this.isBufferSource = isSafari || isMacFirefox || !data.pitchCompensation;
+
 		// Resume.
 		if (oldData.isPaused && !data.isPaused) {
 			this.audioAnalyser.resumeContext();
-			this.playMediaSession();
+			if (this.source) {
+				this.playMediaSession();
+			}
 			this.isPlaying = true;
 		}
 
@@ -126,7 +145,7 @@ AFRAME.registerComponent('song', {
 			this.startAudio(queryParamTime);
 			if (data.isPaused) {
 				this.audioAnalyser.suspendContext();
-				this.audio.pause();
+				this.pauseAudio();
 				this.isPlaying = false;
 			}
 		}
@@ -134,15 +153,19 @@ AFRAME.registerComponent('song', {
 		// Pause / stop.
 		if (!oldData.isPaused && data.isPaused) {
 			this.audioAnalyser.suspendContext();
-			this.audio.pause();
+			this.pauseAudio();
 			this.isPlaying = false;
+		}
+
+		if (oldData.pitchCompensation !== data.pitchCompensation) {
+			this.setPlaybackRate(this.speed);
 		}
 	},
 
 	pause: function () {
 		if (this.data.isPlaying) {
 			this.audioAnalyser.suspendContext();
-			this.audio.pause();
+			this.pauseAudio();
 		}
 	},
 
@@ -159,20 +182,23 @@ AFRAME.registerComponent('song', {
 		this.isPlaying = false;
 		return new Promise(resolve => {
 			data.analyserEl.addEventListener(
-				'audioanalyserbuffersource',
+				'audioanalysersource',
 				evt => {
-					// Finished decoding.
-					this.source = evt.detail;
+					this.source = evt.detail.source;
+					this.mediaSource = evt.detail.mediaSource;
+					this.duration = evt.detail.duration;
+					if (evt.detail.audio) {
+						this.audio = evt.detail.audio;
+					}
 					if (isSafari) {
-						this.audio.src = utils.createSilence(evt.detail.buffer.duration);
-					} else {
-						this.audio.src = this.audioAnalyser.data.src;
+						this.audio.src = utils.createSilence(this.duration);
 					}
 					resolve(this.source);
 				},
 				ONCE
 			);
 			this.analyserSetter.src = this.data.audio;
+			this.analyserSetter.speed = this.speed;
 			data.analyserEl.setAttribute('audioanalyser', this.analyserSetter);
 		});
 	},
@@ -182,10 +208,17 @@ AFRAME.registerComponent('song', {
 			console.warn('[song] Tried to stopAudio, but not playing.');
 			return;
 		}
-		this.source.stop();
-		this.source.disconnect();
+		if (this.source && this.source.stop) {
+			this.source.stop();
+			this.source = null;
+		}
+		if (this.source != this.mediaSource && this.mediaSource && this.mediaSource.stop) {
+			this.mediaSource.stop();
+		}
+		if (this.audio) {
+			this.pauseAudio();
+		}
 
-		this.source = null;
 		this.isPlaying = false;
 	},
 
@@ -196,24 +229,19 @@ AFRAME.registerComponent('song', {
 		this.lastFrameNow = null;
 		this.songStartTime = undefined;
 
-		// Restart, get new buffer source node and play.
-		if (this.source) {
-			this.source.disconnect();
-		}
-
 		// Clear gain interpolation values from game over.
 		const gain = this.audioAnalyser.gainNode.gain;
 		gain.cancelScheduledValues(0);
 
 		this.el.sceneEl.emit('songprocessingstart', null, false);
 		this.data.analyserEl.addEventListener(
-			'audioanalyserbuffersource',
+			'audioanalysersource',
 			evt => {
-				this.source = evt.detail;
+				this.source = evt.detail.source;
+				this.mediaSource = evt.detail.mediaSource;
+				this.duration = evt.detail.duration;
 				if (isSafari) {
-					this.audio.src = utils.createSilence(evt.detail.buffer.duration);
-				} else {
-					this.audio.src = this.audioAnalyser.data.src;
+					this.audio.src = utils.createSilence(this.duration);
 				}
 
 				if (this.data.isPlaying) {
@@ -223,7 +251,7 @@ AFRAME.registerComponent('song', {
 			},
 			ONCE
 		);
-		this.audioAnalyser.refreshSource();
+		this.audioAnalyser.refreshSource(this.speed);
 	},
 
 	onWallHitStart: function () {
@@ -242,7 +270,9 @@ AFRAME.registerComponent('song', {
 		if (!this.metadataAudioLoading) {
 			this.metadataAudioLoading = true;
 
-			this.audio.play().then(_ => {
+			this.playRequest = this.audio.play();
+			this.playRequest.then(_ => {
+				this.playRequest = null;
 				navigator.mediaSession.metadata = new MediaMetadata({});
 				this.metadataAudioLoading = false;
 
@@ -254,30 +284,115 @@ AFRAME.registerComponent('song', {
 	startAudio: function (time) {
 		this.isPlaying = true;
 		const playTime = time || skipDebug || 0;
+
+		const duration = this.getDuration();
+		const canUseBuffer = duration > 0 ? duration <= 1800 : true;
+		if ((this.isBufferSource || this.speed < 0.5) && canUseBuffer) {
+			this.source = this.audioAnalyser.activateBufferSource();
+		} else {
+			this.source = this.audioAnalyser.activateMediaSource();
+		}
+
 		this.songStartTime = (this.context.currentTime * this.speed - playTime) / (this.speed > 0.01 ? this.speed : 0.01);
-		try {
-			this.source.start(0, playTime);
-		} catch (e) {
-			console.log(e);
+		if (this.source.start) {
+			try {
+				this.source.start(0, playTime);
+			} catch (e) {
+				console.log(e);
+			}
+		}
+		if (this.source != this.mediaSource && this.mediaSource && this.mediaSource.start) {
+			try {
+				this.mediaSource.start(0, playTime);
+			} catch (e) {
+				console.log(e);
+			}
 		}
 
 		this.lastCurrentTime = this.speed > 0.01 ? 0 : time;
 		this.lastContextTime = null;
 		this.lastFrameNow = null;
 
-		this.source.playbackRate.value = this.speed;
-
 		this.audio.currentTime = playTime;
+		if (this.source && this.source.playbackRate) {
+			this.source.playbackRate.value = this.speed;
+		}
+		if (this.mediaSource && this.mediaSource.playbackRate) {
+			this.mediaSource.playbackRate.value = this.speed;
+		}
+		this.audio.playbackRate = Math.max(this.speed, 0.0001);
 
 		if (this.speed > 0 && 'mediaSession' in navigator) {
 			navigator.mediaSession.setPositionState({
-				duration: this.source.buffer.duration,
+				duration: this.getDuration(),
 				playbackRate: this.speed,
 				position: playTime,
 			});
 		}
 
 		this.playMediaSession();
+	},
+
+	setPlaybackRate: function (rate) {
+		this.speed = rate;
+
+		const duration = this.getDuration();
+		const canUseBuffer = duration > 0 ? duration <= 1800 : true;
+		var newSource = null;
+		if ((this.isBufferSource || this.speed < 0.5) && canUseBuffer) {
+			newSource = this.audioAnalyser.activateBufferSource();
+		} else {
+			newSource = this.audioAnalyser.activateMediaSource();
+		}
+
+		if (newSource != this.source) {
+			if (this.source && this.source.stop) {
+				this.source.stop();
+				this.source = null;
+			}
+			if (this.source != this.mediaSource && this.mediaSource && this.mediaSource.stop) {
+				this.mediaSource.stop();
+			}
+
+			this.source = newSource;
+
+			if (this.source.start) {
+				try {
+					this.source.start(0, this.lastCurrentTime);
+				} catch (e) {
+					console.log(e);
+				}
+			}
+
+			if (this.source != this.mediaSource && this.mediaSource && this.mediaSource.start) {
+				try {
+					this.mediaSource.start(0, this.lastCurrentTime);
+				} catch (e) {
+					console.log(e);
+				}
+			}
+
+			if (this.lastCurrentTime !== undefined) {
+				this.audio.currentTime = this.lastCurrentTime;
+			}
+		}
+
+		if (this.source && this.source.playbackRate) {
+			this.source.playbackRate.value = rate;
+		}
+		if (this.mediaSource && this.mediaSource.playbackRate) {
+			this.mediaSource.playbackRate.value = rate;
+		}
+		this.audio.playbackRate = Math.max(rate, 0.5);
+	},
+
+	getDuration: function () {
+		if (this.source && this.source.buffer) {
+			return this.source.buffer.duration;
+		}
+		if (this.duration) return this.duration;
+		if (this.audio && isFinite(this.audio.duration)) return this.audio.duration;
+		return 0;
 	},
 
 	getCurrentTime: function () {

@@ -82,7 +82,7 @@
 			precision="mediump"
 			mixin="bgColorAnimation tunnelColorAnimation leftLaserColorAnimation rightLaserColorAnimation textGlowColorAnimation floorColorAnimation"
 			bind__beat-generator="difficulty: challenge.difficulty; mode: challenge.mode; isPlaying: isPlaying || isPaused; beatSpeed: challenge.beatSpeed; noEffects: settings.noEffects"
-			bind__song="audio: challenge.audio; difficulty: challenge.difficulty; mode: challenge.mode; isPaused: isPaused; isFinished: isFinished; isPlaying: isPlaying; isBeatsPreloaded: challenge.isBeatsPreloaded"
+			bind__song="audio: challenge.audio; difficulty: challenge.difficulty; mode: challenge.mode; isPaused: isPaused; isFinished: isFinished; isPlaying: isPlaying; isBeatsPreloaded: challenge.isBeatsPreloaded; pitchCompensation: settings.pitchCompensation"
 			beat-hit-sound
 			bind__song-controls="difficulty: challenge.difficulty; mode: challenge.mode; isSafari: isSafari; isPlaying: isPlaying; songName: challenge.songName; songSubName: challenge.author; songImage: challenge.image; showControls: showControls; leaderboardId: challenge.leaderboardId; songId: challenge.id; autoplayOnLoad: settings.autoplayOnLoad"
 			bind__zip-loader="difficulty: challenge.difficulty; id: challenge.id; mode: challenge.mode"
@@ -153,7 +153,7 @@
 			<a-entity
 				id="audioAnalyser"
 				audioanalyser="fftSize: 64; enableBeatDetection: true; enableLevels: false; enableWaveform: false; beatDetectionThrottle: 5000; unique: true"
-				bind__audioanalyser="beatDetectionThrottle: menuActive && 5000 || 1000; isSafari: isSafari"></a-entity>
+				bind__audioanalyser="beatDetectionThrottle: menuActive && 5000 || 1000; isSafari: isSafari; pitchCompensation: settings.pitchCompensation"></a-entity>
 
 			{% include './templates/stage.html' %} {% include './templates/gameMenu.html' %} {% include './templates/score.html' %} {% include
 			'./templates/loading.html' %}

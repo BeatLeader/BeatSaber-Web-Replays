@@ -45,7 +45,8 @@ AFRAME.registerComponent('song-controls', {
 				'songstartaudio',
 				() => {
 					setTimeout(() => {
-						if (queryParamTime >= 0 && queryParamTime <= this.song.source.buffer.duration) {
+						const total = this.song.getDuration();
+						if (queryParamTime >= 0 && queryParamTime <= total) {
 							this.seek(queryParamTime, false);
 							queryParamTime = undefined;
 						}
@@ -56,11 +57,11 @@ AFRAME.registerComponent('song-controls', {
 		}
 
 		const analyser = document.getElementById('audioAnalyser');
-		analyser.addEventListener('audioanalyserbuffersource', evt => {
-			const songDuration = evt.detail.buffer.duration;
+		analyser.addEventListener('audioanalysersource', evt => {
+			const songDuration = evt.detail.duration;
 			document.getElementById('songDuration').innerHTML = formatSeconds(songDuration);
 			if (this.replayData && !this.timelineFilter) {
-				this.makeTimelineOverlay(this.replayData, evt.detail.buffer, this);
+				this.makeTimelineOverlay(this.replayData, songDuration, this);
 			}
 			if (queryParamTime >= 0 && queryParamTime <= songDuration) {
 				const percent = queryParamTime / songDuration;
@@ -68,13 +69,15 @@ AFRAME.registerComponent('song-controls', {
 				this.playhead.style.width = progress + '%';
 
 				document.getElementById('songProgress').innerHTML = formatSeconds(queryParamTime);
-				this.timelineFilter.style.width = this.timeline.getBoundingClientRect().width * percent + 'px';
+				if (this.timelineFilter) {
+					this.timelineFilter.style.width = this.timeline.getBoundingClientRect().width * percent + 'px';
+				}
 			}
 		});
 
 		this.el.sceneEl.addEventListener('replayloaded', event => {
-			if (this.song.source && this.song.source.buffer && !this.timelineFilter) {
-				this.makeTimelineOverlay(event.detail, this.song.source.buffer, this);
+			if (this.song.getDuration() && !this.timelineFilter) {
+				this.makeTimelineOverlay(event.detail, this.song.getDuration(), this);
 			}
 			this.replayData = event.detail;
 			let replay = event.detail.replay;
@@ -329,15 +332,15 @@ AFRAME.registerComponent('song-controls', {
 			if (!fromTime) {
 				const marginLeft = event.clientX - timeline.getBoundingClientRect().left;
 				const percent = marginLeft / timeline.getBoundingClientRect().width;
-				time = percent * this.song.source.buffer.duration;
+				time = percent * this.song.getDuration();
 			} else {
 				time = fromTime;
 			}
 
 			// Get new audio buffer source (needed every time audio is stopped).
 			// Start audio at seek time.
-			if (time > this.song.source.buffer.duration) {
-				this.seek(this.song.source.buffer.duration);
+			if (time > this.song.getDuration()) {
+				this.seek(this.song.getDuration());
 			} else {
 				this.seek(time >= 0 ? time : 0);
 			}
@@ -407,7 +410,7 @@ AFRAME.registerComponent('song-controls', {
 				handleLeave();
 				return;
 			}
-			const seconds = percent * this.song.source.buffer.duration;
+			const seconds = percent * this.song.getDuration();
 
 			var previousNote = null;
 			var note = null;
@@ -698,6 +701,10 @@ AFRAME.registerComponent('song-controls', {
 				baseParams += '&mapLink=' + utils.getUrlParameter('mapLink');
 			}
 
+			if (utils.getUrlParameter('songLink')) {
+				baseParams += '&songLink=' + utils.getUrlParameter('songLink');
+			}
+
 			if (utils.getUrlParameter('forceFpv')) {
 				baseParams += '&forceFpv=true';
 			}
@@ -764,7 +771,7 @@ AFRAME.registerComponent('song-controls', {
 			firefoxHandler();
 			this.baseSongSpeed = parseFloat(value);
 			const effectiveSpeed = this.getCurrentEffectiveSpeed();
-			this.song.source.playbackRate.value = effectiveSpeed;
+			this.song.setPlaybackRate(effectiveSpeed);
 			this.song.speed = effectiveSpeed;
 			speedSlider.forEach(element => {
 				element.value = value;
@@ -1208,14 +1215,14 @@ AFRAME.registerComponent('song-controls', {
 		});
 	},
 
-	makeTimelineOverlay: function (replayData, buffer, target) {
+	makeTimelineOverlay: function (replayData, songDuration, target) {
 		const notes = replayData.notes;
 		const pauses = replayData.replay.pauses;
 
 		const timeline = target.timeline;
 		const height = 40;
 		const width = timeline.getBoundingClientRect().width;
-		const duration = buffer.duration;
+		const duration = songDuration;
 
 		let containers = document.querySelectorAll('.timeline-container');
 		containers.forEach(element => {
@@ -1504,26 +1511,18 @@ AFRAME.registerComponent('song-controls', {
 	seek: function (time, clearBeats = true) {
 		this.song.stopAudio();
 
-		// Get new audio buffer source (needed every time audio is stopped).
 		this.song.data.analyserEl.addEventListener(
-			'audioanalyserbuffersource',
+			'audioanalysersource',
 			evt => {
-				// Start audio at seek time.
-				const source = (this.song.source = evt.detail);
-
+				this.song.source = evt.detail;
 				this.song.startAudio(time);
-
-				if (clearBeats) {
-					// Tell beat generator about seek.
-					this.el.components['beat-generator'].seek(time);
-				}
-
+				if (clearBeats) this.el.components['beat-generator'].seek(time);
 				this.updatePlayhead(true);
 			},
 			ONCE
 		);
 
-		this.song.audioAnalyser.refreshSource();
+		this.song.audioAnalyser.refreshSource(this.song.speed);
 		this.updateAutoSpeedState();
 	},
 
@@ -1577,7 +1576,7 @@ AFRAME.registerComponent('song-controls', {
 	},
 
 	updatePlayhead: function (seek) {
-		const percent = this.song.getCurrentTime() / this.song.source.buffer.duration;
+		const percent = this.song.getCurrentTime() / this.song.getDuration();
 		const progress = Math.max(0, Math.min(100, 100 * percent));
 		this.playhead.style.width = progress + '%';
 		if (seek) {
@@ -1588,9 +1587,9 @@ AFRAME.registerComponent('song-controls', {
 
 		if (this.song.speed > 0 && 'mediaSession' in navigator) {
 			navigator.mediaSession.setPositionState({
-				duration: this.song.source.buffer.duration,
+				duration: this.song.getDuration(),
 				playbackRate: this.getCurrentEffectiveSpeed ? this.getCurrentEffectiveSpeed() : this.song.speed,
-				position: Math.min(this.song.getCurrentTime(), this.song.source.buffer.duration),
+				position: Math.min(this.song.getCurrentTime(), this.song.getDuration()),
 			});
 		}
 	},
@@ -1663,8 +1662,8 @@ AFRAME.registerComponent('song-controls', {
 
 	updateAutoSpeedState: function () {
 		const effective = this.getCurrentEffectiveSpeed();
-		if (this.song && this.song.source) {
-			this.song.source.playbackRate.value = effective;
+		if (this.song && this.song.source && effective != this.song.speed) {
+			this.song.setPlaybackRate(effective);
 			this.song.speed = effective;
 		}
 		// Update effective speed label without changing the main slider value

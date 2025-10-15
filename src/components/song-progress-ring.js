@@ -24,7 +24,8 @@ AFRAME.registerComponent('song-progress-ring', {
 			return;
 		}
 
-		const progress = this.el.sceneEl.components.song.getCurrentTime() / source.buffer.duration;
+		const duration = this.el.sceneEl.components.song.getDuration();
+		const progress = this.el.sceneEl.components.song.getCurrentTime() / duration;
 		this.progress.value = progress;
 	},
 

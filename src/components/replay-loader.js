@@ -246,23 +246,32 @@ AFRAME.registerComponent('replay-loader', {
 		});
 	},
 
-	tryFindingNotes: function (map, replay, noteStructs, mapnotes) {
+	tryFindingNotes: function (map, replay, noteStructs, mapnotes, indexToBeat = null) {
 		this.setIds(map, replay);
-
+		const remainingNoteStructs = [].concat(noteStructs);
 		for (var j = 0; j < mapnotes.length; j++) {
 			const mapnote = mapnotes[j];
-			for (var m = 0; m < noteStructs.length; m++) {
-				const replaynote = noteStructs[m];
+			for (var m = 0; m < remainingNoteStructs.length; m++) {
+				const replaynote = remainingNoteStructs[m];
 
 				if (replaynote.index == undefined) {
+					var diff = replaynote.spawnTime - mapnote._songTime;
+					if (diff > 1) { 
+						if (indexToBeat !== null && m > indexToBeat) {
+							return;
+						}
+						break;
+					}
+					var absDiff = Math.abs(diff);
 					if (
-						Math.abs(replaynote.spawnTime - mapnote._songTime) < 0.0005 &&
+						absDiff < 0.0005 &&
 						(replaynote.id == mapnote._id ||
 							replaynote.id == mapnote._idWithScoring ||
 							replaynote.id == mapnote._idWithAlternativeScoring ||
 							replaynote.id == mapnote._idWithLegacyScoring)
 					) {
 						assignNote(replaynote, mapnote);
+						remainingNoteStructs.splice(m, 1);
 						break;
 					}
 				}
@@ -352,7 +361,7 @@ AFRAME.registerComponent('replay-loader', {
 			}
 		}
 
-		if (brokenNotesCount > 1) {
+		if (brokenNotesCount > noteStructs.length / 10) {
 			const mirrorAndRecalculate = () => {
 				Mirror_Horizontal(map, 4, true, false);
 				updateScoringAndTypes(map);
@@ -366,7 +375,7 @@ AFRAME.registerComponent('replay-loader', {
 					const element = noteStructs[i];
 					element.index = undefined;
 				}
-				this.tryFindingNotes(map, replay, noteStructs, mapnotes);
+				this.tryFindingNotes(map, replay, noteStructs, mapnotes, brokenNotesCount);
 			};
 
 			mirrorAndRecalculate();
@@ -381,6 +390,7 @@ AFRAME.registerComponent('replay-loader', {
 				leftHanded = true;
 				console.log('Applied left-handed mode');
 			} else {
+				brokenNotesCount = null;
 				mirrorAndRecalculate();
 			}
 		}

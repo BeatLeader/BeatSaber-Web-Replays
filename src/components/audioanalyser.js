@@ -9,7 +9,6 @@ var audioBufferCache = {};
  */
 AFRAME.registerComponent('audioanalyser', {
 	schema: {
-		buffer: {default: false},
 		isSafari: {default: false},
 		beatDetectionDecay: {default: 0.99},
 		beatDetectionMinVolume: {default: 15},
@@ -22,6 +21,8 @@ AFRAME.registerComponent('audioanalyser', {
 		enableVolume: {default: true},
 		fftSize: {default: 2048},
 		smoothingTimeConstant: {default: 0.8},
+		pitchCompensation: {default: true},
+		speed: {default: 1.0},
 		src: {
 			parse: function (val) {
 				if (val.constructor !== String) {
@@ -61,7 +62,9 @@ AFRAME.registerComponent('audioanalyser', {
 		if (!data.src) {
 			return;
 		}
-		this.refreshSource();
+		if (!this.mediaSource && !this.audioSource) {
+			this.refreshSource(data.speed);
+		}
 	},
 
 	/**
@@ -128,6 +131,7 @@ AFRAME.registerComponent('audioanalyser', {
 
 		analyser = this.analyser = this.context.createAnalyser();
 		gainNode = this.gainNode = this.context.createGain();
+		this.mediaGainNode = this.context.createGain();
 		gainNode.connect(analyser);
 		analyser.connect(this.context.destination);
 		analyser.fftSize = data.fftSize;
@@ -136,19 +140,88 @@ AFRAME.registerComponent('audioanalyser', {
 		this.waveform = new Uint8Array(analyser.fftSize);
 	},
 
-	refreshSource: function () {
-		var analyser = this.analyser;
-		var data = this.data;
+	refreshSource: function (speed) {
+		const ua = navigator.userAgent;
+		const isSafariUA = ua.toLowerCase().indexOf('safari') !== -1 && ua.toLowerCase().indexOf('chrome') === -1;
+		const isMacFirefox = /Macintosh|Mac OS X/.test(ua) && ua.toLowerCase().indexOf('firefox') !== -1;
 
-		if (data.buffer && data.src.constructor === String) {
-			this.getBufferSource().then(source => {
-				this.source = source;
-				this.source.connect(this.gainNode);
-			});
+		if (isSafariUA || isMacFirefox || speed < 0.5) {
+			this.getBufferSource().then(bufferSource => {
+				this.el.emit(
+					'audioanalysersource',
+					{source: bufferSource, mediaSource: null, audio: null, duration: bufferSource.buffer.duration},
+					false
+				);
+			})
 		} else {
-			this.source = this.getMediaSource();
-			this.source.connect(this.gainNode);
+			this.getMediaSource().then(source => {
+				if (this.audio && this.audio.duration && this.audio.duration > 0 && this.audio.duration <= 1800) {
+					this.getBufferSource().then(bufferSource => {
+						if (!this.data.pitchCompensation) {
+							this.mediaGainNode.gain.value = 0;
+						} else {
+							this.mediaGainNode.gain.value = 1;
+						}
+						this.el.emit(
+							'audioanalysersource',
+							{source: this.data.pitchCompensation ? source : bufferSource, mediaSource: source, audio: this.audio, duration: bufferSource.buffer.duration},
+							false
+						);
+					})
+				} else {
+					this.el.emit(
+						'audioanalysersource',
+						{source, mediaSource: source, audio: this.audio, duration: this.audio.duration},
+						false
+					);
+				}
+			});
 		}
+	},
+
+	activateBufferSource: function () {
+		// Disconnect media if connected, connect buffer source
+		if (this.mediaSource && this.mediaConnected) {
+			try {
+				this.mediaGainNode.gain.value = 0;
+			} catch (e) {
+				console.log(e);
+			}
+			this.mediaConnected = false;
+		}
+
+		if (this.audioSource && !this.bufferConnected) {
+			try {
+				this.audioSource.connect(this.gainNode);
+			} catch (e) {
+				console.log(e);
+			}
+			this.bufferConnected = true;
+		}
+		return this.audioSource;
+	},
+
+	activateMediaSource: function () {
+		// Disconnect buffer if connected, connect media node
+		if (this.audioSource && this.bufferConnected) {
+			try {
+				this.audioSource.disconnect();
+				this.getBufferSource(false);
+			} catch (e) {
+				console.log(e);
+			}
+			this.bufferConnected = false;
+		}
+		if (this.mediaSource && !this.mediaConnected) {
+			try {
+				this.mediaGainNode.gain.value = 1;
+				
+			} catch (e) {
+				console.log(e);
+			}
+			this.mediaConnected = true;
+		}
+		return this.mediaSource;
 	},
 
 	suspendContext: function () {
@@ -216,10 +289,9 @@ AFRAME.registerComponent('audioanalyser', {
 		return audioBufferCache[src];
 	},
 
-	getBufferSource: function () {
+	getBufferSource: function (onlySource = false) {
 		var data = this.data;
 		if (this.audioSource) {
-			this.audioSource.stop();
 			this.audioSource.disconnect();
 		}
 		return this.fetchAudioBuffer(data.src)
@@ -229,32 +301,51 @@ AFRAME.registerComponent('audioanalyser', {
 				source = this.context.createBufferSource();
 				source.buffer = audioBufferCache[data.src];
 				this.audioSource = source;
-				this.el.emit('audioanalyserbuffersource', source, false);
+				if (this.bufferConnected) {
+					source.connect(this.gainNode);
+				}
+				
 				return source;
 			})
 			.catch(console.error);
 	},
 
-	getMediaSource: (function () {
+	getMediaSource: function (onlySource = false) {
 		const nodeCache = {};
 
-		return function () {
-			const src = this.data.src.constructor === String ? this.data.src : this.data.src.src;
+		const captureThis = this;
+		return new Promise(resolve => {
+			const src = captureThis.data.src.constructor === String ? captureThis.data.src : captureThis.data.src.src;
 			if (nodeCache[src]) {
-				return nodeCache[src];
+				resolve(nodeCache[src]);
+				return;
 			}
 
-			if (this.data.src.constructor === String) {
-				this.audio = document.createElement('audio');
-				this.audio.crossOrigin = 'anonymous';
-				this.audio.setAttribute('src', this.data.src);
+			if (captureThis.data.src.constructor === String) {
+				captureThis.audio = document.createElement('audio');
+				captureThis.audio.crossOrigin = 'anonymous';
+				captureThis.audio.preload = 'metadata';
+				captureThis.audio.setAttribute('src', captureThis.data.src);
 			} else {
-				this.audio = this.data.src;
+				captureThis.audio = captureThis.data.src;
 			}
-			const node = this.context.createMediaElementSource(this.audio);
+			const node = captureThis.context.createMediaElementSource(captureThis.audio);
+
+			captureThis.mediaSource = node;
+			captureThis.mediaSource.connect(captureThis.mediaGainNode);
+			captureThis.mediaGainNode.connect(captureThis.gainNode);
 
 			nodeCache[src] = node;
-			return node;
-		};
-	})(),
+
+			const onMeta = () => {
+				resolve(node);
+			};
+
+			if (isFinite(captureThis.audio.duration) && captureThis.audio.duration > 0) {
+				onMeta();
+			} else if (captureThis.audio) {
+				captureThis.audio.addEventListener('loadedmetadata', onMeta, {once: true});
+			}
+		});
+	},
 });

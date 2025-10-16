@@ -37,7 +37,7 @@ AFRAME.registerComponent('song-controls', {
 		this.tick = AFRAME.utils.throttleTick(this.tick.bind(this), 100);
 
 		// Store user-set base speed to combine with slow-mode multiplier.
-		this.baseSongSpeed = this.el.components.song.speed || 1;
+		this.baseSongSpeed = this.el.components.song.speed;
 
 		// Seek to ?time if specified.
 		if (queryParamTime !== undefined) {
@@ -166,7 +166,7 @@ AFRAME.registerComponent('song-controls', {
 		this.songProgress = document.getElementById('songProgress');
 		this.songSpeedPercent = document.querySelectorAll('.songSpeedPercent');
 		this.songDelayPercent = document.querySelectorAll('.songDelayPercent');
-		this.baseSongSpeed = this.song.speed || 1;
+		this.baseSongSpeed = this.song.speed;
 		this.effectiveSpeedLabels = document.querySelectorAll('.songEffectiveSpeed');
 		this.missWindows = [];
 		this.wasInMissZone = false;
@@ -711,7 +711,7 @@ AFRAME.registerComponent('song-controls', {
 
 			let base = location.protocol + '//' + location.host + '/' + baseParams;
 			input.value =
-				base + (time ? `&time=${Math.round(this.song.getCurrentTime() * 1000)}&speed=${Math.round((this.baseSongSpeed || 1) * 100)}` : '');
+				base + (time ? `&time=${Math.round(this.song.getCurrentTime() * 1000)}&speed=${Math.round(this.baseSongSpeed * 100)}` : '');
 			input.select();
 			document.execCommand('copy');
 			target.removeChild(input);
@@ -800,7 +800,7 @@ AFRAME.registerComponent('song-controls', {
 			});
 
 			this.songSpeedPercent.forEach(element => {
-				const base = this.baseSongSpeed || this.song.speed || 1;
+				const base = this.baseSongSpeed;
 				element.textContent = base + 'x';
 			});
 
@@ -1632,11 +1632,11 @@ AFRAME.registerComponent('song-controls', {
 
 	getCurrentEffectiveSpeed: function () {
 		const s = this.settings && this.settings.settings ? this.settings.settings : {};
-		if (!s.autoSpeedControls) return this.baseSongSpeed || this.song.speed || 1;
+		if (!s.autoSpeedControls) return this.baseSongSpeed === undefined ? this.song.speed : this.baseSongSpeed;
 		const slowMult = Math.max(0.01, parseFloat(s.speedSlow || 0.2));
 		const now = this.song.getCurrentTime ? this.song.getCurrentTime() : 0;
 		const [inZone, secondsIntoWindow] = this.isInMissWindow(now);
-		if (!inZone) return this.baseSongSpeed || 1;
+		if (!inZone) return this.baseSongSpeed;
 
 		const rampDurationSecs = Math.abs(parseFloat(s.offsetSlowBeginning || 0)) / 3;
 
@@ -1645,7 +1645,7 @@ AFRAME.registerComponent('song-controls', {
 				? (secondsIntoWindow / rampDurationSecs) * slowMult + (1 - secondsIntoWindow / rampDurationSecs)
 				: slowMult;
 
-		return (this.baseSongSpeed || 1) * speedMult;
+		return (this.baseSongSpeed) * speedMult;
 	},
 
 	isInMissWindow: function (t) {

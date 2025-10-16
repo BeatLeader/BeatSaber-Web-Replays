@@ -694,7 +694,7 @@ AFRAME.registerComponent('song-controls', {
 			}
 
 			if (camera) {
-				baseParams += '&' + this.el.components['camera-mover'].cameraPositionQuery();
+				baseParams += '&' + this.el.components['camera-mover'].cameraPositionQuery() + jdParam;
 			}
 
 			if (utils.getUrlParameter('mapLink')) {
@@ -1801,7 +1801,7 @@ AFRAME.registerComponent('song-controls', {
 				masterVolumeHandler();
 			}
 
-			if (e.keyCode === 77) {
+			if (e.keyCode === 77 && !e.ctrlKey) {
 				// m
 				if (this.lastVolume == null) {
 					this.lastVolume = volumeSlider.value;

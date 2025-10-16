@@ -1,5 +1,6 @@
 const defaultHitSound = require('../../assets/sounds/defaulthitsound.js');
 const {getUrlParameter, pageInIframe, DEFAULT_COLORS} = require('../utils.js');
+const isSafari = navigator.userAgent.toLowerCase().indexOf('safari') !== -1 && navigator.userAgent.toLowerCase().indexOf('chrome') === -1;
 
 AFRAME.registerComponent('settings', {
 	schema: {},
@@ -92,6 +93,7 @@ AFRAME.registerComponent('settings', {
 			autoplayOnLoad: false,
 			loopReplays: false,
 			pitchCompensation: true,
+			pitchCompensationTreshold: 0.1,
 
 			autoplayRandomScore: true,
 			randomScoreSource: 'all',
@@ -144,14 +146,15 @@ AFRAME.registerComponent('settings', {
 		Object.keys(this.settings).forEach(key => {
 			let toggle = document.getElementById(key);
 			if (!toggle) return; // Someone else handling setting.
-			// Hide Pitch compensation on macOS
-			if (key === 'pitchCompensation') {
-				const isMac = /Macintosh|Mac OS X/.test(navigator.userAgent);
-				if (isMac) {
-					const container = document.getElementById('pitchCompensationContainer');
-					if (container) container.style.display = 'none';
-					return; // Do not bind hidden control
-				}
+			if (key === 'pitchCompensation' && isSafari) {
+				const container = document.getElementById('pitchCompensationContainer');
+				if (container) container.style.display = 'none';
+				return; // Do not bind hidden control
+			}
+			if (key === 'pitchCompensationTreshold' && isSafari) {
+				const container = document.getElementById('pitchCompensationTresholdContainer');
+				if (container) container.style.display = 'none';
+				return; // Do not bind hidden control
 			}
 			if (toggle.type == 'checkbox') {
 				toggle.addEventListener('input', event => {

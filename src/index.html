@@ -153,7 +153,7 @@
 			<a-entity
 				id="audioAnalyser"
 				audioanalyser="fftSize: 64; enableBeatDetection: true; enableLevels: false; enableWaveform: false; beatDetectionThrottle: 5000; unique: true"
-				bind__audioanalyser="beatDetectionThrottle: menuActive && 5000 || 1000; isSafari: isSafari; pitchCompensation: settings.pitchCompensation"></a-entity>
+				bind__audioanalyser="beatDetectionThrottle: menuActive && 5000 || 1000; isSafari: isSafari; pitchCompensation: settings.pitchCompensation; pitchCompensationTreshold: settings.pitchCompensationTreshold"></a-entity>
 
 			{% include './templates/stage.html' %} {% include './templates/gameMenu.html' %} {% include './templates/score.html' %} {% include
 			'./templates/loading.html' %}

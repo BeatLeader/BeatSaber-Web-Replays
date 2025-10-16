@@ -68,6 +68,18 @@
 				>
 			</div>
 
+			<div class="toggleButton" id="pitchCompensationTresholdContainer" title="Pitch compensation treshold (0.07-0.5)">
+				<label>
+					<div class="toggleButtonContainer">
+						<label class="toggleButtonLabel" style="margin-left: 5px"
+							><td><nobr>Pitch compensation treshold:</nobr></td></label
+						>
+						<label id="pitchCompensationTresholdLabel" class="toggleButtonLabel" style="margin-left: 127px">0.1</label>
+					</div>
+					<input id="pitchCompensationTreshold" class="settingRange" type="range" min="0.07" max="0.5" step="0.01" value="0.1" />
+				</label>
+			</div>
+
 			<div class="toggleButton" title="Automatically skip start of replay with no elements">
 				<label class="switch">
 					<input type="checkbox" id="autoSkipIntro" />

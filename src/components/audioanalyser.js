@@ -10,6 +10,7 @@ var audioBufferCache = {};
 AFRAME.registerComponent('audioanalyser', {
 	schema: {
 		isSafari: {default: false},
+		pitchCompensationTreshold: {default: 0.1},
 		beatDetectionDecay: {default: 0.99},
 		beatDetectionMinVolume: {default: 15},
 		beatDetectionThrottle: {default: 250},
@@ -141,11 +142,7 @@ AFRAME.registerComponent('audioanalyser', {
 	},
 
 	refreshSource: function (speed) {
-		const ua = navigator.userAgent;
-		const isSafariUA = ua.toLowerCase().indexOf('safari') !== -1 && ua.toLowerCase().indexOf('chrome') === -1;
-		const isMacFirefox = /Macintosh|Mac OS X/.test(ua) && ua.toLowerCase().indexOf('firefox') !== -1;
-
-		if (isSafariUA || isMacFirefox || speed < 0.5) {
+		if (this.data.isSafari || speed < this.data.pitchCompensationTreshold) {
 			this.getBufferSource().then(bufferSource => {
 				this.el.emit(
 					'audioanalysersource',

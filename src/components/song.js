@@ -5,8 +5,6 @@ const GAME_OVER_LENGTH = 3.5;
 const ONCE = {once: true};
 const BASE_VOLUME = 0.35;
 const isSafari = navigator.userAgent.toLowerCase().indexOf('safari') !== -1 && navigator.userAgent.toLowerCase().indexOf('chrome') === -1;
-const isMac = /Macintosh|Mac OS X/.test(navigator.userAgent);
-const isMacFirefox = isMac && utils.isFirefox();
 
 let skipDebug = AFRAME.utils.getUrlParameter('skip');
 if (!!skipDebug) {
@@ -110,7 +108,7 @@ AFRAME.registerComponent('song', {
 			return;
 		}
 
-		this.isBufferSource = isSafari || isMacFirefox || !data.pitchCompensation;
+		this.isBufferSource = isSafari || !data.pitchCompensation;
 
 		// Resume.
 		if (oldData.isPaused && !data.isPaused) {
@@ -287,7 +285,7 @@ AFRAME.registerComponent('song', {
 
 		const duration = this.getDuration();
 		const canUseBuffer = duration > 0 ? duration <= 1800 : true;
-		if ((this.isBufferSource || this.speed < 0.5) && canUseBuffer) {
+		if ((this.isBufferSource || this.speed < this.settings.settings.pitchCompensationTreshold) && canUseBuffer) {
 			this.source = this.audioAnalyser.activateBufferSource();
 		} else {
 			this.source = this.audioAnalyser.activateMediaSource();
@@ -320,7 +318,7 @@ AFRAME.registerComponent('song', {
 		if (this.mediaSource && this.mediaSource.playbackRate) {
 			this.mediaSource.playbackRate.value = this.speed;
 		}
-		this.audio.playbackRate = Math.max(this.speed, 0.0001);
+		this.audio.playbackRate = Math.max(this.speed, this.settings.settings.pitchCompensationTreshold);
 
 		if (this.speed > 0 && 'mediaSession' in navigator) {
 			navigator.mediaSession.setPositionState({
@@ -339,7 +337,7 @@ AFRAME.registerComponent('song', {
 		const duration = this.getDuration();
 		const canUseBuffer = duration > 0 ? duration <= 1800 : true;
 		var newSource = null;
-		if ((this.isBufferSource || this.speed < 0.5) && canUseBuffer) {
+		if ((this.isBufferSource || this.speed < this.settings.settings.pitchCompensationTreshold) && canUseBuffer) {
 			newSource = this.audioAnalyser.activateBufferSource();
 		} else {
 			newSource = this.audioAnalyser.activateMediaSource();
@@ -383,7 +381,7 @@ AFRAME.registerComponent('song', {
 		if (this.mediaSource && this.mediaSource.playbackRate) {
 			this.mediaSource.playbackRate.value = rate;
 		}
-		this.audio.playbackRate = Math.max(rate, 0.5);
+		this.audio.playbackRate = Math.max(rate, this.settings.settings.pitchCompensationTreshold);
 	},
 
 	getDuration: function () {

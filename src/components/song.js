@@ -271,7 +271,9 @@ AFRAME.registerComponent('song', {
 			this.playRequest = this.audio.play();
 			this.playRequest.then(_ => {
 				this.playRequest = null;
-				navigator.mediaSession.metadata = new MediaMetadata({});
+				if (window.MediaMetadata) {
+					navigator.mediaSession.metadata = new MediaMetadata({});
+				}
 				this.metadataAudioLoading = false;
 
 				this.el.emit('songstartaudio');

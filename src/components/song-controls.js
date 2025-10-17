@@ -475,7 +475,9 @@ AFRAME.registerComponent('song-controls', {
 					if (deviceHasTouchScreen) {
 						noSleep.enable();
 					}
-					navigator.mediaSession.playbackState = 'playing';
+					if (navigator.mediaSession) {
+						navigator.mediaSession.playbackState = 'playing';
+					}
 				}
 			} else {
 				if (pauseButton.classList.contains('pause')) {
@@ -484,7 +486,9 @@ AFRAME.registerComponent('song-controls', {
 					if (deviceHasTouchScreen) {
 						noSleep.disable();
 					}
-					navigator.mediaSession.playbackState = 'paused';
+					if (navigator.mediaSession) {
+						navigator.mediaSession.playbackState = 'paused';
+					}
 				}
 			}
 		};

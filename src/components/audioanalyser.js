@@ -142,7 +142,7 @@ AFRAME.registerComponent('audioanalyser', {
 	},
 
 	refreshSource: function (speed) {
-		if (this.data.isSafari || speed < this.data.pitchCompensationTreshold) {
+		if (this.data.isSafari) {
 			this.getBufferSource().then(bufferSource => {
 				this.el.emit(
 					'audioanalysersource',
@@ -154,14 +154,14 @@ AFRAME.registerComponent('audioanalyser', {
 			this.getMediaSource().then(source => {
 				if (this.audio && this.audio.duration && this.audio.duration > 0 && this.audio.duration <= 1800) {
 					this.getBufferSource().then(bufferSource => {
-						if (!this.data.pitchCompensation) {
+						if (!this.data.pitchCompensation || speed < this.data.pitchCompensationTreshold) {
 							this.mediaGainNode.gain.value = 0;
 						} else {
 							this.mediaGainNode.gain.value = 1;
 						}
 						this.el.emit(
 							'audioanalysersource',
-							{source: this.data.pitchCompensation ? source : bufferSource, mediaSource: source, audio: this.audio, duration: bufferSource.buffer.duration},
+							{source: this.data.pitchCompensation && speed >= this.data.pitchCompensationTreshold ? source : bufferSource, mediaSource: source, audio: this.audio, duration: bufferSource.buffer.duration},
 							false
 						);
 					})

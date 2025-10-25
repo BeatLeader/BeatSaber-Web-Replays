@@ -632,6 +632,18 @@ function addScoringTypeAndChains(map) {
 			}
 			head.sliderhead = slider;
 		}
+
+		var tail = mapnotes.find(n => compareSlider(n, slider, true));
+		if (tail) {
+			if (tail._scoringType == ScoringType.Normal) {
+				tail._scoringType = ScoringType.SliderTail;
+			} else if (tail._scoringType == ScoringType.SliderHead) {
+				tail._scoringType = ScoringType.SliderHeadSliderTail;
+			} else if (tail._scoringType == ScoringType.BurstSliderHead) {
+				tail._scoringType = ScoringType.BurstSliderHeadSliderTail;
+			}
+		}
+
 		for (var i = 1; i < slider._sliceCount; ++i) {
 			let chain = clone(slider);
 			chain._headCutDirection = slider._cutDirection;

@@ -140,11 +140,12 @@ AFRAME.registerComponent('song', {
 
 		// Play if we have loaded and were waiting for beats to preload.
 		if (!oldData.isBeatsPreloaded && this.data.isBeatsPreloaded && this.source) {
-			this.startAudio(queryParamTime);
 			if (data.isPaused) {
 				this.audioAnalyser.suspendContext();
 				this.pauseAudio();
 				this.isPlaying = false;
+			} else {
+				this.startAudio(queryParamTime);
 			}
 		}
 
@@ -266,18 +267,22 @@ AFRAME.registerComponent('song', {
 
 	playMediaSession: function () {
 		if (!this.metadataAudioLoading) {
-			this.metadataAudioLoading = true;
+			try {
+				this.playRequest = this.audio.play();
+				this.playRequest.then(_ => {
+					this.playRequest = null;
+					if (window.MediaMetadata) {
+						navigator.mediaSession.metadata = new MediaMetadata({});
+					}
+					this.metadataAudioLoading = false;
 
-			this.playRequest = this.audio.play();
-			this.playRequest.then(_ => {
-				this.playRequest = null;
-				if (window.MediaMetadata) {
-					navigator.mediaSession.metadata = new MediaMetadata({});
-				}
-				this.metadataAudioLoading = false;
+					this.el.emit('songstartaudio');
+				});
 
-				this.el.emit('songstartaudio');
-			});
+				this.metadataAudioLoading = true;
+			} catch (e) {
+				console.log(e);
+			}
 		}
 	},
 

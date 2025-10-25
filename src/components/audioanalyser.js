@@ -149,28 +149,33 @@ AFRAME.registerComponent('audioanalyser', {
 					{source: bufferSource, mediaSource: null, audio: null, duration: bufferSource.buffer.duration},
 					false
 				);
-			})
+			});
 		} else {
 			this.getMediaSource().then(source => {
 				if (this.audio && this.audio.duration && this.audio.duration > 0 && this.audio.duration <= 1800) {
+					if (this.data.pitchCompensation && speed >= this.data.pitchCompensationTreshold) {
+						this.el.emit(
+							'audioanalysersource',
+							{source: source, mediaSource: source, audio: this.audio, duration: this.audio.duration},
+							false
+						);
+					}
 					this.getBufferSource().then(bufferSource => {
 						if (!this.data.pitchCompensation || speed < this.data.pitchCompensationTreshold) {
 							this.mediaGainNode.gain.value = 0;
 						} else {
 							this.mediaGainNode.gain.value = 1;
 						}
-						this.el.emit(
-							'audioanalysersource',
-							{source: this.data.pitchCompensation && speed >= this.data.pitchCompensationTreshold ? source : bufferSource, mediaSource: source, audio: this.audio, duration: bufferSource.buffer.duration},
-							false
-						);
-					})
+						if (!this.data.pitchCompensation || speed < this.data.pitchCompensationTreshold) {
+							this.el.emit(
+								'audioanalysersource',
+								{source: bufferSource, mediaSource: source, audio: this.audio, duration: bufferSource.buffer.duration},
+								false
+							);
+						}
+					});
 				} else {
-					this.el.emit(
-						'audioanalysersource',
-						{source, mediaSource: source, audio: this.audio, duration: this.audio.duration},
-						false
-					);
+					this.el.emit('audioanalysersource', {source, mediaSource: source, audio: this.audio, duration: this.audio.duration}, false);
 				}
 			});
 		}
@@ -212,7 +217,6 @@ AFRAME.registerComponent('audioanalyser', {
 		if (this.mediaSource && !this.mediaConnected) {
 			try {
 				this.mediaGainNode.gain.value = 1;
-				
 			} catch (e) {
 				console.log(e);
 			}
@@ -301,7 +305,7 @@ AFRAME.registerComponent('audioanalyser', {
 				if (this.bufferConnected) {
 					source.connect(this.gainNode);
 				}
-				
+
 				return source;
 			})
 			.catch(console.error);

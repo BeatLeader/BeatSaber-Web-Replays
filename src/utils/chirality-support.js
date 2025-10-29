@@ -58,13 +58,7 @@ function Mirror_Horizontal(beatmap, numberOfLines, flip_lines, remove_walls) {
 	});
 
 	beatmap._notes.forEach(note => {
-		if (note._type != 0 && note._type != 1) {
-			if (flip_lines) {
-				note._lineIndex = numberOfLines - 1 - note._lineIndex;
-			}
-		} else {
-			Mirror_Horizontal_Note(note, numberOfLines, flip_lines);
-		}
+		Mirror_Horizontal_Note(note, numberOfLines, flip_lines);
 
 		if (note._customData && note._customData._position) {
 			note._customData._position[0] = numberOfLines - note._customData._position[0] - 5;
@@ -218,10 +212,12 @@ function Mirror_Horizontal_Note(note, numberOfLines, flip_lines) {
 
 		note._flipLineIndex = h_flip_line;
 	}
-
-	note._type = color;
 	note._lineIndex = h_line;
 
+	if (note._type != 0 && note._type != 1) {
+		return;
+	}
+	note._type = color;
 	note._cutDirection = horizontal_cut_transform(note._cutDirection);
 
 	if (note.cutDirectionAngleOffset) {

@@ -1007,24 +1007,45 @@ AFRAME.registerComponent('song-controls', {
 			}
 			if (e.keyCode === 70 && !e.shiftKey) {
 				// f
+
+				this.el.sceneEl.emit('showHotkeyNotification', {
+					text: fullscreen[0].classList.contains('inFullscreen') ? 'Exit Fullscreen' : 'Fullscreen',
+					icon: 'fas fa-expand'
+				});
 				toggleFullscreen();
 			}
 			if (e.keyCode === 39 || e.keyCode == 76) {
 				// right
 				seekRight(e.shiftKey ? 2 : 0.2);
+				this.el.sceneEl.emit('showHotkeyNotification', {
+					text: e.shiftKey ? 'Skip Forward (Fast)' : 'Skip Forward',
+					icon: 'fas fa-forward'
+				});
 			}
 			if (e.keyCode === 37 || e.keyCode == 74) {
 				// left
 				seekLeft(e.shiftKey ? 2 : 0.2);
+				this.el.sceneEl.emit('showHotkeyNotification', {
+					text: e.shiftKey ? 'Skip Backward (Fast)' : 'Skip Backward',
+					icon: 'fas fa-backward'
+				});
 			}
 
 			if (e.keyCode === 190) {
 				// right
 				seekRightBeats(e.shiftKey ? 0.1 : 1);
+				this.el.sceneEl.emit('showHotkeyNotification', {
+					text: e.shiftKey ? '+0.1 Beat' : '+1 Beat',
+					icon: 'fas fa-step-forward'
+				});
 			}
 			if (e.keyCode === 188) {
 				// left
 				seekLeftBeats(e.shiftKey ? 0.1 : 1);
+				this.el.sceneEl.emit('showHotkeyNotification', {
+					text: e.shiftKey ? '-0.1 Beat' : '-1 Beat',
+					icon: 'fas fa-step-backward'
+				});
 			}
 
 			if (!e.ctrlKey && (e.keyCode === 189 || e.keyCode === 173)) {
@@ -1032,15 +1053,49 @@ AFRAME.registerComponent('song-controls', {
 				const currentSpeed = parseFloat(this.song.speed);
 				const change = e.shiftKey ? 0.01 : 0.1;
 
-				speedHandler(Math.max(currentSpeed - change, 0));
+				const newSpeed = Math.max(currentSpeed - change, 0);
+				speedHandler(newSpeed);
+				this.el.sceneEl.emit('showHotkeyNotification', {
+					text: `Speed: ${(newSpeed * 100).toFixed(0)}%`,
+					icon: 'fas fa-gauge-simple'
+				});
 			}
 			if (!e.ctrlKey && (e.keyCode === 187 || e.keyCode === 61)) {
 				// +
 				const currentSpeed = parseFloat(this.song.speed);
 				const change = e.shiftKey ? 0.01 : 0.1;
 
-				speedHandler(Math.min(currentSpeed + change, 2));
+				const newSpeed = Math.min(currentSpeed + change, 2);
+				speedHandler(newSpeed);
+				this.el.sceneEl.emit('showHotkeyNotification', {
+					text: `Speed: ${(newSpeed * 100).toFixed(0)}%`,
+					icon: 'fas fa-gauge-simple'
+				});
 			}
+
+			if (e.keyCode === 85) {
+				// u
+				this.settings.settings.autoSpeedControls = !this.settings.settings.autoSpeedControls;
+				document.getElementById('autoSpeedControls').checked = this.settings.settings.autoSpeedControls;
+				this.settings.sync();
+				this.el.sceneEl.emit('showHotkeyNotification', {
+					text: `Slow-mo on mistakes: ${this.settings.settings.autoSpeedControls ? 'On' : 'Off'}`,
+					icon: this.settings.settings.autoSpeedControls ? 'fas fa-robot' : 'fas fa-robot'
+				});
+			}
+
+			if (e.keyCode === 79) {
+				// o
+				this.settings.settings.loopReplays = !this.settings.settings.loopReplays;
+				document.getElementById('loopReplays').checked = this.settings.settings.loopReplays;
+				this.settings.sync();
+				this.el.sceneEl.emit('showHotkeyNotification', {
+					text: `Loop Replays: ${this.settings.settings.loopReplays ? 'On' : 'Off'}`,
+					icon: this.settings.settings.loopReplays ? 'fas fa-repeat' : 'fas fa-repeat'
+				});
+			}
+			
+			
 		});
 
 		if ('mediaSession' in navigator) {
@@ -1797,12 +1852,20 @@ AFRAME.registerComponent('song-controls', {
 				// up
 				volumeSlider.valueAsNumber += e.shiftKey ? 0.025 : 0.05;
 				masterVolumeHandler();
+				this.el.sceneEl.emit('showHotkeyNotification', {
+					text: `Volume: ${Math.round(volumeSlider.value * 100)}%`,
+					icon: 'fas fa-volume-up'
+				});
 			}
 
 			if (e.keyCode === 40) {
 				// down
 				volumeSlider.value -= e.shiftKey ? 0.025 : 0.05;
 				masterVolumeHandler();
+				this.el.sceneEl.emit('showHotkeyNotification', {
+					text: `Volume: ${Math.round(volumeSlider.value * 100)}%`,
+					icon: 'fas fa-volume-down'
+				});
 			}
 
 			if (e.keyCode === 77 && !e.ctrlKey) {
@@ -1813,11 +1876,19 @@ AFRAME.registerComponent('song-controls', {
 					volumeSlider.valueAsNumber = 0;
 					hitsoundSlider.valueAsNumber = 0;
 					musicSlider.valueAsNumber = 0;
+					this.el.sceneEl.emit('showHotkeyNotification', {
+						text: 'Muted',
+						icon: 'fas fa-volume-mute'
+					});
 				} else if (this.lastVolume) {
 					volumeSlider.valueAsNumber = this.lastVolume;
 					hitsoundSlider.valueAsNumber = this.lastHitsoundVolume;
 					musicSlider.valueAsNumber = this.lastVolume;
 					this.lastVolume = null;
+					this.el.sceneEl.emit('showHotkeyNotification', {
+						text: 'Unmuted',
+						icon: 'fas fa-volume-up'
+					});
 				}
 				volumeHandler();
 			}
@@ -1827,8 +1898,16 @@ AFRAME.registerComponent('song-controls', {
 
 				if (!this.data.showControls) {
 					document.body.classList.add('showControls');
+					this.el.sceneEl.emit('showHotkeyNotification', {
+						text: 'Controls: Visible',
+						icon: 'fas fa-eye'
+					});
 				} else {
 					document.body.classList.remove('showControls');
+					this.el.sceneEl.emit('showHotkeyNotification', {
+						text: 'Controls: Hidden',
+						icon: 'fas fa-eye-slash'
+					});
 				}
 				this.data.showControls = !this.data.showControls;
 			}

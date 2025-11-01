@@ -531,8 +531,10 @@ AFRAME.registerComponent('beat-generator', {
 
 				if (note._cutDirection >= 1000 && note._cutDirection <= 1360) {
 					beatObj.rotationOffset = 1000 - note._cutDirection;
+					beatObj.cutDirection = 'down';
 				} else if (note._cutDirection >= 2000 && note._cutDirection <= 2360) {
 					beatObj.rotationOffset = 2000 - note._cutDirection;
+					beatObj.cutDirection = 'down';
 				}
 			}
 			beatObj.horizontalPosition = note._lineIndex;

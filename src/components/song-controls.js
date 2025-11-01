@@ -446,7 +446,7 @@ AFRAME.registerComponent('song-controls', {
 		let captureThis = this;
 		timeline.addEventListener('wheel', function (e) {
 			let currentTime = captureThis.song.getCurrentTime();
-			doSeek(null, currentTime - (e.deltaY / 356) * Math.max(captureThis.song.speed, 0.01));
+			doSeek(null, currentTime - (e.deltaY / (e.shiftKey ? 4000 : 356)) * Math.max(captureThis.song.speed, 0.01));
 			e.preventDefault();
 			e.stopPropagation();
 		});

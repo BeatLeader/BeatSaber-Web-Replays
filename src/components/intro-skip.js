@@ -44,6 +44,17 @@ AFRAME.registerComponent('intro-skip', {
 		document.addEventListener('keydown', e => {
 			if (e.keyCode === 73) {
 				// i
+				if (skipIntroButton.classList.contains('intro')) {
+					this.el.sceneEl.emit('showHotkeyNotification', {
+						text: 'Skip Intro',
+						icon: 'fas fa-forward-fast',
+					});
+				} else if (skipIntroButton.classList.contains('outro')) {
+					this.el.sceneEl.emit('showHotkeyNotification', {
+						text: 'Skip Outro',
+						icon: 'fas fa-forward-fast',
+					});
+				}
 				skipIntroHanler();
 			}
 		});

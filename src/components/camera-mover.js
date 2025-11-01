@@ -112,18 +112,34 @@ AFRAME.registerComponent('camera-mover', {
 			if (e.keyCode === 70 && e.shiftKey) {
 				// f + Shift
 				powHandler();
+				this.el.sceneEl.emit('showHotkeyNotification', {
+					text: this.pov ? 'POV Camera' : 'Free Camera',
+					icon: 'fas fa-video',
+				});
 			}
 			if (e.keyCode === 81 && e.shiftKey) {
 				// q + Shift
 				toLeftHandler();
+				this.el.sceneEl.emit('showHotkeyNotification', {
+					text: 'Camera: Left View',
+					icon: 'fas fa-arrow-left',
+				});
 			}
 			if (e.keyCode === 82 && e.shiftKey) {
 				// r + Shift
 				toCenterHandler();
+				this.el.sceneEl.emit('showHotkeyNotification', {
+					text: 'Camera: Center View',
+					icon: 'fas fa-arrow-up',
+				});
 			}
 			if (e.keyCode === 69 && e.shiftKey) {
 				// e + Shift
 				toRightHandler();
+				this.el.sceneEl.emit('showHotkeyNotification', {
+					text: 'Camera: Right View',
+					icon: 'fas fa-arrow-right',
+				});
 			}
 		});
 

@@ -35,7 +35,9 @@ AFRAME.registerComponent('hotkey-help', {
           { keys: ['←', 'J'], action: 'Skip backward (hold Shift for fast)' },
           { keys: ['→', 'L'], action: 'Skip forward (hold Shift for fast)' },
           { keys: [','], action: 'Previous beat (hold Shift for 0.1 beat)' },
-          { keys: ['.'], action: 'Next beat (hold Shift for 0.1 beat)' }
+          { keys: ['.'], action: 'Next beat (hold Shift for 0.1 beat)' },
+          { keys: ['I'], action: 'Skip intro / outro' },
+          { keys: ['Scroll'], action: 'Scroll on timeline to seek (hold Shift for fine adjust)' }
         ]
       },
       {
@@ -64,6 +66,16 @@ AFRAME.registerComponent('hotkey-help', {
           { keys: ['F'], action: 'Toggle fullscreen' },
           { keys: ['H'], action: 'Show / Hide controls' },
           { keys: ['F2'], action: 'Show this help guide' }
+        ]
+      },
+      {
+        title: 'Camera Controls',
+        icon: 'fas fa-video',
+        hotkeys: [
+          { keys: ['Shift', 'F'], action: 'Toggle POV / Free camera' },
+          { keys: ['Shift', 'Q'], action: 'Move camera to left view' },
+          { keys: ['Shift', 'R'], action: 'Move camera to center view' },
+          { keys: ['Shift', 'E'], action: 'Move camera to right view' }
         ]
       }
     ];

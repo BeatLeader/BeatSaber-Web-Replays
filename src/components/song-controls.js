@@ -1017,18 +1017,10 @@ AFRAME.registerComponent('song-controls', {
 			if (e.keyCode === 39 || e.keyCode == 76) {
 				// right
 				seekRight(e.shiftKey ? 2 : 0.2);
-				this.el.sceneEl.emit('showHotkeyNotification', {
-					text: e.shiftKey ? 'Skip Forward (Fast)' : 'Skip Forward',
-					icon: 'fas fa-forward'
-				});
 			}
 			if (e.keyCode === 37 || e.keyCode == 74) {
 				// left
 				seekLeft(e.shiftKey ? 2 : 0.2);
-				this.el.sceneEl.emit('showHotkeyNotification', {
-					text: e.shiftKey ? 'Skip Backward (Fast)' : 'Skip Backward',
-					icon: 'fas fa-backward'
-				});
 			}
 
 			if (e.keyCode === 190) {

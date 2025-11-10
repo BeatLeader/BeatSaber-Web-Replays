@@ -113,6 +113,7 @@ AFRAME.registerComponent('wall', {
 
 		material.uniforms['highlight'].value = this.hit && this.settings.settings.highlightErrors;
 		material.uniforms['wallColor'].value = new THREE.Color(data.color ? data.color : this.settings.settings.wallColor);
+		material.uniforms['zeroDuration'].value = data.durationSeconds === 0;
 
 		mesh.frustumCulled = false;
 

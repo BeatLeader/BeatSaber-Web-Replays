@@ -56,6 +56,7 @@ function upgrade(map) {
 			var resultWall = {
 				_time: zeroIfUndefined(wall['b']),
 				_lineIndex: zeroIfUndefined(wallData['x']),
+				_lineLayer: zeroIfUndefined(wallData['y']),
 				_type: zeroIfUndefined(wallData['y']) / 2,
 				_duration: zeroIfUndefined(wallData['d']),
 				_width: zeroIfUndefined(wallData['w']),
@@ -760,7 +761,7 @@ function calculateSongTimes(map) {
 		if (!collection) return;
 		collection.forEach(o => {
 			o._songTime = map.timeConvertor(o._time);
-			if (o._duration) {
+			if (o._duration !== undefined) {
 				o._songDuration = map.timeConvertor(o._time + o._duration) - o._songTime;
 			}
 		});

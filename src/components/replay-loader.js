@@ -6,11 +6,26 @@ const DECODER_LINK = 'https://ssdecode.azurewebsites.net';
 
 import {NoteCutDirection, difficultyFromName, clamp, ScoringType, getRandomColor} from '../utils';
 
+function getUrlParameter(name, url = window.location.href) {
+	name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+	const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+	const results = regex.exec(url);
+	if (!results) {
+		return '';
+	}
+	const value = results[1];
+	if (value.includes('cdn.discordapp')) {
+		const cdnAndOthers = url.substring(results.index + 2 + name.length);
+		return `${value}&is=${getUrlParameter('is', cdnAndOthers)}&hm=${getUrlParameter('hm', cdnAndOthers)}`;
+	}
+	return decodeURIComponent(value.replace(/\+/g, ' '));
+}
+
 AFRAME.registerComponent('replay-loader', {
 	schema: {
 		playerID: {default: AFRAME.utils.getUrlParameter('playerID')},
 		players: {default: AFRAME.utils.getUrlParameter('players')},
-		links: {default: AFRAME.utils.getUrlParameter('links')},
+		links: {default: getUrlParameter('links')},
 		hash: {default: AFRAME.utils.getUrlParameter('hash')},
 		context: {default: AFRAME.utils.getUrlParameter('context') || 'general'},
 		isSafari: {default: false},
@@ -131,6 +146,7 @@ AFRAME.registerComponent('replay-loader', {
 					} else {
 						replay.index = index;
 						replay.color = getRandomColor();
+						this.userIds[index] = replay.info.playerID;
 						this.fetchPlayer(replay.info.playerID, index);
 						replay.info.playerID = replay.info.playerID + index;
 						this.replays[index] = replay;

@@ -1,7 +1,7 @@
 function checkBSOR(file, isLink, completion) {
 	if (isLink) {
 		if (file.split('.').pop() == 'bsor' || file.split('.').pop() == 'bsortemp' || file.split('?')[0].split('.').pop() == 'bsor') {
-			file = file.replace('https://cdn.discordapp.com/', '/cors/discord-cdn/');
+			file = file.replace('https://cdn.discordapp.com/attachments/', 'https://discord.beatleader.pro/');
 			var xhr = new XMLHttpRequest();
 			xhr.open('GET', file, true);
 			xhr.responseType = 'blob';

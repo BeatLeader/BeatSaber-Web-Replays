@@ -55,6 +55,21 @@ if (isSafari) {
 let beatmaps;
 let difficulties;
 
+function getUrlParameter(name, url = window.location.href) {
+	name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+	const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+	const results = regex.exec(url);
+	if (!results) {
+		return '';
+	}
+	const value = results[1];
+	if (value.includes('cdn.discordapp')) {
+		const cdnAndOthers = url.substring(results.index + 2 + name.length);
+		return `${value}&is=${getUrlParameter('is', cdnAndOthers)}&hm=${getUrlParameter('hm', cdnAndOthers)}`;
+	}
+	return decodeURIComponent(value.replace(/\+/g, ' '));
+}
+
 /**
  * State handler.
  *
@@ -105,8 +120,8 @@ AFRAME.registerState({
 		replaysCount: (() => {
 			if (AFRAME.utils.getUrlParameter('players').length > 0) {
 				return AFRAME.utils.getUrlParameter('players').split(',').length;
-			} else if (AFRAME.utils.getUrlParameter('links').length > 0) {
-				return AFRAME.utils.getUrlParameter('links').split(',').length;
+			} else if (getUrlParameter('links').length > 0) {
+				return getUrlParameter('links').split(',').length;
 			} else {
 				return 1;
 			}

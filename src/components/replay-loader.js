@@ -256,7 +256,7 @@ AFRAME.registerComponent('replay-loader', {
 
 				if (replaynote.index == undefined) {
 					var diff = replaynote.spawnTime - mapnote._songTime;
-					if (diff > 1) { 
+					if (diff > 1) {
 						if (indexToBeat !== null && m > indexToBeat) {
 							return;
 						}
@@ -283,16 +283,12 @@ AFRAME.registerComponent('replay-loader', {
 		const replay = this.replay;
 		const map = this.challenge.beatmaps[this.challenge.mode][this.challenge.difficulty];
 
-		const firstReplayNote = replay.notes[0];
-		const firstReplayNoteTime = firstReplayNote
-			? Math.min(floorToTwo(firstReplayNote.spawnTime), floorToTwo(firstReplayNote.eventTime))
-			: 0;
 		var mapnotes = []
 			.concat(map._notes, map._chains)
 			.sort((a, b) => {
 				return a._time - b._time;
 			})
-			.filter(a => (a._type == 0 || a._type == 1) && a._songTime >= firstReplayNoteTime);
+			.filter(a => a._type == 0 || a._type == 1);
 		this.applyModifiers(map, replay);
 
 		var noteStructs = new Array();
@@ -370,7 +366,7 @@ AFRAME.registerComponent('replay-loader', {
 					.sort((a, b) => {
 						return a._time - b._time;
 					})
-					.filter(a => (a._type == 0 || a._type == 1) && a._songTime >= firstReplayNoteTime);
+					.filter(a => a._type == 0 || a._type == 1);
 				for (let i = 0; i < noteStructs.length; i++) {
 					const element = noteStructs[i];
 					element.index = undefined;

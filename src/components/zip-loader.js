@@ -138,7 +138,7 @@ AFRAME.registerComponent('zip-loader', {
 					var mapJson;
 					try {
 						var fileData = new TextDecoder().decode(fileArray);
-						mapJson = JSON.parse(fileData);
+						mapJson = JSON.parse(fileData.replaceAll('NaN', '0'));
 					} catch (e) {
 						var fileData = new TextDecoder('UTF-16LE').decode(fileArray);
 						mapJson = JSON.parse(fileData);

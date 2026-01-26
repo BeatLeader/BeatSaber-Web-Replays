@@ -469,9 +469,9 @@ AFRAME.registerComponent('replay-loader', {
 			let note = allStructs[i];
 
 			var scoreForMaxScore = 115;
-			if (note.scoringType == ScoringType.BurstSliderHead) {
+			if (note.scoringType == ScoringType.ChainHead) {
 				scoreForMaxScore = 85;
-			} else if (note.scoringType == ScoringType.BurstSliderElement || note.scoringType == ScoringType.BurstSliderElementSliderHead) {
+			} else if (note.scoringType == ScoringType.ChainLink || note.scoringType == ScoringType.ChainLinkArcHead) {
 				scoreForMaxScore = 20;
 			}
 
@@ -493,7 +493,7 @@ AFRAME.registerComponent('replay-loader', {
 				misses++;
 				switch (note.score) {
 					case -2: // badcut
-						if (note.scoringType == ScoringType.BurstSliderElement) {
+						if (note.scoringType == ScoringType.ChainLink) {
 							energy -= 0.025;
 						} else {
 							energy -= 0.1;
@@ -501,7 +501,7 @@ AFRAME.registerComponent('replay-loader', {
 						break;
 					case -3: // miss
 					case -4: // bomb
-						if (note.scoringType == ScoringType.BurstSliderElement) {
+						if (note.scoringType == ScoringType.ChainLink) {
 							energy -= 0.03;
 						} else {
 							energy -= 0.15;
@@ -517,7 +517,7 @@ AFRAME.registerComponent('replay-loader', {
 				fcScore += maxCounter.Multiplier * note.score;
 
 				if (energy > 0 || (!replay.info.modifiers.includes('NF') && !replay.info.failTime)) {
-					if (note.scoringType == ScoringType.BurstSliderElement) {
+					if (note.scoringType == ScoringType.ChainLink) {
 						energy += 1 / 500;
 					} else {
 						energy += 0.01;
@@ -528,7 +528,7 @@ AFRAME.registerComponent('replay-loader', {
 				}
 				combo++;
 
-				if (note.scoringType != ScoringType.BurstSliderElement) {
+				if (note.scoringType != ScoringType.ChainLink) {
 					if (note.score == 115) {
 						streak++;
 						if (streakId == -1) {
@@ -622,33 +622,39 @@ AFRAME.registerComponent('replay-loader', {
 
 			var altscoringType = scoringType;
 			var legacyScoringType = scoringType;
-			if (mapnote._scoringType == ScoringType.BurstSliderHead) {
-				altscoringType = ScoringType.SliderHead + 2;
-			} else if (mapnote._scoringType == ScoringType.SliderHead) {
-				altscoringType = ScoringType.BurstSliderHead + 2;
-			} else if (mapnote._scoringType == ScoringType.BurstSliderHeadSliderTail) {
-				altscoringType = ScoringType.SliderTail + 2;
-			} else if (mapnote._scoringType == ScoringType.BurstSliderElementSliderHead) {
-				altscoringType = ScoringType.BurstSliderElement + 2;
+			if (mapnote._scoringType == ScoringType.ChainHead) {
+				altscoringType = ScoringType.ArcHead + 2;
+			} else if (mapnote._scoringType == ScoringType.ArcHead) {
+				altscoringType = ScoringType.ChainHead + 2;
+			} else if (mapnote._scoringType == ScoringType.ChainHeadArcTail) {
+				altscoringType = ScoringType.ArcTail + 2;
+			} else if (mapnote._scoringType == ScoringType.ChainHeadArcHead) {
+				altscoringType = ScoringType.ArcHead + 2;
+			} else if (mapnote._scoringType == ScoringType.ChainHeadArcHeadArcTail) {
+				altscoringType = ScoringType.ArcTail + 2;
+			} else if (mapnote._scoringType == ScoringType.ChainLinkArcHead) {
+				altscoringType = ScoringType.ChainLink + 2;
 				if (gameVersion >= 29 && mapnote._sliceIndex == mapnote._sliceCount - 1) {
 					id = mapnote._tailLineIndex * 1000 + mapnote._tailLineLayer * 100 + colorType * 10 + cutDirection;
 				}
-			} else if (mapnote._scoringType == ScoringType.SliderHeadSliderTail) {
-				altscoringType = ScoringType.SliderHead + 2;
-			} else if (
-				gameVersion >= 29 &&
-				mapnote._scoringType == ScoringType.BurstSliderElement &&
-				mapnote._sliceIndex == mapnote._sliceCount - 1
-			) {
+			} else if (mapnote._scoringType == ScoringType.ArcHeadArcTail) {
+				altscoringType = ScoringType.ArcHead + 2;
+			} else if (gameVersion >= 29 && mapnote._scoringType == ScoringType.ChainLink && mapnote._sliceIndex == mapnote._sliceCount - 1) {
 				id = mapnote._tailLineIndex * 1000 + mapnote._tailLineLayer * 100 + colorType * 10 + cutDirection;
 			}
 
-			if (mapnote._scoringType == ScoringType.SliderHeadSliderTail) {
-				legacyScoringType = ScoringType.SliderTail + 2;
-			} else if (mapnote._scoringType == ScoringType.BurstSliderHeadSliderTail) {
-				legacyScoringType = ScoringType.BurstSliderHead + 2;
-			} else if (mapnote._scoringType == ScoringType.BurstSliderElementSliderHead) {
-				legacyScoringType = ScoringType.BurstSliderElement + 2;
+			if (mapnote._scoringType == ScoringType.ArcTail) {
+				legacyScoringType = ScoringType.Normal + 2;
+			} else if (mapnote._scoringType == ScoringType.ArcHeadArcTail) {
+				legacyScoringType = ScoringType.ArcTail + 2;
+			} else if (mapnote._scoringType == ScoringType.ChainHeadArcTail) {
+				legacyScoringType = ScoringType.ChainHead + 2;
+			} else if (mapnote._scoringType == ScoringType.ChainLinkArcHead) {
+				legacyScoringType = ScoringType.ChainLink + 2;
+			} else if (mapnote._scoringType == ScoringType.ChainHeadArcHead) {
+				legacyScoringType = ScoringType.ChainHead + 2;
+			} else if (mapnote._scoringType == ScoringType.ChainHeadArcHeadArcTail) {
+				legacyScoringType = ScoringType.ChainHeadArcTail + 2;
 			}
 
 			mapnote._idWithAlternativeScoring = id + altscoringType * 10000;
@@ -659,25 +665,21 @@ AFRAME.registerComponent('replay-loader', {
 
 function CutScoresForNote(cut, scoringType) {
 	var beforeCutRawScore = 0;
-	if (scoringType != ScoringType.BurstSliderElement && scoringType != ScoringType.BurstSliderElementSliderHead) {
-		if (
-			scoringType == ScoringType.SliderTail ||
-			scoringType == ScoringType.SliderHeadSliderTail ||
-			scoringType == ScoringType.BurstSliderHeadSliderTail
-		) {
+	if (scoringType != ScoringType.ChainLink && scoringType != ScoringType.ChainLinkArcHead) {
+		if (scoringType == ScoringType.ArcTail || scoringType == ScoringType.ArcHeadArcTail || scoringType == ScoringType.ChainHeadArcTail) {
 			beforeCutRawScore = 70;
 		} else {
 			beforeCutRawScore = clamp(Math.round(70 * cut.beforeCutRating), 0, 70);
 		}
 	}
 	var afterCutRawScore = 0;
-	if (scoringType != ScoringType.BurstSliderElement && scoringType != ScoringType.BurstSliderElementSliderHead) {
-		if (scoringType == ScoringType.BurstSliderHead) {
+	if (scoringType != ScoringType.ChainLink && scoringType != ScoringType.ChainLinkArcHead) {
+		if (scoringType == ScoringType.ChainHead) {
 			afterCutRawScore = 0;
 		} else if (
-			scoringType == ScoringType.SliderHead ||
-			scoringType == ScoringType.SliderHeadSliderTail ||
-			scoringType == ScoringType.BurstSliderHeadSliderTail
+			scoringType == ScoringType.ArcHead ||
+			scoringType == ScoringType.ArcHeadArcTail ||
+			scoringType == ScoringType.ChainHeadArcTail
 		) {
 			afterCutRawScore = 30;
 		} else {
@@ -685,7 +687,7 @@ function CutScoresForNote(cut, scoringType) {
 		}
 	}
 	var cutDistanceRawScore = 0;
-	if (scoringType == ScoringType.BurstSliderElement || scoringType == ScoringType.BurstSliderElementSliderHead) {
+	if (scoringType == ScoringType.ChainLink || scoringType == ScoringType.ChainLinkArcHead) {
 		cutDistanceRawScore = 20;
 	} else {
 		var num = 1 - clamp(cut.cutDistanceToCenter / 0.3, 0, 1);

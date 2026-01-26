@@ -92,13 +92,15 @@ const ScoringType = {
 	Ignore: -1,
 	NoScore: 0,
 	Normal: 1,
-	SliderHead: 2,
-	SliderTail: 3,
-	BurstSliderHead: 4,
-	BurstSliderElement: 5,
-	SliderHeadSliderTail: 6,
-	BurstSliderHeadSliderTail: 7,
-	BurstSliderElementSliderHead: 8,
+	ArcHead: 2,
+	ArcTail: 3,
+	ChainHead: 4,
+	ChainLink: 5,
+	ArcHeadArcTail: 6,
+	ChainHeadArcTail: 7,
+	ChainLinkArcHead: 8,
+	ChainHeadArcHead: 9,
+	ChainHeadArcHeadArcTail: 10,
 };
 
 const EaseType = {

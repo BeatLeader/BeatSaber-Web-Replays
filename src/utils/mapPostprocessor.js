@@ -595,12 +595,12 @@ function addScoringTypeAndChains(map) {
 		var head = mapnotes.find(n => compareSlider(n, slider));
 		if (head) {
 			if (head._scoringType == ScoringType.Normal) {
-				head._scoringType = ScoringType.SliderHead;
-			} else if (head._scoringType == ScoringType.SliderTail) {
-				head._scoringType = ScoringType.SliderHeadSliderTail;
+				head._scoringType = ScoringType.ArcHead;
+			} else if (head._scoringType == ScoringType.ArcTail) {
+				head._scoringType = ScoringType.ArcHeadArcTail;
 			}
 		}
-		var tail = mapnotes.find(n => compareSlider(n, slider, true));
+		var tail = slider._tailTime != slider._time ? mapnotes.find(n => compareSlider(n, slider, true)) : null;
 		if (head) {
 			head.tail = tail;
 		}
@@ -608,9 +608,9 @@ function addScoringTypeAndChains(map) {
 		slider.tail = tail;
 		if (tail) {
 			if (tail._scoringType == ScoringType.Normal) {
-				tail._scoringType = ScoringType.SliderTail;
-			} else if (tail._scoringType == ScoringType.SliderHead) {
-				tail._scoringType = ScoringType.SliderHeadSliderTail;
+				tail._scoringType = ScoringType.ArcTail;
+			} else if (tail._scoringType == ScoringType.ArcHead) {
+				tail._scoringType = ScoringType.ArcHeadArcTail;
 			}
 		}
 	});
@@ -621,46 +621,46 @@ function addScoringTypeAndChains(map) {
 		var head = mapnotes.find(n => compareSlider(n, slider));
 		if (head) {
 			if (head._scoringType == ScoringType.Normal) {
-				head._scoringType = ScoringType.BurstSliderHead;
-			} else if (head._scoringType == ScoringType.SliderTail) {
-				head._scoringType = ScoringType.BurstSliderHeadSliderTail;
-			}
-			if (head._scoringType == ScoringType.SliderHead && head.tail) {
-				let nextHead = map._burstSliders.find(n => compareSlider(n, head.tail));
-				if (nextHead) {
-					head._scoringType = ScoringType.BurstSliderHead;
-				}
+				head._scoringType = ScoringType.ChainHead;
+			} else if (head._scoringType == ScoringType.ArcTail) {
+				head._scoringType = ScoringType.ChainHeadArcTail;
+			} else if (head._scoringType == ScoringType.ArcHead) {
+				head._scoringType = ScoringType.ChainHeadArcHead;
+			} else if (head._scoringType == ScoringType.ArcHeadArcTail) {
+				head._scoringType = ScoringType.ChainHeadArcHeadArcTail;
 			}
 			head.sliderhead = slider;
-		}
-
-		var tail = mapnotes.find(n => compareSlider(n, slider, true));
-		if (tail) {
-			if (tail._scoringType == ScoringType.Normal) {
-				tail._scoringType = ScoringType.SliderTail;
-			} else if (tail._scoringType == ScoringType.SliderHead) {
-				tail._scoringType = ScoringType.SliderHeadSliderTail;
-			} else if (tail._scoringType == ScoringType.BurstSliderHead) {
-				tail._scoringType = ScoringType.BurstSliderHeadSliderTail;
-			}
 		}
 
 		for (var i = 1; i < slider._sliceCount; ++i) {
 			let chain = clone(slider);
 			chain._headCutDirection = slider._cutDirection;
 			chain._cutDirection = ANY_CUT_DIRECTION;
-			chain._scoringType = ScoringType.BurstSliderElement;
+			chain._scoringType = ScoringType.ChainLink;
 			chain._sliceIndex = i;
 
 			chain._time = LerpUnclamped(chain._time, chain._tailTime, chain._sliceIndex / (slider._sliceCount - 1));
 
 			const arcSlider = map._sliders.find(n => compareSlider(chain, n));
 			if (arcSlider) {
-				chain._scoringType = ScoringType.BurstSliderElementSliderHead;
+				chain._scoringType = ScoringType.ChainLinkArcHead;
 			}
 
 			chains.push(chain);
 		}
+	});
+
+	map._burstSliders.forEach(slider => {
+		var tail = mapnotes.find(n => compareSlider(n, slider, true));
+        if (tail) {
+			if (tail._scoringType == ScoringType.Normal) {
+				tail._scoringType = ScoringType.ArcTail;
+			} else if (tail._scoringType == ScoringType.ArcHead) {
+                tail._scoringType = ScoringType.ArcHeadArcTail;
+            } else if (tail._scoringType == ScoringType.ChainHead) {
+                tail._scoringType = ScoringType.ChainHeadArcTail;
+            }
+        }
 	});
 
 	map._chains = chains;

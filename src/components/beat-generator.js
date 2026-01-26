@@ -336,6 +336,9 @@ AFRAME.registerComponent('beat-generator', {
 
 		const sliders = this.beatData._sliders;
 		for (let i = 0; i < sliders.length; ++i) {
+			if (sliders[i]._time == sliders[i]._tailTime) {
+				continue;
+			}
 			let noteTime = sliders[i]._songTime;
 			if (noteTime > prevBeatsTime && noteTime <= beatsTime) {
 				sliders[i].time = noteTime;
@@ -435,7 +438,7 @@ AFRAME.registerComponent('beat-generator', {
 		let color;
 		let type;
 
-		if (note.sliderhead) {
+		if (note.sliderhead && note._cutDirection !== 8) {
 			type = 'sliderhead';
 		} else {
 			type = note._cutDirection === 8 ? 'dot' : 'arrow';

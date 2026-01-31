@@ -26,6 +26,8 @@ AFRAME.registerShader('wallShader', {
     uniform bool highlight;
     uniform float thickness;
     uniform bool zeroDuration;
+
+    #define WALL_HL_COLOR vec3(${WALL_HL_COLOR.r}, ${WALL_HL_COLOR.g}, ${WALL_HL_COLOR.b})
    	
     float edgeFactor(vec2 p){
     	vec2 grid = abs(fract(p - 0.5) - 0.5) / fwidth(p);
@@ -39,6 +41,10 @@ AFRAME.registerShader('wallShader', {
         gl_FragColor = mix(vec4(wallColor, 1.0), vec4(1.0, 1.0, 1.0, 1.0), 1.0 - sqrt(a / thickness));
       } else {
         gl_FragColor = vec4(wallColor * 0.4, 0.3);
+      }
+
+      if (highlight) {
+        gl_FragColor = mix(gl_FragColor, vec4(WALL_HL_COLOR, 1.0), 0.4);
       }
     }
 `,

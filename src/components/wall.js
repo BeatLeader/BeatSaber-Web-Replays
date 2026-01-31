@@ -71,7 +71,7 @@ AFRAME.registerComponent('wall', {
 			newPosition = movementData.halfJumpPosition + movementData.warmupPosition + movementData.warmupSpeed * -timeOffset;
 		}
 
-		newPosition += this.headset.object3D.position.z - SWORD_OFFSET;
+		newPosition += this.headset.object3D.position.z;
 
 		var direction = this.startPosition.clone().sub(this.origin).normalize();
 		this.el.object3D.position.copy(direction.multiplyScalar(-newPosition).add(this.origin));
@@ -100,7 +100,7 @@ AFRAME.registerComponent('wall', {
 		if (walls) {
 			const durationSeconds = this.data.durationSeconds;
 			for (var i = 0; i < walls.length; i++) {
-				if (walls[i].time < data.time + durationSeconds && walls[i].time > data.time) {
+				if (walls[i].time < data.time + durationSeconds + 0.1 && walls[i].time > data.time - 0.1) {
 					this.hit = true;
 					this.hitWall = walls[i];
 					break;
@@ -120,7 +120,7 @@ AFRAME.registerComponent('wall', {
 		var origin;
 		var height = data.height;
 		if (data.isV3) {
-			let y = getVerticalPosition(data.verticalPosition) + RAISE_Y_OFFSET;
+			let y = 0.1 + data.verticalPosition * _noteLinesDistance;
 			origin = new THREE.Vector3(getHorizontalWallPosition(data.horizontalPosition), y, -SWORD_OFFSET);
 
 			if (height < 0) {

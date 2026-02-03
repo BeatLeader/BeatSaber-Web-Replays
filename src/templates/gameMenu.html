@@ -15,7 +15,7 @@
 
 <!-- Titles. -->
 <a-entity id="inGameMenuTitles" render-order="hud" position="0 3 -2.3">
-	<a-entity mixin="gameMenuButtonText" text="value: PAUSED; color: #FAFAFA; width: 4" bind__visible="isPaused && !isFinished"></a-entity>
+	<a-entity mixin="gameMenuButtonText" text="value: PAUSED; color: #FAFAFA; width: 4" bind__visible="isPaused && !isFinished && !(!challenge.isLoading && !replay.isLoading && !isPlaying && (!hasReceivedUserGesture || localReplay) && !isSongBufferProcessing && !challenge.hasLoadError && !replay.hasError)"></a-entity>
 	<a-entity mixin="gameMenuButtonText" text="value: THE END; color: #FAFAFA; width: 4" bind__visible="isFinished"></a-entity>
 </a-entity>
 

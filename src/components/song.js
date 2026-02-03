@@ -42,7 +42,7 @@ AFRAME.registerComponent('song', {
 		analyserEl: {type: 'selector', default: '#audioAnalyser'},
 		difficulty: {default: ''},
 		isBeatsPreloaded: {default: false},
-		isPaused: {default: queryParamTime != 0},
+		isPaused: {default: queryParamTime !== undefined},
 		isPlaying: {default: false},
 		isFinished: {default: false},
 		pitchCompensation: {default: true},
@@ -79,7 +79,7 @@ AFRAME.registerComponent('song', {
 			this.hitSound.suspendContext();
 			this.hitSound.resumeContext();
 
-			if (this.data.isPaused && this.data.isBeatsPreloaded && this.source) {
+			if (this.data.isPaused && this.source && this.songStartTime === undefined) {
 				this.startAudio(queryParamTime);
 			}
 
@@ -401,7 +401,7 @@ AFRAME.registerComponent('song', {
 	},
 
 	getCurrentTime: function () {
-		if (this.songStartTime === undefined) return queryParamTime;
+		if (this.songStartTime === undefined) return queryParamTime !== undefined ? queryParamTime : 0;
 
 		let lastCurrentTime = this.lastCurrentTime;
 		let currentTime = this.context.currentTime;

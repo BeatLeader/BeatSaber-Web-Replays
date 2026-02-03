@@ -101,10 +101,10 @@ AFRAME.registerState({
 		},
 		controllerType: '',
 		damage: 0,
-		hasReceivedUserGesture: queryParamTime != 0,
+		hasReceivedUserGesture: queryParamTime !== undefined,
 		inVR: false,
 		pov: false,
-		isPaused: queryParamTime != 0, // Playing, but paused.
+		isPaused: true, // Playing, but paused.
 		isPlaying: false, // Actively playing.
 		isFinished: false,
 		isSafari: isSafari,

@@ -1528,7 +1528,11 @@ AFRAME.registerComponent('song-controls', {
 			const clickedMarker = markers.find(marker => Math.abs(marker.x - x) < 7.5 && Math.abs(marker.currentY - y) < 7.5);
 
 			if (clickedMarker) {
-				this.seek(clickedMarker.spawnTime ? clickedMarker.spawnTime - 0.3 : clickedMarker.time - 0.3);
+				if (clickedMarker.spawnTime) {
+					this.seek(clickedMarker.spawnTime >= 0.3 ? clickedMarker.spawnTime - 0.3 : 0);
+				} else {
+					this.seek(clickedMarker.time >= 0.3 ? clickedMarker.time - 0.3 : 0);
+				}
 			}
 		};
 

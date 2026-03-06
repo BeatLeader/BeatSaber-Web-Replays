@@ -231,7 +231,7 @@ AFRAME.registerState({
 		challengeloaderror: (state, payload) => {
 			state.challenge.hasLoadError = true;
 			state.challenge.isLoading = false;
-			state.challenge.loadErrorText = `Map was not found. Drop or click to select zip locally`;
+			state.challenge.loadErrorText = payload && payload.text ? payload.text : `Map was not found. Drop or click to select zip locally`;
 		},
 
 		controllerconnected: (state, payload) => {

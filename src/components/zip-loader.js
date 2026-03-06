@@ -4,6 +4,11 @@ import JSZip from 'jszip';
 import {postprocess, processNoodle} from '../utils/mapPostprocessor';
 
 const chiralityModes = ['VerticalStandard', 'HorizontalStandard', 'InverseStandard', 'InvertedStandard'];
+const CUSTOM_LEVEL_PREFIX = 'custom_level_';
+const INFO_DAT_FILE_NAME = 'info.dat';
+const LOCAL_HASH_CACHE_DB_NAME = 'beatleader-web-replays-local-map-cache';
+const LOCAL_HASH_CACHE_DB_VERSION = 1;
+const LOCAL_HASH_CACHE_STORE_NAME = 'hashCache';
 
 AFRAME.registerComponent('zip-loader', {
 	schema: {
@@ -17,6 +22,14 @@ AFRAME.registerComponent('zip-loader', {
 	init: function () {
 		this.fetchedZip = '';
 		this.fetched = false;
+		this.localHashCache = {};
+		this.lastLocalLookupAttemptHash = '';
+		this.currentCustomLevelsRootName = '';
+		this.persistentFolderHashCache = {};
+		this.persistentHashFolderCache = {};
+		this.persistentHashCacheKey = '';
+		this.persistentHashCacheLoaded = false;
+		this.persistentHashCacheDirty = false;
 
 		let fetchCallback = e => {
 			if (!this.fetched) {
@@ -27,7 +40,7 @@ AFRAME.registerComponent('zip-loader', {
 				if (this.data.mapLink) {
 					this.fetchZip(this.data.mapLink.replace('https://cdn.discordapp.com/attachments/', 'https://discord.beatleader.pro/'));
 				} else if (e.detail.hash.length >= 40) {
-					this.fetchData(e.detail.hash.replace('custom_level_', '').substring(0, 40).toLowerCase(), true);
+					this.fetchData(e.detail.hash.replace(CUSTOM_LEVEL_PREFIX, '').substring(0, 40).toLowerCase(), true);
 				} else {
 					this.el.sceneEl.emit('songFetched', {leaderboardId: this.leaderboardId, metadata: e.detail.metadata});
 					this.fetchZip(`https://cdn.songs.beatleader.xyz/${e.detail.hash}.zip`);
@@ -38,6 +51,7 @@ AFRAME.registerComponent('zip-loader', {
 		this.el.sceneEl.addEventListener('replayloadstart', () => {
 			this.fetchedZip = '';
 			this.fetched = false;
+			this.lastLocalLookupAttemptHash = '';
 		});
 
 		if (!this.data.id && !this.data.hash) {
@@ -294,7 +308,358 @@ AFRAME.registerComponent('zip-loader', {
 		}
 	},
 
-	postchallengeloaderror: function (hash) {
+	tryLoadFromCustomLevels: async function (hash, options = {}) {
+		const requestPermission = options.requestPermission !== undefined ? options.requestPermission : true;
+		const targetHash = normalizeReplayHash(hash);
+		if (!targetHash) {
+			return {loaded: false, attempted: false};
+		}
+
+		const settings = this.el.sceneEl.components.settings;
+		if (!settings || !settings.supportsCustomLevelsLookup || !settings.supportsCustomLevelsLookup()) {
+			return {loaded: false, attempted: false};
+		}
+
+		const rootDirectoryHandle = await settings.getCustomLevelsDirectoryHandle(requestPermission);
+		if (!rootDirectoryHandle) {
+			return {loaded: false, attempted: false};
+		}
+
+		if (!requestPermission) {
+			let permission = 'prompt';
+			try {
+				permission = await rootDirectoryHandle.queryPermission({mode: 'read'});
+			} catch (error) {
+				return {loaded: false, attempted: false};
+			}
+			if (permission !== 'granted') {
+				return {loaded: false, attempted: false};
+			}
+		}
+
+		if (this.currentCustomLevelsRootName !== rootDirectoryHandle.name) {
+			this.localHashCache = {};
+			this.currentCustomLevelsRootName = rootDirectoryHandle.name;
+		}
+
+		try {
+			const files = await this.findMapInCustomLevels(rootDirectoryHandle, targetHash);
+			if (!files) {
+				return {loaded: false, attempted: true};
+			}
+
+			this.fetchedZip = this.data.id;
+			this.el.emit('challengeloadstart', this.data.id, false);
+			this.fetchedZipUrl = `local-customlevels://${rootDirectoryHandle.name}/${targetHash}`;
+			this.processInfo(files);
+			return {loaded: true, attempted: true};
+		} catch (error) {
+			console.warn('Error while scanning CustomLevels directory', error);
+			return {loaded: false, attempted: true};
+		}
+	},
+
+	getPersistentCacheKeyForRoot: function (rootDirectoryHandle) {
+		return rootDirectoryHandle && rootDirectoryHandle.name ? rootDirectoryHandle.name.toLowerCase() : '';
+	},
+
+	ensurePersistentLocalHashCache: async function (rootDirectoryHandle) {
+		const cacheKey = this.getPersistentCacheKeyForRoot(rootDirectoryHandle);
+		if (cacheKey && this.persistentHashCacheLoaded && this.persistentHashCacheKey === cacheKey) {
+			return;
+		}
+
+		this.persistentHashCacheKey = cacheKey;
+		this.persistentFolderHashCache = {};
+		this.persistentHashFolderCache = {};
+		this.persistentHashCacheLoaded = true;
+		this.persistentHashCacheDirty = false;
+
+		if (!cacheKey) {
+			return;
+		}
+
+		try {
+			const cached = await readPersistedLocalHashCache(cacheKey);
+			if (cached && cached.folderHashes && cached.hashFolders) {
+				this.persistentFolderHashCache = cached.folderHashes;
+				this.persistentHashFolderCache = cached.hashFolders;
+			}
+		} catch (error) {
+			console.warn('Could not load persisted local hash cache', error);
+		}
+	},
+
+	setPersistentFolderHash: function (folderName, hash) {
+		if (!folderName || !hash) {
+			return;
+		}
+
+		const normalizedFolder = folderName.toLowerCase();
+		const normalizedHash = hash.toLowerCase();
+		const previousHash = this.persistentFolderHashCache[normalizedFolder];
+		if (previousHash === normalizedHash) {
+			return;
+		}
+
+		if (previousHash && this.persistentHashFolderCache[previousHash] === normalizedFolder) {
+			delete this.persistentHashFolderCache[previousHash];
+		}
+
+		this.persistentFolderHashCache[normalizedFolder] = normalizedHash;
+		this.persistentHashFolderCache[normalizedHash] = normalizedFolder;
+		this.persistentHashCacheDirty = true;
+	},
+
+	pruneMissingFoldersFromPersistentCache: function (directoryByName) {
+		const cachedFolderNames = Object.keys(this.persistentFolderHashCache);
+		for (let index = 0; index < cachedFolderNames.length; index++) {
+			const folderName = cachedFolderNames[index];
+			if (!directoryByName[folderName]) {
+				const hash = this.persistentFolderHashCache[folderName];
+				delete this.persistentFolderHashCache[folderName];
+				if (hash && this.persistentHashFolderCache[hash] === folderName) {
+					delete this.persistentHashFolderCache[hash];
+				}
+				this.persistentHashCacheDirty = true;
+			}
+		}
+	},
+
+	flushPersistentLocalHashCache: async function () {
+		if (!this.persistentHashCacheDirty || !this.persistentHashCacheKey) {
+			return;
+		}
+
+		this.persistentHashCacheDirty = false;
+		try {
+			await writePersistedLocalHashCache(this.persistentHashCacheKey, {
+				folderHashes: this.persistentFolderHashCache,
+				hashFolders: this.persistentHashFolderCache,
+			});
+		} catch (error) {
+			console.warn('Could not persist local hash cache', error);
+		}
+	},
+
+	findMapInCustomLevels: async function (rootDirectoryHandle, targetHash) {
+		if (this.localHashCache[targetHash]) {
+			try {
+				const cachedDirectoryFiles = await this.collectDirectoryFiles(this.localHashCache[targetHash]);
+				return this.buildVirtualFiles(cachedDirectoryFiles);
+			} catch (error) {
+				delete this.localHashCache[targetHash];
+			}
+		}
+
+		await this.ensurePersistentLocalHashCache(rootDirectoryHandle);
+
+		const directoryHandles = [];
+		const directoryByName = {};
+		const directoriesIterator = rootDirectoryHandle.entries();
+		while (true) {
+			const step = await directoriesIterator.next();
+			if (step.done) {
+				break;
+			}
+
+			const handle = step.value[1];
+			if (handle.kind === 'directory') {
+				directoryHandles.push(handle);
+				directoryByName[handle.name.toLowerCase()] = handle;
+			}
+		}
+
+		this.pruneMissingFoldersFromPersistentCache(directoryByName);
+
+		const cachedFolderForHash = this.persistentHashFolderCache[targetHash];
+		if (cachedFolderForHash && directoryByName[cachedFolderForHash]) {
+			const cachedHandle = directoryByName[cachedFolderForHash];
+			const cachedDirectoryFiles = await this.collectDirectoryFiles(cachedHandle);
+			this.localHashCache[targetHash] = cachedHandle;
+			await this.flushPersistentLocalHashCache();
+			return this.buildVirtualFiles(cachedDirectoryFiles);
+		}
+
+		const prioritizedDirectories = [];
+		const remainingDirectories = [];
+		for (let index = 0; index < directoryHandles.length; index++) {
+			const directoryHandle = directoryHandles[index];
+			const directoryName = directoryHandle.name.toLowerCase();
+			if (directoryName.includes(targetHash) || directoryName.includes(CUSTOM_LEVEL_PREFIX + targetHash)) {
+				prioritizedDirectories.push(directoryHandle);
+			} else {
+				remainingDirectories.push(directoryHandle);
+			}
+		}
+
+		const orderedDirectories = prioritizedDirectories.concat(remainingDirectories);
+		const canHash = typeof window.crypto !== 'undefined' && window.crypto.subtle;
+
+		for (let index = 0; index < orderedDirectories.length; index++) {
+			const directoryHandle = orderedDirectories[index];
+			const directoryName = directoryHandle.name.toLowerCase();
+			const cachedHash = this.persistentFolderHashCache[directoryName];
+
+			try {
+				if (directoryName.includes(targetHash) || directoryName.includes(CUSTOM_LEVEL_PREFIX + targetHash)) {
+					const directoryFiles = await this.collectDirectoryFiles(directoryHandle);
+					this.localHashCache[targetHash] = directoryHandle;
+					await this.flushPersistentLocalHashCache();
+					return this.buildVirtualFiles(directoryFiles);
+				}
+
+				if (cachedHash) {
+					if (cachedHash === targetHash) {
+						const directoryFiles = await this.collectDirectoryFiles(directoryHandle);
+						this.localHashCache[targetHash] = directoryHandle;
+						await this.flushPersistentLocalHashCache();
+						return this.buildVirtualFiles(directoryFiles);
+					}
+					continue;
+				}
+
+				if (!canHash) {
+					continue;
+				}
+
+				const directoryFiles = await this.collectDirectoryFiles(directoryHandle);
+				const computedHash = await this.computeCustomLevelHash(directoryFiles);
+				if (!computedHash) {
+					continue;
+				}
+
+				this.setPersistentFolderHash(directoryName, computedHash);
+				this.localHashCache[computedHash] = directoryHandle;
+				if (computedHash === targetHash) {
+					await this.flushPersistentLocalHashCache();
+					return this.buildVirtualFiles(directoryFiles);
+				}
+			} catch (error) {
+				console.warn('Could not read map folder from CustomLevels', error);
+			}
+		}
+
+		await this.flushPersistentLocalHashCache();
+		return null;
+	},
+
+	collectDirectoryFiles: async function (directoryHandle) {
+		const fileHandles = {};
+		await this.collectDirectoryFilesRecursive(directoryHandle, fileHandles, '');
+		return fileHandles;
+	},
+
+	collectDirectoryFilesRecursive: async function (directoryHandle, fileHandles, relativePath) {
+		const filesIterator = directoryHandle.entries();
+		while (true) {
+			const step = await filesIterator.next();
+			if (step.done) {
+				break;
+			}
+
+			const [name, handle] = step.value;
+			const path = relativePath ? `${relativePath}/${name}` : name;
+			if (handle.kind === 'file') {
+				fileHandles[path] = handle;
+			} else if (handle.kind === 'directory') {
+				await this.collectDirectoryFilesRecursive(handle, fileHandles, path);
+			}
+		}
+	},
+
+	buildVirtualFiles: function (fileHandles) {
+		const files = {};
+		Object.keys(fileHandles).forEach(path => {
+			const handle = fileHandles[path];
+			files[path] = {
+				async: async type => {
+					const file = await handle.getFile();
+					if (type === 'string') {
+						return file.text();
+					}
+					if (type === 'uint8array') {
+						return new Uint8Array(await file.arrayBuffer());
+					}
+					if (type === 'arraybuffer') {
+						return file.arrayBuffer();
+					}
+					if (type === 'blob') {
+						return file;
+					}
+					return file.arrayBuffer();
+				},
+			};
+		});
+		return files;
+	},
+
+	computeCustomLevelHash: async function (fileHandles) {
+		const infoFilePath = findInfoFilePath(fileHandles);
+		if (!infoFilePath) {
+			return '';
+		}
+
+		const infoText = await readJsonTextWithEncodingFallback(fileHandles[infoFilePath]);
+		if (!infoText) {
+			return '';
+		}
+
+		const infoJson = jsonParseClean(infoText);
+		if (!infoJson) {
+			return '';
+		}
+
+		const hashInputFiles = getHashInputFiles(infoJson);
+		const filePathLookup = {};
+		Object.keys(fileHandles).forEach(path => {
+			filePathLookup[normalizeFilePath(path)] = path;
+		});
+
+		const chunks = [];
+		let byteCount = 0;
+
+		const infoBytes = new TextEncoder().encode(infoText);
+		chunks.push(infoBytes);
+		byteCount += infoBytes.length;
+
+		for (let index = 0; index < hashInputFiles.length; index++) {
+			const desiredPath = normalizeFilePath(hashInputFiles[index]);
+			const actualPath = filePathLookup[desiredPath];
+			if (!actualPath) {
+				continue;
+			}
+
+			const fileBuffer = await (await fileHandles[actualPath].getFile()).arrayBuffer();
+			const fileBytes = new Uint8Array(fileBuffer);
+			chunks.push(fileBytes);
+			byteCount += fileBytes.length;
+		}
+
+		const combined = new Uint8Array(byteCount);
+		let offset = 0;
+		for (let index = 0; index < chunks.length; index++) {
+			combined.set(chunks[index], offset);
+			offset += chunks[index].length;
+		}
+
+		const hashBuffer = await window.crypto.subtle.digest('SHA-1', combined.buffer);
+		return arrayBufferToHex(hashBuffer).toLowerCase();
+	},
+
+	postchallengeloaderror: async function (hash) {
+		const normalizedHash = normalizeReplayHash(hash);
+		let localLookupResult = {loaded: false, attempted: false};
+		if (normalizedHash && this.lastLocalLookupAttemptHash !== normalizedHash) {
+			localLookupResult = await this.tryLoadFromCustomLevels(normalizedHash);
+			if (localLookupResult.attempted) {
+				this.lastLocalLookupAttemptHash = normalizedHash;
+			}
+			if (localLookupResult.loaded) {
+				return;
+			}
+		}
+
 		if (utils.getCookie('autoplayReplay')) {
 			this.el.sceneEl.components['random-replay'].fetchRandomReplay(true);
 		}
@@ -334,15 +699,28 @@ AFRAME.registerComponent('zip-loader', {
 			});
 		});
 
-		this.el.emit('challengeloaderror', {hash});
+		this.el.emit('challengeloaderror', {
+			hash,
+			text: localLookupResult.attempted
+				? 'Map was not found in saved CustomLevels folder. Drop or click to select zip locally'
+				: 'Map was not found. Drop or click to select zip locally',
+		});
 	},
 
 	/**
 	 * Read API first to get hash and URLs.
 	 */
-	fetchData: function (id, byHash) {
+	fetchData: async function (id, byHash) {
 		this.fetched = true;
 		document.cookie = 'aprilFools=1; expires=Sat, 03 Apr 2022 00:00:00 UTC; path=/';
+
+		if (byHash) {
+			const localLookupResult = await this.tryLoadFromCustomLevels(id, {requestPermission: false});
+			if (localLookupResult.loaded) {
+				return;
+			}
+		}
+
 		return fetch(`/cors/beat-saver2/api/maps/${byHash ? 'hash' : 'id'}/${id}`, {
 			signal: AbortSignal.timeout ? AbortSignal.timeout(5000) : null,
 		})
@@ -352,7 +730,7 @@ AFRAME.registerComponent('zip-loader', {
 						const currentVersion = data.versions[0];
 						const desiredHash = byHash ? id : currentVersion.hash;
 
-						let callback = (hash, cover, zipUrl, fallbackUrls) => {
+						let callback = async (hash, cover, zipUrl, fallbackUrls) => {
 							data.image = cover;
 							data.hash = hash;
 							data.leaderboardId = this.leaderboardId;
@@ -360,6 +738,10 @@ AFRAME.registerComponent('zip-loader', {
 
 							this.el.sceneEl.emit('songFetched', data);
 
+							const localLookupResult = await this.tryLoadFromCustomLevels(hash, {requestPermission: false});
+							if (localLookupResult.loaded) {
+								return;
+							}
 							this.fetchZip(zipUrl, fallbackUrls);
 						};
 						if (desiredHash.toLowerCase() == currentVersion.hash.toLowerCase()) {
@@ -483,6 +865,157 @@ function jsonParseLoop(str, i) {
 		str = str.replace(str[errorPos + 2], 'x');
 		return jsonParseLoop(str, i + 1);
 	}
+}
+
+function openLocalHashCacheDb() {
+	return new Promise((resolve, reject) => {
+		if (typeof window.indexedDB === 'undefined') {
+			resolve(null);
+			return;
+		}
+
+		const request = window.indexedDB.open(LOCAL_HASH_CACHE_DB_NAME, LOCAL_HASH_CACHE_DB_VERSION);
+		request.onupgradeneeded = event => {
+			const db = event.target.result;
+			if (!db.objectStoreNames.contains(LOCAL_HASH_CACHE_STORE_NAME)) {
+				db.createObjectStore(LOCAL_HASH_CACHE_STORE_NAME);
+			}
+		};
+		request.onsuccess = event => resolve(event.target.result);
+		request.onerror = () => reject(request.error);
+	});
+}
+
+async function readPersistedLocalHashCache(cacheKey) {
+	const db = await openLocalHashCacheDb();
+	if (!db) {
+		return null;
+	}
+
+	try {
+		return await new Promise((resolve, reject) => {
+			const transaction = db.transaction(LOCAL_HASH_CACHE_STORE_NAME, 'readonly');
+			const store = transaction.objectStore(LOCAL_HASH_CACHE_STORE_NAME);
+			const request = store.get(cacheKey);
+			request.onsuccess = () => resolve(request.result || null);
+			request.onerror = () => reject(request.error);
+		});
+	} finally {
+		db.close();
+	}
+}
+
+async function writePersistedLocalHashCache(cacheKey, value) {
+	const db = await openLocalHashCacheDb();
+	if (!db) {
+		return;
+	}
+
+	try {
+		await new Promise((resolve, reject) => {
+			const transaction = db.transaction(LOCAL_HASH_CACHE_STORE_NAME, 'readwrite');
+			const store = transaction.objectStore(LOCAL_HASH_CACHE_STORE_NAME);
+			store.put(value, cacheKey);
+			transaction.oncomplete = () => resolve();
+			transaction.onerror = () => reject(transaction.error);
+			transaction.onabort = () => reject(transaction.error);
+		});
+	} finally {
+		db.close();
+	}
+}
+
+function normalizeReplayHash(hash) {
+	if (!hash || typeof hash !== 'string') {
+		return '';
+	}
+	const normalized = hash.toLowerCase().replace(CUSTOM_LEVEL_PREFIX, '');
+	return normalized.length >= 40 ? normalized.substring(0, 40) : '';
+}
+
+function normalizeFilePath(path) {
+	if (!path || typeof path !== 'string') {
+		return '';
+	}
+	return path.replace(/\\/g, '/').replace(/^\/+/, '').toLowerCase();
+}
+
+function arrayBufferToHex(arrayBuffer) {
+	const byteArray = new Uint8Array(arrayBuffer);
+	let hex = '';
+	for (let index = 0; index < byteArray.length; index++) {
+		const byte = byteArray[index].toString(16).padStart(2, '0');
+		hex += byte;
+	}
+	return hex;
+}
+
+function findInfoFilePath(fileHandles) {
+	const paths = Object.keys(fileHandles);
+	let preferredPath = '';
+	for (let index = 0; index < paths.length; index++) {
+		const path = paths[index];
+		const fileName = normalizeFilePath(path).split('/').pop();
+		if (fileName !== INFO_DAT_FILE_NAME) {
+			continue;
+		}
+		if (path.indexOf('/') === -1) {
+			return path;
+		}
+		if (!preferredPath || preferredPath.split('/').length > path.split('/').length) {
+			preferredPath = path;
+		}
+	}
+	return preferredPath;
+}
+
+async function readJsonTextWithEncodingFallback(fileHandle) {
+	const fileBuffer = await (await fileHandle.getFile()).arrayBuffer();
+	const utf8Text = new TextDecoder().decode(fileBuffer);
+	if (jsonParseClean(utf8Text)) {
+		return utf8Text;
+	}
+
+	const utf16Text = new TextDecoder('UTF-16LE').decode(fileBuffer);
+	if (jsonParseClean(utf16Text)) {
+		return utf16Text;
+	}
+
+	return '';
+}
+
+function getHashInputFiles(info) {
+	if (!info) {
+		return [];
+	}
+
+	if (info.version && info.version.startsWith('4')) {
+		const files = [];
+		if (info.audio && info.audio.audioDataFilename) {
+			files.push(info.audio.audioDataFilename);
+		}
+		if (info.difficultyBeatmaps) {
+			for (let index = 0; index < info.difficultyBeatmaps.length; index++) {
+				const difficulty = info.difficultyBeatmaps[index];
+				if (difficulty.beatmapDataFilename) {
+					files.push(difficulty.beatmapDataFilename);
+				}
+				if (difficulty.lightshowDataFilename) {
+					files.push(difficulty.lightshowDataFilename);
+				}
+			}
+		}
+		return files;
+	}
+
+	if (!info._difficultyBeatmapSets) {
+		return [];
+	}
+
+	return info._difficultyBeatmapSets
+		.reduce((all, set) => all.concat(set._difficultyBeatmaps || []), [])
+		.map(difficulty => difficulty._beatmapFilename)
+		.filter(Boolean);
 }
 
 function generateMode(event, difficulty, mode) {

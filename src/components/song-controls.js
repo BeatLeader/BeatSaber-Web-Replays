@@ -1226,6 +1226,73 @@ AFRAME.registerComponent('song-controls', {
 			resetHitsounds.style.display = 'none';
 		});
 
+		let selectCustomLevelsFolderButton = document.getElementById('selectCustomLevelsFolder');
+		let clearCustomLevelsFolderButton = document.getElementById('clearCustomLevelsFolder');
+		let customLevelsFolderStatus = document.getElementById('customLevelsFolderStatus');
+
+		const updateCustomLevelsFolderStatus = async () => {
+			if (!selectCustomLevelsFolderButton || !clearCustomLevelsFolderButton || !customLevelsFolderStatus) {
+				return;
+			}
+
+			if (!this.settings.supportsCustomLevelsLookup()) {
+				selectCustomLevelsFolderButton.disabled = true;
+				clearCustomLevelsFolderButton.disabled = true;
+				customLevelsFolderStatus.textContent = 'CustomLevels scan is not supported in this browser.';
+				customLevelsFolderStatus.title = '';
+				return;
+			}
+
+			selectCustomLevelsFolderButton.disabled = false;
+
+			const handle = await this.settings.getCustomLevelsDirectoryHandle();
+			const savedName = this.settings.settings.customLevelsFolderName;
+			const savedPath = this.settings.settings.customLevelsFolderPath;
+			if (handle) {
+				const fullPath = this.settings.getCustomLevelsFolderDisplayPath(handle);
+				if (savedPath || (fullPath && fullPath !== handle.name)) {
+					customLevelsFolderStatus.textContent = `Using: ${fullPath}`;
+				} else {
+					customLevelsFolderStatus.textContent = `Using: ${savedName || handle.name} (full path unavailable in browser)`;
+				}
+				customLevelsFolderStatus.title = fullPath || savedName || handle.name;
+				clearCustomLevelsFolderButton.disabled = false;
+			} else if (savedName) {
+				const folderLabel = savedPath || savedName;
+				customLevelsFolderStatus.textContent = `Saved: ${folderLabel} (reselect to re-authorize)`;
+				customLevelsFolderStatus.title = folderLabel;
+				clearCustomLevelsFolderButton.disabled = false;
+			} else {
+				customLevelsFolderStatus.textContent = 'No CustomLevels folder selected.';
+				customLevelsFolderStatus.title = '';
+				clearCustomLevelsFolderButton.disabled = true;
+			}
+		};
+
+		if (selectCustomLevelsFolderButton) {
+			selectCustomLevelsFolderButton.addEventListener('click', async () => {
+				try {
+					await this.settings.pickCustomLevelsDirectoryHandle();
+					await updateCustomLevelsFolderStatus();
+				} catch (error) {
+					if (error && error.name === 'AbortError') {
+						return;
+					}
+					console.warn('Could not select CustomLevels directory', error);
+					alert('Could not read the selected CustomLevels directory.');
+				}
+			});
+		}
+
+		if (clearCustomLevelsFolderButton) {
+			clearCustomLevelsFolderButton.addEventListener('click', async () => {
+				await this.settings.clearCustomLevelsDirectoryHandle();
+				await updateCustomLevelsFolderStatus();
+			});
+		}
+
+		updateCustomLevelsFolderStatus();
+
 		let exportSettingsButton = document.getElementById('exportSettings');
 		exportSettingsButton.addEventListener('click', e => {
 			const settingsJson = JSON.stringify(this.settings.settings, null, 2);
@@ -1259,6 +1326,7 @@ AFRAME.registerComponent('song-controls', {
 
 				this.settings.settings = settings;
 				this.settings.sync();
+				updateCustomLevelsFolderStatus();
 
 				alert('Settings imported successfully!');
 			};

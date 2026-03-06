@@ -16,6 +16,9 @@ html
     cursor: none !important;
 
 @media screen and (max-width: 700px)
+  #controls
+    width 420px !important
+    left calc(50vw - 220px) !important
   .patreonColors
     display: none
   .povswitch.mobileControl
@@ -69,6 +72,9 @@ html
     display: block !important;
   .controlsSettings:not(.mobileControl), .controlsCamera:not(.mobileControl)
     display: none !important;
+  #controls
+    width 360px !important
+    left calc(50vw - 188px) !important
 
 @media screen and (max-width: 374px)
   .povswitch.mobileControl
@@ -81,6 +87,9 @@ html
     display: block !important;
   .controlsFullscreen:not(.mobileControl)
     display: none !important;
+  #controls
+    width 328px !important
+    left calc(50vw - 175px) !important
 
 #controls
   align-items center
@@ -88,12 +97,11 @@ html
   border-radius 10px
   display none
   font-family $font
-  left 0
+  left calc(50vw - 260px)
   margin 0 auto 10px auto
   padding 10px
   position fixed
-  right 0
-  max-width 520px
+  width 520px
   z-index 99999999
 
   &.challengeLoaded

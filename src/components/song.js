@@ -42,6 +42,7 @@ AFRAME.registerComponent('song', {
 		analyserEl: {type: 'selector', default: '#audioAnalyser'},
 		difficulty: {default: ''},
 		isBeatsPreloaded: {default: false},
+		isReplayLoading: {default: true},
 		isPaused: {default: queryParamTime !== undefined},
 		isPlaying: {default: false},
 		isFinished: {default: false},
@@ -79,7 +80,7 @@ AFRAME.registerComponent('song', {
 			this.hitSound.suspendContext();
 			this.hitSound.resumeContext();
 
-			if (this.data.isPaused && this.source && this.songStartTime === undefined) {
+			if (this.data.isPaused && !this.data.isReplayLoading && this.source && this.songStartTime === undefined) {
 				this.startAudio(queryParamTime);
 			}
 

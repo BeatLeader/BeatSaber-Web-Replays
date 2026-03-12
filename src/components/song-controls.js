@@ -219,11 +219,12 @@ AFRAME.registerComponent('song-controls', {
 			document.getElementById('songName').setAttribute('title', data.songName);
 			document.getElementById('songSubName').textContent = data.songSubName;
 			document.getElementById('songSubName').setAttribute('title', data.songSubName);
-			if (data.leaderboardId.length) {
-				document.getElementById('songLink').setAttribute('href', utils.getWebsiteUrl() + '/leaderboard/global/' + data.leaderboardId);
-			} else {
-				document.getElementById('songLink').setAttribute('href', 'https://beatsaver.com/maps/' + data.songId);
-			}
+		}
+
+		if (data.leaderboardId.length) {
+			document.getElementById('songLink').setAttribute('href', utils.getWebsiteUrl() + '/leaderboard/global/' + data.leaderboardId);
+		} else {
+			document.getElementById('songLink').setAttribute('href', 'https://beatsaver.com/maps/' + data.songId);
 		}
 	},
 

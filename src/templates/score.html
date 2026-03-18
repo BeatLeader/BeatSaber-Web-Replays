@@ -9,7 +9,7 @@
 	id="scoreContainer"
 	animation__rotationY="property: object3D.rotation.y; from: 0; to: 0; dur: 600; easing: easeInOutQuad; startEvents: spawnRotationStart"
 	bind__score-texts="isSongLoading: isSongLoading"
-	bind__visible="(isPlaying || isPaused) && settings.showHud">
+	bind__visible="isPlaying || isPaused">
 	<a-entity id="scoreTextContainer" position="1.8 0.3 -4">
 		<a-entity id="score" mixin="scoreText" bind__text="value: score.scoreDescription" text="width: 4; color: #FAFAFA"> </a-entity>
 	</a-entity>

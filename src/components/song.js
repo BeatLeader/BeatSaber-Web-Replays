@@ -67,6 +67,7 @@ AFRAME.registerComponent('song', {
 		this.el.addEventListener('gamemenurestart', this.onRestart.bind(this));
 		this.el.addEventListener('wallhitstart', this.onWallHitStart.bind(this));
 		this.el.addEventListener('wallhitend', this.onWallHitEnd.bind(this));
+		this.el.sceneEl.addEventListener('streammapchange', this.onStreamMapChange.bind(this));
 
 		const gestureListener = () => {
 			if (!this.hitSound) {
@@ -220,6 +221,46 @@ AFRAME.registerComponent('song', {
 		}
 
 		this.isPlaying = false;
+	},
+
+	onStreamMapChange: function () {
+		if (this.source && this.source.stop) {
+			try { this.source.stop(); } catch (e) {}
+		}
+		if (this.source !== this.mediaSource && this.mediaSource && this.mediaSource.stop) {
+			try { this.mediaSource.stop(); } catch (e) {}
+		}
+		if (this.audio) {
+			this.pauseAudio();
+			if (this.audio.src && this.audio.src.startsWith('blob:')) {
+				URL.revokeObjectURL(this.audio.src);
+			}
+			this.audio.removeAttribute('src');
+		}
+
+		this.source = null;
+		this.mediaSource = null;
+		this.isPlaying = false;
+		this.lastCurrentTime = null;
+		this.lastContextTime = null;
+		this.lastFrameNow = null;
+		this.songStartTime = undefined;
+		this.duration = undefined;
+
+		if (this.audioAnalyser.mediaSource) {
+			try { this.audioAnalyser.mediaSource.disconnect(); } catch (e) {}
+		}
+		if (this.audioAnalyser.audioSource) {
+			try { this.audioAnalyser.audioSource.disconnect(); } catch (e) {}
+		}
+		this.audioAnalyser.mediaSource = null;
+		this.audioAnalyser.audioSource = null;
+		this.audioAnalyser.mediaConnected = false;
+		this.audioAnalyser.bufferConnected = false;
+
+		const gain = this.audioAnalyser.gainNode.gain;
+		gain.cancelScheduledValues(0);
+		gain.value = this.settings.settings.volume || BASE_VOLUME;
 	},
 
 	onRestart: function () {

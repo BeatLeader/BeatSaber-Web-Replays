@@ -557,16 +557,27 @@ AFRAME.registerComponent('beat', {
 			const notes = replayLoader.allStructs;
 			const index = this.data.index;
 			var result;
-			for (var i = 0; i < notes.length; i++) {
-				if (notes[i].index == index) {
-					result = notes[i];
-					break;
+			if (notes) {
+				for (var i = 0; i < notes.length; i++) {
+					if (notes[i].index == index) {
+						result = notes[i];
+						break;
+					}
 				}
 			}
 			this.replayNote = result;
 		}
 
+		this._streamNoteIndex = null;
 		if (this.replayNote == null) {
+			if (replayLoader.isStreaming && data.type !== 'mine') {
+				this._streamNoteIndex = data.index;
+				replayLoader.registerStreamNoteCallback(data.index, (note) => {
+					this._streamNoteIndex = null;
+					this.replayNote = note;
+					this.onStreamNoteReceived();
+				});
+			}
 			this.replayNote = {
 				score: 1,
 				totalScore: -1,
@@ -869,6 +880,28 @@ AFRAME.registerComponent('beat', {
 		}
 	},
 
+	onStreamNoteReceived: function () {
+		const note = this.replayNote;
+		if (!note) return;
+
+		if (
+			replayLoader.challenge &&
+			'RhythmGameStandard' !== replayLoader.challenge.mode &&
+			note.cutInfo &&
+			note.cutInfo.timeDeviation
+		) {
+			note.cutTime = note.spawnTime - note.cutInfo.timeDeviation;
+		}
+
+		if (settings.settings.highlightErrors && note.score < 0) {
+			this.blockEl.setAttribute('material', `color: yellow; emissive: ${this.data[this.data.color]}; emissiveIntensity: 0.7`);
+		}
+
+		if (settings.settings.highlight115s && note.score == 115 && this.data.type !== 'mine') {
+			this.rainbowShader = true;
+		}
+	},
+
 	missHit: function (hand) {
 		if (this.data.type === 'mine') {
 			if (this.replayNote && this.replayNote.totalScore != -1) {
@@ -1094,6 +1127,11 @@ AFRAME.registerComponent('beat', {
 	returnToPool: function (force) {
 		if (!this.backToPool && !force) {
 			return;
+		}
+
+		if (this._streamNoteIndex != null) {
+			replayLoader.unregisterStreamNoteCallback(this._streamNoteIndex);
+			this._streamNoteIndex = null;
 		}
 
 		if (this.el.sceneEl.components[this.poolName]) {

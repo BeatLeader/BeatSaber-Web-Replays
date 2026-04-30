@@ -31,6 +31,7 @@
 
   <div id="timeline">
     <div id="timelineLine">
+      <div id="bufferedHead"></div>
       <div id="playhead"></div>
     </div>
     <p id="timelineHover"></p>
@@ -42,6 +43,7 @@
     /
     <span id="songDuration">-:--</span>
   </p>
+  <button id="liveButton" style="display: none;">LIVE</button>
 
   <div id="desktopContainer" style="display: flex">
     {% include './speedcontrol.html' %}

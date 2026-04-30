@@ -1,9 +1,11 @@
 import {clamp} from '../utils';
 function FindFrameIndexByTime(frames, songTime, startFrom = 0) {
-	var index = startFrom;
+	if (!frames || frames.length === 0) return -1;
+
+	var index = Math.min(startFrom, frames.length - 1);
+	if (index < 0) index = 0;
 
 	if (songTime >= frames[index].time) {
-		//Search forwards
 		for (var i = index; i < frames.length; ++i) {
 			if (songTime < frames[i].time) break;
 			index = i;
@@ -12,7 +14,6 @@ function FindFrameIndexByTime(frames, songTime, startFrom = 0) {
 		return index;
 	}
 
-	//Search backwards
 	for (var i = index; i >= 0; --i) {
 		if (songTime > frames[i].time) break;
 		index = i;
@@ -58,6 +59,12 @@ AFRAME.registerComponent('replay-player', {
 
 		this._frameIndex = 0;
 		this._heightFrameIndex = 0;
+
+		this.el.sceneEl.addEventListener('streammapchange', () => {
+			this._frameIndex = 0;
+			this._heightFrameIndex = 0;
+			this.headRotationOffset = null;
+		});
 	},
 
 	play: function () {

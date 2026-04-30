@@ -594,6 +594,11 @@ const DEFAULT_COLORS = {
 	backgroundColor: '#000000',
 };
 
+function getStreamUrl() {
+	return 'wss://sockets.api.beatleader.com';
+}
+
+module.exports.getStreamUrl = getStreamUrl;
 module.exports.getApiUrl = getApiUrl;
 module.exports.getWebsiteUrl = getWebsiteUrl;
 module.exports.replaceCdnUrl = replaceCdnUrl;

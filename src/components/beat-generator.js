@@ -112,24 +112,19 @@ AFRAME.registerComponent('beat-generator', {
 			if (this.customData && this.customData._requirements) {
 				this.noodleExtensions = this.customData._requirements.includes('Noodle Extensions');
 			}
+
+			if (this._pendingStreamMapChange) {
+				this._pendingStreamMapChange = false;
+				this._streamBeatsReady = true;
+				this.processBeats();
+			}
 		});
 		this.el.addEventListener('replayloadstart', evt => {
-			this.replayFetched = false;
-			this.beatData = null;
-			this.customData = null;
-			this.beatDataProcessed = false;
-
-			this.beatsTime = undefined;
-			this.eventsTime = undefined;
-
-			this.bpm = undefined;
-			this.colors = {};
-			this.spawnRotation = {rotation: 0};
-			this.spawnRotationKeys = [];
-			this.spawnRotations = {};
-			this.beatData = null;
-			this.beatsPreloadTime = undefined;
-			this.clearBeats(true);
+			this.resetBeatState();
+		});
+		this.el.sceneEl.addEventListener('streammapchange', evt => {
+			this.resetBeatState();
+			this._pendingStreamMapChange = true;
 		});
 		this.el.addEventListener('replayfetched', evt => {
 			if (evt.detail.jd != null) {
@@ -143,7 +138,10 @@ AFRAME.registerComponent('beat-generator', {
 		});
 
 		this.el.addEventListener('songprocessingfinish', evt => {
-			this.processBeats();
+			if (!this._streamBeatsReady) {
+				this.processBeats();
+			}
+			this._streamBeatsReady = false;
 		});
 		this.el.sceneEl.addEventListener('colorChanged', e => {
 			if (e.detail.color) {
@@ -161,6 +159,25 @@ AFRAME.registerComponent('beat-generator', {
 		setInterval(() => {
 			this.manualTick();
 		}, 0);
+	},
+
+	resetBeatState: function () {
+		this.replayFetched = false;
+		this.beatData = null;
+		this.customData = null;
+		this.beatDataProcessed = false;
+		this._pendingStreamMapChange = false;
+
+		this.beatsTime = undefined;
+		this.eventsTime = undefined;
+
+		this.bpm = undefined;
+		this.colors = {};
+		this.spawnRotation = {rotation: 0};
+		this.spawnRotationKeys = [];
+		this.spawnRotations = {};
+		this.beatsPreloadTime = undefined;
+		this.clearBeats(true);
 	},
 
 	beatSpeedOrDefault: function () {

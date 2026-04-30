@@ -290,7 +290,7 @@ html
     display none
     margin-left -6px
     z-index 99
-    display block
+    display none
 
     input
       --value: 1;
@@ -365,6 +365,17 @@ html
     border-radius 2px
     margin-top 5px
     transition background 0.2s, height 0.2s, margin-top 0.2s
+    position relative
+    overflow hidden
+
+  #bufferedHead
+    background rgba(255, 255, 255, 0.25)
+    position absolute
+    border-radius 2px
+    height 100%
+    width 0%
+    top 0
+    left 0
 
   #playhead
     background $white
@@ -372,6 +383,27 @@ html
     border-radius 2px 0 0 2px
     height 100%
     width 0%
+    z-index 1
+
+#liveButton
+  display none
+  background #cc0000
+  color white
+  border none
+  border-radius 3px
+  font-size 10px
+  font-weight bold
+  padding 2px 8px
+  margin-left 8px
+  cursor pointer
+  letter-spacing 0.5px
+  transition background 0.2s, opacity 0.2s
+  &:hover
+    background #ff0000
+  &.liveBehind
+    background #666
+    &:hover
+      background #888
 
 #songTime
   color $gray
@@ -386,6 +418,7 @@ html
   align-self baseline
   margin-right 1em
   width 10px
+  display none
 
 .songEffectiveSpeed
   color: #ffcf66;

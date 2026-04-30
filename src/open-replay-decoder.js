@@ -501,3 +501,14 @@ function DecodeTrickFrame(dataView) {
 
 module.exports.checkBSOR = checkBSOR;
 module.exports.NoteEventType = NoteEventType;
+module.exports.StructType = StructType;
+module.exports.DecodeInfo = DecodeInfo;
+module.exports.DecodeFrames = DecodeFrames;
+module.exports.DecodeNotes = DecodeNotes;
+module.exports.DecodeWalls = DecodeWalls;
+module.exports.DecodeHeight = DecodeHeight;
+module.exports.DecodePauses = DecodePauses;
+module.exports.DecodeInt = DecodeInt;
+module.exports.DecodeFloat = DecodeFloat;
+module.exports.DecodeBool = DecodeBool;
+module.exports.DecodeUint8 = DecodeUint8;

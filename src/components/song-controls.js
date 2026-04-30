@@ -24,6 +24,8 @@ AFRAME.registerComponent('song-controls', {
 		songId: {default: ''},
 		leaderboardId: {default: ''},
 		isPlaying: {default: false},
+		isStreaming: {default: false},
+		isLive: {default: false},
 		showControls: {default: true},
 		isSafari: {default: false},
 		autoplayOnLoad: {default: false},
@@ -76,7 +78,8 @@ AFRAME.registerComponent('song-controls', {
 		});
 
 		this.el.sceneEl.addEventListener('replayloaded', event => {
-			if (this.song.getDuration() && !this.timelineFilter) {
+			const isStreamingUpdate = event.detail.streaming;
+			if (this.song.getDuration() && (!this.timelineFilter || isStreamingUpdate)) {
 				this.makeTimelineOverlay(event.detail, this.song.getDuration(), this);
 			}
 			this.replayData = event.detail;
@@ -171,6 +174,82 @@ AFRAME.registerComponent('song-controls', {
 		this.missWindows = [];
 		this.wasInMissZone = false;
 
+		this.streamBufferedTime = 0;
+		this.isStreamLive = false;
+		this.isStreaming = false;
+		this.liveEdgeThreshold = 2;
+
+		this.el.sceneEl.addEventListener('streamstarted', () => {
+			this.isStreaming = true;
+			this.isStreamLive = true;
+			this.streamBufferedTime = 0;
+
+			const liveBtn = document.getElementById('liveButton');
+			if (liveBtn) {
+				liveBtn.style.display = 'inline-block';
+				liveBtn.classList.remove('liveBehind');
+			}
+		});
+
+		this.el.sceneEl.addEventListener('streambuffered', (evt) => {
+			this.streamBufferedTime = evt.detail.time;
+			this.updateBufferedHead();
+		});
+
+		this.el.sceneEl.addEventListener('streamended', () => {
+			this.isStreaming = false;
+			this.isStreamLive = false;
+
+			const liveBtn = document.getElementById('liveButton');
+			if (liveBtn) liveBtn.style.display = 'none';
+		});
+
+		this.el.sceneEl.addEventListener('streammapchange', () => {
+			this.streamBufferedTime = 0;
+			this.isStreamLive = true;
+			this.finished = false;
+			this.replayData = null;
+			this.timelineFilter = null;
+
+			if (this._timelineCleanup) {
+				this._timelineCleanup();
+			}
+			this._timelineElements = null;
+			this._timelineMarkers = null;
+			this._drawMarkers = null;
+			this._cachedMarkerImages = null;
+			this._cachedHoverMarkerImages = null;
+
+			const overlay = document.getElementById('timelineOverlay');
+			if (overlay) {
+				overlay.innerHTML = '';
+			}
+
+			const bufferedHead = document.getElementById('bufferedHead');
+			if (bufferedHead) bufferedHead.style.width = '0%';
+
+			const playhead = document.getElementById('playhead');
+			if (playhead) playhead.style.width = '0%';
+
+			const liveBtn = document.getElementById('liveButton');
+			if (liveBtn) {
+				liveBtn.style.display = 'inline-block';
+				liveBtn.classList.remove('liveBehind');
+			}
+		});
+
+		this.el.sceneEl.addEventListener('streamlive', () => {
+			this.isStreamLive = true;
+			const liveBtn = document.getElementById('liveButton');
+			if (liveBtn) liveBtn.classList.remove('liveBehind');
+		});
+
+		this.el.sceneEl.addEventListener('streamunlive', () => {
+			this.isStreamLive = false;
+			const liveBtn = document.getElementById('liveButton');
+			if (liveBtn) liveBtn.classList.add('liveBehind');
+		});
+
 		this.el.sceneEl.addEventListener('settingsChanged', () => {
 			this.computeMissWindows();
 			this.updateAutoSpeedState();
@@ -188,6 +267,21 @@ AFRAME.registerComponent('song-controls', {
 			document.body.classList.add('isPlaying');
 		} else if (oldData.isPlaying) {
 			document.body.classList.remove('isPlaying');
+		}
+
+		if (data.isStreaming !== oldData.isStreaming || data.isLive !== oldData.isLive) {
+			this.isStreaming = data.isStreaming;
+			this.isStreamLive = data.isLive;
+
+			const liveBtn = document.getElementById('liveButton');
+			if (liveBtn) {
+				liveBtn.style.display = data.isStreaming ? 'inline-block' : 'none';
+				if (data.isLive) {
+					liveBtn.classList.remove('liveBehind');
+				} else {
+					liveBtn.classList.add('liveBehind');
+				}
+			}
 		}
 
 		if (data.showControls && !oldData.showControls) {
@@ -235,6 +329,13 @@ AFRAME.registerComponent('song-controls', {
 		this.modeDropdownEl = document.getElementById('controlsMode');
 		this.modeOptionEls = document.getElementById('controlsModes');
 		this.playhead = document.getElementById('playhead');
+		this.bufferedHead = document.getElementById('bufferedHead');
+
+		const liveButton = document.getElementById('liveButton');
+		liveButton.addEventListener('click', () => {
+			if (!this.isStreaming) return;
+			this.seekToLive();
+		});
 
 		const timeline = (this.timeline = document.getElementById('timeline'));
 		const timelineHover = (this.timelineHover = document.getElementById('timelineHover'));
@@ -415,6 +516,7 @@ AFRAME.registerComponent('song-controls', {
 
 			var previousNote = null;
 			var note = null;
+			if (!this.replayData || !this.replayData.notes) return;
 			for (let index = 0; index < this.replayData.notes.length; index++) {
 				const element = this.replayData.notes[index];
 				if (element.time > seconds) {
@@ -1337,6 +1439,8 @@ AFRAME.registerComponent('song-controls', {
 
 	makeTimelineOverlay: function (replayData, songDuration, target) {
 		const notes = replayData.notes;
+		if (!notes || notes.length === 0) return;
+
 		const pauses = replayData.replay.pauses;
 
 		const timeline = target.timeline;
@@ -1344,35 +1448,93 @@ AFRAME.registerComponent('song-controls', {
 		const width = timeline.getBoundingClientRect().width;
 		const duration = songDuration;
 
-		let containers = document.querySelectorAll('.timeline-container');
-		containers.forEach(element => {
-			timeline.removeChild(element);
-		});
+		const markerTypes = ['pause', 'fail', 'start', 'maxStreak', 'miss', 'badCut', 'wall', 'bomb'];
 
-		const container = document.createElement('div');
-		container.className = 'timeline-container';
+		if (!this._cachedMarkerImages) {
+			this._cachedMarkerImages = {};
+			this._cachedHoverMarkerImages = {};
+			this._markerImagesLoaded = 0;
+			const totalTypes = markerTypes.length;
 
-		const canvas = document.createElement('canvas');
-		canvas.className = 'acc-canvas';
-		canvas.width = width;
-		canvas.style.width = width + 'px';
+			markerTypes.forEach(type => {
+				const img = new Image();
+				img.src = `assets/img/${type}-timeline.png`;
+				img.onload = () => {
+					this._markerImagesLoaded++;
+					this._cachedMarkerImages[type] = img;
+					if (this._markerImagesLoaded === totalTypes && this._pendingDrawMarkers) {
+						this._pendingDrawMarkers();
+					}
+				};
+				const hoverImg = new Image();
+				hoverImg.src = `assets/img/${type}-timeline-hover.png`;
+				hoverImg.onload = () => {
+					this._cachedHoverMarkerImages[type] = hoverImg;
+				};
+			});
+		}
 
-		const canvas2 = document.createElement('canvas');
-		canvas2.className = 'acc-canvas-filter';
-		canvas2.width = width;
-		canvas2.style.width = width + 'px';
+		const markerImages = this._cachedMarkerImages;
+		const hoverMarkerImages = this._cachedHoverMarkerImages;
 
-		const markersCanvas = document.createElement('canvas');
-		markersCanvas.className = 'markers-canvas';
-		markersCanvas.width = width * window.devicePixelRatio;
-		markersCanvas.height = height * window.devicePixelRatio;
-		markersCanvas.style.width = width + 'px';
+		const existing = this._timelineElements;
+		let canvas, canvas2, markersCanvas, context, context2, markersContext, filter, container;
 
-		const context = canvas.getContext('2d', {alpha: false});
-		const context2 = canvas2.getContext('2d', {alpha: false});
-		const markersContext = markersCanvas.getContext('2d');
+		if (existing && replayData.streaming) {
+			canvas = existing.canvas;
+			canvas2 = existing.canvas2;
+			markersCanvas = existing.markersCanvas;
+			filter = existing.filter;
 
-		markersContext.scale(window.devicePixelRatio, window.devicePixelRatio);
+			context = canvas.getContext('2d', {alpha: false});
+			context2 = canvas2.getContext('2d', {alpha: false});
+			markersContext = existing.markersContext;
+
+			context.clearRect(0, 0, width, height);
+			context2.clearRect(0, 0, width, height);
+		} else {
+			let containers = document.querySelectorAll('.timeline-container');
+			containers.forEach(element => {
+				timeline.removeChild(element);
+			});
+
+			container = document.createElement('div');
+			container.className = 'timeline-container';
+
+			canvas = document.createElement('canvas');
+			canvas.className = 'acc-canvas';
+			canvas.width = width;
+			canvas.style.width = width + 'px';
+
+			canvas2 = document.createElement('canvas');
+			canvas2.className = 'acc-canvas-filter';
+			canvas2.width = width;
+			canvas2.style.width = width + 'px';
+
+			markersCanvas = document.createElement('canvas');
+			markersCanvas.className = 'markers-canvas';
+			markersCanvas.width = width * window.devicePixelRatio;
+			markersCanvas.height = height * window.devicePixelRatio;
+			markersCanvas.style.width = width + 'px';
+
+			context = canvas.getContext('2d', {alpha: false});
+			context2 = canvas2.getContext('2d', {alpha: false});
+			markersContext = markersCanvas.getContext('2d');
+			markersContext.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+			filter = document.createElement('div');
+			filter.className = 'timeline-filter';
+			filter.style.width = '0px';
+			filter.style.height = height + 'px';
+
+			filter.appendChild(canvas2);
+			container.appendChild(filter);
+			container.appendChild(canvas);
+			container.appendChild(markersCanvas);
+			timeline.appendChild(container);
+
+			this._timelineElements = {canvas, canvas2, markersCanvas, markersContext, filter};
+		}
 
 		var minAcc = 100,
 			maxAcc = 0;
@@ -1394,30 +1556,6 @@ AFRAME.registerComponent('song-controls', {
 		context2.moveTo(0, height);
 
 		const markers = [];
-		const markerImages = {};
-		const hoverMarkerImages = {};
-		const markerTypes = ['pause', 'fail', 'start', 'maxStreak', 'miss', 'badCut', 'wall', 'bomb'];
-		let loadedImages = 0;
-
-		markerTypes.forEach(type => {
-			const img = new Image();
-			img.src = `assets/img/${type}-timeline.png`;
-			img.onload = () => {
-				loadedImages++;
-				if (loadedImages === markerTypes.length) {
-					drawMarkers();
-				}
-				markerImages[type] = img;
-			};
-		});
-
-		markerTypes.forEach(type => {
-			const img = new Image();
-			img.src = `assets/img/${type}-timeline-hover.png`;
-			img.onload = () => {
-				hoverMarkerImages[type] = img;
-			};
-		});
 
 		var unasignedPauseIndex = 0;
 		notes.forEach(note => {
@@ -1481,158 +1619,190 @@ AFRAME.registerComponent('song-controls', {
 		context2.fillStyle = 'white';
 		context2.fill();
 
-		const filter = document.createElement('div');
-		filter.className = 'timeline-filter';
-		filter.style.width = '0px';
-		filter.style.height = height + 'px';
 		target.timelineFilter = filter;
-
-		filter.appendChild(canvas2);
-		container.appendChild(filter);
-		container.appendChild(canvas);
-		container.appendChild(markersCanvas);
-		timeline.appendChild(container);
-
 		target.minAcc = minAcc;
 		target.maxAcc = maxAcc;
 
-		let hoveredMarkers = [];
-		let isHovering = false;
+		this._timelineMarkers = markers;
 
 		const drawMarkers = () => {
-			markersContext.clearRect(0, 0, width, height);
-			markers.forEach(marker => {
+			const m = this._timelineMarkers;
+			const mc = this._timelineElements ? this._timelineElements.markersContext : null;
+			if (!mc || !m) return;
+			mc.clearRect(0, 0, width, height);
+			m.forEach(marker => {
 				if (this.settings.settings[marker.type + 'Markers']) {
-					const hovered = hoveredMarkers.includes(marker);
+					const hovered = this._hoveredMarkers && this._hoveredMarkers.includes(marker);
 					const img = hovered && hoverMarkerImages[marker.type] ? hoverMarkerImages[marker.type] : markerImages[marker.type];
 					if (img) {
 						const size = hovered ? 15 : 10;
-						const y = isHovering ? marker.y : height - size / 2;
-						markersContext.drawImage(img, marker.x - size / 2, y - size / 2, size, size);
+						const y = this._timelineIsHovering ? marker.y : height - size / 2;
+						mc.drawImage(img, marker.x - size / 2, y - size / 2, size, size);
 					}
 				}
 			});
 		};
 
-		const animateMarkers = () => {
-			if (isHovering) {
-				let animationComplete = true;
-				markers.forEach(marker => {
-					if (Math.abs(marker.currentY - marker.y) > 0.01) {
-						marker.currentY += (marker.y - marker.currentY) * 0.01;
-						animationComplete = false;
-					} else {
-						marker.currentY = marker.y;
-					}
-				});
-				drawMarkers();
-				if (!animationComplete) {
-					requestAnimationFrame(animateMarkers);
-				}
-			}
-		};
+		this._drawMarkers = drawMarkers;
+		this._pendingDrawMarkers = drawMarkers;
 
-		const getTooltipContent = markers => {
-			return markers
-				.map(marker => {
-					switch (marker.type) {
-						case 'pause':
-							return `Pause at ${formatSeconds(marker.time)} for ${formatSeconds(parseInt(marker.duration))}`;
-						case 'fail':
-							return `Failed at ${formatSeconds(marker.time)}`;
-						case 'start':
-							return `Started at ${formatSeconds(marker.time)}`;
-						case 'maxStreak':
-							return `${marker.maxStreak} streak of 115s at ${formatSeconds(marker.time)}`;
-						case 'miss':
-							return `Miss at ${formatSeconds(marker.time)}`;
-						case 'badCut':
-							return `Bad cut at ${formatSeconds(marker.time)}`;
-						case 'wall':
-							return `Wall hit at ${formatSeconds(marker.time)}`;
-						case 'bomb':
-							return `Bomb hit at ${formatSeconds(marker.time)}`;
-						default:
-							return `Event at ${formatSeconds(marker.time)}`;
-					}
-				})
-				.join('\n');
-		};
-
-		const handleHover = e => {
-			const rect = markersCanvas.getBoundingClientRect();
-			const x = e.clientX - rect.left;
-			const y = e.clientY - rect.top;
-
-			hoveredMarkers = markers.filter(marker => Math.abs(marker.x - x) < 2 && Math.abs(marker.currentY - y) < 5);
-
-			if (hoveredMarkers.length > 0 && hoveredMarkers.some(marker => this.settings.settings[marker.type + 'Markers'])) {
-				drawMarkers();
-				markersCanvas.title = getTooltipContent(hoveredMarkers.filter(marker => this.settings.settings[marker.type + 'Markers']));
-			} else {
-				markersCanvas.removeAttribute('title');
-			}
-		};
-
-		const handleMouseEnter = () => {
-			isHovering = true;
-			markers.forEach(marker => {
-				marker.currentY = height - 5;
-			});
-			animateMarkers();
-		};
-
-		const handleMouseLeave = () => {
-			isHovering = false;
-			hoveredMarkers = [];
-			markersCanvas.removeAttribute('title');
+		if (existing && replayData.streaming) {
 			drawMarkers();
-		};
+		} else {
+			this._hoveredMarkers = [];
+			this._timelineIsHovering = false;
 
-		const handleClick = e => {
-			const rect = markersCanvas.getBoundingClientRect();
-			const x = e.clientX - rect.left;
-			const y = e.clientY - rect.top;
+			const animateMarkers = () => {
+				if (this._timelineIsHovering) {
+					let animationComplete = true;
+					const m = this._timelineMarkers;
+					if (m) {
+						m.forEach(marker => {
+							if (Math.abs(marker.currentY - marker.y) > 0.01) {
+								marker.currentY += (marker.y - marker.currentY) * 0.01;
+								animationComplete = false;
+							} else {
+								marker.currentY = marker.y;
+							}
+						});
+					}
+					drawMarkers();
+					if (!animationComplete) {
+						requestAnimationFrame(animateMarkers);
+					}
+				}
+			};
 
-			const clickedMarker = markers.find(marker => Math.abs(marker.x - x) < 7.5 && Math.abs(marker.currentY - y) < 7.5);
+			const getTooltipContent = list => {
+				return list
+					.map(marker => {
+						switch (marker.type) {
+							case 'pause':
+								return `Pause at ${formatSeconds(marker.time)} for ${formatSeconds(parseInt(marker.duration))}`;
+							case 'fail':
+								return `Failed at ${formatSeconds(marker.time)}`;
+							case 'start':
+								return `Started at ${formatSeconds(marker.time)}`;
+							case 'maxStreak':
+								return `${marker.maxStreak} streak of 115s at ${formatSeconds(marker.time)}`;
+							case 'miss':
+								return `Miss at ${formatSeconds(marker.time)}`;
+							case 'badCut':
+								return `Bad cut at ${formatSeconds(marker.time)}`;
+							case 'wall':
+								return `Wall hit at ${formatSeconds(marker.time)}`;
+							case 'bomb':
+								return `Bomb hit at ${formatSeconds(marker.time)}`;
+							default:
+								return `Event at ${formatSeconds(marker.time)}`;
+						}
+					})
+					.join('\n');
+			};
 
-			if (clickedMarker) {
-				if (clickedMarker.spawnTime) {
-					this.seek(clickedMarker.spawnTime >= 0.3 ? clickedMarker.spawnTime - 0.3 : 0);
+			const handleHover = e => {
+				const rect = markersCanvas.getBoundingClientRect();
+				const x = e.clientX - rect.left;
+				const y = e.clientY - rect.top;
+				const m = this._timelineMarkers || [];
+
+				this._hoveredMarkers = m.filter(marker => Math.abs(marker.x - x) < 2 && Math.abs(marker.currentY - y) < 5);
+
+				if (this._hoveredMarkers.length > 0 && this._hoveredMarkers.some(marker => this.settings.settings[marker.type + 'Markers'])) {
+					drawMarkers();
+					markersCanvas.title = getTooltipContent(this._hoveredMarkers.filter(marker => this.settings.settings[marker.type + 'Markers']));
 				} else {
-					this.seek(clickedMarker.time >= 0.3 ? clickedMarker.time - 0.3 : 0);
+					markersCanvas.removeAttribute('title');
 				}
+			};
+
+			const handleMouseEnter = () => {
+				this._timelineIsHovering = true;
+				const m = this._timelineMarkers || [];
+				m.forEach(marker => {
+					marker.currentY = height - 5;
+				});
+				animateMarkers();
+			};
+
+			const handleMouseLeave = () => {
+				this._timelineIsHovering = false;
+				this._hoveredMarkers = [];
+				markersCanvas.removeAttribute('title');
+				drawMarkers();
+			};
+
+			const handleClick = e => {
+				const rect = markersCanvas.getBoundingClientRect();
+				const x = e.clientX - rect.left;
+				const y = e.clientY - rect.top;
+				const m = this._timelineMarkers || [];
+
+				const clickedMarker = m.find(marker => Math.abs(marker.x - x) < 7.5 && Math.abs(marker.currentY - y) < 7.5);
+
+				if (clickedMarker) {
+					if (clickedMarker.spawnTime) {
+						this.seek(clickedMarker.spawnTime >= 0.3 ? clickedMarker.spawnTime - 0.3 : 0);
+					} else {
+						this.seek(clickedMarker.time >= 0.3 ? clickedMarker.time - 0.3 : 0);
+					}
+				}
+			};
+
+			markersCanvas.addEventListener('mousemove', handleHover);
+			timeline.addEventListener('mouseenter', handleMouseEnter);
+			timeline.addEventListener('mouseleave', handleMouseLeave);
+			markersCanvas.addEventListener('click', handleClick);
+
+			if (this._timelineCleanup) {
+				this._timelineCleanup();
 			}
-		};
 
-		markersCanvas.addEventListener('mousemove', handleHover);
-		timeline.addEventListener('mouseenter', handleMouseEnter);
-		timeline.addEventListener('mouseleave', handleMouseLeave);
-		markersCanvas.addEventListener('click', handleClick);
+			const onSettingsChanged = () => { drawMarkers(); };
+			this.el.sceneEl.addEventListener('settingsChanged', onSettingsChanged);
 
-		const updateMarkers = () => {
-			drawMarkers();
-		};
+			this._timelineCleanup = () => {
+				timeline.removeEventListener('mouseenter', handleMouseEnter);
+				timeline.removeEventListener('mouseleave', handleMouseLeave);
+				this.el.sceneEl.removeEventListener('settingsChanged', onSettingsChanged);
+			};
 
-		setTimeout(() => {
-			updateMarkers();
-		}, 200);
-
-		this.el.sceneEl.addEventListener('settingsChanged', e => {
-			updateMarkers();
-		});
+			setTimeout(() => {
+				drawMarkers();
+			}, 200);
+		}
 	},
 
 	tick: function () {
 		if (!this.song.isPlaying || !this.song.source) {
 			return;
 		}
+
+		if (this.isStreaming && this.isStreamLive) {
+			const currentTime = this.song.getCurrentTime();
+			const distanceFromLive = this.streamBufferedTime - currentTime;
+			if (distanceFromLive < -0.5 || distanceFromLive > this.liveEdgeThreshold + 1) {
+				this.seekToLive(true);
+			}
+		}
+
 		this.updatePlayhead();
 		this.updateAutoSpeedState();
 		this.songProgress.textContent = formatSeconds(this.song.getCurrentTime());
 	},
 
 	seek: function (time, clearBeats = true) {
+		if (this.isStreaming) {
+			if (time >= this.streamBufferedTime) {
+				this.seekToLive();
+				return;
+			}
+			const distanceFromLive = this.streamBufferedTime - time;
+			if (distanceFromLive > this.liveEdgeThreshold) {
+				this.el.sceneEl.emit('streamunlive', null, false);
+			}
+		}
+
 		this.song.stopAudio();
 
 		this.song.data.analyserEl.addEventListener(
@@ -1648,6 +1818,40 @@ AFRAME.registerComponent('song-controls', {
 
 		this.song.audioAnalyser.refreshSource(this.song.speed);
 		this.updateAutoSpeedState();
+	},
+
+	seekToLive: function (silent) {
+		if (!this.isStreaming) return;
+		const targetTime = Math.max(0, this.streamBufferedTime - 0.5);
+		if (!this.isStreamLive) {
+			this.el.sceneEl.emit('streamlive', null, false);
+		}
+
+		this.song.stopAudio();
+
+		this.song.data.analyserEl.addEventListener(
+			'audioanalysersource',
+			evt => {
+				this.song.source = evt.detail;
+				this.song.startAudio(targetTime);
+				this.el.components['beat-generator'].seek(targetTime);
+				this.updatePlayhead(true, true);
+			},
+			ONCE
+		);
+
+		this.song.audioAnalyser.refreshSource(this.song.speed);
+		if (!silent) {
+			this.el.sceneEl.emit('usergesturereceive', null, false);
+			this.el.sceneEl.emit('gamemenuresume', null, false);
+		}
+	},
+
+	updateBufferedHead: function () {
+		if (!this.bufferedHead || !this.song.getDuration()) return;
+		const duration = this.song.getDuration();
+		const percent = Math.min(100, (this.streamBufferedTime / duration) * 100);
+		this.bufferedHead.style.width = percent + '%';
 	},
 
 	updateModeOptions: function () {
@@ -1699,15 +1903,21 @@ AFRAME.registerComponent('song-controls', {
 		});
 	},
 
-	updatePlayhead: function (seek) {
+	updatePlayhead: function (seek, fromLive) {
 		const percent = this.song.getCurrentTime() / this.song.getDuration();
 		const progress = Math.max(0, Math.min(100, 100 * percent));
 		this.playhead.style.width = progress + '%';
 		if (seek) {
-			this.el.sceneEl.emit('timechanged', {newTime: this.song.getCurrentTime()}, null);
+			this.el.sceneEl.emit('timechanged', {newTime: this.song.getCurrentTime(), fromLive: !!fromLive}, null);
 		}
 
-		this.timelineFilter.style.width = this.timeline.getBoundingClientRect().width * percent + 'px';
+		if (this.timelineFilter) {
+			this.timelineFilter.style.width = this.timeline.getBoundingClientRect().width * percent + 'px';
+		}
+
+		if (this.isStreaming) {
+			this.updateBufferedHead();
+		}
 
 		if (this.song.speed > 0 && 'mediaSession' in navigator) {
 			navigator.mediaSession.setPositionState({

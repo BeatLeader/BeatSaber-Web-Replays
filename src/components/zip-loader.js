@@ -54,6 +54,21 @@ AFRAME.registerComponent('zip-loader', {
 			this.lastLocalLookupAttemptHash = '';
 		});
 
+		this.el.sceneEl.addEventListener('streammapchange', e => {
+			this.fetchedZip = '';
+			this.fetched = false;
+			this.isFetching = '';
+			this.lastLocalLookupAttemptHash = '';
+
+			this.data.difficulty = this.difficultyFromId(e.detail.difficulty);
+			this.data.mode = e.detail.mode;
+
+			const hash = e.detail.hash.replace(CUSTOM_LEVEL_PREFIX, '').substring(0, 40).toLowerCase();
+			this.data.hash = hash;
+			this.fetched = true;
+			this.fetchData(hash, true);
+		});
+
 		if (!this.data.id && !this.data.hash) {
 			this.el.sceneEl.addEventListener('replayInfofetched', fetchCallback);
 			this.el.sceneEl.addEventListener('replayfetched', fetchCallback);

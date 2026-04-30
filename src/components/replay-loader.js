@@ -1,5 +1,19 @@
 const dragDrop = require('drag-drop');
-import {checkBSOR, NoteEventType} from '../open-replay-decoder';
+import {
+	checkBSOR,
+	NoteEventType,
+	StructType,
+	DecodeInfo,
+	DecodeFrames,
+	DecodeNotes,
+	DecodeWalls,
+	DecodeHeight,
+	DecodePauses,
+	DecodeInt,
+	DecodeFloat,
+	DecodeBool,
+	DecodeUint8,
+} from '../open-replay-decoder';
 import {checkSS} from '../ss-replay-decoder';
 import {Mirror_Horizontal, Mirror_Horizontal_Note} from '../utils/chirality-support';
 import {MultiplierCounter} from '../utils/MultiplierCounter';
@@ -12,6 +26,7 @@ import {
 	ScoringType,
 	getUrlParameter,
 	getApiUrl,
+	getStreamUrl,
 	getWebsiteUrl,
 	replaceCdnUrl,
 	getCookie,
@@ -36,6 +51,7 @@ function assignNote(replaynote, mapnote) {
 AFRAME.registerComponent('replay-loader', {
 	schema: {
 		playerID: {default: getUrlParameter('playerID')},
+		playerId: {default: getUrlParameter('playerId')},
 		link: {default: getUrlParameter('link')},
 		isSafari: {default: false},
 		difficulty: {default: getUrlParameter('difficulty') || 'ExpertPlus'},
@@ -47,9 +63,16 @@ AFRAME.registerComponent('replay-loader', {
 	init: function () {
 		this.replay = null;
 		this.user = null;
+		this.streamSocket = null;
+		this.isStreaming = false;
+
+		this._streamState = null;
+		this._streamNoteCallbacks = new Map();
 
 		let captureThis = this;
-		if (this.data.link.length) {
+		if (this.data.playerId.length) {
+			this.connectToStream(this.data.playerId);
+		} else if (this.data.link.length) {
 			setTimeout(() => this.fetchByFile(this.data.link, true), 300);
 		} else if (this.data.scoreId.length) {
 			captureThis.downloadReplay(null, this.data.scoreId);
@@ -244,6 +267,507 @@ AFRAME.registerComponent('replay-loader', {
 				}
 			});
 		});
+	},
+
+	connectToStream: function (playerId) {
+		this.el.sceneEl.emit('replayloadstart', null);
+		this.challenge = null;
+		this.notes = null;
+		this.isStreaming = true;
+
+		this.fetchPlayer(playerId);
+
+		const wsUrl = `${getStreamUrl()}/stream/player/listen`;
+		const ws = new WebSocket(wsUrl);
+		this.streamSocket = ws;
+
+		ws.binaryType = 'arraybuffer';
+
+		ws.onopen = () => {
+			ws.send(JSON.stringify({action: 'replay', playerId}));
+		};
+
+		ws.onmessage = (event) => {
+			if (typeof event.data === 'string') {
+				try {
+					const msg = JSON.parse(event.data);
+					if (msg.error) {
+						this.el.sceneEl.emit('replayloadfailed', {error: msg.error}, null);
+					}
+				} catch (e) {}
+				return;
+			}
+
+			this.processStreamChunk(event.data);
+		};
+
+		ws.onerror = () => {
+			this.el.sceneEl.emit('replayloadfailed', {error: 'Stream connection error'}, null);
+		};
+
+		ws.onclose = () => {
+			this.isStreaming = false;
+			this.streamSocket = null;
+		};
+	},
+
+	processStreamChunk: function (arrayBuffer) {
+		const dataView = new DataView(arrayBuffer);
+		dataView.pointer = 0;
+
+		while (dataView.pointer < dataView.byteLength) {
+			const typeByte = DecodeUint8(dataView);
+
+			if (typeByte === 99) {
+				if (this.replay) {
+					this.replay.info = DecodeInfo(dataView);
+				}
+				const endType = DecodeInt(dataView);
+				const failTime = DecodeFloat(dataView);
+				const shouldUpload = DecodeBool(dataView);
+
+				if (failTime > 0.01) {
+					this.replay.info.failTime = failTime;
+				}
+				this.el.sceneEl.emit('streamended', {endType, failTime, shouldUpload}, null);
+				continue;
+			}
+
+			switch (typeByte) {
+				case StructType.info:
+					this.onStreamInfo(DecodeInfo(dataView));
+					break;
+				case StructType.frames:
+					this.onStreamFrames(DecodeFrames(dataView));
+					break;
+				case StructType.notes:
+					this.onStreamNotes(DecodeNotes(dataView));
+					break;
+				case StructType.walls:
+					this.onStreamWalls(DecodeWalls(dataView));
+					break;
+				case StructType.heights:
+					this.onStreamHeights(DecodeHeight(dataView));
+					break;
+				case StructType.pauses:
+					this.onStreamPauses(DecodePauses(dataView));
+					break;
+				default:
+					return;
+			}
+		}
+	},
+
+	onStreamInfo: function (info) {
+		const isMapChange = this.replay != null;
+
+		this.replay = {
+			info,
+			frames: [],
+			notes: [],
+			walls: [],
+			heights: [],
+			pauses: [],
+		};
+
+		this.challenge = null;
+		this.notes = null;
+		this.allStructs = null;
+		this.bombs = null;
+		this.walls = null;
+		this.resetStreamState();
+
+		const jd = info.jumpDistance > 5 ? info.jumpDistance : undefined;
+		const difficulty = difficultyFromName(info.difficulty);
+
+		if (isMapChange) {
+			this.el.sceneEl.emit('streammapchange', {
+				hash: info.hash,
+				difficulty,
+				mode: info.mode,
+				jd,
+			}, null);
+		} else {
+			this.el.sceneEl.emit('streamstarted', null, null);
+		}
+
+		this.el.sceneEl.emit(
+			'replayfetched',
+			{
+				hash: info.hash,
+				difficulty,
+				mode: info.mode,
+				jd,
+				streaming: true,
+			},
+			null
+		);
+	},
+
+	onStreamFrames: function (frames) {
+		if (!this.replay) return;
+		this.replay.frames.push(...frames);
+
+		if (frames.length > 0) {
+			const lastTime = frames[frames.length - 1].time;
+			this.el.sceneEl.emit('streambuffered', {time: lastTime}, null);
+		}
+
+		this.el.sceneEl.emit('streamframes', {frames}, null);
+	},
+
+	onStreamNotes: function (newNotes) {
+		if (!this.replay) return;
+		this.replay.notes.push(...newNotes);
+
+		if (this.challenge) {
+			this.processIncrementalNotes(newNotes);
+		} else {
+			if (!this._pendingNotes) this._pendingNotes = [];
+			this._pendingNotes.push(...newNotes);
+		}
+	},
+
+	onStreamWalls: function (newWalls) {
+		if (!this.replay) return;
+		this.replay.walls.push(...newWalls);
+
+		if (this.challenge) {
+			this.processIncrementalWalls(newWalls);
+		} else {
+			if (!this._pendingWalls) this._pendingWalls = [];
+			this._pendingWalls.push(...newWalls);
+		}
+	},
+
+	onStreamHeights: function (heights) {
+		if (!this.replay) return;
+		this.replay.heights.push(...heights);
+	},
+
+	onStreamPauses: function (pauses) {
+		if (!this.replay) return;
+		this.replay.pauses.push(...pauses);
+		this.el.sceneEl.emit('streampauses', {pauses}, null);
+	},
+
+	resetStreamState: function () {
+		this._streamState = {
+			normalCounter: new MultiplierCounter(),
+			maxCounter: new MultiplierCounter(),
+			score: 0,
+			maxScore: 0,
+			fcScore: 0,
+			combo: 0,
+			misses: 0,
+			energy: 0.5,
+			streak: 0,
+			maxStreak: 0,
+			streakId: -1,
+			maxStreakId: -1,
+			failRecorded: false,
+			allStructs: [],
+			noteStructs: [],
+			bombStructs: [],
+			wallStructs: [],
+			mapnotes: null,
+			leftHanded: false,
+			mapPrepared: false,
+		};
+		this._pendingNotes = [];
+		this._pendingWalls = [];
+		this._streamNoteCallbacks.clear();
+	},
+
+	registerStreamNoteCallback: function (noteIndex, callback) {
+		this._streamNoteCallbacks.set(noteIndex, callback);
+	},
+
+	unregisterStreamNoteCallback: function (noteIndex) {
+		this._streamNoteCallbacks.delete(noteIndex);
+	},
+
+	prepareMapForStream: function () {
+		const ss = this._streamState;
+		if (ss.mapPrepared || !this.challenge || !this.replay) return;
+
+		const map = this.challenge.beatmaps[this.challenge.mode][this.challenge.difficulty];
+		this.applyModifiers(map, this.replay);
+		this.setIds(map, this.replay);
+
+		ss.mapnotes = []
+			.concat(map._notes, map._chains)
+			.sort((a, b) => a._time - b._time)
+			.filter(a => a._type == 0 || a._type == 1);
+		ss.mapPrepared = true;
+	},
+
+	processIncrementalNotes: function (newRawNotes) {
+		const ss = this._streamState;
+		if (!ss) return;
+
+		this.prepareMapForStream();
+		const replay = this.replay;
+
+		const newNoteStructs = [];
+		const newBombStructs = [];
+
+		for (let i = 0; i < newRawNotes.length; i++) {
+			const info = newRawNotes[i];
+			let note = {
+				eventType: info.eventType,
+				cutInfo: info.noteCutInfo,
+				spawnTime: info.spawnTime,
+				time: info.eventTime,
+				id: info.noteID,
+				score: info.score,
+				cutPoint: info.noteCutInfo ? info.noteCutInfo.cutPoint : null,
+			};
+
+			if (note.id == -1) {
+				note.eventType = NoteEventType.bomb;
+				note.id += 39;
+				note.score = -4;
+			}
+			if (note.id > 0 && note.id < 100000) {
+				if (note.id % 100 == 99) {
+					note.eventType = NoteEventType.bomb;
+					note.id += 39;
+					note.score = -4;
+				} else if (note.id % 10 == 9) {
+					note.eventType = NoteEventType.bomb;
+					note.id -= 1;
+					note.score = -4;
+				}
+			}
+			if (note.eventType == NoteEventType.bomb) {
+				newBombStructs.push(note);
+			} else {
+				note.isBlock = true;
+				newNoteStructs.push(note);
+			}
+		}
+
+		if (ss.mapnotes) {
+			for (let j = 0; j < ss.mapnotes.length; j++) {
+				const mapnote = ss.mapnotes[j];
+				if (mapnote.found) continue;
+				for (let m = 0; m < newNoteStructs.length; m++) {
+					const replaynote = newNoteStructs[m];
+					if (replaynote.index != undefined) continue;
+
+					const absDiff = Math.abs(replaynote.spawnTime - mapnote._songTime);
+					if (
+						absDiff < 0.0005 &&
+						(replaynote.id == mapnote._id ||
+							replaynote.id == mapnote._idWithScoring ||
+							replaynote.id == mapnote._idWithAlternativeScoring ||
+							replaynote.id == mapnote._idWithLegacyScoring)
+					) {
+						assignNote(replaynote, mapnote);
+						break;
+					}
+				}
+			}
+
+			for (let j = 0; j < ss.mapnotes.length; j++) {
+				const mapnote = ss.mapnotes[j];
+				if (mapnote.found) continue;
+				for (let m = 0; m < newNoteStructs.length; m++) {
+					const replaynote = newNoteStructs[m];
+					if (replaynote.index != undefined) continue;
+					if (
+						replaynote.id == mapnote._id ||
+						replaynote.id == mapnote._idWithScoring ||
+						replaynote.id == mapnote._idWithAlternativeScoring ||
+						replaynote.id == mapnote._idWithLegacyScoring
+					) {
+						assignNote(replaynote, mapnote);
+						break;
+					}
+				}
+			}
+		}
+
+		ss.noteStructs.push(...newNoteStructs);
+		ss.bombStructs.push(...newBombStructs);
+
+		const newAll = [].concat(newBombStructs, newNoteStructs);
+		newAll.sort((a, b) => {
+			if (a.time < b.time) return -1;
+			if (a.time > b.time) return 1;
+			if (a.time === b.time && a.cutPoint && b.cutPoint) {
+				if (a.cutPoint.z < b.cutPoint.z) return -1;
+				if (a.cutPoint.z > b.cutPoint.z) return 1;
+			}
+			return 0;
+		});
+
+		for (let i = 0; i < newAll.length; i++) {
+			const note = newAll[i];
+			note.i = ss.allStructs.length;
+
+			if (!note.score) {
+				note.score = ScoreForNote(note.eventType, note.cutInfo, note.scoringType);
+			}
+
+			let scoreForMaxScore = 115;
+			if (note.scoringType == ScoringType.ChainHead) {
+				scoreForMaxScore = 85;
+			} else if (note.scoringType == ScoringType.ChainLink || note.scoringType == ScoringType.ChainLinkArcHead) {
+				scoreForMaxScore = 20;
+			}
+
+			if (note.isBlock) {
+				ss.maxCounter.Increase();
+				ss.maxScore += ss.maxCounter.Multiplier * scoreForMaxScore;
+			}
+
+			if (note.score < 0) {
+				if (note.isBlock) {
+					if (ss.allStructs.length == 0) {
+						ss.fcScore += ss.maxCounter.Multiplier * scoreForMaxScore;
+					} else {
+						const prev = ss.allStructs[ss.allStructs.length - 1];
+						ss.fcScore += (ss.maxCounter.Multiplier * prev.accuracy * scoreForMaxScore) / 100;
+					}
+				}
+				ss.normalCounter.Decrease();
+				ss.combo = 0;
+				ss.misses++;
+				switch (note.score) {
+					case -2:
+						ss.energy -= note.scoringType == ScoringType.ChainLink ? 0.025 : 0.1;
+						break;
+					case -3:
+					case -4:
+						ss.energy -= note.scoringType == ScoringType.ChainLink ? 0.03 : 0.15;
+						break;
+				}
+			} else {
+				ss.normalCounter.Increase();
+				ss.score += ss.normalCounter.Multiplier * note.score;
+				ss.fcScore += ss.maxCounter.Multiplier * note.score;
+
+				if (ss.energy > 0 || (!replay.info.modifiers.includes('NF') && !replay.info.failTime)) {
+					ss.energy += note.scoringType == ScoringType.ChainLink ? 1 / 500 : 0.01;
+				}
+				if (ss.energy > 1) ss.energy = 1;
+				ss.combo++;
+
+				if (note.scoringType != ScoringType.ChainLink) {
+					if (note.score == 115) {
+						ss.streak++;
+						if (ss.streakId == -1) ss.streakId = note.i;
+					} else if (note.isBlock) {
+						if (ss.streak > ss.maxStreak) {
+							ss.maxStreak = ss.streak;
+							ss.maxStreakId = ss.streakId;
+						}
+						ss.streak = 0;
+						ss.streakId = -1;
+					}
+				}
+			}
+
+			note.multiplier = ss.normalCounter.Multiplier;
+			note.totalScore = ss.score;
+			note.combo = ss.combo;
+			note.misses = ss.misses;
+			note.energy = ss.energy;
+			note.maxScore = scoreForMaxScore;
+
+			if (ss.energy <= 0 && !ss.failRecorded) {
+				ss.failRecorded = true;
+				note.fail = true;
+			}
+
+			if (note.isBlock) {
+				note.accuracy = (note.totalScore / ss.maxScore) * 100;
+				note.fcAccuracy = (ss.fcScore / ss.maxScore) * 100;
+			} else {
+				const prev = ss.allStructs.length > 0 ? ss.allStructs[ss.allStructs.length - 1] : null;
+				note.accuracy = prev ? prev.accuracy : 0;
+				note.fcAccuracy = prev ? prev.fcAccuracy : 100;
+			}
+
+			ss.allStructs.push(note);
+		}
+
+		if (ss.streak > ss.maxStreak) {
+			ss.maxStreak = ss.streak;
+			ss.maxStreakId = ss.streakId;
+		}
+
+		this.allStructs = ss.allStructs;
+		this.notes = ss.noteStructs;
+		this.bombs = ss.bombStructs;
+		this.walls = ss.wallStructs;
+
+		if (this._streamNoteCallbacks.size > 0) {
+			for (let i = 0; i < newAll.length; i++) {
+				const note = newAll[i];
+				if (note.index !== undefined) {
+					const cb = this._streamNoteCallbacks.get(note.index);
+					if (cb) {
+						this._streamNoteCallbacks.delete(note.index);
+						cb(note);
+					}
+				}
+			}
+		}
+
+		this.el.sceneEl.emit(
+			'replayloaded',
+			{notes: ss.allStructs, replay: this.replay, leftHanded: ss.leftHanded, streaming: true},
+			null
+		);
+	},
+
+	processIncrementalWalls: function (newRawWalls) {
+		const ss = this._streamState;
+		if (!ss) return;
+
+		const newWallStructs = [];
+		for (let i = 0; i < newRawWalls.length; i++) {
+			const info = newRawWalls[i];
+			newWallStructs.push({
+				time: info.time,
+				id: info.wallID,
+				score: -5,
+			});
+		}
+
+		ss.wallStructs.push(...newWallStructs);
+
+		for (let i = 0; i < newWallStructs.length; i++) {
+			const note = newWallStructs[i];
+			note.i = ss.allStructs.length;
+
+			ss.normalCounter.Decrease();
+			ss.combo = 0;
+
+			note.multiplier = ss.normalCounter.Multiplier;
+			note.totalScore = ss.score;
+			note.combo = ss.combo;
+			note.misses = ss.misses;
+			note.energy = ss.energy;
+
+			const prev = ss.allStructs.length > 0 ? ss.allStructs[ss.allStructs.length - 1] : null;
+			note.accuracy = prev ? prev.accuracy : 0;
+			note.fcAccuracy = prev ? prev.fcAccuracy : 100;
+
+			ss.allStructs.push(note);
+		}
+
+		this.allStructs = ss.allStructs;
+		this.walls = ss.wallStructs;
+
+		this.el.sceneEl.emit(
+			'replayloaded',
+			{notes: ss.allStructs, replay: this.replay, leftHanded: ss.leftHanded, streaming: true},
+			null
+		);
 	},
 
 	tryFindingNotes: function (map, replay, noteStructs, mapnotes, indexToBeat = null) {
@@ -584,7 +1108,19 @@ AFRAME.registerComponent('replay-loader', {
 
 	challengeloadend: function (event) {
 		this.challenge = event;
-		if (!this.notes && this.replay) {
+
+		if (this.isStreaming && this.replay) {
+			this.prepareMapForStream();
+
+			if (this._pendingNotes && this._pendingNotes.length > 0) {
+				this.processIncrementalNotes(this._pendingNotes);
+				this._pendingNotes = [];
+			}
+			if (this._pendingWalls && this._pendingWalls.length > 0) {
+				this.processIncrementalWalls(this._pendingWalls);
+				this._pendingWalls = [];
+			}
+		} else if (!this.notes && this.replay) {
 			this.processScores();
 		}
 	},

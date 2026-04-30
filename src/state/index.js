@@ -95,6 +95,9 @@ AFRAME.registerState({
 			hasError: false,
 			errorText: '',
 		},
+		isStreaming: false,
+		isLive: false,
+		streamBufferedTime: 0,
 		player: {
 			name: '',
 			avatar: '',
@@ -146,6 +149,20 @@ AFRAME.registerState({
 			document
 				.querySelector('meta[property="og:title"]')
 				.setAttribute('content', `Replay | ${state.player.name} | ${payload.metadata.songName}`);
+		},
+
+		streammapchange: (state, payload) => {
+			state.challenge.isBeatsPreloaded = false;
+			state.challenge.isLoading = true;
+			state.challenge.hasLoadError = false;
+			state.challenge.audio = '';
+			state.isFinished = false;
+			state.isPaused = false;
+			state.isLive = true;
+			state.streamBufferedTime = 0;
+			state.notes = null;
+
+			Object.assign(state.score, emptyScore);
 		},
 
 		challengeloadstart: (state, payload) => {
@@ -206,10 +223,32 @@ AFRAME.registerState({
 		replayloaded: (state, payload) => {
 			state.replay.isLoading = false;
 			state.notes = payload.notes;
-			console.log(state.challenge);
 			if (state.challenge.mode == 'OneSaber') {
 				state.hiddenSaber = payload.leftHanded ? 'right' : 'left';
 			}
+		},
+
+		streamstarted: (state, payload) => {
+			state.isStreaming = true;
+			state.isLive = true;
+			state.streamBufferedTime = 0;
+		},
+
+		streambuffered: (state, payload) => {
+			state.streamBufferedTime = payload.time;
+		},
+
+		streamlive: (state) => {
+			state.isLive = true;
+		},
+
+		streamunlive: (state) => {
+			state.isLive = false;
+		},
+
+		streamended: (state) => {
+			state.isStreaming = false;
+			state.isLive = false;
 		},
 
 		replayloadfailed: (state, payload) => {
@@ -316,7 +355,13 @@ AFRAME.registerState({
 
 		timechanged: (state, payload) => {
 			state.isFinished = false;
+
+			if (state.isStreaming && !payload.fromLive) {
+				state.isLive = false;
+			}
+
 			let notes = state.notes;
+			if (!notes) return;
 			for (var i = notes.length; --i > 0; ) {
 				if (notes[i].time < payload.newTime) {
 					updateScore(state, {index: i}, true);
@@ -345,6 +390,9 @@ AFRAME.registerState({
 				return;
 			}
 			state.isPaused = true;
+			if (state.isStreaming && state.isLive) {
+				state.isLive = false;
+			}
 		},
 
 		finishgame: state => {

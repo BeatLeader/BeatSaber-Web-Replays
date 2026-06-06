@@ -197,29 +197,37 @@ AFRAME.registerComponent('zip-loader', {
 			return URL.createObjectURL(new Blob([await files[name].async('arraybuffer')], {type}));
 		};
 
+		let extractAudioAsBlobUrl = async name => {
+			const buffer = await files[name].async('arraybuffer');
+			const type = detectAudioMimeType(new Uint8Array(buffer.slice(0, 16)), name);
+			return URL.createObjectURL(new Blob([buffer], {type}));
+		};
+
+		// Resolve the song audio. Prefer the filename declared in the map info and detect its
+		// encoding from the file contents, since file extensions can be missing or misspelled.
+		if (utils.getUrlParameter('songLink')) {
+			event.audio = utils.getUrlParameter('songLink').replace('https://cdn.discordapp.com/attachments/', 'https://discord.beatleader.pro/');
+		} else if (event.info._songFilename) {
+			const songFilename = event.info._songFilename.toLowerCase();
+			const songKey = Object.keys(files).find(f => f.toLowerCase() === songFilename);
+			if (songKey) {
+				event.audio = await extractAudioAsBlobUrl(songKey);
+			}
+		}
+
 		let keys = Object.keys(files);
 		for (let index = 0; index < keys.length; index++) {
 			const filename = keys[index];
-			if (!event.audio) {
-				if (utils.getUrlParameter('songLink')) {
-					event.audio = utils.getUrlParameter('songLink').replace('https://cdn.discordapp.com/attachments/', 'https://discord.beatleader.pro/');
-				} else {
-					if (filename.endsWith('egg') || filename.endsWith('ogg')) {
-						event.audio = await extractAsBlobUrl(filename, 'audio/ogg');
-					}
-					if (filename.endsWith('wav')) {
-						event.audio = await extractAsBlobUrl(filename, 'audio/wav');
-					}
-					if (filename.endsWith('mp3')) {
-						event.audio = await extractAsBlobUrl(filename, 'audio/mp3');
-					}
-				}
+			const lowerFilename = filename.toLowerCase();
+			// Fallback: scan for any audio file if it could not be resolved from the map info.
+			if (!event.audio && (lowerFilename.endsWith('egg') || lowerFilename.endsWith('ogg') || lowerFilename.endsWith('wav') || lowerFilename.endsWith('mp3'))) {
+				event.audio = await extractAudioAsBlobUrl(filename);
 			}
 			if (!event.image) {
-				if (filename.endsWith('jpg') || filename.endsWith('jpeg')) {
+				if (lowerFilename.endsWith('jpg') || lowerFilename.endsWith('jpeg')) {
 					event.image = await extractAsBlobUrl(filename, 'image/jpeg');
 				}
-				if (filename.endsWith('png')) {
+				if (lowerFilename.endsWith('png')) {
 					event.image = await extractAsBlobUrl(filename, 'image/png');
 				}
 			}
@@ -1016,6 +1024,47 @@ function getHashInputFiles(info) {
 		.reduce((all, set) => all.concat(set._difficultyBeatmaps || []), [])
 		.map(difficulty => difficulty._beatmapFilename)
 		.filter(Boolean);
+}
+
+/**
+ * Detect the audio MIME type from the file's magic bytes, falling back to the file extension.
+ * Beat Saber song files often use the `.egg` extension (which is just Ogg Vorbis) or have
+ * mismatched/misspelled extensions, so sniffing the contents is more reliable.
+ */
+function detectAudioMimeType(bytes, filename) {
+	if (bytes && bytes.length >= 4) {
+		// OGG: "OggS" (Beat Saber `.egg` files are Ogg Vorbis).
+		if (bytes[0] === 0x4f && bytes[1] === 0x67 && bytes[2] === 0x67 && bytes[3] === 0x53) {
+			return 'audio/ogg';
+		}
+		// WAV: "RIFF" container.
+		if (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46) {
+			return 'audio/wav';
+		}
+		// MP3: "ID3" tag.
+		if (bytes[0] === 0x49 && bytes[1] === 0x44 && bytes[2] === 0x33) {
+			return 'audio/mpeg';
+		}
+		// MP3: MPEG frame sync (11 set bits).
+		if (bytes[0] === 0xff && (bytes[1] & 0xe0) === 0xe0) {
+			return 'audio/mpeg';
+		}
+		// FLAC: "fLaC".
+		if (bytes[0] === 0x66 && bytes[1] === 0x4c && bytes[2] === 0x61 && bytes[3] === 0x43) {
+			return 'audio/flac';
+		}
+	}
+	// M4A/MP4 audio: "ftyp" box at offset 4.
+	if (bytes && bytes.length >= 8 && bytes[4] === 0x66 && bytes[5] === 0x74 && bytes[6] === 0x79 && bytes[7] === 0x70) {
+		return 'audio/mp4';
+	}
+
+	const lower = (filename || '').toLowerCase();
+	if (lower.endsWith('wav')) return 'audio/wav';
+	if (lower.endsWith('mp3')) return 'audio/mpeg';
+	if (lower.endsWith('flac')) return 'audio/flac';
+	if (lower.endsWith('m4a')) return 'audio/mp4';
+	return 'audio/ogg';
 }
 
 function generateMode(event, difficulty, mode) {

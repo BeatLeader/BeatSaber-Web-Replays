@@ -1,36 +1,48 @@
-var MinifyPlugin = require('babel-minify-webpack-plugin');
-var Nunjucks = require('nunjucks');
-var fs = require('fs');
-var htmlMinify = require('html-minifier').minify;
-var ip = require('ip');
-var path = require('path');
-var webpack = require('webpack');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const webpack = require('webpack');
+const Nunjucks = require('nunjucks');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const COLORS = require('./src/constants/colors.js');
-const ExtractTextPlugin = require('extract-text-webpack-plugin');
+
+const isProduction = process.env.NODE_ENV === 'production';
+
+// Resolve the machine's LAN address for the dev-server A-Frame template branch.
+function localIP() {
+	const nets = os.networkInterfaces();
+	for (const name of Object.keys(nets)) {
+		for (const net of nets[name] || []) {
+			if (net.family === 'IPv4' && !net.internal) {
+				return net.address;
+			}
+		}
+	}
+	return 'localhost';
+}
 
 // Set up templating.
-var nunjucks = Nunjucks.configure(path.resolve(__dirname, 'src'), {
-	noCache: true,
-});
+const nunjucks = Nunjucks.configure(path.resolve(__dirname, 'src'), {noCache: true});
 nunjucks.addGlobal('DEBUG_AFRAME', !!process.env.DEBUG_AFRAME);
 nunjucks.addGlobal('DEBUG_KEYBOARD', !!process.env.DEBUG_KEYBOARD);
 nunjucks.addGlobal('DEBUG_INSPECTOR', !!process.env.DEBUG_INSPECTOR);
-nunjucks.addGlobal('HOST', ip.address());
-nunjucks.addGlobal('IS_PRODUCTION', process.env.NODE_ENV === 'production');
+nunjucks.addGlobal('HOST', localIP());
+nunjucks.addGlobal('IS_PRODUCTION', isProduction);
 nunjucks.addGlobal('COLORS', COLORS);
 
-// Generate timestamp
+// Generate timestamp used to cache-bust the emitted bundle and stylesheet.
 const timestamp = Math.floor(Date.now() / 1000);
 nunjucks.addGlobal('BUILD_TIMESTAMP', timestamp);
 
 // Initial Nunjucks render.
 fs.writeFileSync('index.html', nunjucks.render('index.html'));
 
-// For development, watch HTML for changes to compile Nunjucks.
-// The production Express server will handle Nunjucks by itself.
-if (process.env.NODE_ENV !== 'production') {
+// For development, watch HTML for changes to recompile Nunjucks.
+// The production Express server handles Nunjucks by itself.
+if (!isProduction) {
 	fs.watch('src/', {recursive: true}, (eventType, filename) => {
-		if (filename.indexOf('.html') === -1 && filename.indexOf('templates') === -1) {
+		if (!filename || (filename.indexOf('.html') === -1 && filename.indexOf('templates') === -1)) {
 			return;
 		}
 		try {
@@ -41,88 +53,57 @@ if (process.env.NODE_ENV !== 'production') {
 	});
 }
 
-PLUGINS = [new webpack.EnvironmentPlugin(['NODE_ENV']), new ExtractTextPlugin(`build/style.${timestamp}.css`)];
-
-if (process.env.NODE_ENV === 'production') {
-	PLUGINS.push(
-		new MinifyPlugin({
-			booleans: true,
-			builtIns: true,
-			consecutiveAdds: true,
-			deadcode: true,
-			evaluate: false,
-			flipComparisons: true,
-			guards: true,
-			infinity: true,
-			mangle: false,
-			memberExpressions: true,
-			mergeVars: true,
-			numericLiterals: true,
-			propertyLiterals: true,
-			regexpConstructors: true,
-			removeUndefined: true,
-			replace: true,
-			simplify: true,
-			simplifyComparisons: true,
-			typeConstructors: true,
-			undefinedToVoid: true,
-			keepFnName: true,
-			keepClassName: true,
-			tdz: true,
-		})
-	);
-}
-
 module.exports = {
-	devServer: {
-		disableHostCheck: true,
-	},
+	mode: isProduction ? 'production' : 'development',
+	devtool: isProduction ? 'source-map' : 'eval-cheap-module-source-map',
 	entry: './src/index.js',
 	output: {
 		path: __dirname,
 		filename: `build/build.${timestamp}.js`,
+		clean: false,
 	},
-	plugins: PLUGINS,
+	plugins: [
+		new webpack.ProvidePlugin({Buffer: ['buffer', 'Buffer']}),
+		new MiniCssExtractPlugin({filename: `build/style.${timestamp}.css`}),
+	],
 	module: {
 		rules: [
 			{
-				test: /\.js/,
-				exclude: path => path.indexOf('node_modules') !== -1 || path.indexOf('panel') !== -1,
-				loader: 'babel-loader',
-			},
-			{
-				test: /\.glsl/,
-				exclude: /(node_modules)/,
-				loader: 'webpack-glsl-loader',
-			},
-			{
-				test: /\.(png|jpg)/,
-				loader: 'url-loader',
+				test: /\.js$/,
+				// Vendored aframe components ship browser-ready and must be bundled as-is.
+				exclude: [/node_modules/, path.resolve(__dirname, 'src/vendor/aframe-components')],
+				use: 'babel-loader',
 			},
 			{
 				test: /\.styl$/,
-				exclude: /(node_modules)/,
-				use: ExtractTextPlugin.extract({
-					fallback: 'style-loader',
-					use: [
-						{
-							loader: 'css-loader',
-							options: {url: false},
-						},
-						{
-							loader: 'postcss-loader',
-							options: {
-								ident: 'postcss',
-								plugins: loader => [require('autoprefixer')()],
-							},
-						},
-						'stylus-loader',
-					],
-				}),
+				exclude: /node_modules/,
+				use: [
+					MiniCssExtractPlugin.loader,
+					{loader: 'css-loader', options: {url: false}},
+					'postcss-loader',
+					'stylus-loader',
+				],
 			},
 		],
 	},
+	optimization: {
+		minimizer: ['...', new CssMinimizerPlugin()],
+	},
+	// lzma-min.js (vendored LZMA worker lib) uses a dynamic require expression
+	// for its worker; the resulting "Critical dependency" warning is benign.
+	ignoreWarnings: [{module: /vendor[\\/]lzma-min\.js/}],
 	resolve: {
 		modules: [path.join(__dirname, 'node_modules')],
+		fallback: {
+			buffer: require.resolve('buffer/'),
+		},
+	},
+	devServer: {
+		host: '0.0.0.0',
+		port: 3003,
+		hot: true,
+		allowedHosts: 'all',
+		static: {directory: __dirname},
+		devMiddleware: {writeToDisk: false},
 	},
 };

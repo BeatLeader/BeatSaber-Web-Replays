@@ -3,72 +3,45 @@
   "version": "1.0.0",
   "scripts": {
     "build": "cross-env NODE_ENV=production webpack",
-    "deploy": "ghpages git@github.com:supermedium/beatsaver-viewer.git -p .ghpages && rm -rf .ghpages",
-    "lint": "semistandard -v | snazzy",
+    "start": "cross-env NODE_ENV=development webpack serve",
+    "lint": "semistandard | snazzy",
     "lint:fix": "semistandard --fix",
-    "predeploy": "npm run build && shx mkdir -p .ghpages && cp -r index.html assets build vendor .ghpages",
-    "start": "webpack-dev-server --host 0.0.0.0 --progress --colors --hot --inline --port 3003"
+    "predeploy": "npm run build && shx mkdir -p .ghpages && shx cp -r index.html assets build vendor .ghpages",
+    "deploy": "gh-pages -d .ghpages -r git@github.com:supermedium/beatsaver-viewer.git && shx rm -rf .ghpages"
   },
   "dependencies": {
-    "aframe-aabb-collider-component": "^3.1.0",
-    "aframe-atlas-uvs-component": "^2.1.0",
-    "aframe-audioanalyser-component": "^5.3.0",
-    "aframe-event-decorators": "^1.0.2",
-    "aframe-event-set-component": "^4.0.1",
-    "aframe-geometry-merger-component": "^2.0.0-beta1",
-    "aframe-haptics-component": "^1.4.2",
-    "aframe-layout-component": "^5.3.0",
-    "aframe-orbit-controls": "^1.2.0",
-    "aframe-proxy-event-component": "^2.1.0",
-    "aframe-render-order-component": "^1.1.0",
-    "aframe-ring-shader": "^1.1.0",
-    "aframe-slice9-component": "^1.0.0",
-    "aframe-state-component": "^6.4.2",
-    "aframe-thumb-controls-component": "^1.1.0",
-    "algoliasearch": "^3.32.0",
-    "ansi-html": "0.0.7",
-    "autoprefixer": "^7.2.6",
-    "babel": "6.23.0",
-    "babel-core": "6.24.1",
-    "babel-loader": "7.0.0",
-    "babel-minify-webpack-plugin": "0.2.0",
-    "babel-preset-es2015": "6.24.1",
-    "babel-preset-react": "^6.24.1",
-    "babel-preset-stage-0": "6.24.1",
-    "body-parser": "1.18.2",
-    "classnames": "^2.2.5",
-    "css-loader": "^0.23.1",
-    "debug": "^4.1.0",
     "drag-drop": "^7.2.0",
-    "fswatch": "^0.1.4",
-    "html-entities": "^1.2.1",
-    "html-minifier": "^3.5.11",
-    "ip": "1.1.5",
-    "json-loader": "^0.5.7",
     "jszip": "^3.10.1",
-    "nosleep.js": "^0.12.0",
-    "nunjucks": "3.0.1",
-    "postcss": "^6.0.23",
-    "postcss-loader": "^0.9.1",
-    "preact": "^8.4.2",
-    "style-loader": "^0.23.1",
-    "stylus": "^0.54.5",
-    "stylus-loader": "^3.0.2",
-    "uglify-js": "git://github.com/mishoo/UglifyJS2#harmony",
-    "uglifyjs-webpack-plugin": "0.4.6",
-    "webpack-glsl-loader": "^1.0.1",
-    "webpack-sources": "1.0.1"
+    "nosleep.js": "^0.12.0"
   },
   "devDependencies": {
-    "cross-env": "4.0.0",
-    "extract-text-webpack-plugin": "^2.1.2",
-    "ghpages": "0.0.10",
-    "semistandard": "10.0.0",
-    "shx": "^0.2.2",
-    "snazzy": "7.0.0",
-    "superagent": "^3.8.2",
-    "webpack": "^2.3.3",
-    "webpack-dev-server": "^2.4.4"
+    "@babel/core": "^7.26.0",
+    "@babel/preset-env": "^7.26.0",
+    "autoprefixer": "^10.4.20",
+    "babel-loader": "^9.2.1",
+    "buffer": "^6.0.3",
+    "cross-env": "^7.0.3",
+    "css-loader": "^7.1.2",
+    "css-minimizer-webpack-plugin": "^8.0.0",
+    "gh-pages": "^6.3.0",
+    "mini-css-extract-plugin": "^2.9.2",
+    "nunjucks": "^3.2.4",
+    "postcss": "^8.4.49",
+    "postcss-loader": "^8.1.1",
+    "semistandard": "^17.0.0",
+    "shx": "^0.3.4",
+    "snazzy": "^9.0.0",
+    "style-loader": "^4.0.0",
+    "stylus": "^0.64.0",
+    "stylus-loader": "^8.1.0",
+    "webpack": "^5.97.1",
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-server": "^5.2.0"
+  },
+  "overrides": {
+    "sockjs": {
+      "uuid": "^11.1.1"
+    }
   },
   "semistandard": {
     "globals": [
@@ -76,10 +49,11 @@
       "THREE"
     ],
     "ignore": [
-      "build/**"
+      "build/**",
+      "vendor/**"
     ]
   },
   "engines": {
-    "node": "8.9.1"
+    "node": ">=18"
   }
 }

@@ -7,17 +7,17 @@ console.timeEnd = () => {};
 
 require('../vendor/BufferGeometryUtils');
 
-require('aframe-aabb-collider-component');
-require('aframe-atlas-uvs-component');
-require('aframe-event-set-component');
-require('aframe-geometry-merger-component');
-require('aframe-layout-component');
-require('aframe-orbit-controls');
-require('aframe-proxy-event-component');
-require('aframe-ring-shader');
-require('aframe-state-component');
-require('aframe-slice9-component');
-require('aframe-render-order-component');
+require('./vendor/aframe-components/aabb-collider');
+require('./vendor/aframe-components/atlas-uvs');
+require('./vendor/aframe-components/event-set');
+require('./vendor/aframe-components/geometry-merger');
+require('./vendor/aframe-components/layout');
+require('./vendor/aframe-components/orbit-controls');
+require('./vendor/aframe-components/proxy-event');
+require('./vendor/aframe-components/ring-shader');
+require('./vendor/aframe-components/state-component');
+require('./vendor/aframe-components/slice9');
+require('./vendor/aframe-components/render-order');
 
 requireAll(require.context('./components/', true, /\.js$/));
 requireAll(require.context('./state/', true, /\.js$/));

@@ -1,0 +1,53 @@
+{
+  "version": "3",
+  "remote": {
+    "https://edge.netlify.com/": "fd941d61d88673d5f28aab283fb86fcc50f08a3bc80ee5470498fcfa88c65cfb",
+    "https://edge.netlify.com/bootstrap/config.ts": "6a2ce0e544e15e8f8883a5c18da5948e37fd0f2619f68cb31f3af53c51817025",
+    "https://edge.netlify.com/bootstrap/context.ts": "e97240232121e2f369f6546ce961490f34d961ea1ea54be3ff09633e3f08373f",
+    "https://edge.netlify.com/bootstrap/cookie.ts": "8b0baae708989ca183c6f3b4ab3d029e6abcbc2e43f93edeb0ff447b3bbc3a05",
+    "https://edge.netlify.com/bootstrap/edge_function.ts": "b8253e86aa83c67341f5cfedeba5049d77fbf84dcab7eceff7566b7728ae9b39",
+    "https://edge.netlify.com/bootstrap/globals/types.ts": "eaa6148ded3121d8dee62dd91c86e7fe76601df0f3ca8d7962243a30f4c8935f"
+  },
+  "workspace": {
+    "packageJson": {
+      "dependencies": [
+        "npm:@babel/core@^7.26.0",
+        "npm:@babel/preset-env@^7.26.0",
+        "npm:aframe-aabb-collider-component@^3.1.0",
+        "npm:aframe-atlas-uvs-component@^2.1.0",
+        "npm:aframe-event-set-component@^4.0.1",
+        "npm:aframe-geometry-merger-component@^2.0.0-beta1",
+        "npm:aframe-layout-component@^5.3.0",
+        "npm:aframe-orbit-controls@^1.2.0",
+        "npm:aframe-proxy-event-component@^2.1.0",
+        "npm:aframe-render-order-component@^1.1.0",
+        "npm:aframe-ring-shader@^1.1.0",
+        "npm:aframe-slice9-component@^1.0.0",
+        "npm:aframe-state-component@^6.4.2",
+        "npm:autoprefixer@^10.4.20",
+        "npm:babel-loader@^9.2.1",
+        "npm:buffer@^6.0.3",
+        "npm:cross-env@^7.0.3",
+        "npm:css-loader@^7.1.2",
+        "npm:css-minimizer-webpack-plugin@^7.0.0",
+        "npm:drag-drop@^7.2.0",
+        "npm:gh-pages@^6.3.0",
+        "npm:jszip@^3.10.1",
+        "npm:mini-css-extract-plugin@^2.9.2",
+        "npm:nosleep.js@^0.12.0",
+        "npm:nunjucks@^3.2.4",
+        "npm:postcss-loader@^8.1.1",
+        "npm:postcss@^8.4.49",
+        "npm:semistandard@^17.0.0",
+        "npm:shx@^0.3.4",
+        "npm:snazzy@^9.0.0",
+        "npm:style-loader@^4.0.0",
+        "npm:stylus-loader@^8.1.0",
+        "npm:stylus@^0.64.0",
+        "npm:webpack-cli@^6.0.1",
+        "npm:webpack-dev-server@^5.2.0",
+        "npm:webpack@^5.97.1"
+      ]
+    }
+  }
+}

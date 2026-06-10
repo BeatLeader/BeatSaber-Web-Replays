@@ -1,4 +1,19 @@
 <a-entity id="stage">
+	<!-- Exported Beat Saber environment (Phase 1 POC). On load it hides the legacy
+	     hardcoded decorative stage below so the two don't overlap. -->
+	<!-- Exported environment is chosen via the ?env=<name> URL param (default weave). -->
+	<a-entity id="glbEnvironment"
+		environment-glb="hideLegacy: true"
+		light-rig
+		material-mapper
+		environment-background
+		mirror
+		light-events-v2
+		light-events-v3
+		track-lane-rings
+		laser-rotation
+		env-spectrogram>
+
 	<a-entity
 		id="audioColumns"
 		bind__visible="settings.showAudioColumns"
@@ -57,13 +72,14 @@
 			id="stageadditiveobj"
 			obj-model="obj: #stageAdditiveObj"
 			materials="name: stageAdditive"></a-entity>
-	</a-entity>
-	<a-entity
-		id="lightFixture"
-		bind__visible="settings.showLight"
-		animation__rotationY="property: object3D.rotation.y; from: 0; to: 0; dur: 600; easing: easeInOutQuad; startEvents: spawnRotationStart">
-		<a-entity light="type: point; intensity: 10" position="-8 4 2"> </a-entity>
-		<a-entity light="type: point; intensity: 10" position="8 4 2"> </a-entity>
+
+		<a-entity
+			id="lightFixture"
+			bind__visible="settings.showLight"
+			animation__rotationY="property: object3D.rotation.y; from: 0; to: 0; dur: 600; easing: easeInOutQuad; startEvents: spawnRotationStart">
+			<a-entity light="type: point; intensity: 10" position="-8 4 2"> </a-entity>
+			<a-entity light="type: point; intensity: 10" position="8 4 2"> </a-entity>
+		</a-entity>
 	</a-entity>
 
 	<a-entity

@@ -810,6 +810,108 @@ function postprocess(map, mode) {
 	return updateScoringAndTypes(result);
 }
 
+/**
+ * V4 maps split lighting into a separate lightshow file that uses shared index tables
+ * (indexFilters / lightColorEventBoxes / lightColorEvents / rotation+translation equivalents)
+ * referenced by index. This resolves those tables back into the inline V3-shaped box groups the
+ * light-events-v3 runtime already consumes (lightColorEventBoxGroups / lightRotationEventBoxGroups
+ * / lightTranslationEventBoxGroups), so no runtime changes are needed.
+ *
+ * EventBoxGroupType: 1=Color, 2=Rotation, 3=Translation. BeatIndex {b: beat, i: tableIndex}.
+ */
+function convertV4Lightshow(ls) {
+	const filters = ls.indexFilters || [];
+	const colorBoxes = ls.lightColorEventBoxes || [];
+	const colorEvents = ls.lightColorEvents || [];
+	const rotBoxes = ls.lightRotationEventBoxes || [];
+	const rotEvents = ls.lightRotationEvents || [];
+	const transBoxes = ls.lightTranslationEventBoxes || [];
+	const transEvents = ls.lightTranslationEvents || [];
+	const groups = ls.eventBoxGroups || [];
+
+	const color = [];
+	const rotation = [];
+	const translation = [];
+
+	for (const g of groups) {
+		if (g.t === 1) {
+			color.push(convertV4Group(g, eb => convV4ColorBox(eb, filters, colorBoxes, colorEvents)));
+		} else if (g.t === 2) {
+			rotation.push(convertV4Group(g, eb => convV4AxisBox(eb, filters, rotBoxes, rotEvents, convV4RotData)));
+		} else if (g.t === 3) {
+			translation.push(convertV4Group(g, eb => convV4AxisBox(eb, filters, transBoxes, transEvents, convV4TransData)));
+		}
+	}
+
+	// Color-boost timeline: colorBoostEvents (BeatIndex {b,i}) -> colorBoostEventsData ({b: on}).
+	const boostIdx = ls.colorBoostEvents || [];
+	const boostData = ls.colorBoostEventsData || [];
+	const colorBoost = boostIdx.map(bi => ({b: bi.b, o: (boostData[bi.i] || {}).b === 1}));
+
+	return {
+		lightColorEventBoxGroups: color,
+		lightRotationEventBoxGroups: rotation,
+		lightTranslationEventBoxGroups: translation,
+		colorBoostBeatmapEvents: colorBoost,
+	};
+}
+
+function convertV4Group(g, boxConv) {
+	return {b: g.b, g: g.g, e: (g.e || []).map(boxConv)};
+}
+
+// Color box: brightness-distribution param/type are s/t in v4 but r/t in the v3 inline shape.
+function convV4ColorBox(eb, filters, boxes, events) {
+	const box = boxes[eb.e] || {};
+	return {
+		f: filters[eb.f] || {},
+		w: box.w,
+		d: box.d,
+		r: box.s, // brightness distribution param
+		t: box.t, // brightness distribution type
+		b: box.b, // affectFirst
+		e: (eb.l || []).map(bi => {
+			const ev = events[bi.i] || {};
+			return {
+				b: bi.b,
+				c: ev.c,
+				s: ev.b, // brightness
+				f: ev.f,
+				sb: ev.sb,
+				sf: ev.sf,
+				// v3 transition encoding: extend / linear / instant (non-linear color eases collapse to linear)
+				i: ev.p === 1 ? 2 : ev.e !== undefined && ev.e !== -1 ? 1 : 0,
+			};
+		}),
+	};
+}
+
+// Rotation/translation boxes share a shape: axis a, flip f, dist s/t, data list -> dataConv.
+function convV4AxisBox(eb, filters, boxes, events, dataConv) {
+	const box = boxes[eb.e] || {};
+	return {
+		f: filters[eb.f] || {},
+		w: box.w,
+		d: box.d,
+		s: box.s, // value distribution param
+		t: box.t, // value distribution type
+		b: box.b, // affectFirst
+		i: box.e, // distribution easeType
+		a: box.a, // axis
+		r: box.f, // flip (NOTE: the box's own f field, not the EventBox filter index eb.f)
+		l: (eb.l || []).map(bi => dataConv(bi.b, events[bi.i] || {})),
+	};
+}
+
+function convV4RotData(beat, ev) {
+	return {b: beat, p: ev.p, e: ev.e, l: ev.l, r: ev.r, o: ev.d};
+}
+
+function convV4TransData(beat, ev) {
+	return {b: beat, p: ev.p, e: ev.e, t: ev.t};
+}
+
 module.exports.postprocess = postprocess;
+module.exports.convertV4Lightshow = convertV4Lightshow;
 module.exports.processNoodle = processNoodle;
 module.exports.updateScoringAndTypes = updateScoringAndTypes;

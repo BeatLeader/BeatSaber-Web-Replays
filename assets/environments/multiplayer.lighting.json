@@ -1,0 +1,18 @@
+{
+  "env": "multiplayerenvironment",
+  "switches": [],
+  "groups": [],
+  "translationGroups": [],
+  "rings": [],
+  "colorScheme": null,
+  "background": null,
+  "fog": {
+    "attenuation": 0.0008,
+    "offset": 0.0,
+    "heightFogStartY": -50.0,
+    "heightFogHeight": 10.0,
+    "autoExposureLimit": 1000.0,
+    "legacyAutoExposure": false
+  },
+  "lights": []
+}

@@ -1,7 +1,7 @@
 const utils = require('../utils');
 const dragDrop = require('drag-drop');
 import JSZip from 'jszip';
-import {postprocess, processNoodle} from '../utils/mapPostprocessor';
+import {postprocess, processNoodle, convertV4Lightshow} from '../utils/mapPostprocessor';
 
 const chiralityModes = ['VerticalStandard', 'HorizontalStandard', 'InverseStandard', 'InvertedStandard'];
 const CUSTOM_LEVEL_PREFIX = 'custom_level_';
@@ -160,6 +160,26 @@ AFRAME.registerComponent('zip-loader', {
 					mapJson.info = event.info;
 					mapJson.audioData = info.audioData;
 					let map = postprocess(mapJson, mode);
+
+					// V4 splits lighting into a separate lightshow file; load it and resolve its
+					// index tables into the inline box groups the V3 lighting runtime consumes.
+					if (diff._lightshowFilename) {
+						const lsKey = Object.keys(files).find(f => f.toLowerCase() == diff._lightshowFilename.toLowerCase());
+						if (lsKey) {
+							try {
+								const lsData = new TextDecoder().decode(await files[lsKey].async('uint8array'));
+								const ls = JSON.parse(lsData.replaceAll('NaN', '0'));
+								const converted = convertV4Lightshow(ls);
+								map.lightColorEventBoxGroups = converted.lightColorEventBoxGroups;
+								map.lightRotationEventBoxGroups = converted.lightRotationEventBoxGroups;
+								map.lightTranslationEventBoxGroups = converted.lightTranslationEventBoxGroups;
+								map.colorBoostBeatmapEvents = converted.colorBoostBeatmapEvents;
+							} catch (e) {
+								console.warn('[zip-loader] failed to parse v4 lightshow', diff._lightshowFilename, e);
+							}
+						}
+					}
+
 					event.beatmaps[mode][diff._difficulty] = map;
 					event.beatSpeeds[mode][diff._difficulty] = diff._noteJumpMovementSpeed;
 					event.beatOffsets[mode][diff._difficulty] = diff._noteJumpStartBeatOffset;
@@ -286,6 +306,7 @@ AFRAME.registerComponent('zip-loader', {
 											? 9
 											: 1,
 									_beatmapFilename: diff.beatmapDataFilename,
+									_lightshowFilename: diff.lightshowDataFilename,
 									_noteJumpMovementSpeed: diff.noteJumpMovementSpeed,
 									_noteJumpStartBeatOffset: diff.noteJumpStartBeatOffset,
 									_beatmapColorSchemeIdx: diff.beatmapColorSchemeIdx,

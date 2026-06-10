@@ -1,89 +1,196 @@
-<div class="toggleButton" style="border-bottom: 1px solid white; margin-bottom: 4px" title="Disable color changes, rotations, sparks, etc.">
-	<label class="switch">
-		<input type="checkbox" id="noEffects" />
-		<span class="slider round"></span>
-	</label>
-	<label class="toggleButtonLabel">
-		<td>
-			<nobr>Disable events</nobr>
-		</td>
+<div style="border-bottom: 1px solid white; margin-bottom: 4px">
+	<label style="display: flex" title="Which environment to display. 'Map environment' uses the one the map asks for, 'Legacy' switches back to the old hardcoded stage.">
+		<div class="toggleButtonContainer">
+			<label class="toggleButtonLabel" style="margin-left: 5px; top: 0; width: unset"
+				><td><nobr>Environment:</nobr></td></label
+			>
+		</div>
+		<select id="environmentOverride" class="settingButton" style="margin-left: 5px; margin-bottom: 5px; font-size: 0.7em">
+			<option value="">Map environment</option>
+			<option value="legacy">Legacy</option>
+			<option value="bigmirror">Big Mirror</option>
+			<option value="billie">Billie</option>
+			<option value="britney">Britney Spears</option>
+			<option value="bts">BTS</option>
+			<option value="coldplay">Coldplay</option>
+			<option value="collider">Collider</option>
+			<option value="crabrave">Crab Rave</option>
+			<option value="daftpunk">Daft Punk</option>
+			<option value="dragons">Dragons</option>
+			<option value="dragons2">Dragons 2.0</option>
+			<option value="edm">EDM</option>
+			<option value="fitbeat">FitBeat</option>
+			<option value="gaga">Gaga</option>
+			<option value="glassdesert">Glass Desert</option>
+			<option value="greenday">Green Day</option>
+			<option value="grid">Grid</option>
+			<option value="halloween">Spooky</option>
+			<option value="hiphop">Hip Hop</option>
+			<option value="interscope">Interscope</option>
+			<option value="kaleidoscope">Kaleidoscope</option>
+			<option value="kda">K/DA</option>
+			<option value="lattice">Lattice</option>
+			<option value="linkinpark">Linkin Park</option>
+			<option value="linkinpark2">Linkin Park 2.0</option>
+			<option value="lizzo">Lizzo</option>
+			<option value="metallica">Metallica</option>
+			<option value="monstercat">Monstercat</option>
+			<option value="monstercat2">Monstercat 2.0</option>
+			<option value="multiplayer">Multiplayer</option>
+			<option value="nice">Nice</option>
+			<option value="origins">Origins</option>
+			<option value="panic">Panic! At The Disco</option>
+			<option value="panic2">Panic 2.0</option>
+			<option value="prodigy">The Prodigy</option>
+			<option value="pyro">Pyro</option>
+			<option value="queen">Queen</option>
+			<option value="rocket">Rocket</option>
+			<option value="rockmixtape">Rock Mixtape</option>
+			<option value="skrillex">Skrillex</option>
+			<option value="thefirst">The First</option>
+			<option value="therollingstones">The Rolling Stones</option>
+			<option value="thesecond">The Second</option>
+			<option value="theweeknd">The Weeknd</option>
+			<option value="timbaland">Timbaland</option>
+			<option value="triangle">Triangle</option>
+			<option value="tutorial">Tutorial</option>
+			<option value="weave">Weave</option>
+		</select>
 	</label>
 </div>
 
-<div class="generalSettingsContainer">
+<!-- Settings for the exported (new) environment system. Hidden when "Legacy" is selected. -->
+<div id="environmentVisualsSettings">
 	<div class="toggleButtons" style="display: flex; flex-direction: column; justify-content: space-between">
-		<div class="toggleButton" title="Display lasers on the back.">
+		<div class="toggleButton" title="Distance fog — dims and hazes far away lights and structure.">
 			<label class="switch">
-				<input type="checkbox" id="showLasers" />
+				<input type="checkbox" id="environmentFog" />
 				<span class="slider round"></span>
 			</label>
 			<label class="toggleButtonLabel">
 				<td>
-					<nobr>Lasers</nobr>
+					<nobr>Fog</nobr>
 				</td>
 			</label>
 		</div>
 
-		<div class="toggleButton" title="Display twisting animation.">
+		<div class="toggleButton" title="Screen bloom — the wide glow around lights.">
 			<label class="switch">
-				<input type="checkbox" id="showTwister" />
+				<input type="checkbox" id="environmentBloom" />
 				<span class="slider round"></span>
 			</label>
 			<label class="toggleButtonLabel">
 				<td>
-					<nobr>Twister</nobr>
+					<nobr>Bloom</nobr>
 				</td>
 			</label>
 		</div>
 
-		<div class="toggleButton" title="Display columns to the sides.">
-			<label class="switch">
-				<input type="checkbox" id="showAudioColumns" />
-				<span class="slider round"></span>
-			</label>
-			<label class="toggleButtonLabel">
-				<td>
-					<nobr>Audio columns</nobr>
-				</td>
-			</label>
-		</div>
+		<label style="display: flex" title="Floor reflection quality.">
+			<div class="toggleButtonContainer">
+				<label class="toggleButtonLabel" style="margin-left: 5px; top: 0; width: unset"
+					><td><nobr>Mirrors:</nobr></td></label
+				>
+			</div>
+			<select id="environmentMirror" class="settingButton" style="margin-left: 5px; margin-bottom: 5px; font-size: 0.7em">
+				<option value="off">Off</option>
+				<option value="low">Low</option>
+				<option value="middle">Middle</option>
+				<option value="high">High</option>
+			</select>
+		</label>
+	</div>
+</div>
+
+<!-- Legacy stage settings. Only applicable (and only shown) when the "Legacy" environment is selected. -->
+<div id="legacyVisualsSettings" style="display: none">
+	<div class="toggleButton" style="border-bottom: 1px solid white; margin-bottom: 4px" title="Disable color changes, rotations, sparks, etc.">
+		<label class="switch">
+			<input type="checkbox" id="noEffects" />
+			<span class="slider round"></span>
+		</label>
+		<label class="toggleButtonLabel">
+			<td>
+				<nobr>Disable events</nobr>
+			</td>
+		</label>
 	</div>
 
-	<div class="toggleButtons" style="display: flex; flex-direction: column; justify-content: space-between">
-		<div class="toggleButton" title="Display platform on the front.">
-			<label class="switch">
-				<input type="checkbox" id="showPlatform" />
-				<span class="slider round"></span>
-			</label>
-			<label class="toggleButtonLabel">
-				<td>
-					<nobr>Platform</nobr>
-				</td>
-			</label>
+	<div class="generalSettingsContainer">
+		<div class="toggleButtons" style="display: flex; flex-direction: column; justify-content: space-between">
+			<div class="toggleButton" title="Display lasers on the back.">
+				<label class="switch">
+					<input type="checkbox" id="showLasers" />
+					<span class="slider round"></span>
+				</label>
+				<label class="toggleButtonLabel">
+					<td>
+						<nobr>Lasers</nobr>
+					</td>
+				</label>
+			</div>
+
+			<div class="toggleButton" title="Display twisting animation.">
+				<label class="switch">
+					<input type="checkbox" id="showTwister" />
+					<span class="slider round"></span>
+				</label>
+				<label class="toggleButtonLabel">
+					<td>
+						<nobr>Twister</nobr>
+					</td>
+				</label>
+			</div>
+
+			<div class="toggleButton" title="Display columns to the sides.">
+				<label class="switch">
+					<input type="checkbox" id="showAudioColumns" />
+					<span class="slider round"></span>
+				</label>
+				<label class="toggleButtonLabel">
+					<td>
+						<nobr>Audio columns</nobr>
+					</td>
+				</label>
+			</div>
 		</div>
 
-		<div class="toggleButton" title="Display floor.">
-			<label class="switch">
-				<input type="checkbox" id="showFloor" />
-				<span class="slider round"></span>
-			</label>
-			<label class="toggleButtonLabel">
-				<td>
-					<nobr>Floor</nobr>
-				</td>
-			</label>
-		</div>
+		<div class="toggleButtons" style="display: flex; flex-direction: column; justify-content: space-between">
+			<div class="toggleButton" title="Display platform on the front.">
+				<label class="switch">
+					<input type="checkbox" id="showPlatform" />
+					<span class="slider round"></span>
+				</label>
+				<label class="toggleButtonLabel">
+					<td>
+						<nobr>Platform</nobr>
+					</td>
+				</label>
+			</div>
 
-		<div class="toggleButton" title="Lights!">
-			<label class="switch">
-				<input type="checkbox" id="showLight" />
-				<span class="slider round"></span>
-			</label>
-			<label class="toggleButtonLabel">
-				<td>
-					<nobr>Light</nobr>
-				</td>
-			</label>
+			<div class="toggleButton" title="Display floor.">
+				<label class="switch">
+					<input type="checkbox" id="showFloor" />
+					<span class="slider round"></span>
+				</label>
+				<label class="toggleButtonLabel">
+					<td>
+						<nobr>Floor</nobr>
+					</td>
+				</label>
+			</div>
+
+			<div class="toggleButton" title="Lights!">
+				<label class="switch">
+					<input type="checkbox" id="showLight" />
+					<span class="slider round"></span>
+				</label>
+				<label class="toggleButtonLabel">
+					<td>
+						<nobr>Light</nobr>
+					</td>
+				</label>
+			</div>
 		</div>
 	</div>
 </div>

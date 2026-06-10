@@ -129,7 +129,7 @@ AFRAME.registerComponent('settings', {
 			fov: 60,
 			forceForwardLookDirection: false,
 			cameraXRotation: 0,
-			orthographicBackEnabled: document.body.clientWidth > 600,
+			orthographicBackEnabled: false,
 			orthographicBackFrustum: 1.4,
 			orthographicBackFar: 25,
 			orthographicRightEnabled: false,
@@ -142,6 +142,14 @@ AFRAME.registerComponent('settings', {
 			saveFpvToggle: true,
 
 			// Visuals
+			// '' = environment requested by the map, 'legacy' = old hardcoded web stage,
+			// anything else = force that exported environment (assets/environments/<name>.glb).
+			environmentOverride: '',
+			environmentFog: false,
+			environmentBloom: false,
+			environmentMirror: 'off', // off | low | middle | high
+
+			// Legacy stage visuals (only apply when environmentOverride == 'legacy')
 			showLasers: true,
 			showTwister: true,
 			showPlatform: true,
@@ -273,6 +281,18 @@ AFRAME.registerComponent('settings', {
 				toggle.value = this.settings[key];
 			}
 		});
+
+		// The Visuals tab shows the legacy stage toggles only when the legacy environment is
+		// selected; the new-environment controls (fog/bloom/mirrors) only otherwise.
+		const updateVisualsPanes = () => {
+			const legacy = this.settings.environmentOverride === 'legacy';
+			const legacyPane = document.getElementById('legacyVisualsSettings');
+			if (legacyPane) legacyPane.style.display = legacy ? '' : 'none';
+			const envPane = document.getElementById('environmentVisualsSettings');
+			if (envPane) envPane.style.display = legacy ? 'none' : '';
+		};
+		updateVisualsPanes();
+		this.el.sceneEl.addEventListener('settingsChanged', updateVisualsPanes);
 	},
 	sync: function () {
 		localStorage.setItem('settings', JSON.stringify(this.settings));

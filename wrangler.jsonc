@@ -1,0 +1,10 @@
+{
+	"name": "beatsaber-web-replays",
+	"compatibility_date": "2026-01-02",
+	"main": "worker.js",
+	"assets": {
+		"directory": "./",
+		"binding": "ASSETS",
+		"not_found_handling": "single-page-application"
+	}
+}

@@ -8,6 +8,7 @@ $font=system-ui, BlinkMacSystemFont, -apple-system, "Segoe UI", Helvetica, Arial
 html
   background #111
   user-select: none;
+  -webkit-tap-highlight-color: transparent;
 
 #body:not(.showControls)
   .povswitch
@@ -169,6 +170,10 @@ html
     #mixerContainer .settingRange
       margin auto
 
+    #mixerContainer > div
+      grid-auto-rows: 1fr
+      align-items: center
+
   .controlsSettings
     margin: 6px 16px 0 8px;
     right: 24px;
@@ -296,44 +301,58 @@ html
       --value: 1;
       -webkit-appearance: none;
       -moz-appearance: none;
+      appearance: none;
       cursor pointer
       margin-left: -1px
       width 104px
-      height: 8px
-      background-color transparent
-      margin-top 13px
+      height: 28px
+      margin-top 3px
+      margin-bottom -10px
+      padding 0
+      background transparent
       z-index 100
-      border-radius: 10px;
-      background: #4776e6; /* fallback for old browsers */
-      background:
-        -webkit-linear-gradient(to right, transparent 0%, transparent calc((var(--value) / 2) * 100%), white calc((var(--value) / 2) * 100%), white 100%),
-        -webkit-linear-gradient(to right, #8e54e9, #dd1853);
+      touch-action none
+
+    input[type=range]::-webkit-slider-runnable-track
+      height: 8px
+      border: none
+      border-radius: 10px
+      background: #4776e6 /* fallback for old browsers */
       background:
         linear-gradient(to right, transparent 0%, transparent calc((var(--value) / 2) * 100%), white calc((var(--value) / 2) * 100%), white 100%),
         linear-gradient(to right, #8e54e9, #dd1853);
 
-    input[type="range"]::-moz-range-thumb {
+    input[type=range]::-moz-range-track
+      height: 8px
+      border: none
+      border-radius: 10px
+      background: #4776e6 /* fallback for old browsers */
+      background:
+        linear-gradient(to right, transparent 0%, transparent calc((var(--value) / 2) * 100%), white calc((var(--value) / 2) * 100%), white 100%),
+        linear-gradient(to right, #8e54e9, #dd1853);
+
+    input[type=range]::-moz-range-thumb
       -moz-appearance: none;
       border-radius: 50%;
       height: 15px;
       width: 15px;
       max-width: 80px;
+      border: none;
       position: relative;
       background-color: #1d1c25;
       cursor: -moz-grab;
       -moz-transition: border 1000ms ease;
       transition: border 1000ms ease;
-    }
 
-    input[type=range]::-webkit-slider-thumb {
+    input[type=range]::-webkit-slider-thumb
       -webkit-appearance: none;
       height: 15px
       width: 15px
+      margin-top: -3.5px
       border-radius: 50%
       border: 1px solid white
       background-color: #1d1c25
       z-index: 1
-    }
 
   #pause
     cursor pointer
@@ -397,9 +416,8 @@ html
   right: 101px;
 
 .delaySliderContainer {
-  height: 6px;
-  margin-top: 4px;
-  margin-bottom: -7px;
+  display: flex;
+  align-items: center;
 }
 
 #delaySlider {
@@ -805,41 +823,44 @@ html
 input[type=range].settingRange
   display: inline-block
   -webkit-appearance: none
-  height: 4px
+  appearance: none
+  height: 24px
   padding: 0;
-  margin: 10px 0;
+  margin: 0;
   margin-left: 0.3em;
   font: inherit;
   outline: none;
   color: #069
-  background: #3f3f3f;
+  background: transparent;
   box-sizing: border-box;
   transition: opacity .2s;
   cursor: pointer;
+  touch-action: none;
 
 /* Input range Chrome */
-input[type=range].settingRange::-webkit-slider-runnable-track 
+input[type=range].settingRange::-webkit-slider-runnable-track
   border: none;
-  height: 14px
-  border-radius: 0;
-  background-color: transparent;
+  height: 4px
+  border-radius: 2px;
+  background-color: #3f3f3f;
 
 
-input[type=range].settingRange::-webkit-slider-thumb 
+input[type=range].settingRange::-webkit-slider-thumb
   -webkit-appearance: none;
   height: 15px
   width: 15px
+  margin-top: -5.5px
   border: none
   border-radius: 50%
   background-color: rgb(142,84,233);
 
 
 /* Input range Firefox */
-input[type=range].settingRange::-moz-range-track 
+input[type=range].settingRange::-moz-range-track
   border: none;
   height: 4px
-  border-radius: 0;
-  background-color: transparent;
+  border-radius: 2px;
+  background-color: #3f3f3f;
 
 input[type=range].settingRange::-moz-range-thumb
   height: 15px
@@ -851,6 +872,35 @@ input[type=range].settingRange::-moz-range-thumb
 input[type=range].settingRange::-moz-range-progress
   height: 4px;
   background: transparent;
+
+@media (pointer: coarse)
+  input[type=range].settingRange
+    height: 36px
+    margin-top: -6px
+    margin-bottom: -6px
+
+  input[type=range].settingRange::-webkit-slider-thumb
+    height: 20px
+    width: 20px
+    margin-top: -8px
+
+  input[type=range].settingRange::-moz-range-thumb
+    height: 20px
+    width: 20px
+
+  #controls .speedSliderContainer input
+    height: 36px
+    margin-top: -1px
+    margin-bottom: -14px
+
+  #controls .speedSliderContainer input[type=range]::-webkit-slider-thumb
+    height: 20px
+    width: 20px
+    margin-top: -6px
+
+  #controls .speedSliderContainer input[type=range]::-moz-range-thumb
+    height: 20px
+    width: 20px
 
 .settingButton
     border: none;

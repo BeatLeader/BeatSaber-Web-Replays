@@ -252,21 +252,23 @@ AFRAME.registerComponent('beat-generator', {
 		var prevBeatsTime;
 		var prevEventsTime;
 
+		const currentSongTime = song.getCurrentTime();
+
 		if (this.beatsPreloadTime === undefined) {
 			prevBeatsTime = this.beatsTime + skipDebug;
 			prevEventsTime = this.eventsTime + skipDebug;
 
 			// Get current song time.
-			this.beatsTime = song.getCurrentTime() + this.movementData.spawnAheadTime;
+			this.beatsTime = currentSongTime + this.movementData.spawnAheadTime;
 
-			this.eventsTime = song.getCurrentTime();
+			this.eventsTime = currentSongTime;
 		} else {
 			prevBeatsTime = this.beatsPreloadTime;
 			prevEventsTime = this.beatsPreloadTime;
 
 			// Song is not playing and is preloading beats, use maintained beat time.
 			this.beatsTime = this.beatsPreloadTime + this.movementData.spawnAheadTime;
-			this.eventsTime = song.getCurrentTime();
+			this.eventsTime = currentSongTime;
 		}
 
 		if (!this.isSeeking && this.beatsTime <= prevBeatsTime) {
@@ -325,10 +327,12 @@ AFRAME.registerComponent('beat-generator', {
 			}
 		}
 
+		const songTime = currentSongTime + skipDebug;
+
 		const notes = this.beatData._notes;
 		for (let i = 0; i < notes.length; ++i) {
 			let noteTime = notes[i]._songTime;
-			if (noteTime > prevBeatsTime && noteTime <= beatsTime) {
+			if (noteTime <= beatsTime && this.shouldSpawnBeat(notes[i], songTime)) {
 				notes[i].time = noteTime;
 				this.generateBeat(notes[i]);
 			}
@@ -340,7 +344,7 @@ AFRAME.registerComponent('beat-generator', {
 				continue;
 			}
 			let noteTime = sliders[i]._songTime;
-			if (noteTime > prevBeatsTime && noteTime <= beatsTime) {
+			if (noteTime <= beatsTime && sliders[i]._songTailTime > songTime && !this.isSpawned(sliders[i])) {
 				sliders[i].time = noteTime;
 				this.generateSlider(sliders[i]);
 			}
@@ -349,7 +353,7 @@ AFRAME.registerComponent('beat-generator', {
 		const chains = this.beatData._chains;
 		for (let i = 0; i < chains.length; ++i) {
 			let noteTime = chains[i]._songTime;
-			if (noteTime > prevBeatsTime && noteTime <= beatsTime) {
+			if (noteTime <= beatsTime && this.shouldSpawnBeat(chains[i], songTime)) {
 				chains[i].time = noteTime;
 				this.generateChain(chains[i]);
 			}
@@ -358,6 +362,9 @@ AFRAME.registerComponent('beat-generator', {
 		// Walls.
 		const obstacles = this.beatData._obstacles;
 		for (let i = 0; i < obstacles.length; ++i) {
+			if (this.isSpawned(obstacles[i])) {
+				continue;
+			}
 			let noteTime = obstacles[i]._songTime;
 			let noteDuration = obstacles[i]._songDuration;
 			if (this.isSeeking) {
@@ -396,10 +403,21 @@ AFRAME.registerComponent('beat-generator', {
 	},
 
 	seek: function (time) {
-		this.clearBeats(true);
 		this.beatsTime = time;
 		this.isSeeking = true;
 		this.el.sceneEl.components['beat-hit-sound'].beatSeekReset = true;
+
+		const movementData = this.movementData;
+		for (let i = 0; i < this.beatContainer.children.length; i++) {
+			const child = this.beatContainer.children[i];
+			const beat = child.components.beat;
+			if (!beat || !child.isPlaying) {
+				continue;
+			}
+			if (time - (beat.data.time - movementData.spawnAheadTime) < movementData.waitingDuration) {
+				beat.returnToPool(true);
+			}
+		}
 
 		if (this.getRotation(time) != this.spawnRotation.rotation) {
 			this.el.sceneEl.emit('spawnRotationChanged', {spawnRotation: this.getRotation(time), oldSpawnRotation: this.spawnRotation}, false);
@@ -457,6 +475,7 @@ AFRAME.registerComponent('beat-generator', {
 		if (!beatEl) {
 			return;
 		}
+		this.markSpawned(note, beatEl);
 
 		if (!beatEl.components.beat || !beatEl.components.beat.data) {
 			beatEl.addEventListener('loaded', () => {
@@ -574,7 +593,7 @@ AFRAME.registerComponent('beat-generator', {
 			beatObj.flipYSide = note._flipYSide;
 
 			beatEl.setAttribute('beat', beatObj);
-			beatEl.components.beat.onGenerate(this.mappingExtensions);
+			beatEl.components.beat.onGenerate(this.mappingExtensions, note);
 			beatEl.play();
 		};
 	})(),
@@ -597,6 +616,7 @@ AFRAME.registerComponent('beat-generator', {
 		if (!beatEl) {
 			return;
 		}
+		this.markSpawned(note, beatEl);
 
 		if (!beatEl.components.beat || !beatEl.components.beat.data) {
 			beatEl.addEventListener('loaded', () => {
@@ -612,6 +632,7 @@ AFRAME.registerComponent('beat-generator', {
 		if (!wallEl) {
 			return;
 		}
+		this.markSpawned(wall, wallEl);
 
 		if (!wallEl.components.wall || !wallEl.components.wall.data) {
 			wallEl.addEventListener('loaded', () => {
@@ -781,6 +802,7 @@ AFRAME.registerComponent('beat-generator', {
 		if (!sliderEl) {
 			return;
 		}
+		this.markSpawned(slider, sliderEl);
 
 		if (!sliderEl.components.slider || !sliderEl.components.slider.data) {
 			sliderEl.addEventListener('loaded', () => {
@@ -956,7 +978,6 @@ AFRAME.registerComponent('beat-generator', {
 	},
 
 	initJD: function (newJD, itsDefault = false) {
-
 		const movementData = this.movementData;
 		const defaultHalfJumpDuration = this.calculateHalfJumpDuration(
 			this.bpm,
@@ -974,7 +995,7 @@ AFRAME.registerComponent('beat-generator', {
 		} else {
 			jt = defaultHalfJumpDuration;
 			jd = defaultJumpDistance;
-			
+
 			movementData.customJumpDuration = null;
 		}
 
@@ -990,19 +1011,13 @@ AFRAME.registerComponent('beat-generator', {
 	},
 
 	updateJD: function (fromVNJS = false) {
-
 		const movementData = this.movementData;
 
 		var jt, jd;
 		if (movementData.customJumpDuration != null) {
 			jt = movementData.customJumpDuration;
 		} else {
-			jt = this.calculateHalfJumpDuration(
-				this.bpm,
-				movementData.noteJumpMovementSpeed,
-				movementData.beatOffset
-			);
-			
+			jt = this.calculateHalfJumpDuration(this.bpm, movementData.noteJumpMovementSpeed, movementData.beatOffset);
 		}
 		jd = (60 / this.bpm) * jt * movementData.noteJumpMovementSpeed * 2;
 
@@ -1035,6 +1050,30 @@ AFRAME.registerComponent('beat-generator', {
 				child.components.wall.returnToPool();
 			}
 		}
+	},
+
+	markSpawned: function (note, el) {
+		note.spawnedEl = el;
+		note.cutTime = undefined;
+		el.spawnedFor = note;
+	},
+
+	isSpawned: function (note) {
+		const el = note.spawnedEl;
+		return el && el.spawnedFor === note && (el.isPlaying || !el.hasLoaded);
+	},
+
+	shouldSpawnBeat: function (note, songTime) {
+		if (note.cutTime !== undefined) {
+			if (note.cutTime <= songTime) {
+				return false;
+			}
+			if (this.isSpawned(note) && note.spawnedEl.components.beat) {
+				note.spawnedEl.components.beat.returnToPool(true);
+			}
+			return true;
+		}
+		return note._songTime > songTime && !this.isSpawned(note);
 	},
 });
 

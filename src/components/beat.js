@@ -359,6 +359,11 @@ AFRAME.registerComponent('beat', {
 
 			this.updatePosition();
 
+			if (!this.destroyed && this.currentPositionZ > 3 && getCurrentTime() - this.data.time > 0.5) {
+				this.returnToPool(true);
+				return;
+			}
+
 			if (
 				this.data.type != 'mine' &&
 				this.replayNote.score != NoteErrorType.Miss &&
@@ -500,10 +505,11 @@ AFRAME.registerComponent('beat', {
 	/**
 	 * Called when summoned by beat-generator.
 	 */
-	onGenerate: function () {
+	onGenerate: function (mappingExtensions, note) {
 		const data = this.data;
 		const el = this.el;
 		const movementData = data.movementData;
+		this.note = note;
 
 		this.initPositionData();
 
@@ -877,12 +883,20 @@ AFRAME.registerComponent('beat', {
 			return;
 		}
 
+		this.markCut();
+
 		if (this.replayNote.score > 0) {
 			this.el.emit('wrongMiss', null, true);
 		}
 
 		this.postScoreEvent();
 		this.showScore(hand);
+	},
+
+	markCut: function () {
+		if (this.note) {
+			this.note.cutTime = song.getCurrentTime();
+		}
 	},
 
 	postScoreEvent: function () {
@@ -906,6 +920,7 @@ AFRAME.registerComponent('beat', {
 	},
 
 	destroyMine: function () {
+		this.markCut();
 		if (!settings.settings.reducedDebris) {
 			for (let i = 0; i < this.mineFragments.length; i++) {
 				this.mineFragments[i].visible = true;
@@ -938,6 +953,7 @@ AFRAME.registerComponent('beat', {
 		var point3 = new THREE.Vector3();
 
 		return function (saberEl) {
+			this.markCut();
 			if (!settings.settings.reducedDebris && this.partRightEl) {
 				var coplanarPoint;
 				var cutThickness = (this.cutThickness = 0.02);

@@ -312,13 +312,16 @@ AFRAME.registerComponent('audioanalyser', {
 	},
 
 	getMediaSource: function (onlySource = false) {
-		const nodeCache = {};
+		const nodeCache = this.mediaNodeCache || (this.mediaNodeCache = {});
 
 		const captureThis = this;
 		return new Promise(resolve => {
 			const src = captureThis.data.src.constructor === String ? captureThis.data.src : captureThis.data.src.src;
-			if (nodeCache[src]) {
-				resolve(nodeCache[src]);
+			const cached = nodeCache[src];
+			if (cached) {
+				captureThis.audio = cached.audio;
+				captureThis.mediaSource = cached.node;
+				resolve(cached.node);
 				return;
 			}
 
@@ -336,7 +339,7 @@ AFRAME.registerComponent('audioanalyser', {
 			captureThis.mediaSource.connect(captureThis.mediaGainNode);
 			captureThis.mediaGainNode.connect(captureThis.gainNode);
 
-			nodeCache[src] = node;
+			nodeCache[src] = {node, audio: captureThis.audio};
 
 			const onMeta = () => {
 				resolve(node);

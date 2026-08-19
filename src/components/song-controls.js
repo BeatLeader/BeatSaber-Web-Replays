@@ -389,8 +389,10 @@ AFRAME.registerComponent('song-controls', {
 
 		if ('onpointerup' in window) {
 			timeline.addEventListener('pointerup', handleUp);
+			timeline.addEventListener('pointercancel', handleUp);
 		} else {
 			timeline.addEventListener('touchend', handleUp);
+			timeline.addEventListener('touchcancel', handleUp);
 		}
 
 		// Seek hover.

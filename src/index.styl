@@ -1208,6 +1208,7 @@ input:checked + .slider:before {
   fill: #a0a0a0;
   font-size: 10px
   white-space: pre
+  pointer-events: auto
   &:hover
     fill: red
 
@@ -1215,6 +1216,7 @@ input:checked + .slider:before {
   fill: #a0a0a0;
   font-size: 10px
   white-space: pre
+  pointer-events: auto
   &:hover
     fill: red
 
@@ -1230,7 +1232,8 @@ input:checked + .slider:before {
   bottom: 2px
   margin-left: 1.5px
   width: 100px;
-  z-index: -1;
+  z-index: 101;
+  pointer-events: none;
 }
 
 .range__tick:first-child {
@@ -1299,7 +1302,8 @@ input:checked + .slider:before {
   bottom: -13px
   margin-left: 1.5px
   width: 100px;
-  z-index: 1;
+  z-index: 3;
+  pointer-events: none;
 }
 
 #jdRangePoint {

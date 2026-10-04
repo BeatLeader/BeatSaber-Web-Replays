@@ -262,6 +262,16 @@ function ParseKnownCustomData(replay) {
 				replay.parsedCustomData['HeartBeatQuest'] = result;
 			}
 		}
+		if (replay.customData['EyeTracking']) {
+			try {
+				const eyeTracking = DecodeEyeTracking(replay.customData['EyeTracking']);
+				if (eyeTracking) {
+					replay.parsedCustomData['EyeTracking'] = eyeTracking;
+				}
+			} catch (e) {
+				console.warn('Failed to decode eye tracking', e);
+			}
+		}
 		if (replay.customData['reesabers:tricks-replay']) {
 			var result = {};
 			const dataView = new DataView(replay.customData['reesabers:tricks-replay'].buffer);
@@ -281,6 +291,66 @@ function ParseKnownCustomData(replay) {
 			}
 		}
 	}
+}
+
+const EyeTrackingFlags = {
+	gaze: 1,
+	leftEyeClosed: 2,
+	rightEyeClosed: 4,
+	gazeFromOpenXR: 8,
+};
+
+// Steam Link OSC data arrives ~60 ms after the head pose it belongs to, OpenXR gaze is aligned with it
+const OscEyeTrackingLatency = 0.06;
+const EyeTrackingSampleSize = 4 + 1 + 3 * 4 + 2 * 4;
+
+function DecodeEyeTracking(data) {
+	const dataView = new DataView(data.buffer);
+	dataView.pointer = 0;
+
+	const version = DecodeUint8(dataView);
+	if (version != 1) return null;
+
+	const result = {
+		source: DecodeString(dataView),
+		runtime: DecodeString(dataView),
+		gaze: [],
+		eyelids: [],
+	};
+	const count = DecodeInt(dataView);
+	if (count < 0 || count * EyeTrackingSampleSize > dataView.byteLength - dataView.pointer) return null;
+
+	for (var i = 0; i < count; i++) {
+		const time = DecodeFloat(dataView);
+		const flags = DecodeUint8(dataView);
+		const gaze = DecodeVector3(dataView);
+		const leftEyeClosed = DecodeFloat(dataView);
+		const rightEyeClosed = DecodeFloat(dataView);
+
+		if (flags & EyeTrackingFlags.gaze) {
+			const fromOpenXR = (flags & EyeTrackingFlags.gazeFromOpenXR) != 0;
+			result.gaze.push({
+				time: fromOpenXR ? time : time - OscEyeTrackingLatency,
+				x: gaze.x,
+				y: gaze.y,
+				z: gaze.z,
+				fromOpenXR,
+			});
+		}
+
+		const hasLeft = (flags & EyeTrackingFlags.leftEyeClosed) != 0;
+		const hasRight = (flags & EyeTrackingFlags.rightEyeClosed) != 0;
+		if (hasLeft || hasRight) {
+			result.eyelids.push({
+				time: time - OscEyeTrackingLatency,
+				left: hasLeft ? leftEyeClosed : rightEyeClosed,
+				right: hasRight ? rightEyeClosed : leftEyeClosed,
+			});
+		}
+	}
+
+	result.gaze.sort((a, b) => a.time - b.time);
+	return result;
 }
 
 function AddTricksToReplay(replay, tricksReplay) {

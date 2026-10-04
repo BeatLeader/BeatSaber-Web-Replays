@@ -197,6 +197,7 @@ AFRAME.registerComponent('settings', {
 			// Extensions (custom data)
 			showHeartrate: true,
 			showTreecks: true,
+			showEyeTracking: true,
 
 			// Misses slow-mode
 			autoSpeedControls: false,

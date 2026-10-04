@@ -300,20 +300,21 @@ const EyeTrackingFlags = {
 	gazeFromOpenXR: 8,
 };
 
-// Steam Link OSC data arrives ~60 ms after the head pose it belongs to, OpenXR gaze is aligned with it
-const OscEyeTrackingLatency = 0.06;
+// SteamVR eye tracker data (both OpenXR and Steam Link OSC) arrives ~60 ms after the head pose it belongs to.
+const EyeTrackingLatency = 0.06;
+const EyeTrackingVersion = 2;
 const EyeTrackingSampleSize = 4 + 1 + 3 * 4 + 2 * 4;
 
 function DecodeEyeTracking(data) {
 	const dataView = new DataView(data.buffer);
 	dataView.pointer = 0;
 
-	const version = DecodeUint8(dataView);
-	if (version != 1) return null;
+	if (DecodeUint8(dataView) != EyeTrackingVersion) return null;
 
 	const result = {
 		source: DecodeString(dataView),
 		runtime: DecodeString(dataView),
+		gazePosePrediction: DecodeFloat(dataView),
 		gaze: [],
 		eyelids: [],
 	};
@@ -330,7 +331,7 @@ function DecodeEyeTracking(data) {
 		if (flags & EyeTrackingFlags.gaze) {
 			const fromOpenXR = (flags & EyeTrackingFlags.gazeFromOpenXR) != 0;
 			result.gaze.push({
-				time: fromOpenXR ? time : time - OscEyeTrackingLatency,
+				time: time - EyeTrackingLatency,
 				x: gaze.x,
 				y: gaze.y,
 				z: gaze.z,
@@ -342,14 +343,13 @@ function DecodeEyeTracking(data) {
 		const hasRight = (flags & EyeTrackingFlags.rightEyeClosed) != 0;
 		if (hasLeft || hasRight) {
 			result.eyelids.push({
-				time: time - OscEyeTrackingLatency,
+				time: time - EyeTrackingLatency,
 				left: hasLeft ? leftEyeClosed : rightEyeClosed,
 				right: hasRight ? rightEyeClosed : leftEyeClosed,
 			});
 		}
 	}
 
-	result.gaze.sort((a, b) => a.time - b.time);
 	return result;
 }
 

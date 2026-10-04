@@ -4,6 +4,8 @@ const RING_DISTANCE = 3;
 const COLOR = 0xffd966;
 const MAX_GAZE_GAP = 0.1;
 const MAX_EYELIDS_GAP = 0.25;
+const BLINK_START = 0.6;
+const BLINK_END = 0.95;
 
 function FindSampleIndex(samples, time, hint) {
 	if (hint >= 0 && hint < samples.length && samples[hint].time <= time) {
@@ -131,13 +133,13 @@ AFRAME.registerComponent('eye-tracking', {
 		this.localRotation.setFromUnitVectors(this.forward, this.localGaze);
 		this.group.quaternion.copy(head.quaternion).multiply(this.localRotation);
 
-		const openness = 1 - this.getEyesClosed(eyeTracking, time);
+		const openness = 1 - this.getBlink(eyeTracking, time);
 		this.beamMaterial.color.setScalar(openness);
 		this.ringMaterial.color.copy(this.color).multiplyScalar(openness);
 		return openness > 0.02;
 	},
 
-	getEyesClosed: function (eyeTracking, time) {
+	getBlink: function (eyeTracking, time) {
 		const samples = eyeTracking.eyelids;
 		const i = (this.eyelidsIndex = FindSampleIndex(samples, time, this.eyelidsIndex));
 		if (i < 0 || i >= samples.length - 1) return 0;
@@ -148,6 +150,7 @@ AFRAME.registerComponent('eye-tracking', {
 		const t = (time - a.time) / Math.max(1e-6, b.time - a.time);
 		const left = a.left + (b.left - a.left) * t;
 		const right = a.right + (b.right - a.right) * t;
-		return Math.min(1, Math.max(0, (left + right) / 2));
+		const closed = Math.min(left, right);
+		return Math.min(1, Math.max(0, (closed - BLINK_START) / (BLINK_END - BLINK_START)));
 	},
 });

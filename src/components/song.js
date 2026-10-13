@@ -420,8 +420,8 @@ AFRAME.registerComponent('song', {
 		const nowSeconds = performance.now() / 1000;
 		const frameDelta = this.lastFrameNow != null ? Math.max(0, nowSeconds - this.lastFrameNow) : 0;
 
-		if (this.source && this.source.context.state === 'running' && this.lastContextTime && currentTime - this.lastContextTime < 1e-6) {
-			currentTime = this.lastContextTime + frameDelta;
+		if (this.lastContextTime && currentTime - this.lastContextTime < 1e-6) {
+			currentTime = this.lastContextTime + (this.source && this.source.context.state === 'running' ? frameDelta : 0);
 		}
 
 		var newCurrent;

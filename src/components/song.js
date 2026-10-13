@@ -6,25 +6,10 @@ const ONCE = {once: true};
 const BASE_VOLUME = 0.35;
 const isSafari = navigator.userAgent.toLowerCase().indexOf('safari') !== -1 && navigator.userAgent.toLowerCase().indexOf('chrome') === -1;
 
-// Song time is integrated from the AudioContext clock, but with pitch compensation the music
-// comes from an <audio> element. Changing that element's playbackRate (speed slider, slow-mo on
-// mistakes) makes it lose some media time, so the music falls behind the notes a bit more on
-// every change. After such a change we wait for the element to settle, compare its position
-// with the song time and gently pull the song time back to the offset it had before.
-const MEDIA_SYNC_SAMPLE_INTERVAL = 0.04; // s (wall clock) between offset samples
-const MEDIA_SYNC_REF_SAMPLES = 8; // steady-state samples kept for the reference offset
-const MEDIA_SYNC_MEASURE_SAMPLES = 6; // samples taken after a disturbance
-const MEDIA_SYNC_SETTLE_TIME = 0.3; // s (wall clock) to wait after the last disturbance
-const MEDIA_SYNC_MIN_CORRECTION = 0.002; // s, smaller differences are left alone
-const MEDIA_SYNC_SLEW = 0.15; // share of song progress used to absorb a correction
-const MEDIA_SYNC_FAST_SLEW = 0.5; // same, for corrections above MEDIA_SYNC_FAST_SLEW_FROM
-const MEDIA_SYNC_FAST_SLEW_FROM = 0.1; // s
-
-function median(values) {
-	const sorted = values.slice().sort((a, b) => a - b);
-	const mid = sorted.length >> 1;
-	return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
-}
+const MEDIA_SYNC_SETTLE = 0.3; // s, <audio> position is unreliable this long after a (re)start or rate change
+const MEDIA_SYNC_WINDOW = 0.5; // s of song time to average over, Firefox moves <audio> currentTime in ~40 ms steps
+const MEDIA_SYNC_TOLERANCE = 0.005;
+const MEDIA_SYNC_SLEW = 0.25; // max share of song progress used to absorb a correction
 
 let skipDebug = AFRAME.utils.getUrlParameter('skip');
 if (!!skipDebug) {
@@ -139,7 +124,6 @@ AFRAME.registerComponent('song', {
 				this.playMediaSession();
 			}
 			this.isPlaying = true;
-			this.markMediaSyncDisturbed();
 		}
 
 		// New challenge, load audio and play when ready.
@@ -195,7 +179,6 @@ AFRAME.registerComponent('song', {
 		if (this.data.isPlaying) {
 			this.audioAnalyser.resumeContext();
 			this.playMediaSession();
-			this.markMediaSyncDisturbed();
 		}
 	},
 
@@ -243,7 +226,6 @@ AFRAME.registerComponent('song', {
 		}
 
 		this.isPlaying = false;
-		this.resetMediaSync();
 	},
 
 	onRestart: function () {
@@ -252,7 +234,6 @@ AFRAME.registerComponent('song', {
 		this.lastContextTime = null;
 		this.lastFrameNow = null;
 		this.songStartTime = undefined;
-		this.resetMediaSync();
 
 		// Clear gain interpolation values from game over.
 		const gain = this.audioAnalyser.gainNode.gain;
@@ -298,6 +279,7 @@ AFRAME.registerComponent('song', {
 				this.playRequest.then(_ => {
 					this.playRequest = null;
 					this.metadataAudioLoading = false;
+					this.holdMediaSync();
 
 					this.el.emit('songstartaudio');
 				});
@@ -406,10 +388,9 @@ AFRAME.registerComponent('song', {
 				this.audio.currentTime = this.lastCurrentTime;
 			}
 
-			// Different source, the old reference offset no longer applies.
 			this.resetMediaSync();
 		} else if (rateChanged) {
-			this.markMediaSyncDisturbed();
+			this.holdMediaSync();
 		}
 
 		if (this.source && this.source.playbackRate) {
@@ -450,7 +431,7 @@ AFRAME.registerComponent('song', {
 			newCurrent = (currentTime - this.songStartTime) * this.speed;
 		}
 
-		newCurrent = this.updateMediaSync(newCurrent, lastCurrentTime || 0, nowSeconds);
+		newCurrent = this.syncToMedia(newCurrent, newCurrent - (lastCurrentTime || 0), nowSeconds);
 
 		this.lastCurrentTime = newCurrent;
 		this.lastContextTime = currentTime;
@@ -460,74 +441,35 @@ AFRAME.registerComponent('song', {
 	},
 
 	resetMediaSync: function () {
-		// changedAt also delays the first steady samples, so start/seek transients don't end up in the reference.
-		this.mediaSync = {phase: 'steady', samples: [], ref: null, lastSampleAt: 0, changedAt: performance.now() / 1000, remaining: 0};
+		this.mediaSync = {ref: null, pending: 0};
+		this.holdMediaSync();
 	},
 
-	usesMediaClock: function () {
-		return !!(this.source && this.source === this.mediaSource && this.audio);
+	holdMediaSync: function () {
+		this.mediaSync.sum = this.mediaSync.count = 0;
+		this.mediaSync.settleAt = performance.now() / 1000 + MEDIA_SYNC_SETTLE;
 	},
 
-	// The <audio> element may lose or gain media time (playback rate change, resume).
-	// Keep the offset measured before the disturbance and re-measure once playback settles.
-	markMediaSyncDisturbed: function () {
-		if (!this.mediaSync || !this.usesMediaClock()) {
-			this.resetMediaSync();
-			return;
-		}
-		const ms = this.mediaSync;
-		// Without a reference yet (just started or seeked) there is nothing to restore, keep warming up.
-		ms.phase = ms.ref === null ? 'steady' : 'settling';
-		ms.changedAt = performance.now() / 1000;
-		ms.samples = [];
-		ms.remaining = 0;
-	},
+	// The <audio> element loses a bit of position on playbackRate changes and resumes, while song time
+	// follows the AudioContext clock. Keep their offset at what it was after start, slewing corrections in.
+	syncToMedia: function (current, advanced, now) {
+		const sync = this.mediaSync;
+		if (!this.isPlaying || this.source !== this.mediaSource || this.audio.paused) return current;
 
-	// Called from getCurrentTime with the freshly integrated song time, returns the corrected one.
-	updateMediaSync: function (current, previous, now) {
-		const ms = this.mediaSync;
-		if (!ms || !this.isPlaying || !this.usesMediaClock() || this.audio.paused || this.context.state !== 'running') {
-			return current;
-		}
+		const step = Math.sign(sync.pending) * Math.min(Math.abs(sync.pending), Math.max(0, advanced) * MEDIA_SYNC_SLEW);
+		sync.pending -= step;
+		current -= step;
 
-		if (ms.phase === 'slewing') {
-			// Absorb the correction while the song moves forward, so time never jumps or goes backwards.
-			const advanced = current - previous;
-			if (advanced > 0) {
-				const slew = Math.abs(ms.remaining) > MEDIA_SYNC_FAST_SLEW_FROM ? MEDIA_SYNC_FAST_SLEW : MEDIA_SYNC_SLEW;
-				const step = Math.min(Math.abs(ms.remaining), advanced * slew);
-				const signedStep = ms.remaining > 0 ? step : -step;
-				current -= signedStep;
-				ms.remaining -= signedStep;
-			}
-			if (Math.abs(ms.remaining) < 1e-5) {
-				ms.phase = 'steady';
-				ms.samples = [];
-				ms.remaining = 0;
-			}
-			return current;
-		}
+		if (now < sync.settleAt) return current;
+		if (!sync.count) sync.windowStart = current;
+		sync.sum += current - sync.pending - this.audio.currentTime;
+		sync.count++;
+		if (current - sync.windowStart < MEDIA_SYNC_WINDOW) return current;
 
-		if (now - ms.lastSampleAt < MEDIA_SYNC_SAMPLE_INTERVAL) return current;
-		if (now - ms.changedAt < MEDIA_SYNC_SETTLE_TIME) return current;
-		if (ms.phase === 'settling') ms.phase = 'measuring';
-
-		ms.lastSampleAt = now;
-		ms.samples.push(current - this.audio.currentTime);
-
-		if (ms.phase === 'steady') {
-			if (ms.samples.length > MEDIA_SYNC_REF_SAMPLES) ms.samples.shift();
-			if (ms.samples.length >= 3) ms.ref = median(ms.samples);
-		} else if (ms.samples.length >= MEDIA_SYNC_MEASURE_SAMPLES) {
-			const correction = median(ms.samples) - ms.ref;
-			ms.samples = [];
-			if (Math.abs(correction) >= MEDIA_SYNC_MIN_CORRECTION) {
-				ms.phase = 'slewing';
-				ms.remaining = correction;
-			} else {
-				ms.phase = 'steady';
-			}
-		}
+		const offset = sync.sum / sync.count;
+		sync.sum = sync.count = 0;
+		if (sync.ref === null) sync.ref = offset;
+		else if (Math.abs(offset - sync.ref) > MEDIA_SYNC_TOLERANCE) sync.pending += offset - sync.ref;
 		return current;
 	},
 });

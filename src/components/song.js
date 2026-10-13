@@ -6,6 +6,11 @@ const ONCE = {once: true};
 const BASE_VOLUME = 0.35;
 const isSafari = navigator.userAgent.toLowerCase().indexOf('safari') !== -1 && navigator.userAgent.toLowerCase().indexOf('chrome') === -1;
 
+const MEDIA_SYNC_SETTLE = 0.3; // s, <audio> position is unreliable this long after a (re)start or rate change
+const MEDIA_SYNC_WINDOW = 0.5; // s of song time to average over, Firefox moves <audio> currentTime in ~40 ms steps
+const MEDIA_SYNC_TOLERANCE = 0.005;
+const MEDIA_SYNC_SLEW = 0.25; // max share of song progress used to absorb a correction
+
 let skipDebug = AFRAME.utils.getUrlParameter('skip');
 if (!!skipDebug) {
 	skipDebug = parseInt(skipDebug) / 1000;
@@ -63,6 +68,7 @@ AFRAME.registerComponent('song', {
 		this.settings = this.el.sceneEl.components.settings;
 
 		this.audioAnalyser.gainNode.gain.value = this.settings.settings.volume || BASE_VOLUME;
+		this.resetMediaSync();
 
 		this.el.addEventListener('gamemenurestart', this.onRestart.bind(this));
 		this.el.addEventListener('wallhitstart', this.onWallHitStart.bind(this));
@@ -273,6 +279,7 @@ AFRAME.registerComponent('song', {
 				this.playRequest.then(_ => {
 					this.playRequest = null;
 					this.metadataAudioLoading = false;
+					this.holdMediaSync();
 
 					this.el.emit('songstartaudio');
 				});
@@ -315,6 +322,7 @@ AFRAME.registerComponent('song', {
 		this.lastCurrentTime = this.speed > 0.01 ? 0 : time;
 		this.lastContextTime = null;
 		this.lastFrameNow = null;
+		this.resetMediaSync();
 
 		this.audio.currentTime = playTime;
 		if (this.source && this.source.playbackRate) {
@@ -337,6 +345,7 @@ AFRAME.registerComponent('song', {
 	},
 
 	setPlaybackRate: function (rate) {
+		const rateChanged = rate !== this.speed;
 		this.speed = rate;
 
 		const duration = this.getDuration();
@@ -378,6 +387,10 @@ AFRAME.registerComponent('song', {
 			if (this.lastCurrentTime !== undefined) {
 				this.audio.currentTime = this.lastCurrentTime;
 			}
+
+			this.resetMediaSync();
+		} else if (rateChanged) {
+			this.holdMediaSync();
 		}
 
 		if (this.source && this.source.playbackRate) {
@@ -418,10 +431,45 @@ AFRAME.registerComponent('song', {
 			newCurrent = (currentTime - this.songStartTime) * this.speed;
 		}
 
+		newCurrent = this.syncToMedia(newCurrent, newCurrent - (lastCurrentTime || 0), nowSeconds);
+
 		this.lastCurrentTime = newCurrent;
 		this.lastContextTime = currentTime;
 		this.lastFrameNow = nowSeconds;
 
 		return Math.max(0, newCurrent + parseFloat(this.settings.settings.soundDelay));
+	},
+
+	resetMediaSync: function () {
+		this.mediaSync = {ref: null, pending: 0};
+		this.holdMediaSync();
+	},
+
+	holdMediaSync: function () {
+		this.mediaSync.sum = this.mediaSync.count = 0;
+		this.mediaSync.settleAt = performance.now() / 1000 + MEDIA_SYNC_SETTLE;
+	},
+
+	// The <audio> element loses a bit of position on playbackRate changes and resumes, while song time
+	// follows the AudioContext clock. Keep their offset at what it was after start, slewing corrections in.
+	syncToMedia: function (current, advanced, now) {
+		const sync = this.mediaSync;
+		if (!this.isPlaying || this.source !== this.mediaSource || this.audio.paused) return current;
+
+		const step = Math.sign(sync.pending) * Math.min(Math.abs(sync.pending), Math.max(0, advanced) * MEDIA_SYNC_SLEW);
+		sync.pending -= step;
+		current -= step;
+
+		if (now < sync.settleAt) return current;
+		if (!sync.count) sync.windowStart = current;
+		sync.sum += current - sync.pending - this.audio.currentTime;
+		sync.count++;
+		if (current - sync.windowStart < MEDIA_SYNC_WINDOW) return current;
+
+		const offset = sync.sum / sync.count;
+		sync.sum = sync.count = 0;
+		if (sync.ref === null) sync.ref = offset;
+		else if (Math.abs(offset - sync.ref) > MEDIA_SYNC_TOLERANCE) sync.pending += offset - sync.ref;
+		return current;
 	},
 });

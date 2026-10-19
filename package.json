@@ -4,6 +4,7 @@
   "scripts": {
     "build": "cross-env NODE_ENV=production webpack",
     "start": "cross-env NODE_ENV=development webpack serve",
+    "dev": "node scripts/netlify-dev.js",
     "lint": "semistandard | snazzy",
     "lint:fix": "semistandard --fix",
     "predeploy": "npm run build && shx mkdir -p .ghpages && shx cp -r index.html assets build vendor .ghpages",

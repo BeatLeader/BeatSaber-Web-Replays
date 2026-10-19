@@ -5,4 +5,4 @@ if (!queryParamTime || isNaN(queryParamTime)) {
 	queryParamTime = parseFloat(queryParamTime) / 1000;
 }
 
-module.exports.queryParamTime = queryParamTime;
+module.exports.queryParams = {time: queryParamTime};

@@ -12,6 +12,10 @@ AFRAME.registerComponent('heartrate-counter', {
 		this.replayLoader = this.el.sceneEl.components['replay-loader'];
 		this.song = this.el.sceneEl.components['song'];
 		this.setupHeartrate();
+
+		this.el.sceneEl.addEventListener('replayunload', () => {
+			this.label.setAttribute('text', 'value', '');
+		});
 	},
 
 	setupHeartrate: function () {

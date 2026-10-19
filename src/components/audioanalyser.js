@@ -63,9 +63,36 @@ AFRAME.registerComponent('audioanalyser', {
 		if (!data.src) {
 			return;
 		}
+		if (oldData.src !== data.src) {
+			this.releaseSources();
+		}
 		if (!this.mediaSource && !this.audioSource) {
 			this.refreshSource(data.speed);
 		}
+	},
+
+	releaseSources: function () {
+		if (this.xhr) {
+			this.xhr.abort();
+			this.xhr = null;
+		}
+		if (this.audioSource) {
+			this.audioSource.disconnect();
+			this.audioSource = null;
+		}
+		if (this.mediaSource) {
+			this.mediaSource.disconnect();
+			this.mediaSource = null;
+		}
+		if (this.audio) {
+			this.audio.pause();
+			this.audio.removeAttribute('src');
+			this.audio.load();
+			this.audio = null;
+		}
+		this.mediaNodeCache = {};
+		this.bufferConnected = false;
+		this.mediaConnected = false;
 	},
 
 	/**
@@ -142,8 +169,12 @@ AFRAME.registerComponent('audioanalyser', {
 	},
 
 	refreshSource: function (speed) {
+		const src = this.data.src;
+		const isStale = () => this.data.src !== src;
+
 		if (this.data.isSafari) {
 			this.getBufferSource().then(bufferSource => {
+				if (isStale()) return;
 				this.el.emit(
 					'audioanalysersource',
 					{source: bufferSource, mediaSource: null, audio: null, duration: bufferSource.buffer.duration},
@@ -152,6 +183,7 @@ AFRAME.registerComponent('audioanalyser', {
 			});
 		} else {
 			this.getMediaSource().then(source => {
+				if (isStale()) return;
 				if (this.audio && this.audio.duration && this.audio.duration > 0 && this.audio.duration <= 1800) {
 					if (this.data.pitchCompensation && speed >= this.data.pitchCompensationTreshold) {
 						this.el.emit(
@@ -161,6 +193,7 @@ AFRAME.registerComponent('audioanalyser', {
 						);
 					}
 					this.getBufferSource().then(bufferSource => {
+						if (isStale()) return;
 						if (!this.data.pitchCompensation || speed < this.data.pitchCompensationTreshold) {
 							this.mediaGainNode.gain.value = 0;
 						} else {

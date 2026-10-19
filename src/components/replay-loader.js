@@ -3,7 +3,7 @@ import {checkBSOR, NoteEventType} from '../open-replay-decoder';
 import {checkSS} from '../ss-replay-decoder';
 import {Mirror_Horizontal, Mirror_Horizontal_Note} from '../utils/chirality-support';
 import {MultiplierCounter} from '../utils/MultiplierCounter';
-var queryParams = require('../query-params');
+const {queryParams} = require('../query-params');
 
 import {
 	NoteCutDirection,
@@ -14,11 +14,45 @@ import {
 	getApiUrl,
 	getWebsiteUrl,
 	replaceCdnUrl,
-	getCookie,
+	pageInIframe,
+	checkAutoplay,
 } from '../utils';
 import {updateScoringAndTypes} from '../utils/mapPostprocessor';
 function floorToTwo(num) {
 	return Math.floor(num * 100) / 100;
+}
+
+// `is` and `hm` are parts of unencoded Discord links.
+const REPLAY_URL_PARAMS = [
+	'scoreId',
+	'link',
+	'is',
+	'hm',
+	'playerID',
+	'id',
+	'hash',
+	'difficulty',
+	'mode',
+	'context',
+	'time',
+	'speed',
+	'jd',
+	'mapLink',
+	'songLink',
+];
+
+function replayUrl(source) {
+	const params = new URLSearchParams(location.search);
+	REPLAY_URL_PARAMS.forEach(name => params.delete(name));
+
+	let replayParam = '';
+	if (source.scoreId) {
+		replayParam = 'scoreId=' + encodeURIComponent(source.scoreId);
+	} else if (source.link) {
+		replayParam = 'link=' + encodeURI(source.link);
+	}
+	const query = [replayParam, params.toString()].filter(Boolean).join('&');
+	return location.pathname + (query ? '?' + query : '');
 }
 
 function assignNote(replaynote, mapnote) {
@@ -47,21 +81,27 @@ AFRAME.registerComponent('replay-loader', {
 	init: function () {
 		this.replay = null;
 		this.user = null;
+		this.loadId = 0;
+		this.countWatch = true;
+		this.historyIndex = (history.state && history.state.replayIndex) || 0;
+		this.historyLength = this.historyIndex + 1;
 
 		let captureThis = this;
 		if (this.data.link.length) {
+			this.source = {link: this.data.link};
 			setTimeout(() => this.fetchByFile(this.data.link, true), 300);
 		} else if (this.data.scoreId.length) {
+			this.source = {scoreId: this.data.scoreId};
 			captureThis.downloadReplay(null, this.data.scoreId);
 		} else if (!this.data.playerID.length) {
 			this.empty = true;
 			this.cleanup = dragDrop('#body', files => {
 				if (files[0].name.includes('.bsor') || files[0].name.includes('.dat')) {
-					this.fetchByFile(files[0]);
+					this.loadFile(files[0]);
 				}
 			});
 			this.el.sceneEl.addEventListener('usergesturereceive', e => {
-				if (this.replay || this.fetching) {
+				if (!this.empty || this.replay || this.fetching) {
 					return;
 				}
 				this.fetching = true;
@@ -70,7 +110,7 @@ AFRAME.registerComponent('replay-loader', {
 				input.accept = '.bsor, .bsortemp, .dat';
 
 				input.onchange = e => {
-					this.fetchByFile(e.target.files[0]);
+					this.loadFile(e.target.files[0]);
 				};
 
 				input.click();
@@ -81,16 +121,88 @@ AFRAME.registerComponent('replay-loader', {
 			});
 		} else {
 			document.addEventListener('songFetched', e => {
-				captureThis.downloadReplay(e.detail.hash);
+				if (this.loadId === 0) {
+					captureThis.downloadReplay(e.detail.hash);
+				}
 			});
 		}
 
 		this.el.addEventListener('challengeloadend', e => {
 			captureThis.challengeloadend(e.detail);
 		});
+
+		window.addEventListener('popstate', e => this.onPopState(e));
+	},
+
+	openReplay: function (source, {updateUrl = true, countWatch = true} = {}) {
+		this.loadId++;
+		this.source = source;
+		this.countWatch = countWatch;
+		this.empty = false;
+		this.replay = null;
+		queryParams.time = undefined;
+
+		if (updateUrl) {
+			const url = replayUrl(source);
+			if (pageInIframe()) {
+				history.replaceState(history.state, '', url);
+			} else {
+				this.historyIndex++;
+				this.historyLength = this.historyIndex + 1;
+				history.pushState({replayIndex: this.historyIndex}, '', url);
+			}
+		}
+
+		const sceneEl = this.el.sceneEl;
+		sceneEl.emit('replayunload', source, false);
+		sceneEl.emit('cleargame', null, false);
+		if (!sceneEl.systems.state.state.hasReceivedUserGesture) {
+			checkAutoplay().then(canAutoplay => {
+				if (canAutoplay) {
+					sceneEl.emit('usergesturereceive', null, false);
+				}
+			});
+		}
+
+		if (source.scoreId) {
+			this.downloadReplay(null, source.scoreId);
+		} else if (source.link) {
+			this.fetchByFile(source.link, true);
+		} else {
+			this.fetchByFile(source.file);
+		}
+	},
+
+	loadFile: function (file) {
+		if (this.source) {
+			this.openReplay({file});
+		} else {
+			this.source = {file};
+			this.fetchByFile(file);
+		}
+	},
+
+	canGoBack: function () {
+		return this.historyIndex > 0;
+	},
+
+	canGoForward: function () {
+		return this.historyIndex < this.historyLength - 1;
+	},
+
+	onPopState: function (e) {
+		const scoreId = getUrlParameter('scoreId');
+		const link = getUrlParameter('link');
+		this.historyIndex = (e.state && e.state.replayIndex) || 0;
+		if (scoreId || link) {
+			this.openReplay({scoreId, link}, {updateUrl: false});
+		} else {
+			location.reload();
+		}
 	},
 
 	downloadReplay: function (hash, scoreId, error) {
+		const loadId = this.loadId;
 		this.el.sceneEl.emit('replayloadstart', null);
 		this.challenge = null;
 		this.notes = null;
@@ -102,6 +214,9 @@ AFRAME.registerComponent('replay-loader', {
 					: `${this.data.context}/${this.data.playerID}/${hash}/${this.data.difficulty}/${this.data.mode}`)
 		).then(async response => {
 			let data = response.status == 200 ? await response.json() : null;
+			if (loadId !== this.loadId) {
+				return;
+			}
 			if (data && data.playerId) {
 				if (/googlebot/i.test(navigator.userAgent)) {
 					document.title = `Replay | ${data.player.name} | ${data.song.name}`;
@@ -128,6 +243,9 @@ AFRAME.registerComponent('replay-loader', {
 				);
 
 				checkBSOR(replaceCdnUrl(data.replay), true, replay => {
+					if (loadId !== this.loadId) {
+						return;
+					}
 					if (replay && replay.frames) {
 						if (replay.frames.length == 0) {
 							this.el.sceneEl.emit('replayloadfailed', {error: 'Replay broken, redownload and reinstall mod, please'}, null);
@@ -171,7 +289,7 @@ AFRAME.registerComponent('replay-loader', {
 				if (profileSettings) {
 					this.el.sceneEl.emit('colorsFetched', {playerId: data.player.id, features: profileSettings}, null);
 				}
-				if (!getCookie('autoplayReplay')) {
+				if (this.countWatch) {
 					fetch(getApiUrl() + '/watched/' + data.id, {credentials: 'include'});
 				}
 			} else {
@@ -192,10 +310,14 @@ AFRAME.registerComponent('replay-loader', {
 	},
 
 	fetchByFile: function (file, itsLink) {
+		const loadId = this.loadId;
 		this.el.sceneEl.emit('replayloadstart', null);
 		this.challenge = null;
 		this.notes = null;
 		checkBSOR(itsLink ? replaceCdnUrl(file) : file, itsLink, replay => {
+			if (loadId !== this.loadId) {
+				return;
+			}
 			if (replay && replay.frames) {
 				this.replay = replay;
 				this.fetchPlayer(replay.info.playerID);
@@ -223,8 +345,12 @@ AFRAME.registerComponent('replay-loader', {
 	},
 
 	fetchPlayer: function (playerID) {
+		const loadId = this.loadId;
 		fetch(`${getApiUrl()}/player/${playerID}`).then(res => {
 			res.json().then(data => {
+				if (loadId !== this.loadId) {
+					return;
+				}
 				this.user = data;
 				this.el.sceneEl.emit(
 					'userloaded',

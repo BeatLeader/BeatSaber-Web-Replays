@@ -1,4 +1,4 @@
-const {getCookie, getUrlParameter, setCookie, checkAutoplay} = require('../utils');
+const {checkAutoplay} = require('../utils');
 
 /**
  * Lame Chrome user gesture policy.
@@ -10,7 +10,7 @@ AFRAME.registerComponent('user-gesture', {
 		this.settings = this.el.sceneEl.components['settings'];
 
 		checkAutoplay().then(canAutoplay => {
-			if (this.settings.shouldAutoplayOnLoad() || getCookie('autoplayReplay')) {
+			if (this.settings.shouldAutoplayOnLoad()) {
 				if (canAutoplay) {
 					setTimeout(() => {
 						this.el.sceneEl.emit('usergesturereceive', null, false);

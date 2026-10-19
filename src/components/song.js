@@ -1,5 +1,5 @@
 const utils = require('../utils');
-var {queryParamTime} = require('../query-params');
+var {queryParams} = require('../query-params');
 
 const GAME_OVER_LENGTH = 3.5;
 const ONCE = {once: true};
@@ -48,7 +48,7 @@ AFRAME.registerComponent('song', {
 		difficulty: {default: ''},
 		isBeatsPreloaded: {default: false},
 		isReplayLoading: {default: true},
-		isPaused: {default: queryParamTime !== undefined},
+		isPaused: {default: queryParams.time !== undefined},
 		isPlaying: {default: false},
 		isFinished: {default: false},
 		pitchCompensation: {default: true},
@@ -73,6 +73,7 @@ AFRAME.registerComponent('song', {
 		this.el.addEventListener('gamemenurestart', this.onRestart.bind(this));
 		this.el.addEventListener('wallhitstart', this.onWallHitStart.bind(this));
 		this.el.addEventListener('wallhitend', this.onWallHitEnd.bind(this));
+		this.el.addEventListener('replayunload', this.unloadAudio.bind(this));
 
 		const gestureListener = () => {
 			if (!this.hitSound) {
@@ -87,7 +88,7 @@ AFRAME.registerComponent('song', {
 			this.hitSound.resumeContext();
 
 			if (this.data.isPaused && !this.data.isReplayLoading && this.source && this.songStartTime === undefined) {
-				this.startAudio(queryParamTime);
+				this.startAudio(queryParams.time);
 			}
 
 			this.el.removeEventListener('usergesturereceive', gestureListener);
@@ -132,7 +133,7 @@ AFRAME.registerComponent('song', {
 			this.getAudio()
 				.then(source => {
 					if (this.data.isBeatsPreloaded) {
-						this.startAudio(queryParamTime);
+						this.startAudio(queryParams.time);
 					}
 					this.el.sceneEl.emit('songprocessingfinish', null, false);
 				})
@@ -152,7 +153,7 @@ AFRAME.registerComponent('song', {
 				this.pauseAudio();
 				this.isPlaying = false;
 			} else {
-				this.startAudio(queryParamTime);
+				this.startAudio(queryParams.time);
 			}
 		}
 
@@ -187,22 +188,20 @@ AFRAME.registerComponent('song', {
 
 		this.isPlaying = false;
 		return new Promise(resolve => {
-			data.analyserEl.addEventListener(
-				'audioanalysersource',
-				evt => {
-					this.source = evt.detail.source;
-					this.mediaSource = evt.detail.mediaSource;
-					this.duration = evt.detail.duration;
-					if (evt.detail.audio) {
-						this.audio = evt.detail.audio;
-					}
-					if (isSafari) {
-						this.audio.src = utils.createSilence(this.duration);
-					}
-					resolve(this.source);
-				},
-				ONCE
-			);
+			this.audioSourceListener = evt => {
+				this.audioSourceListener = null;
+				this.source = evt.detail.source;
+				this.mediaSource = evt.detail.mediaSource;
+				this.duration = evt.detail.duration;
+				if (evt.detail.audio) {
+					this.audio = evt.detail.audio;
+				}
+				if (isSafari) {
+					this.setSilence();
+				}
+				resolve(this.source);
+			};
+			data.analyserEl.addEventListener('audioanalysersource', this.audioSourceListener, ONCE);
 			this.analyserSetter.src = this.data.audio;
 			this.analyserSetter.speed = this.speed;
 			data.analyserEl.setAttribute('audioanalyser', this.analyserSetter);
@@ -247,7 +246,7 @@ AFRAME.registerComponent('song', {
 				this.mediaSource = evt.detail.mediaSource;
 				this.duration = evt.detail.duration;
 				if (isSafari) {
-					this.audio.src = utils.createSilence(this.duration);
+					this.setSilence();
 				}
 
 				if (this.data.isPlaying) {
@@ -258,6 +257,42 @@ AFRAME.registerComponent('song', {
 			ONCE
 		);
 		this.audioAnalyser.refreshSource(this.speed);
+	},
+
+	unloadAudio: function () {
+		if (this.audioSourceListener) {
+			this.data.analyserEl.removeEventListener('audioanalysersource', this.audioSourceListener);
+			this.audioSourceListener = null;
+		}
+		if (this.source && this.source.stop) {
+			try {
+				this.source.stop();
+			} catch (e) {}
+		}
+		this.audio.pause();
+
+		this.source = null;
+		this.mediaSource = null;
+		this.duration = 0;
+		this.playRequest = null;
+		this.metadataAudioLoading = false;
+		this.isPlaying = false;
+		this.songStartTime = undefined;
+		this.lastCurrentTime = null;
+		this.lastContextTime = null;
+		this.lastFrameNow = null;
+		this.resetMediaSync();
+
+		const gain = this.audioAnalyser.gainNode.gain;
+		gain.cancelScheduledValues(0);
+		gain.value = this.settings.settings.volume;
+	},
+
+	setSilence: function () {
+		if (this.silenceUrl) {
+			URL.revokeObjectURL(this.silenceUrl);
+		}
+		this.silenceUrl = this.audio.src = utils.createSilence(this.duration);
 	},
 
 	onWallHitStart: function () {
@@ -275,14 +310,21 @@ AFRAME.registerComponent('song', {
 	playMediaSession: function () {
 		if (!this.metadataAudioLoading) {
 			try {
-				this.playRequest = this.audio.play();
-				this.playRequest.then(_ => {
-					this.playRequest = null;
-					this.metadataAudioLoading = false;
-					this.holdMediaSync();
+				const playRequest = (this.playRequest = this.audio.play());
+				playRequest
+					.then(_ => {
+						if (this.playRequest !== playRequest) return;
+						this.playRequest = null;
+						this.metadataAudioLoading = false;
+						this.holdMediaSync();
 
-					this.el.emit('songstartaudio');
-				});
+						this.el.emit('songstartaudio');
+					})
+					.catch(() => {
+						if (this.playRequest !== playRequest) return;
+						this.playRequest = null;
+						this.metadataAudioLoading = false;
+					});
 
 				this.metadataAudioLoading = true;
 			} catch (e) {
@@ -412,7 +454,7 @@ AFRAME.registerComponent('song', {
 	},
 
 	getCurrentTime: function () {
-		if (this.songStartTime === undefined) return queryParamTime !== undefined ? queryParamTime : 0;
+		if (this.songStartTime === undefined) return queryParams.time !== undefined ? queryParams.time : 0;
 
 		let lastCurrentTime = this.lastCurrentTime;
 		let currentTime = this.context.currentTime;

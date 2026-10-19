@@ -1,4 +1,6 @@
-const {setCookie, getApiUrl} = require('../utils');
+const {getApiUrl} = require('../utils');
+
+const MAX_AUTOPLAY_FAILURES = 3;
 
 AFRAME.registerComponent('random-replay', {
 	schema: {
@@ -32,6 +34,31 @@ AFRAME.registerComponent('random-replay', {
 			this.canceled = true;
 			clearInterval(this.interval);
 		};
+
+		this.randomReplayNext.addEventListener('click', e => {
+			if (!this.score || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) {
+				return;
+			}
+			e.preventDefault();
+			this.playScore(this.score, true);
+		});
+
+		this.autoplayFailures = 0;
+		const onLoadFailed = () => {
+			if (this.autoplayed && this.autoplayFailures < MAX_AUTOPLAY_FAILURES) {
+				this.autoplayFailures++;
+				this.fetchRandomReplay(true);
+			}
+		};
+		this.el.sceneEl.addEventListener('replayloadfailed', onLoadFailed);
+		this.el.sceneEl.addEventListener('challengeloaderror', onLoadFailed);
+		this.el.sceneEl.addEventListener('replayloaded', () => {
+			this.autoplayFailures = 0;
+		});
+		this.el.sceneEl.addEventListener('replayunload', () => {
+			this.autoplayed = false;
+			this.canceled = false;
+		});
 
 		const randomSourceSelect = document.getElementById('randomScoreSource');
 		if (randomSourceSelect) {
@@ -80,11 +107,15 @@ AFRAME.registerComponent('random-replay', {
 		}
 	},
 
-	playScore: function (score) {
-		setCookie('autoplayReplay', true, 30);
+	playScore: function (score, countWatch = false) {
+		clearInterval(this.interval);
+		this.interval = null;
+		this.score = null;
+		this.randomReplay.style.display = 'none';
+		this.randomReplay.classList = [];
 
-		let base = location.protocol + '//' + location.host + '?scoreId=' + score.id;
-		window.location.assign(base);
+		this.replayLoader.openReplay({scoreId: score.id}, {countWatch});
+		this.autoplayed = !countWatch;
 	},
 
 	fetchRandomReplay: function (instant) {
@@ -95,7 +126,7 @@ AFRAME.registerComponent('random-replay', {
 			}
 			this.randomReplay.style.display = 'flex';
 			if (!this.interval) {
-				this.seconds = this.replayLoader.cleanup ? 30 : 10;
+				this.seconds = this.replayLoader.empty ? 30 : 10;
 				this.interval = setInterval(() => {
 					this.randomReplayNext.innerHTML = 'Next in ' + this.seconds + ' sec...';
 					this.seconds--;

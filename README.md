@@ -74,6 +74,8 @@ netlify dev
 Navigate to [localhost:9999](http://localhost:9999). You should see the app running.
 Website will reload automatically after you save your changes.
 
+If port 3003 or 9999 is already taken (e.g. by another copy of the repo), run `npm run dev` instead. It starts `netlify dev` on the next free ports and prints the URL to open.
+
 ### Contributing
 
 - Create a fork ("Fork" button on top) or ask me in [Discord](https://discord.gg/2RG5YVqtG6) to add you to this repository as a developer if you plan to contribute often.

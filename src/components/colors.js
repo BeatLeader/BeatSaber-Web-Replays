@@ -254,6 +254,15 @@ AFRAME.registerComponent('colors', {
 			this.replayPlayerId = e.detail.playerId;
 		});
 
+		this.el.sceneEl.addEventListener('replayunload', () => {
+			this.replayPlayerId = null;
+			leftSaberColorInput.value = '#bf2121';
+			rightSaberColorInput.value = '#335aff';
+			this.el.sceneEl.emit('colorReset', {hand: 'left', color: '#bf2121'}, null);
+			this.el.sceneEl.emit('colorReset', {hand: 'right', color: '#335aff'}, null);
+			refreshResetButtonVisibility();
+		});
+
 		this.getColors(data => {
 			if (data.player) {
 				let roles = data.player.role;

@@ -32,7 +32,8 @@ nunjucks.addGlobal('IS_PRODUCTION', isProduction);
 nunjucks.addGlobal('COLORS', COLORS);
 
 // Generate timestamp used to cache-bust the emitted bundle and stylesheet.
-const timestamp = Math.floor(Date.now() / 1000);
+// Dev builds keep fixed names: dev servers of one checkout share the index.html they write.
+const timestamp = isProduction ? Math.floor(Date.now() / 1000) : 'dev';
 nunjucks.addGlobal('BUILD_TIMESTAMP', timestamp);
 
 // Initial Nunjucks render.
@@ -53,9 +54,13 @@ if (!isProduction) {
 	});
 }
 
+// The first free port from 3003. `netlify dev` proxies to a fixed one: netlify.toml's, or what scripts/netlify-dev.js picked.
+process.env.WEBPACK_DEV_SERVER_BASE_PORT = process.env.WEBPACK_DEV_SERVER_BASE_PORT || '3003';
+const devServerPort = process.env.NETLIFY_DEV ? Number(process.env.DEV_SERVER_PORT) || 3003 : 'auto';
+
 module.exports = {
 	mode: isProduction ? 'production' : 'development',
-	devtool: isProduction ? 'source-map' : 'eval-cheap-module-source-map',
+	devtool: isProduction ? 'source-map' : 'eval-source-map',
 	entry: './src/index.js',
 	output: {
 		path: __dirname,
@@ -100,7 +105,7 @@ module.exports = {
 	},
 	devServer: {
 		host: '0.0.0.0',
-		port: 3003,
+		port: devServerPort,
 		hot: true,
 		allowedHosts: 'all',
 		static: {directory: __dirname},

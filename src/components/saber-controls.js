@@ -81,6 +81,8 @@ AFRAME.registerComponent('saber-controls', {
 	update: function (oldData) {
 		if (this.data.hiddenSaber == this.data.hand) {
 			this.el.object3D.visible = false;
+		} else if (oldData.hiddenSaber == this.data.hand) {
+			this.el.object3D.visible = true;
 		}
 		if (!oldData.bladeEnabled && this.data.bladeEnabled) {
 			setTimeout(() => {

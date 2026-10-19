@@ -1,5 +1,5 @@
 var utils = require('../utils');
-var {queryParamTime} = require('../query-params');
+var {queryParams} = require('../query-params');
 const ONCE = {once: true};
 
 const NoSleep = require('nosleep.js');
@@ -40,15 +40,15 @@ AFRAME.registerComponent('song-controls', {
 		this.baseSongSpeed = this.el.components.song.speed;
 
 		// Seek to ?time if specified.
-		if (queryParamTime !== undefined) {
+		if (queryParams.time !== undefined) {
 			this.el.sceneEl.addEventListener(
 				'songstartaudio',
 				() => {
 					setTimeout(() => {
 						const total = this.song.getDuration();
-						if (queryParamTime >= 0 && queryParamTime <= total) {
-							this.seek(queryParamTime, false);
-							queryParamTime = undefined;
+						if (queryParams.time >= 0 && queryParams.time <= total) {
+							this.seek(queryParams.time, false);
+							queryParams.time = undefined;
 						}
 					}, 100);
 				},
@@ -63,12 +63,12 @@ AFRAME.registerComponent('song-controls', {
 			if (this.replayData && !this.timelineFilter) {
 				this.makeTimelineOverlay(this.replayData, songDuration, this);
 			}
-			if (queryParamTime >= 0 && queryParamTime <= songDuration) {
-				const percent = queryParamTime / songDuration;
+			if (queryParams.time >= 0 && queryParams.time <= songDuration) {
+				const percent = queryParams.time / songDuration;
 				const progress = Math.max(0, Math.min(100, 100 * percent));
 				this.playhead.style.width = progress + '%';
 
-				document.getElementById('songProgress').innerHTML = formatSeconds(queryParamTime);
+				document.getElementById('songProgress').innerHTML = formatSeconds(queryParams.time);
 				if (this.timelineFilter) {
 					this.timelineFilter.style.width = this.timeline.getBoundingClientRect().width * percent + 'px';
 				}
@@ -96,7 +96,7 @@ AFRAME.registerComponent('song-controls', {
 
 						const svg = rangePoints.querySelector('svg');
 						const newPoint = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-						newPoint.setAttribute('class', 'range__point');
+						newPoint.setAttribute('class', 'range__point range__point--modifier');
 						newPoint.setAttribute('x', `${(speedValue / 2) * 100}%`);
 						newPoint.setAttribute('y', '8');
 						newPoint.setAttribute('text-anchor', 'middle');
@@ -125,12 +125,12 @@ AFRAME.registerComponent('song-controls', {
 							if (replay.info.modifiers.includes(modifier)) {
 								speed = speedValue;
 								if (modifier === 'SF') {
-									// Remove the 75% tick mark for SF
+									// Hide the 75% tick mark for SF
 									const rangeTicks = document.querySelector('.rangeTicks');
 									if (rangeTicks) {
-										const tickToRemove = rangeTicks.querySelector('rect[x="75%"]');
-										if (tickToRemove) {
-											tickToRemove.remove();
+										const tickToHide = rangeTicks.querySelector('rect[x="75%"]');
+										if (tickToHide) {
+											tickToHide.style.display = 'none';
 										}
 									}
 								}
@@ -139,16 +139,14 @@ AFRAME.registerComponent('song-controls', {
 						}
 					}
 
-					this.el.addEventListener(
-						'songstartaudio',
-						() => {
-							speedSlider.forEach(element => {
-								element.value = speed;
-								element.dispatchEvent(new Event('input', {bubbles: true}));
-							});
-						},
-						{once: true}
-					);
+					this.replaySpeedListener = () => {
+						this.replaySpeedListener = null;
+						speedSlider.forEach(element => {
+							element.value = speed;
+							element.dispatchEvent(new Event('input', {bubbles: true}));
+						});
+					};
+					this.el.addEventListener('songstartaudio', this.replaySpeedListener, {once: true});
 				}
 			}
 
@@ -158,10 +156,14 @@ AFRAME.registerComponent('song-controls', {
 					var toggle = document.getElementById(key);
 					if (toggle) {
 						toggle.style.display = 'block';
+						this.customDataToggles.push(toggle);
 					}
 				});
 			}
 		});
+
+		this.customDataToggles = [];
+		this.environmentOverrides = {};
 
 		this.songProgress = document.getElementById('songProgress');
 		this.songSpeedPercent = document.querySelectorAll('.songSpeedPercent');
@@ -281,24 +283,30 @@ AFRAME.registerComponent('song-controls', {
 				const removal = evt.detail.customData[evt.detail.mode][evt.detail.difficulty]['_environmentRemoval'];
 				if (removal) {
 					var settings = this.settings.settings;
+					const hide = key => {
+						if (!(key in this.environmentOverrides)) {
+							this.environmentOverrides[key] = settings[key];
+						}
+						settings[key] = false;
+					};
 
 					removal.forEach(element => {
 						switch (element) {
 							case 'Spectrograms':
-								settings.showAudioColumns = false;
+								hide('showAudioColumns');
 								break;
 							case 'Floor':
-								settings.showFloor = false;
+								hide('showFloor');
 								break;
 							case 'TrackLaneRing':
-								settings.showTwister = false;
+								hide('showTwister');
 								break;
 							case 'BackColumns':
-								settings.showLasers = false;
-								settings.showPlatform = false;
+								hide('showLasers');
+								hide('showPlatform');
 								break;
 							case 'Frame':
-								settings.showHud = false;
+								hide('showHud');
 								break;
 
 							default:
@@ -330,7 +338,7 @@ AFRAME.registerComponent('song-controls', {
 
 		let doSeek = (event, fromTime) => {
 			var time;
-			if (!fromTime) {
+			if (fromTime == null) {
 				const marginLeft = event.clientX - timeline.getBoundingClientRect().left;
 				const percent = marginLeft / timeline.getBoundingClientRect().width;
 				time = percent * this.song.getDuration();
@@ -415,14 +423,15 @@ AFRAME.registerComponent('song-controls', {
 			}
 			const seconds = percent * this.song.getDuration();
 
+			const notes = this.replayData ? this.replayData.notes : [];
 			var previousNote = null;
 			var note = null;
-			for (let index = 0; index < this.replayData.notes.length; index++) {
-				const element = this.replayData.notes[index];
+			for (let index = 0; index < notes.length; index++) {
+				const element = notes[index];
 				if (element.time > seconds) {
 					note = element;
 					if (index > 0) {
-						previousNote = this.replayData.notes[index - 1];
+						previousNote = notes[index - 1];
 					}
 					break;
 				}
@@ -432,7 +441,7 @@ AFRAME.registerComponent('song-controls', {
 			var hoverText = formatSeconds(seconds, this.settings.settings.timeInBeats);
 
 			if (note) {
-				if (this.settings.settings.timeInBeats) {
+				if (this.settings.settings.timeInBeats && note.mapnote) {
 					hoverText += '\nBeat ' + note.mapnote._time.toFixed(3) + '\n';
 				}
 
@@ -470,14 +479,153 @@ AFRAME.registerComponent('song-controls', {
 			}
 		});
 
+		// Pop-outs (Opera GX, Firefox picture-in-picture) only offer playing <video> elements, so the canvas is mirrored into a hidden one.
+		const isOpera = /OPR\//.test(navigator.userAgent);
+		const isFirefox = utils.isFirefox();
+
+		// Hidden tabs neither run requestAnimationFrame nor composite. While a pop-out shows the canvas,
+		// render through setTimeout and push every frame into its stream.
+		let pendingRenderFrame = null;
+		const installBackgroundRenderLoop = () => {
+			if (this.renderLoopInstalled) return;
+			this.renderLoopInstalled = true;
+			const sceneEl = this.el.sceneEl;
+			const mainRenderer = sceneEl.mainRenderer;
+
+			// Firefox doesn't expose its picture-in-picture state to pages.
+			const backgroundRenderingActive = () =>
+				document.hidden && !!(document.pictureInPictureElement || (isFirefox && this.popoutVideo && !this.popoutVideo.paused));
+
+			const pushFrame = video => {
+				const stream = video && video.srcObject;
+				if (!stream) return;
+				const track = stream.getVideoTracks()[0];
+				if (track && track.requestFrame) {
+					track.requestFrame();
+				} else if (stream.requestFrame) {
+					stream.requestFrame();
+				}
+			};
+
+			const scheduleRenderFrame = () => {
+				if (backgroundRenderingActive()) {
+					pendingRenderFrame = {
+						hidden: true,
+						id: setTimeout(() => {
+							pendingRenderFrame = null;
+							sceneEl.render();
+							pushFrame(document.pictureInPictureElement || this.popoutVideo);
+						}, 1000 / 30),
+					};
+				} else {
+					pendingRenderFrame = {
+						hidden: false,
+						id: window.requestAnimationFrame(() => {
+							pendingRenderFrame = null;
+							sceneEl.render();
+						}),
+					};
+				}
+				return pendingRenderFrame.id;
+			};
+
+			mainRenderer.requestAnimationFrame = f => {
+				f = mainRenderer.f = f || mainRenderer.f;
+				if (!f) return;
+				if (f !== sceneEl.render) {
+					return window.requestAnimationFrame(f);
+				}
+				return scheduleRenderFrame();
+			};
+
+			this.resyncRenderLoop = () => {
+				if (!pendingRenderFrame || pendingRenderFrame.hidden === backgroundRenderingActive()) return;
+				if (pendingRenderFrame.hidden) {
+					clearTimeout(pendingRenderFrame.id);
+				} else {
+					window.cancelAnimationFrame(pendingRenderFrame.id);
+				}
+				scheduleRenderFrame();
+			};
+			document.addEventListener('visibilitychange', this.resyncRenderLoop);
+		};
+
+		const createPopoutVideo = () => {
+			const video = document.createElement('video');
+			video.muted = true;
+			video.playsInline = true;
+			video.disableRemotePlayback = true;
+			video.autoPictureInPicture = true;
+			video.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none';
+			video.srcObject = document.getElementById('main-canvas').captureStream(30);
+			installBackgroundRenderLoop();
+
+			// Media events can arrive stale after quick play/pause pairs, so compare current states instead of trusting the event.
+			const reconcilePlayback = () => {
+				if (video.paused === pauseButton.classList.contains('pause')) {
+					pauseButton.click();
+				}
+			};
+			video.addEventListener('pause', reconcilePlayback);
+			video.addEventListener('play', reconcilePlayback);
+			video.addEventListener('enterpictureinpicture', this.resyncRenderLoop);
+			video.addEventListener('leavepictureinpicture', this.resyncRenderLoop);
+
+			// Pop out when the tab hides and back in when it returns. Opera allows this without user activation.
+			let autoPopout = false;
+			document.addEventListener('visibilitychange', async () => {
+				if (document.hidden && video.requestPictureInPicture && !video.paused && !document.pictureInPictureElement) {
+					try {
+						await video.requestPictureInPicture();
+						autoPopout = true;
+					} catch (error) {
+						console.log('Auto pop-out failed:', error.name, error.message);
+					}
+				} else if (!document.hidden && autoPopout) {
+					autoPopout = false;
+					if (document.pictureInPictureElement === video) {
+						try {
+							await document.exitPictureInPicture();
+						} catch (error) {}
+					}
+				}
+			});
+
+			document.body.appendChild(video);
+			return video;
+		};
+
+		const syncPopoutVideo = playing => {
+			if (!isOpera && !isFirefox) return;
+			if (playing && !this.popoutVideo) {
+				this.popoutVideo = createPopoutVideo();
+			}
+			if (!this.popoutVideo) return;
+			if (playing) {
+				this.popoutVideo.play().catch(() => {});
+			} else {
+				this.popoutVideo.pause();
+			}
+		};
+
+		const keepScreenAwake = () => {
+			if (deviceHasTouchScreen && document.visibilityState === 'visible') {
+				noSleep.enable().catch(() => {});
+			}
+		};
+		document.addEventListener('visibilitychange', () => {
+			if (pauseButton.classList.contains('pause')) {
+				keepScreenAwake();
+			}
+		});
+
 		let togglePause = value => {
+			syncPopoutVideo(value);
 			if (value) {
 				if (pauseButton.classList.contains('play')) {
 					pauseButton.classList.remove('play');
 					pauseButton.classList.add('pause');
-					if (deviceHasTouchScreen) {
-						noSleep.enable();
-					}
+					keepScreenAwake();
 					if (navigator.mediaSession) {
 						navigator.mediaSession.playbackState = 'playing';
 					}
@@ -1110,27 +1258,38 @@ AFRAME.registerComponent('song-controls', {
 			navigator.mediaSession.setActionHandler('seekforward', function () {
 				seekRight();
 			});
-			if (utils.getCookie('autoplayReplay')) {
-				navigator.mediaSession.setActionHandler('previoustrack', function () {
-					utils.setCookie('autoplayReplay', true, 30);
-					window.history.go(-1);
-				});
-			}
+			const replayLoader = this.el.sceneEl.components['replay-loader'];
+			navigator.mediaSession.setActionHandler('previoustrack', function () {
+				if (replayLoader.canGoBack()) {
+					window.history.back();
+				} else if (captureThis.song.source) {
+					captureThis.seek(0);
+				}
+			});
 			navigator.mediaSession.setActionHandler('nexttrack', function () {
-				utils.setCookie('autoplayReplay', true, 30);
-				window.history.forward();
-				captureThis.el.sceneEl.components['random-replay'].fetchRandomReplay(true);
+				if (replayLoader.canGoForward()) {
+					window.history.forward();
+				} else {
+					captureThis.el.sceneEl.components['random-replay'].fetchRandomReplay(true);
+				}
 			});
 			try {
-				navigator.mediaSession.setActionHandler('enterpictureinpicture', async function () {
-					if (!this.video) {
-						const video = document.createElement('video');
-						video.srcObject = document.getElementById('main-canvas').captureStream(25);
-						video.muted = true;
-						this.video = video;
+				navigator.mediaSession.setActionHandler('enterpictureinpicture', async () => {
+					// No play() for the decoy: its play listener would resume a paused replay.
+					if (this.popoutVideo && this.popoutVideo.requestPictureInPicture) {
+						await this.popoutVideo.requestPictureInPicture();
+						return;
 					}
-					await this.video.play();
-					await this.video.requestPictureInPicture();
+					if (!this.pipVideo) {
+						this.pipVideo = document.createElement('video');
+						this.pipVideo.srcObject = document.getElementById('main-canvas').captureStream(25);
+						this.pipVideo.muted = true;
+						installBackgroundRenderLoop();
+						this.pipVideo.addEventListener('enterpictureinpicture', this.resyncRenderLoop);
+						this.pipVideo.addEventListener('leavepictureinpicture', this.resyncRenderLoop);
+					}
+					await this.pipVideo.play();
+					await this.pipVideo.requestPictureInPicture();
 				});
 			} catch (error) {
 				console.log('Warning! The "enterpictureinpicture" media session action is not supported.');
@@ -1185,6 +1344,46 @@ AFRAME.registerComponent('song-controls', {
 		jdPoint.addEventListener('click', evt => {
 			this.el.components['beat-generator'].setNewJD(parseFloat(jdPoint.textContent));
 			this.jdChanged = false;
+		});
+
+		this.el.sceneEl.addEventListener('replayunload', () => {
+			this.finished = false;
+			togglePause(true);
+
+			if (this.replaySpeedListener) {
+				this.el.removeEventListener('songstartaudio', this.replaySpeedListener);
+				this.replaySpeedListener = null;
+			}
+			document.querySelectorAll('.range__point--modifier').forEach(point => point.remove());
+			document.querySelectorAll('.rangeTicks rect[x="75%"]').forEach(tick => (tick.style.display = ''));
+			this.customDataToggles.forEach(toggle => (toggle.style.display = 'none'));
+			this.customDataToggles = [];
+
+			if (this.removeTimelineOverlay) {
+				this.removeTimelineOverlay();
+			}
+			this.replayData = null;
+			this.missWindows = [];
+			this.playhead.style.width = '0%';
+			this.songProgress.textContent = formatSeconds(0);
+			document.getElementById('songDuration').textContent = '-:--';
+
+			if (Object.keys(this.environmentOverrides).length) {
+				Object.assign(this.settings.settings, this.environmentOverrides);
+				this.environmentOverrides = {};
+				this.el.sceneEl.emit('settingsChanged', {settings: this.settings.settings}, false);
+			}
+
+			['songInfoOverlay', 'playerInfoOverlay', 'songMode', 'outdatedMap'].forEach(id => {
+				document.getElementById(id).style.display = 'none';
+			});
+			['songMode', 'songCustomDifficulty', 'modifiers'].forEach(id => {
+				document.getElementById(id).textContent = '';
+			});
+
+			this.jdChanged = false;
+			vnjsjdPoint.parentNode.parentNode.style.display = 'none';
+			vnjsjdTick.parentNode.parentNode.style.display = 'none';
 		});
 
 		let pcorner = document.getElementById('patreon-corner');
@@ -1346,10 +1545,9 @@ AFRAME.registerComponent('song-controls', {
 		const width = timeline.getBoundingClientRect().width;
 		const duration = songDuration;
 
-		let containers = document.querySelectorAll('.timeline-container');
-		containers.forEach(element => {
-			timeline.removeChild(element);
-		});
+		if (target.removeTimelineOverlay) {
+			target.removeTimelineOverlay();
+		}
 
 		const container = document.createElement('div');
 		container.className = 'timeline-container';
@@ -1620,9 +1818,16 @@ AFRAME.registerComponent('song-controls', {
 			updateMarkers();
 		}, 200);
 
-		this.el.sceneEl.addEventListener('settingsChanged', e => {
-			updateMarkers();
-		});
+		this.el.sceneEl.addEventListener('settingsChanged', updateMarkers);
+
+		target.removeTimelineOverlay = () => {
+			target.removeTimelineOverlay = null;
+			target.timelineFilter = null;
+			timeline.removeEventListener('mouseenter', handleMouseEnter);
+			timeline.removeEventListener('mouseleave', handleMouseLeave);
+			this.el.sceneEl.removeEventListener('settingsChanged', updateMarkers);
+			container.remove();
+		};
 	},
 
 	tick: function () {
@@ -1709,7 +1914,9 @@ AFRAME.registerComponent('song-controls', {
 			this.el.sceneEl.emit('timechanged', {newTime: this.song.getCurrentTime()}, null);
 		}
 
-		this.timelineFilter.style.width = this.timeline.getBoundingClientRect().width * percent + 'px';
+		if (this.timelineFilter) {
+			this.timelineFilter.style.width = this.timeline.getBoundingClientRect().width * percent + 'px';
+		}
 
 		if (this.song.speed > 0 && 'mediaSession' in navigator) {
 			navigator.mediaSession.setPositionState({

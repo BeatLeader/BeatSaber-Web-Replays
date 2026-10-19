@@ -1,6 +1,6 @@
 /* global localStorage */
 var utils = require('../utils');
-var {queryParamTime} = require('../query-params');
+var {queryParams} = require('../query-params');
 
 const DAMAGE_DECAY = 0.25;
 const DAMAGE_MAX = 10;
@@ -102,7 +102,7 @@ AFRAME.registerState({
 		},
 		controllerType: '',
 		damage: 0,
-		hasReceivedUserGesture: queryParamTime !== undefined,
+		hasReceivedUserGesture: queryParams.time !== undefined,
 		inVR: false,
 		pov: false,
 		isPaused: true, // Playing, but paused.
@@ -215,6 +215,30 @@ AFRAME.registerState({
 			});
 		},
 
+		replayunload: state => {
+			// Clearing the difficulty would make the song component restart the old song.
+			Object.assign(state.challenge, emptyChallenge, {
+				difficulty: state.challenge.difficulty,
+				hasLoadError: false,
+				isLoading: false,
+				isBeatsPreloaded: false,
+				leaderboardId: '',
+				loadErrorText: '',
+			});
+			resetScore(state);
+			state.notes = null;
+			state.player = {name: '', avatar: ''};
+			state.damage = 0;
+			state.wrongMisses = 0;
+			state.hiddenSaber = '';
+			state.isVictory = false;
+			state.isFinished = false;
+			state.isPaused = false;
+			state.replay.isLoading = true;
+			state.replay.hasError = false;
+			state.replay.errorText = null;
+		},
+
 		replayloadstart: (state, payload) => {
 			state.localReplay = false;
 			state.replay.isLoading = true;
@@ -258,6 +282,9 @@ AFRAME.registerState({
 		},
 
 		scoreChanged: (state, payload) => {
+			if (!state.notes || !state.notes[payload.index]) {
+				return;
+			}
 			updateScore(state, {index: payload.index}, false);
 		},
 

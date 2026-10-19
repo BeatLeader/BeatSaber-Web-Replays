@@ -631,9 +631,8 @@ AFRAME.registerComponent('beat', {
 		const SCScale = 0.5;
 		let noteScale = smallCubes && !itsMine ? SCScale : 1;
 
-		if (smallCubes && settings.settings.showNoteModifierVisuals) {
-			this.blockEl.object3D.scale.set(1, 1, 1).multiplyScalar(3.45).multiplyScalar(this.data.size).multiplyScalar(noteScale);
-		}
+		const blockScale = smallCubes && settings.settings.showNoteModifierVisuals ? noteScale : 1;
+		this.blockEl.object3D.scale.set(1, 1, 1).multiplyScalar(3.45).multiplyScalar(this.data.size).multiplyScalar(blockScale);
 		let gameVersion = (replay.info.gameVersion || '0.0.0').split('.'); // SS doesn't have a game version
 		let oldDots =
 			modifiers.includes('OD') || replay.info.mode.includes('OldDots') || (gameVersion.length == 3 && parseInt(gameVersion[1]) < 20);
@@ -648,7 +647,12 @@ AFRAME.registerComponent('beat', {
 
 		this.updatePosition();
 
+		if (this.hitboxObject && this.hitboxReplay !== replay) {
+			this.removeHitboxes();
+		}
+
 		if (!this.hitboxObject && (!this.replayNote.cutPoint || settings.settings.showHitboxes || !settings.settings.reducedDebris)) {
+			this.hitboxReplay = replay;
 			const hitbox = new THREE.WireframeGeometry(itsMine ? new THREE.SphereGeometry(0.18, 16, 8) : this.toBigBox(boxSettings));
 			const material = new THREE.LineBasicMaterial({
 				color: 0xff0000,
@@ -676,6 +680,18 @@ AFRAME.registerComponent('beat', {
 			}
 			this.hitboxObject = line;
 		}
+	},
+
+	removeHitboxes: function () {
+		[this.hitboxObject, this.smallHitObject].forEach(line => {
+			if (line) {
+				this.el.object3D.remove(line);
+				line.geometry.dispose();
+				line.material.dispose();
+			}
+		});
+		this.hitboxObject = null;
+		this.smallHitObject = null;
 	},
 
 	toSmallBox: function (boxSettings) {
@@ -903,7 +919,12 @@ AFRAME.registerComponent('beat', {
 		if (!this.replayNote.time) return;
 		const timeToScore = this.replayNote.time - getCurrentTime();
 		const payload = {index: this.replayNote.i};
-		const scoreChanged = () => this.el.sceneEl.systems.state.dispatch('scoreChanged', payload);
+		const notes = replayLoader.allStructs;
+		const scoreChanged = () => {
+			if (replayLoader.allStructs === notes) {
+				this.el.sceneEl.systems.state.dispatch('scoreChanged', payload);
+			}
+		};
 		if (timeToScore < 0) {
 			scoreChanged();
 		} else {

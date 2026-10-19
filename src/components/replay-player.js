@@ -58,6 +58,12 @@ AFRAME.registerComponent('replay-player', {
 
 		this._frameIndex = 0;
 		this._heightFrameIndex = 0;
+
+		this.el.addEventListener('replayunload', () => {
+			this.headRotationOffset = null;
+			this._frameIndex = 0;
+			this._heightFrameIndex = 0;
+		});
 	},
 
 	play: function () {

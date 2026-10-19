@@ -36,9 +36,18 @@ AFRAME.registerComponent('intro-skip', {
 			this.bpm = evt.detail.info._beatsPerMinute;
 		});
 
+		this.el.addEventListener('replayunload', () => {
+			this.beatData = null;
+			this.introSkipTime = this.outroSkipTime = this.lastObjectSkipTime = undefined;
+			skipIntroButton.style.display = 'none';
+			skipIntroButton.classList = [];
+		});
+
 		const analyser = document.getElementById('audioAnalyser');
 		analyser.addEventListener('audioanalysersource', evt => {
-			this.readMap(evt.detail.duration);
+			if (this.beatData) {
+				this.readMap(evt.detail.duration);
+			}
 		});
 
 		document.addEventListener('keydown', e => {
@@ -83,12 +92,12 @@ AFRAME.registerComponent('intro-skip', {
 			}
 		}
 
-		if (firstObjectTime > 5) {
-			this.introSkipTime = firstObjectTime - 2;
-		}
+		this.introSkipTime = firstObjectTime > 5 ? firstObjectTime - 2 : undefined;
 		if (songDuration - lastObjectTime >= 5) {
 			this.outroSkipTime = songDuration - 1.5;
 			this.lastObjectSkipTime = lastObjectTime + 0.5;
+		} else {
+			this.outroSkipTime = this.lastObjectSkipTime = undefined;
 		}
 	},
 

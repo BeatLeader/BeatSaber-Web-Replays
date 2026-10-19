@@ -31,13 +31,18 @@ AFRAME.registerComponent('zip-loader', {
 		this.persistentHashCacheLoaded = false;
 		this.persistentHashCacheDirty = false;
 
+		const mapFromUrl = !!(this.data.id || this.data.hash);
 		let fetchCallback = e => {
+			const pageReplay = this.loadId === 0;
+			if (pageReplay && mapFromUrl) {
+				return;
+			}
 			if (!this.fetched) {
 				this.fetched = true;
 				this.leaderboardId = e.detail.leaderboardId;
 				this.data.difficulty = this.difficultyFromId(e.detail.difficulty);
 				this.data.mode = e.detail.mode;
-				if (this.data.mapLink) {
+				if (pageReplay && this.data.mapLink) {
 					this.fetchZip(this.data.mapLink.replace('https://cdn.discordapp.com/attachments/', 'https://discord.beatleader.pro/'));
 				} else if (e.detail.hash.length >= 40) {
 					this.fetchData(e.detail.hash.replace(CUSTOM_LEVEL_PREFIX, '').substring(0, 40).toLowerCase(), true);
@@ -54,10 +59,20 @@ AFRAME.registerComponent('zip-loader', {
 			this.lastLocalLookupAttemptHash = '';
 		});
 
-		if (!this.data.id && !this.data.hash) {
-			this.el.sceneEl.addEventListener('replayInfofetched', fetchCallback);
-			this.el.sceneEl.addEventListener('replayfetched', fetchCallback);
-		}
+		this.loadId = 0;
+		this.el.sceneEl.addEventListener('replayunload', () => {
+			this.loadId++;
+			if (this.xhr) {
+				this.xhr.abort();
+				this.xhr = null;
+			}
+			this.isFetching = '';
+			this.fetchedZipUrl = '';
+			this.removeLocalZipPrompt();
+		});
+
+		this.el.sceneEl.addEventListener('replayInfofetched', fetchCallback);
+		this.el.sceneEl.addEventListener('replayfetched', fetchCallback);
 	},
 
 	update: function (oldData) {
@@ -77,7 +92,8 @@ AFRAME.registerComponent('zip-loader', {
 		this.loadingIndicator = document.getElementById('challengeLoadingIndicator');
 	},
 
-	processFiles: async function (files, info) {
+	processFiles: async function (files, info, loadId) {
+		const objectUrls = [];
 		const event = {
 			audio: '',
 			beatmaps: {Standard: {}},
@@ -179,7 +195,9 @@ AFRAME.registerComponent('zip-loader', {
 				event.difficulties[mode] = diffBeatmaps;
 			}
 		} catch (e) {
-			this.postchallengeloaderror(this.data.hash);
+			if (loadId === this.loadId) {
+				this.postchallengeloaderror(this.data.hash);
+			}
 			return;
 		}
 
@@ -193,14 +211,20 @@ AFRAME.registerComponent('zip-loader', {
 		}
 		event.mode = this.data.mode;
 
+		let createObjectUrl = blob => {
+			const url = URL.createObjectURL(blob);
+			objectUrls.push(url);
+			return url;
+		};
+
 		let extractAsBlobUrl = async (name, type) => {
-			return URL.createObjectURL(new Blob([await files[name].async('arraybuffer')], {type}));
+			return createObjectUrl(new Blob([await files[name].async('arraybuffer')], {type}));
 		};
 
 		let extractAudioAsBlobUrl = async name => {
 			const buffer = await files[name].async('arraybuffer');
 			const type = detectAudioMimeType(new Uint8Array(buffer.slice(0, 16)), name);
-			return URL.createObjectURL(new Blob([buffer], {type}));
+			return createObjectUrl(new Blob([buffer], {type}));
 		};
 
 		// Resolve the song audio. Prefer the filename declared in the map info and detect its
@@ -233,12 +257,22 @@ AFRAME.registerComponent('zip-loader', {
 			}
 		}
 
+		if (loadId !== this.loadId) {
+			objectUrls.forEach(url => URL.revokeObjectURL(url));
+			return;
+		}
+		(this.objectUrls || []).forEach(url => URL.revokeObjectURL(url));
+		this.objectUrls = objectUrls;
+
 		this.isFetching = '';
 		console.log(event);
 		this.el.emit('challengeloadend', event, false);
 	},
 
-	processInfo: function (files) {
+	processInfo: function (files, loadId = this.loadId) {
+		if (loadId !== this.loadId) {
+			return;
+		}
 		let captureSelf = this;
 		var processed = false;
 		Object.keys(files).forEach(filename => {
@@ -303,9 +337,9 @@ AFRAME.registerComponent('zip-loader', {
 								return sets;
 							}, []),
 						};
-						captureSelf.processFiles(files, v2Info);
+						captureSelf.processFiles(files, v2Info, loadId);
 					} else {
-						captureSelf.processFiles(files, info);
+						captureSelf.processFiles(files, info, loadId);
 					}
 				});
 			}
@@ -317,6 +351,7 @@ AFRAME.registerComponent('zip-loader', {
 	},
 
 	tryLoadFromCustomLevels: async function (hash, options = {}) {
+		const loadId = this.loadId;
 		const requestPermission = options.requestPermission !== undefined ? options.requestPermission : true;
 		const targetHash = normalizeReplayHash(hash);
 		if (!targetHash) {
@@ -352,6 +387,9 @@ AFRAME.registerComponent('zip-loader', {
 
 		try {
 			const files = await this.findMapInCustomLevels(rootDirectoryHandle, targetHash);
+			if (loadId !== this.loadId) {
+				return {loaded: false, attempted: false};
+			}
 			if (!files) {
 				return {loaded: false, attempted: true};
 			}
@@ -656,10 +694,14 @@ AFRAME.registerComponent('zip-loader', {
 	},
 
 	postchallengeloaderror: async function (hash) {
+		const loadId = this.loadId;
 		const normalizedHash = normalizeReplayHash(hash);
 		let localLookupResult = {loaded: false, attempted: false};
 		if (normalizedHash && this.lastLocalLookupAttemptHash !== normalizedHash) {
 			localLookupResult = await this.tryLoadFromCustomLevels(normalizedHash);
+			if (loadId !== this.loadId) {
+				return;
+			}
 			if (localLookupResult.attempted) {
 				this.lastLocalLookupAttemptHash = normalizedHash;
 			}
@@ -668,10 +710,7 @@ AFRAME.registerComponent('zip-loader', {
 			}
 		}
 
-		if (utils.getCookie('autoplayReplay')) {
-			this.el.sceneEl.components['random-replay'].fetchRandomReplay(true);
-		}
-
+		this.removeLocalZipPrompt();
 		const gestureListener = e => {
 			if (this.fetching) {
 				return;
@@ -684,8 +723,7 @@ AFRAME.registerComponent('zip-loader', {
 
 			input.onchange = e => {
 				if (e.target.files[0].name.includes('.zip')) {
-					this.el.removeEventListener('usergesturereceive', gestureListener);
-					this.cleanup && this.cleanup();
+					this.removeLocalZipPrompt();
 					this.el.emit('challengeloadstart', this.data.id, false);
 					JSZip.loadAsync(e.target.files[0]).then(zip => {
 						this.fetchedZip = this.data.id;
@@ -696,10 +734,10 @@ AFRAME.registerComponent('zip-loader', {
 
 			input.click();
 		};
+		this.localZipGestureListener = gestureListener;
 		this.el.sceneEl.addEventListener('usergesturereceive', gestureListener);
 		this.cleanup = dragDrop('#body', files => {
-			this.el.removeEventListener('usergesturereceive', gestureListener);
-			this.cleanup && this.cleanup();
+			this.removeLocalZipPrompt();
 			this.el.emit('challengeloadstart', this.data.id, false);
 			JSZip.loadAsync(files[0]).then(zip => {
 				this.fetchedZip = this.data.id;
@@ -715,16 +753,28 @@ AFRAME.registerComponent('zip-loader', {
 		});
 	},
 
+	removeLocalZipPrompt: function () {
+		if (this.localZipGestureListener) {
+			this.el.sceneEl.removeEventListener('usergesturereceive', this.localZipGestureListener);
+			this.localZipGestureListener = null;
+		}
+		if (this.cleanup) {
+			this.cleanup();
+			this.cleanup = null;
+		}
+	},
+
 	/**
 	 * Read API first to get hash and URLs.
 	 */
 	fetchData: async function (id, byHash) {
+		const loadId = this.loadId;
 		this.fetched = true;
 		document.cookie = 'aprilFools=1; expires=Sat, 03 Apr 2022 00:00:00 UTC; path=/';
 
 		if (byHash) {
 			const localLookupResult = await this.tryLoadFromCustomLevels(id, {requestPermission: false});
-			if (localLookupResult.loaded) {
+			if (localLookupResult.loaded || loadId !== this.loadId) {
 				return;
 			}
 		}
@@ -734,6 +784,9 @@ AFRAME.registerComponent('zip-loader', {
 		})
 			.then(res => {
 				res.json().then(data => {
+					if (loadId !== this.loadId) {
+						return;
+					}
 					if (data.versions) {
 						const currentVersion = data.versions[0];
 						const desiredHash = byHash ? id : currentVersion.hash;
@@ -747,7 +800,7 @@ AFRAME.registerComponent('zip-loader', {
 							this.el.sceneEl.emit('songFetched', data);
 
 							const localLookupResult = await this.tryLoadFromCustomLevels(hash, {requestPermission: false});
-							if (localLookupResult.loaded) {
+							if (localLookupResult.loaded || loadId !== this.loadId) {
 								return;
 							}
 							this.fetchZip(zipUrl, fallbackUrls);
@@ -764,6 +817,9 @@ AFRAME.registerComponent('zip-loader', {
 				});
 			})
 			.catch(_ => {
+				if (loadId !== this.loadId) {
+					return;
+				}
 				let urls = ['r2cdn', 'cdn'].map(prefix => 'https://' + prefix + '.beatsaver.com/' + id.toLowerCase() + '.zip');
 				this.fetchZip(urls[0], [urls[1]]);
 			});
@@ -778,7 +834,8 @@ AFRAME.registerComponent('zip-loader', {
 		this.el.emit('challengeloadstart', this.data.id, false);
 		this.isFetching = zipUrl;
 
-		const xhr = new XMLHttpRequest();
+		const loadId = this.loadId;
+		const xhr = (this.xhr = new XMLHttpRequest());
 		xhr.open('GET', zipUrl, true);
 		xhr.responseType = 'arraybuffer';
 
@@ -788,6 +845,9 @@ AFRAME.registerComponent('zip-loader', {
 		};
 
 		var errorHandler = () => {
+			if (loadId !== this.loadId) {
+				return;
+			}
 			if (fallbackUrls && fallbackUrls.length) {
 				this.fetchZip(fallbackUrls.shift(), fallbackUrls);
 			} else {
@@ -799,9 +859,12 @@ AFRAME.registerComponent('zip-loader', {
 		xhr.onload = () => {
 			if (xhr.status == 200) {
 				JSZip.loadAsync(xhr.response).then(zip => {
+					if (loadId !== this.loadId) {
+						return;
+					}
 					this.fetchedZip = this.data.id;
 					this.fetchedZipUrl = zipUrl;
-					this.processInfo(zip.files);
+					this.processInfo(zip.files, loadId);
 				});
 			} else {
 				errorHandler();

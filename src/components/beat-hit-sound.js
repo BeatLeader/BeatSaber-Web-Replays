@@ -29,6 +29,9 @@ AFRAME.registerComponent('beat-hit-sound', {
 		this.el.sceneEl.addEventListener('gamemenurestart', e => {
 			this.beatIndex = -1;
 		});
+		this.el.sceneEl.addEventListener('replayunload', e => {
+			this.beatIndex = -1;
+		});
 
 		// Handle visibility change only for iOS
 		this.checkInterval = null;

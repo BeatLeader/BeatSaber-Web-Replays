@@ -109,8 +109,15 @@ AFRAME.registerComponent('beat-generator', {
 				this.mappingExtensions = null;
 			}
 
-			if (this.customData && this.customData._requirements) {
-				this.noodleExtensions = this.customData._requirements.includes('Noodle Extensions');
+			const requirements = (this.customData && this.customData._requirements) || [];
+			this.noodleExtensions = requirements.includes('Noodle Extensions');
+		});
+		this.el.addEventListener('replayunload', evt => {
+			queryJD = null;
+			this.jdToSet = null;
+
+			if (typeof this.spawnRotation === 'number' && this.spawnRotation !== 0) {
+				this.el.sceneEl.emit('spawnRotationChanged', {spawnRotation: 0, oldSpawnRotation: this.spawnRotation}, false);
 			}
 		});
 		this.el.addEventListener('replayloadstart', evt => {

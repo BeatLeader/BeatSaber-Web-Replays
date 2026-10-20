@@ -76,6 +76,7 @@
 
 		<canvas id="main-canvas"></canvas>
 		{% include './templates/controls.html' %}
+		{% include './templates/playlist.html' %}
 		<a-scene
 			settings
 			bind__pixelRatio="settings.pixelRatio"
@@ -137,6 +138,7 @@
 			heartrate-counter
 			intro-skip
 			random-replay
+			playlist
 			colors
 			render-order="background, additive, middle, hud, walls, splines, headset">
 			<a-assets timeout="100000"> {% include './assets.html' %} </a-assets>

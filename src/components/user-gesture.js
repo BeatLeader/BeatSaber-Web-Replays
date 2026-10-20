@@ -54,13 +54,15 @@ AFRAME.registerComponent('user-gesture', {
 			});
 		});
 
-		const controls = document.getElementById('controls');
-		controls.addEventListener('mouseenter', evt => {
-			captureThis.disableInactivityCheck();
-		});
+		['controls', 'playlistPanel'].forEach(id => {
+			const panel = document.getElementById(id);
+			panel.addEventListener('mouseenter', evt => {
+				captureThis.disableInactivityCheck();
+			});
 
-		controls.addEventListener('mouseleave', evt => {
-			captureThis.enableInactivityCheck();
+			panel.addEventListener('mouseleave', evt => {
+				captureThis.enableInactivityCheck();
+			});
 		});
 
 		this.enableInactivityCheck();

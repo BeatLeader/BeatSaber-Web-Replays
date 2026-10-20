@@ -187,6 +187,11 @@ AFRAME.registerComponent('settings', {
 			randomScoreSource: 'all',
 			randomScoreEmptyPlayer: true,
 
+			playlistAutoplay: true,
+			playlistCollapsed: false,
+			playlistPick: 'nomods',
+			playlistAllDifficulties: false,
+
 			// Saber
 			showSaberAxes: false,
 			saberOffset: 0,

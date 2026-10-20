@@ -479,6 +479,33 @@ function hasTouchScreen() {
 	return result;
 }
 
+const diffColors = {
+	Easy: 'MediumSeaGreen',
+	Normal: '#59b0f4',
+	Hard: 'tomato',
+	Expert: '#bf2a42',
+	ExpertPlus: '#8f48db',
+};
+
+function getDiffInfo(name) {
+	switch (name) {
+		case 'Easy':
+			return {name, shortName: 'Es', difficulty: 1, color: diffColors[name]};
+		case 'Normal':
+			return {name, shortName: 'N', difficulty: 3, color: diffColors[name]};
+		case 'Hard':
+		case 'hard':
+			return {name, shortName: 'H', difficulty: 5, color: diffColors[name]};
+		case 'Expert':
+			return {name, shortName: 'Ex', difficulty: 7, color: diffColors[name]};
+		case 'ExpertPlus':
+			return {name: 'Expert+', shortName: 'E+', difficulty: 9, color: diffColors[name]};
+
+		default:
+			return null;
+	}
+}
+
 function getUrlParameter(name, url = window.location.href) {
 	name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
 	const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
@@ -595,6 +622,7 @@ const DEFAULT_COLORS = {
 };
 
 module.exports.getApiUrl = getApiUrl;
+module.exports.getDiffInfo = getDiffInfo;
 module.exports.getWebsiteUrl = getWebsiteUrl;
 module.exports.replaceCdnUrl = replaceCdnUrl;
 module.exports.LeaderboardContexts = LeaderboardContexts;

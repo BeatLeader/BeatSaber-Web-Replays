@@ -259,7 +259,7 @@ AFRAME.registerComponent('song-controls', {
 			// document.getElementById('difficultyLabel').setAttribute('text', 'value',
 			// this.customDifficultyLabels[this.data.difficulty] + "\n(" + this.data.difficulty + ")");
 
-			let diffInfo = getDiffInfo(this.data.difficulty);
+			let diffInfo = utils.getDiffInfo(this.data.difficulty);
 			let songDifficulty = document.getElementById('songDifficulty');
 			songDifficulty.textContent = diffInfo.name;
 			songDifficulty.setAttribute('title', diffInfo.name);
@@ -864,6 +864,10 @@ AFRAME.registerComponent('song-controls', {
 				baseParams += '&forceFpv=true';
 			}
 
+			if (utils.getUrlParameter('playlist')) {
+				baseParams += '&playlist=' + encodeURIComponent(utils.getUrlParameter('playlist'));
+			}
+
 			let base = location.protocol + '//' + location.host + '/' + baseParams;
 			input.value =
 				base + (time ? `&time=${Math.round(this.song.getCurrentTime() * 1000)}&speed=${Math.round(this.baseSongSpeed * 100)}` : '');
@@ -1259,15 +1263,22 @@ AFRAME.registerComponent('song-controls', {
 				seekRight();
 			});
 			const replayLoader = this.el.sceneEl.components['replay-loader'];
-			navigator.mediaSession.setActionHandler('previoustrack', function () {
-				if (replayLoader.canGoBack()) {
+			const playlist = this.el.sceneEl.components.playlist;
+			navigator.mediaSession.setActionHandler('previoustrack', async function () {
+				if (playlist.active) {
+					if (await playlist.previous()) return;
+				} else if (replayLoader.canGoBack()) {
 					window.history.back();
-				} else if (captureThis.song.source) {
+					return;
+				}
+				if (captureThis.song.source) {
 					captureThis.seek(0);
 				}
 			});
 			navigator.mediaSession.setActionHandler('nexttrack', function () {
-				if (replayLoader.canGoForward()) {
+				if (playlist.active) {
+					playlist.next();
+				} else if (replayLoader.canGoForward()) {
 					window.history.forward();
 				} else {
 					captureThis.el.sceneEl.components['random-replay'].fetchRandomReplay(true);
@@ -2254,31 +2265,4 @@ function formatSeconds(time, precise) {
 		ret += '.' + Math.round((time - Math.floor(time)) * 1000);
 	}
 	return ret;
-}
-
-const diffColors = {
-	Easy: 'MediumSeaGreen',
-	Normal: '#59b0f4',
-	Hard: 'tomato',
-	Expert: '#bf2a42',
-	ExpertPlus: '#8f48db',
-};
-
-function getDiffInfo(name) {
-	switch (name) {
-		case 'Easy':
-			return {name, shortName: 'Es', difficulty: 1, color: diffColors[name]};
-		case 'Normal':
-			return {name, shortName: 'N', difficulty: 3, color: diffColors[name]};
-		case 'Hard':
-		case 'hard':
-			return {name, shortName: 'H', difficulty: 5, color: diffColors[name]};
-		case 'Expert':
-			return {name, shortName: 'Ex', difficulty: 7, color: diffColors[name]};
-		case 'ExpertPlus':
-			return {name: 'Expert+', shortName: 'E+', difficulty: 9, color: diffColors[name]};
-
-		default:
-			return null;
-	}
 }

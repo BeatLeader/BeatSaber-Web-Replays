@@ -1,0 +1,66 @@
+<div id="playlistPanel">
+  <button id="playlistToggle" title="Hide playlist"><i class="fas fa-chevron-right"></i></button>
+  <div id="playlistContent">
+    <div id="playlistHeader">
+      <label id="playlistCoverContainer">
+        <img id="playlistCover" alt="">
+        <span id="playlistCoverEdit" title="Change cover"><i class="fas fa-image"></i></span>
+        <input id="playlistCoverInput" type="file" accept=".jpg,.jpeg,.png,.gif" disabled>
+      </label>
+      <div id="playlistInfo">
+        <a id="playlistTitle" target="_blank"></a>
+        <a id="playlistOwner" target="_blank">
+          <img id="playlistOwnerAvatar" alt="">
+          <span id="playlistOwnerName"></span>
+        </a>
+        <div id="playlistBadges">
+          <button id="playlistVisibility" class="playlistBadge" disabled></button>
+          <span id="playlistRole" class="playlistBadge"><i class="fas fa-user-pen"></i> You can edit</span>
+        </div>
+      </div>
+      <button id="playlistEditInfo" class="playlistIconButton" title="Edit title and description"><i class="fas fa-pen"></i></button>
+    </div>
+    <p id="playlistDescription"></p>
+    <form id="playlistInfoForm">
+      <input id="playlistTitleInput" maxlength="200" placeholder="Title" required>
+      <textarea id="playlistDescriptionInput" maxlength="2000" rows="3" placeholder="Description"></textarea>
+      <div class="playlistFormButtons">
+        <button type="submit" class="playlistIconButton" title="Save"><i class="fas fa-check"></i></button>
+        <button type="button" id="playlistInfoCancel" class="playlistIconButton" title="Cancel"><i class="fas fa-xmark"></i></button>
+      </div>
+    </form>
+    <div id="playlistNav">
+      <button id="playlistPrevious" class="playlistIconButton" title="Previous replay (Shift+P)"><i class="fas fa-backward-step"></i></button>
+      <span id="playlistPosition"></span>
+      <button id="playlistNext" class="playlistIconButton" title="Next replay (Shift+N)"><i class="fas fa-forward-step"></i></button>
+      <span id="playlistCountdown">
+        <span id="playlistCountdownText"></span>
+        <button id="playlistCountdownCancel" class="playlistIconButton" title="Cancel"><i class="fas fa-xmark"></i></button>
+      </span>
+      <label class="playlistToggleLabel" title="Play the next replay when one ends">
+        <span class="toggleButtonLabel">Autoplay</span>
+        <span class="switch">
+          <input type="checkbox" id="playlistAutoplay">
+          <span class="slider round"></span>
+        </span>
+      </label>
+    </div>
+    <div id="playlistMapOptions">
+      <select id="playlistPick" class="settingButton" title="Which score to watch on each map">
+        <option value="nomods">Top score without modifiers</option>
+        <option value="top">Top score</option>
+        <option value="player">My score</option>
+      </select>
+      <label class="playlistToggleLabel" title="Watch every difficulty of maps added without picked difficulties">
+        <span class="toggleButtonLabel">All difficulties</span>
+        <span class="switch">
+          <input type="checkbox" id="playlistAllDifficulties">
+          <span class="slider round"></span>
+        </span>
+      </label>
+    </div>
+    <div id="playlistVote"></div>
+    <p id="playlistStatus"></p>
+    <div id="playlistItems"></div>
+  </div>
+</div>

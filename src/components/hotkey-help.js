@@ -37,6 +37,8 @@ AFRAME.registerComponent('hotkey-help', {
           { keys: [','], action: 'Previous beat (hold Shift for 0.1 beat)' },
           { keys: ['.'], action: 'Next beat (hold Shift for 0.1 beat)' },
           { keys: ['I'], action: 'Skip intro / outro' },
+          { keys: ['Shift', 'N'], action: 'Next replay in the playlist' },
+          { keys: ['Shift', 'P'], action: 'Previous replay in the playlist' },
           { keys: ['Scroll'], action: 'Scroll on timeline to seek (hold Shift for fine adjust)' }
         ]
       },

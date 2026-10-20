@@ -39,6 +39,7 @@ const REPLAY_URL_PARAMS = [
 	'jd',
 	'mapLink',
 	'songLink',
+	'playlist',
 ];
 
 function replayUrl(source) {
@@ -51,7 +52,8 @@ function replayUrl(source) {
 	} else if (source.link) {
 		replayParam = 'link=' + encodeURI(source.link);
 	}
-	const query = [replayParam, params.toString()].filter(Boolean).join('&');
+	const playlistParam = source.playlistId ? 'playlist=' + encodeURIComponent(source.playlistId) : '';
+	const query = [playlistParam, replayParam, params.toString()].filter(Boolean).join('&');
 	return location.pathname + (query ? '?' + query : '');
 }
 
@@ -87,12 +89,16 @@ AFRAME.registerComponent('replay-loader', {
 		this.historyLength = this.historyIndex + 1;
 
 		let captureThis = this;
+		const playlistId = getUrlParameter('playlist') || undefined;
+		const {playlistItemId, playlistEntry} = history.state || {};
 		if (this.data.link.length) {
-			this.source = {link: this.data.link};
+			this.source = {link: this.data.link, playlistId, playlistItemId, playlistEntry};
 			setTimeout(() => this.fetchByFile(this.data.link, true), 300);
 		} else if (this.data.scoreId.length) {
-			this.source = {scoreId: this.data.scoreId};
+			this.source = {scoreId: this.data.scoreId, playlistId, playlistItemId, playlistEntry};
 			captureThis.downloadReplay(null, this.data.scoreId);
+		} else if (playlistId) {
+			// The playlist component opens the first replay.
 		} else if (!this.data.playerID.length) {
 			this.empty = true;
 			this.cleanup = dragDrop('#body', files => {
@@ -134,7 +140,7 @@ AFRAME.registerComponent('replay-loader', {
 		window.addEventListener('popstate', e => this.onPopState(e));
 	},
 
-	openReplay: function (source, {updateUrl = true, countWatch = true} = {}) {
+	openReplay: function (source, {updateUrl = true, replaceUrl = false, countWatch = true} = {}) {
 		this.loadId++;
 		this.source = source;
 		this.countWatch = countWatch;
@@ -144,12 +150,13 @@ AFRAME.registerComponent('replay-loader', {
 
 		if (updateUrl) {
 			const url = replayUrl(source);
-			if (pageInIframe()) {
-				history.replaceState(history.state, '', url);
+			const {playlistItemId, playlistEntry} = source;
+			if (replaceUrl || pageInIframe()) {
+				history.replaceState({...history.state, playlistItemId, playlistEntry}, '', url);
 			} else {
 				this.historyIndex++;
 				this.historyLength = this.historyIndex + 1;
-				history.pushState({replayIndex: this.historyIndex}, '', url);
+				history.pushState({replayIndex: this.historyIndex, playlistItemId, playlistEntry}, '', url);
 			}
 		}
 
@@ -193,9 +200,12 @@ AFRAME.registerComponent('replay-loader', {
 	onPopState: function (e) {
 		const scoreId = getUrlParameter('scoreId');
 		const link = getUrlParameter('link');
-		this.historyIndex = (e.state && e.state.replayIndex) || 0;
+		const state = e.state || {};
+		this.historyIndex = state.replayIndex || 0;
 		if (scoreId || link) {
-			this.openReplay({scoreId, link}, {updateUrl: false});
+			const playlistId = getUrlParameter('playlist') || undefined;
+			const {playlistItemId, playlistEntry} = state;
+			this.openReplay({scoreId, link, playlistId, playlistItemId, playlistEntry}, {updateUrl: false});
 		} else {
 			location.reload();
 		}

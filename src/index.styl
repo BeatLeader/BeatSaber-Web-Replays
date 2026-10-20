@@ -1768,3 +1768,590 @@ input:checked + .slider:before {
   .hotkey-keys kbd
     padding: 4px 8px
     font-size: 11px
+
+$voteAccent=#9b6dff
+
+#playlistPanel
+  display none
+  position fixed
+  top 10px
+  right 10px
+  max-height calc(100% - 90px)
+  width 340px
+  max-width calc(100vw - 50px)
+  z-index 9999999
+  font-family $font
+  color $white
+  transition transform 0.5s
+
+  .playlistOpen &
+    display flex
+
+  &.collapsed
+    transform translateX(calc(100% + 10px))
+
+  button
+    font-family $font
+
+  #playlistTitleInput, textarea
+    width 100%
+    box-sizing border-box
+    padding 4px 6px
+    border 1px solid #3e3e3e
+    border-radius 4px
+    background #1a1a1a
+    color $white
+    font-family $font
+    font-size 12px
+    resize vertical
+
+#body:not(.showControls) #playlistPanel:not(:focus-within)
+  transform translateX(calc(100% + 50px))
+
+.playlistOpen
+  #discord-corner, #patreon-corner
+    display none !important
+
+#playlistToggle
+  position absolute
+  left -30px
+  top 50%
+  width 26px
+  height 48px
+  margin-top -24px
+  border none
+  border-radius 6px 0 0 6px
+  background rgba(0, 0, 0, 0.85)
+  color $white
+  cursor pointer
+
+  i
+    transition transform 0.5s
+
+  .collapsed &
+    i
+      transform rotate(180deg)
+
+#playlistContent
+  display flex
+  flex-direction column
+  flex 1
+  min-width 0
+  background rgba(0, 0, 0, 0.85)
+  border-radius 10px
+  overflow hidden
+
+  #playlistPanel:not(.loaded) &
+    > :not(#playlistStatus)
+      display none
+
+#playlistHeader
+  display flex
+  gap 10px
+  padding 10px
+
+#playlistCoverContainer
+  position relative
+  flex none
+  width 64px
+  height 64px
+
+  img
+    width 100%
+    height 100%
+    border-radius 6px
+    object-fit cover
+
+  input
+    display none
+
+#playlistCoverEdit
+  display none
+  position absolute
+  inset 0
+  align-items center
+  justify-content center
+  border-radius 6px
+  background rgba(0, 0, 0, 0.6)
+  cursor pointer
+
+.editable #playlistCoverContainer:hover #playlistCoverEdit
+  display flex
+
+#playlistInfo
+  display flex
+  flex-direction column
+  gap 4px
+  flex 1
+  min-width 0
+
+#playlistTitle
+  color #ffffffcc
+  font-size 15px
+  font-weight 600
+  text-decoration none
+  overflow hidden
+  display -webkit-box
+  -webkit-line-clamp 2
+  -webkit-box-orient vertical
+
+  &:hover
+    text-decoration underline
+
+#playlistOwner
+  display flex
+  align-items center
+  gap 5px
+  color #ffffffa3
+  font-size 12px
+  text-decoration none
+
+  img
+    width 18px
+    height 18px
+    border-radius 50%
+
+  &:hover
+    color $white
+
+#playlistBadges
+  display flex
+  gap 4px
+
+.playlistBadge
+  padding 1px 6px
+  border none
+  border-radius 8px
+  background #3e3e3e
+  color $white
+  font-size 10px
+  white-space nowrap
+
+  &:disabled
+    color $white
+
+  &.public
+    background #2e7d32
+
+  &:enabled
+    cursor pointer
+
+#playlistRole
+  background #1f6fb2
+
+#playlistEditInfo
+  display none
+  flex none
+
+  .editable &
+    display block
+
+#playlistDescription
+  margin 0 10px 8px
+  max-height 6em
+  overflow-y auto
+  color #ffffffab
+  font-size 12px
+  white-space pre-wrap
+  overflow-wrap anywhere
+
+  &:empty
+    display none
+
+#playlistInfoForm
+  display none
+  flex-direction column
+  gap 4px
+  padding 0 10px 8px
+
+  .editingInfo &
+    display flex
+
+.editingInfo
+  #playlistHeader .playlistBadge, #playlistEditInfo, #playlistDescription
+    display none
+
+.playlistFormButtons
+  display flex
+  justify-content flex-end
+  gap 2px
+
+.playlistIconButton
+  flex none
+  width 24px
+  height 24px
+  padding 0
+  border none
+  border-radius 4px
+  background none
+  color #ffffffa1
+  font-size 12px
+  cursor pointer
+
+  &:hover:enabled
+    background #ffffff1a
+    color $white
+
+  &:disabled
+    opacity 0.3
+    cursor default
+
+#playlistNav
+  display flex
+  align-items center
+  gap 4px
+  padding 4px 10px
+  border-top 1px solid #3e3e3e
+  border-bottom 1px solid #3e3e3e
+  font-size 12px
+
+#playlistPosition
+  min-width 50px
+  text-align center
+  font-variant-numeric tabular-nums
+
+  .countingDown &
+    display none
+
+#playlistCountdown
+  display none
+  align-items center
+  color #ffd24d
+
+  .countingDown &
+    display flex
+
+.playlistToggleLabel
+  display flex
+  align-items center
+  margin-left auto
+  cursor pointer
+
+  .toggleButtonLabel
+    width auto
+    top 0
+
+#playlistMapOptions
+  display none
+  align-items center
+  gap 6px
+  padding 4px 10px
+  border-bottom 1px solid #3e3e3e
+
+  .mapPlaylist &
+    display flex
+
+  select
+    font-size 11px
+
+#playlistStatus
+  margin 0
+  padding 6px 10px
+  color #ffffffa3
+  font-size 12px
+
+  &:empty
+    display none
+
+  &.error
+    color #ff6b6b
+
+#playlistVote
+  display flex
+  flex-direction column
+  gap 4px
+  margin 6px 8px 0
+  padding 8px 10px
+  border 1px solid rgba(155, 109, 255, 0.4)
+  border-radius 8px
+  background rgba(155, 109, 255, 0.08)
+  font-size 12px
+
+  &:empty
+    display none
+
+.playlistVoteHead
+  display flex
+  align-items center
+  gap 6px
+  font-size 13px
+
+  i
+    color $voteAccent
+
+.playlistVoteMeta, .playlistVoteActions
+  display flex
+  flex-wrap wrap
+  align-items center
+  gap 4px 10px
+
+.playlistVoteMeta, .playlistVoteNote
+  color #ffffffa3
+  font-size 11px
+
+.playlistVoteButton
+  padding 3px 10px
+  border none
+  border-radius 4px
+  background $voteAccent
+  color $white
+  cursor pointer
+
+  &:disabled
+    background #ffffff1a
+    color #ffffff80
+    cursor default
+
+.playlistVoteLink
+  padding 0
+  border none
+  background none
+  color #ffffffa3
+  font-size 11px
+  text-decoration underline
+  cursor pointer
+
+  &.danger
+    color #ff6b6b
+
+.playlistVotePick
+  flex none
+  display flex
+  align-items center
+  justify-content center
+  width 16px
+  height 16px
+  margin-top 2px
+  padding 0
+  border 2px solid #ffffff80
+  border-radius 4px
+  background transparent
+  color $white
+  font-size 9px
+  cursor pointer
+
+  &.single
+    border-radius 50%
+
+  &.on
+    border-color $voteAccent
+    background $voteAccent
+
+  &.ghost
+    opacity 0.3
+
+  &:disabled
+    cursor default
+
+.playlistVoteTally
+  display flex
+  align-items center
+  gap 6px
+  color #ffffffa3
+
+  b
+    color $white
+
+.playlistVoteBar
+  flex 1
+  height 3px
+  border-radius 2px
+  background #ffffff1a
+  overflow hidden
+
+  span
+    display block
+    height 100%
+    background $voteAccent
+
+.playlistMore
+  width 100%
+  margin 4px 0
+  padding 6px
+  border none
+  border-radius 6px
+  background #ffffff1a
+  color $white
+  cursor pointer
+
+#playlistItems
+  position relative
+  flex 1
+  min-height 0
+  overflow-y auto
+  padding 4px
+
+  &::-webkit-scrollbar
+    width 8px
+
+  &::-webkit-scrollbar-thumb
+    background #ffffff33
+    border-radius 4px
+
+.playlistItem
+  position relative
+  display flex
+  align-items flex-start
+  gap 8px
+  padding 6px
+  border-radius 6px
+  cursor pointer
+
+  &:hover
+    background #ffffff0f
+
+  &.current
+    background rgba(142, 84, 233, 0.35)
+
+  &.unavailable
+    opacity 0.65
+    cursor default
+
+  &.failed .playlistItemSong
+    color #ff6b6b
+
+  &.dragging
+    opacity 0.4
+
+  &.dropBefore
+    box-shadow inset 0 2px #eb008c
+
+  &.dropAfter
+    box-shadow inset 0 -2px #eb008c
+
+.playlistItemPosition
+  flex none
+  min-width 20px
+  padding-top 2px
+  color #ffffff8c
+  font-size 11px
+  text-align right
+  font-variant-numeric tabular-nums
+
+  i
+    display none
+    cursor grab
+
+  .playlistItem:hover &.draggable
+    .playlistItemNumber
+      display none
+    i
+      display inline
+
+.playlistItemCover
+  flex none
+  display flex
+  align-items center
+  justify-content center
+  width 44px
+  height 44px
+  border-radius 4px
+  background #1a1a1a
+  object-fit cover
+  color #ffffff8c
+
+.playlistItemInfo
+  display flex
+  flex-direction column
+  gap 2px
+  flex 1
+  min-width 0
+  font-size 11px
+
+.playlistItemSong
+  color #ffffffcc
+  font-size 13px
+  font-weight 600
+  overflow hidden
+  text-overflow ellipsis
+  white-space nowrap
+
+.playlistItemMap, .playlistItemPlayer
+  display flex
+  align-items center
+  gap 4px
+  min-width 0
+  white-space nowrap
+
+.playlistItemDifficulty
+  flex none
+  padding 0 4px
+  border-radius 3px
+  background #3e3e3e
+  color $white
+  font-size 10px
+
+  &[data-entry]
+    cursor pointer
+
+  &.empty
+    opacity 0.4
+    cursor default
+
+  &.current
+    box-shadow 0 0 0 1px $white
+
+.playlistItemStars
+  flex none
+  color #ffffffa3
+
+.playlistItemMapper, .playlistItemPlayerName
+  overflow hidden
+  text-overflow ellipsis
+  color #ffffffa3
+
+.playlistItemAvatar
+  flex none
+  width 14px
+  height 14px
+  border-radius 50%
+
+.playlistItemEndType
+  flex none
+  padding 0 4px
+  border-radius 3px
+  background #6b4e16
+  font-size 10px
+
+.playlistItemStats
+  display flex
+  gap 6px
+  margin-left auto
+  padding-left 4px
+
+.playlistItemPp
+  color #8992e8
+
+.playlistItemNote
+  color #ffffffb0
+  font-style italic
+  white-space pre-wrap
+  overflow-wrap anywhere
+  overflow hidden
+  display -webkit-box
+  -webkit-line-clamp 2
+  -webkit-box-orient vertical
+
+  .current &
+    display block
+
+.playlistNoteForm
+  display flex
+  flex-direction column
+  gap 2px
+  margin-top 2px
+
+.playlistItemActions
+  position absolute
+  top 4px
+  right 4px
+  display flex
+  border-radius 4px
+  background rgba(0, 0, 0, 0.8)
+  opacity 0
+
+  .playlistItem:hover &
+    opacity 1
+
+  @media (hover: none)
+    opacity 1

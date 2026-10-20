@@ -90,9 +90,11 @@ AFRAME.registerComponent('random-replay', {
 	manualTick: function () {
 		const song = this.song;
 		const source = song.source;
+		const playlist = this.el.sceneEl.components.playlist;
 
 		if (
 			!this.canceled &&
+			!playlist.active &&
 			this.settings.settings.autoplayRandomScore &&
 			!this.settings.shouldLoopReplays() &&
 			((source && Math.abs(song.getCurrentTime() - song.getDuration()) < 0.1) ||

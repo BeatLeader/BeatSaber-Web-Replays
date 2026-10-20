@@ -43,6 +43,12 @@ To specify replay download link use the `?link` parameter in the URL. Make sure 
 
 `https://replay.beatleader.xyz/?link=https://cdn.replays.beatleader.xyz/9280912-76561198059961776-ExpertPlus-Standard-13400F5FB2FD19F52E8C7AC48815D12E72FA3B4A.bsor`
 
+To play a BeatLeader playlist one replay after another, use the `?playlist` parameter with the playlist's id, or the guid from its share link. Map playlists play a score on every map, picked in the side panel. Add `scoreId` or `link` to start from a specific replay:
+
+`https://replay.beatleader.xyz/?playlist=123`
+
+`https://replay.beatleader.xyz/?playlist=123&scoreId=9280912`
+
 ## Development
 
 Download repository.

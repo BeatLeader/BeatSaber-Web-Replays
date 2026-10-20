@@ -770,6 +770,7 @@ AFRAME.registerComponent('song-controls', {
 		});
 
 		let contextHandler = (event, touch) => {
+			this.el.sceneEl.emit('contextmenuopen', null, false);
 			var ctxMenu = document.getElementById('ctxMenu');
 			ctxMenu.style.display = 'block';
 			ctxMenu.style.left = event.pageX - (touch ? 100 : 10) + 'px';

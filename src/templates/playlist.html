@@ -22,8 +22,8 @@
     </div>
     <p id="playlistDescription"></p>
     <form id="playlistInfoForm">
-      <input id="playlistTitleInput" maxlength="200" placeholder="Title" required>
-      <textarea id="playlistDescriptionInput" maxlength="2000" rows="3" placeholder="Description"></textarea>
+      <input id="playlistTitleInput" class="playlistField" maxlength="200" placeholder="Title" required>
+      <textarea id="playlistDescriptionInput" class="playlistField" maxlength="2000" rows="3" placeholder="Description"></textarea>
       <div class="playlistFormButtons">
         <button type="submit" class="playlistIconButton" title="Save"><i class="fas fa-check"></i></button>
         <button type="button" id="playlistInfoCancel" class="playlistIconButton" title="Cancel"><i class="fas fa-xmark"></i></button>
@@ -62,5 +62,23 @@
     <div id="playlistVote"></div>
     <p id="playlistStatus"></p>
     <div id="playlistItems"></div>
+  </div>
+</div>
+
+<div id="playlistPicker">
+  <div id="playlistPickerDialog" role="dialog" aria-label="Add to playlist">
+    <div id="playlistPickerHead">
+      <b>Add to playlist</b>
+      <button id="playlistPickerClose" class="playlistIconButton" title="Close (Esc)"><i class="fas fa-xmark"></i></button>
+    </div>
+    <textarea id="playlistPickerNote" class="playlistField" rows="2" maxlength="500"></textarea>
+    <small id="playlistPickerNoteHint"></small>
+    <p id="playlistPickerStatus"></p>
+    <div id="playlistPickerList"></div>
+    <form id="playlistPickerCreate">
+      <input id="playlistPickerTitle" class="playlistField" maxlength="200" placeholder="Title" value="Favorite replays" required>
+      <button type="submit" class="playlistButton">Create</button>
+    </form>
+    <button id="playlistPickerNew" class="playlistMore"><i class="fas fa-plus"></i> New replay playlist</button>
   </div>
 </div>

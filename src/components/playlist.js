@@ -1,4 +1,6 @@
-const {getApiUrl, getWebsiteUrl, getUrlParameter, getDiffInfo} = require('../utils');
+const {getWebsiteUrl, getUrlParameter, getDiffInfo} = require('../utils');
+const {element, icon, iconButton, image, plural} = require('../utils/dom');
+const {api, errorText, checkLogin, isVoteRunning, playlistCover} = require('../utils/playlists');
 
 const AUTOPLAY_DELAY = 5;
 const MAX_AUTOPLAY_FAILURES = 3;
@@ -10,55 +12,6 @@ const VOTE_POLL_INTERVAL = 30000;
 const MAX_COVER_SIZE = 5 * 1024 * 1024;
 const END_TYPES = {1: 'Clear', 2: 'Fail', 3: 'Restart', 4: 'Quit', 5: 'Practice'};
 const VOTE_RESULTS_NOTES = {voted: 'Results show once you vote.', ended: 'Results show when the vote ends.'};
-
-async function api(path, {method = 'GET', body} = {}) {
-	const isJson = body !== undefined && !(body instanceof Blob);
-	const response = await fetch(getApiUrl() + path, {
-		method,
-		credentials: 'include',
-		headers: isJson ? {'Content-Type': 'application/json'} : undefined,
-		body: isJson ? JSON.stringify(body) : body,
-	});
-	if (!response.ok) {
-		const error = new Error(response.statusText);
-		error.status = response.status;
-		error.body = await response.text().catch(() => '');
-		throw error;
-	}
-	const text = await response.text();
-	return text ? JSON.parse(text) : null;
-}
-
-function errorText(error, fallback) {
-	return error.status === 409 && error.body ? error.body : fallback;
-}
-
-function element(tag, className, text) {
-	const el = document.createElement(tag);
-	if (className) el.className = className;
-	if (text !== undefined) el.textContent = text;
-	return el;
-}
-
-function icon(name) {
-	return element('i', 'fas ' + name);
-}
-
-function iconButton(name, title) {
-	const button = element('button', 'playlistIconButton');
-	button.type = 'button';
-	button.title = title;
-	button.append(icon(name));
-	return button;
-}
-
-function image(className, src) {
-	const img = element('img', className);
-	img.src = src || '';
-	img.alt = '';
-	img.draggable = false;
-	return img;
-}
 
 function cover(src, placeholderIcon) {
 	const placeholder = element('span', 'playlistItemCover');
@@ -84,10 +37,6 @@ function isPlayable(entry) {
 	return !entry.hidden && !!(entry.scoreId || entry.replay);
 }
 
-function isVoteRunning(vote) {
-	return !!vote && vote.active && !vote.endedAt && (!vote.endsAt || vote.endsAt * 1000 > Date.now());
-}
-
 function timeLeft(endsAt) {
 	const secs = Math.max(0, Math.round(endsAt - Date.now() / 1000));
 	const days = Math.floor(secs / 86400);
@@ -97,10 +46,6 @@ function timeLeft(endsAt) {
 	if (hours > 0) return minutes ? `${hours}h ${minutes}m` : `${hours}h`;
 	if (minutes > 0) return `${minutes}m`;
 	return `${secs}s`;
-}
-
-function plural(count, word) {
-	return `${count} ${word}${count === 1 ? '' : 's'}`;
 }
 
 AFRAME.registerComponent('playlist', {
@@ -571,6 +516,12 @@ AFRAME.registerComponent('playlist', {
 		}, () => {});
 	},
 
+	currentReplay: function () {
+		const item = this.active && this.items.find(item => item.id === this.currentId);
+		const entry = item && (this.entriesOf(item) || []).find(entry => entryKey(entry) === this.currentEntry);
+		return entry && entry.replayId ? {replayType: entry.replayType, id: entry.replayId} : null;
+	},
+
 	setCurrent: function (item, entry) {
 		this.currentId = item ? item.id : null;
 		this.currentEntry = entry || null;
@@ -756,20 +707,11 @@ AFRAME.registerComponent('playlist', {
 		return `/v2/playlist/${this.playlist.id}/votes/${voteId}${action}${guid}`;
 	},
 
-	checkLogin: function () {
-		if (!this.loginCheck) {
-			this.loginCheck = fetch(getApiUrl() + '/user/id', {credentials: 'include'})
-				.then(response => (response.ok ? response.text() : ''))
-				.then(id => !!id.trim(), () => false);
-		}
-		return this.loginCheck;
-	},
-
 	loadVote: async function (voteId) {
 		this.closeVote();
 		this.loadingVoteId = voteId;
 		try {
-			const [vote, loggedIn] = await Promise.all([api(this.votePath(voteId)), this.checkLogin()]);
+			const [vote, loggedIn] = await Promise.all([api(this.votePath(voteId)), checkLogin()]);
 			if (this.loadingVoteId !== voteId) return;
 			this.isLoggedIn = loggedIn;
 			this.applyVote(vote, true);
@@ -912,7 +854,7 @@ AFRAME.registerComponent('playlist', {
 		const playlist = this.playlist;
 		const isOwner = playlist.role === 'owner';
 
-		document.getElementById('playlistCover').src = playlist.cover || `${getWebsiteUrl()}/assets/defaultplaylisticon.png`;
+		document.getElementById('playlistCover').src = playlistCover(playlist);
 		document.getElementById('playlistCoverInput').disabled = !this.canEdit();
 
 		const title = document.getElementById('playlistTitle');
@@ -1085,7 +1027,7 @@ AFRAME.registerComponent('playlist', {
 			const myChoices = vote.myChoices || [];
 			const changed = picks.length !== myChoices.length || picks.some(id => !myChoices.includes(id));
 			const count = vote.maxChoices > 1 ? ` (${picks.length}/${vote.maxChoices})` : '';
-			const submit = element('button', 'playlistVoteButton', voted ? 'Change vote' : 'Submit vote' + count);
+			const submit = element('button', 'playlistButton', voted ? 'Change vote' : 'Submit vote' + count);
 			submit.disabled = this.voteBusy || !changed || !picks.length;
 			submit.addEventListener('click', () => this.submitBallot(picks));
 			actions.append(submit);
@@ -1169,7 +1111,7 @@ AFRAME.registerComponent('playlist', {
 		const row = this.itemsEl.querySelector(`.playlistItem[data-id="${item.id}"]`);
 		const info = row.querySelector('.playlistItemInfo');
 		const form = element('form', 'playlistNoteForm');
-		const textarea = element('textarea');
+		const textarea = element('textarea', 'playlistField');
 		textarea.maxLength = 500;
 		textarea.rows = 3;
 		textarea.placeholder = 'A note shown with this replay';

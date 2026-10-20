@@ -1793,17 +1793,17 @@ $voteAccent=#9b6dff
   button
     font-family $font
 
-  #playlistTitleInput, textarea
-    width 100%
-    box-sizing border-box
-    padding 4px 6px
-    border 1px solid #3e3e3e
-    border-radius 4px
-    background #1a1a1a
-    color $white
-    font-family $font
-    font-size 12px
-    resize vertical
+.playlistField
+  width 100%
+  box-sizing border-box
+  padding 4px 6px
+  border 1px solid #3e3e3e
+  border-radius 4px
+  background #1a1a1a
+  color $white
+  font-family $font
+  font-size 12px
+  resize vertical
 
 #body:not(.showControls) #playlistPanel:not(:focus-within)
   transform translateX(calc(100% + 50px))
@@ -2089,7 +2089,7 @@ $voteAccent=#9b6dff
   color #ffffffa3
   font-size 11px
 
-.playlistVoteButton
+.playlistButton
   padding 3px 10px
   border none
   border-radius 4px
@@ -2163,6 +2163,123 @@ $voteAccent=#9b6dff
     display block
     height 100%
     background $voteAccent
+
+#addToPlaylist .menuitem-icon i
+  width 24px
+  color $white
+  text-align center
+
+#playlistPicker
+  display none
+  position fixed
+  inset 0
+  z-index 999999990
+  align-items center
+  justify-content center
+  background rgba(0, 0, 0, 0.4)
+  font-family $font
+  color $white
+
+  &.open
+    display flex
+
+  button
+    font-family $font
+
+#playlistPickerDialog
+  display flex
+  flex-direction column
+  gap 8px
+  width 360px
+  max-width calc(100vw - 32px)
+  max-height calc(100vh - 32px)
+  box-sizing border-box
+  padding 12px
+  border-radius 10px
+  background rgba(0, 0, 0, 0.9)
+  font-size 12px
+
+#playlistPickerHead
+  display flex
+  align-items center
+  justify-content space-between
+  font-size 15px
+
+#playlistPickerNoteHint, .playlistPickerEmpty
+  color #ffffff8c
+  font-size 11px
+
+#playlistPickerNoteHint:empty, #playlistPickerStatus:empty
+  display none
+
+#playlistPickerStatus
+  margin 0
+  color #ff6b6b
+
+#playlistPickerList
+  display flex
+  flex-direction column
+  gap 2px
+  min-height 0
+  overflow-y auto
+
+.playlistPickerEmpty
+  margin 4px 0
+
+.playlistPickerRow
+  display flex
+  align-items center
+  gap 8px
+  width 100%
+  padding 6px
+  border none
+  border-radius 6px
+  background none
+  color $white
+  text-align left
+  cursor pointer
+
+  &:hover:enabled
+    background #ffffff0f
+
+  &:disabled
+    opacity 0.5
+    cursor default
+
+  img
+    flex none
+    width 36px
+    height 36px
+    border-radius 4px
+    object-fit cover
+
+  i
+    font-size 16px
+    color #ffffff80
+
+  &.in i
+    color rgb(142, 84, 233)
+
+.playlistPickerText
+  display flex
+  flex-direction column
+  flex 1
+  min-width 0
+
+  b, small
+    overflow hidden
+    text-overflow ellipsis
+    white-space nowrap
+
+  small
+    color #ffffffa3
+
+#playlistPickerCreate
+  display none
+  gap 6px
+
+  &.open
+    display flex
 
 .playlistMore
   width 100%

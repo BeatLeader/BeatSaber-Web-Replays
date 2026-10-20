@@ -1,4 +1,5 @@
 const {getApiUrl} = require('../utils');
+const {setMediaMetadata} = require('../utils/media-session');
 
 const MAX_AUTOPLAY_FAILURES = 3;
 
@@ -116,6 +117,12 @@ AFRAME.registerComponent('random-replay', {
 		this.randomReplay.style.display = 'none';
 		this.randomReplay.classList = [];
 
+		setMediaMetadata({
+			title: score.song.name,
+			artist: score.song.subName || score.song.author,
+			album: score.player.name,
+			image: score.song.cover,
+		});
 		this.replayLoader.openReplay({scoreId: score.id}, {countWatch});
 		this.autoplayed = !countWatch;
 	},

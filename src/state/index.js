@@ -1,10 +1,19 @@
 /* global localStorage */
 var utils = require('../utils');
 var {queryParams} = require('../query-params');
+var {setMediaMetadata} = require('../utils/media-session');
 
 const DAMAGE_DECAY = 0.25;
 const DAMAGE_MAX = 10;
-let lastMediaMetadata = null;
+
+function updateMediaMetadata(state) {
+	setMediaMetadata({
+		title: state.challenge.songName,
+		artist: state.challenge.songSubName,
+		album: state.player.name,
+		image: state.challenge.image,
+	});
+}
 
 const DEBUG_CHALLENGE = {
 	author: 'Superman',
@@ -180,39 +189,11 @@ AFRAME.registerState({
 
 			document.title = `Replay | ${state.player.name} | ${payload.info._songName}`;
 			state.challenge.isLoading = false;
+			updateMediaMetadata(state);
 		},
 
-		songstartaudio: (state, payload) => {
-			if (!window.MediaMetadata || !navigator.mediaSession) return;
-
-			const metadata = {
-				title: state.challenge.songName,
-				artist: state.challenge.songSubName,
-				album: state.player.name,
-				image: state.challenge.image,
-			};
-			if (
-				navigator.mediaSession.metadata &&
-				lastMediaMetadata &&
-				lastMediaMetadata.title === metadata.title &&
-				lastMediaMetadata.artist === metadata.artist &&
-				lastMediaMetadata.album === metadata.album &&
-				lastMediaMetadata.image === metadata.image
-			) {
-				return;
-			}
-			lastMediaMetadata = metadata;
-
-			navigator.mediaSession.metadata = new MediaMetadata({
-				title: metadata.title,
-				artist: metadata.artist,
-				album: metadata.album,
-				artwork: [
-					{
-						src: metadata.image,
-					},
-				],
-			});
+		songstartaudio: state => {
+			updateMediaMetadata(state);
 		},
 
 		replayunload: state => {
@@ -264,6 +245,7 @@ AFRAME.registerState({
 
 		userloaded: (state, payload) => {
 			state.player = payload;
+			updateMediaMetadata(state);
 
 			document.title = `Replay | ${state.player.name} | ${state.challenge.songName}`;
 			document

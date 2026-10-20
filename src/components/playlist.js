@@ -1,6 +1,7 @@
 const {getWebsiteUrl, getUrlParameter, getDiffInfo} = require('../utils');
 const {element, icon, iconButton, image, plural} = require('../utils/dom');
 const {api, errorText, checkLogin, isVoteRunning, playlistCover} = require('../utils/playlists');
+const {setMediaMetadata} = require('../utils/media-session');
 
 const AUTOPLAY_DELAY = 5;
 const MAX_AUTOPLAY_FAILURES = 3;
@@ -610,6 +611,15 @@ AFRAME.registerComponent('playlist', {
 
 	playItem: function (item, entry, {auto = false, replaceUrl = false} = {}) {
 		this.navigationId++;
+		const {leaderboard, player} = entry;
+		if (leaderboard) {
+			setMediaMetadata({
+				title: leaderboard.songName,
+				artist: leaderboard.subName || leaderboard.author,
+				album: player && player.name,
+				image: leaderboard.coverImage,
+			});
+		}
 		const source = entry.scoreId ? {scoreId: String(entry.scoreId)} : {link: entry.replay};
 		this.replayLoader.openReplay(
 			{...source, playlistId: this.playlistId, playlistItemId: item.id, playlistEntry: entryKey(entry) || undefined},

@@ -86,13 +86,21 @@ AFRAME.registerComponent('audioanalyser', {
 		}
 		if (this.audio) {
 			this.audio.pause();
-			this.audio.removeAttribute('src');
-			this.audio.load();
+			this.releaseRetiredAudio();
+			this.retiredAudio = this.audio;
 			this.audio = null;
 		}
 		this.mediaNodeCache = {};
 		this.bufferConnected = false;
 		this.mediaConnected = false;
+	},
+
+	releaseRetiredAudio: function () {
+		if (this.retiredAudio) {
+			this.retiredAudio.removeAttribute('src');
+			this.retiredAudio.load();
+			this.retiredAudio = null;
+		}
 	},
 
 	/**
@@ -366,6 +374,7 @@ AFRAME.registerComponent('audioanalyser', {
 			} else {
 				captureThis.audio = captureThis.data.src;
 			}
+			captureThis.audio.addEventListener('playing', () => captureThis.releaseRetiredAudio(), {once: true});
 			const node = captureThis.context.createMediaElementSource(captureThis.audio);
 
 			captureThis.mediaSource = node;

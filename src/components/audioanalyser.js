@@ -362,7 +362,11 @@ AFRAME.registerComponent('audioanalyser', {
 			if (cached) {
 				captureThis.audio = cached.audio;
 				captureThis.mediaSource = cached.node;
-				resolve(cached.node);
+				if (isFinite(cached.audio.duration)) {
+					resolve(cached.node);
+				} else {
+					cached.audio.addEventListener('loadedmetadata', () => resolve(cached.node), {once: true});
+				}
 				return;
 			}
 

@@ -99,11 +99,13 @@ AFRAME.registerComponent('song', {
 
 	pauseAudio: function () {
 		if (this.playRequest) {
-			this.playRequest.then(_ => {
-				if (!this.isPlaying) {
-					this.audio.pause();
-				}
-			});
+			this.playRequest
+				.then(_ => {
+					if (!this.isPlaying) {
+						this.audio.pause();
+					}
+				})
+				.catch(() => {});
 		} else {
 			this.audio.pause();
 		}
@@ -364,9 +366,10 @@ AFRAME.registerComponent('song', {
 		this.lastCurrentTime = this.speed > 0.01 ? 0 : time;
 		this.lastContextTime = null;
 		this.lastFrameNow = null;
-		this.resetMediaSync();
+		this.mediaSync.pending = 0;
+		this.holdMediaSync();
 
-		this.audio.currentTime = playTime;
+		this.seekAudio(playTime);
 		if (this.source && this.source.playbackRate) {
 			this.source.playbackRate.value = this.speed;
 		}
@@ -384,6 +387,17 @@ AFRAME.registerComponent('song', {
 		}
 
 		this.playMediaSession();
+	},
+
+	// Chrome can land Ogg seeks up to a second early in parts of the file it already played, while
+	// currentTime reports the target. Reloading the element first makes the seek exact.
+	seekAudio: function (time) {
+		if (this.source === this.mediaSource && this.audio.src && this.audio.played.length) {
+			this.playRequest = null;
+			this.metadataAudioLoading = false;
+			this.audio.load();
+		}
+		this.audio.currentTime = time;
 	},
 
 	setPlaybackRate: function (rate) {

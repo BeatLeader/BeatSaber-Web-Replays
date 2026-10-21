@@ -1166,7 +1166,7 @@ AFRAME.registerComponent('song-controls', {
 
 				this.el.sceneEl.emit('showHotkeyNotification', {
 					text: fullscreen[0].classList.contains('inFullscreen') ? 'Exit Fullscreen' : 'Fullscreen',
-					icon: 'fas fa-expand'
+					icon: 'fas fa-expand',
 				});
 				toggleFullscreen();
 			}
@@ -1184,7 +1184,7 @@ AFRAME.registerComponent('song-controls', {
 				seekRightBeats(e.shiftKey ? 0.1 : 1);
 				this.el.sceneEl.emit('showHotkeyNotification', {
 					text: e.shiftKey ? '+0.1 Beat' : '+1 Beat',
-					icon: 'fas fa-step-forward'
+					icon: 'fas fa-step-forward',
 				});
 			}
 			if (e.keyCode === 188) {
@@ -1192,7 +1192,7 @@ AFRAME.registerComponent('song-controls', {
 				seekLeftBeats(e.shiftKey ? 0.1 : 1);
 				this.el.sceneEl.emit('showHotkeyNotification', {
 					text: e.shiftKey ? '-0.1 Beat' : '-1 Beat',
-					icon: 'fas fa-step-backward'
+					icon: 'fas fa-step-backward',
 				});
 			}
 
@@ -1205,7 +1205,7 @@ AFRAME.registerComponent('song-controls', {
 				speedHandler(newSpeed);
 				this.el.sceneEl.emit('showHotkeyNotification', {
 					text: `Speed: ${(newSpeed * 100).toFixed(0)}%`,
-					icon: 'fas fa-gauge-simple'
+					icon: 'fas fa-gauge-simple',
 				});
 			}
 			if (!e.ctrlKey && (e.keyCode === 187 || e.keyCode === 61)) {
@@ -1217,7 +1217,7 @@ AFRAME.registerComponent('song-controls', {
 				speedHandler(newSpeed);
 				this.el.sceneEl.emit('showHotkeyNotification', {
 					text: `Speed: ${(newSpeed * 100).toFixed(0)}%`,
-					icon: 'fas fa-gauge-simple'
+					icon: 'fas fa-gauge-simple',
 				});
 			}
 
@@ -1228,7 +1228,7 @@ AFRAME.registerComponent('song-controls', {
 				this.settings.sync();
 				this.el.sceneEl.emit('showHotkeyNotification', {
 					text: `Slow-mo on mistakes: ${this.settings.settings.autoSpeedControls ? 'On' : 'Off'}`,
-					icon: this.settings.settings.autoSpeedControls ? 'fas fa-robot' : 'fas fa-robot'
+					icon: this.settings.settings.autoSpeedControls ? 'fas fa-robot' : 'fas fa-robot',
 				});
 			}
 
@@ -1239,11 +1239,9 @@ AFRAME.registerComponent('song-controls', {
 				this.settings.sync();
 				this.el.sceneEl.emit('showHotkeyNotification', {
 					text: `Loop Replays: ${this.settings.settings.loopReplays ? 'On' : 'Off'}`,
-					icon: this.settings.settings.loopReplays ? 'fas fa-repeat' : 'fas fa-repeat'
+					icon: this.settings.settings.loopReplays ? 'fas fa-repeat' : 'fas fa-repeat',
 				});
 			}
-			
-			
 		});
 
 		if ('mediaSession' in navigator) {
@@ -1365,6 +1363,10 @@ AFRAME.registerComponent('song-controls', {
 			if (this.replaySpeedListener) {
 				this.el.removeEventListener('songstartaudio', this.replaySpeedListener);
 				this.replaySpeedListener = null;
+			}
+			if (this.pendingSeek) {
+				this.song.data.analyserEl.removeEventListener('audioanalysersource', this.pendingSeek.listener);
+				this.pendingSeek = null;
 			}
 			document.querySelectorAll('.range__point--modifier').forEach(point => point.remove());
 			document.querySelectorAll('.rangeTicks rect[x="75%"]').forEach(tick => (tick.style.display = ''));
@@ -1852,18 +1854,22 @@ AFRAME.registerComponent('song-controls', {
 	},
 
 	seek: function (time, clearBeats = true) {
+		if (this.pendingSeek) {
+			this.pendingSeek.time = time;
+			this.pendingSeek.clearBeats = this.pendingSeek.clearBeats || clearBeats;
+			return;
+		}
 		this.song.stopAudio();
 
-		this.song.data.analyserEl.addEventListener(
-			'audioanalysersource',
-			evt => {
-				this.song.source = evt.detail;
-				this.song.startAudio(time);
-				if (clearBeats) this.el.components['beat-generator'].seek(time);
-				this.updatePlayhead(true);
-			},
-			ONCE
-		);
+		const pendingSeek = (this.pendingSeek = {time, clearBeats});
+		pendingSeek.listener = evt => {
+			this.pendingSeek = null;
+			this.song.source = evt.detail;
+			this.song.startAudio(pendingSeek.time);
+			if (pendingSeek.clearBeats) this.el.components['beat-generator'].seek(pendingSeek.time);
+			this.updatePlayhead(true);
+		};
+		this.song.data.analyserEl.addEventListener('audioanalysersource', pendingSeek.listener, ONCE);
 
 		this.song.audioAnalyser.refreshSource(this.song.speed);
 		this.updateAutoSpeedState();
@@ -1990,7 +1996,7 @@ AFRAME.registerComponent('song-controls', {
 				? (secondsIntoWindow / rampDurationSecs) * slowMult + (1 - secondsIntoWindow / rampDurationSecs)
 				: slowMult;
 
-		return (this.baseSongSpeed) * speedMult;
+		return this.baseSongSpeed * speedMult;
 	},
 
 	isInMissWindow: function (t) {
@@ -2140,7 +2146,7 @@ AFRAME.registerComponent('song-controls', {
 				masterVolumeHandler();
 				this.el.sceneEl.emit('showHotkeyNotification', {
 					text: `Volume: ${Math.round(volumeSlider.value * 100)}%`,
-					icon: 'fas fa-volume-up'
+					icon: 'fas fa-volume-up',
 				});
 			}
 
@@ -2150,7 +2156,7 @@ AFRAME.registerComponent('song-controls', {
 				masterVolumeHandler();
 				this.el.sceneEl.emit('showHotkeyNotification', {
 					text: `Volume: ${Math.round(volumeSlider.value * 100)}%`,
-					icon: 'fas fa-volume-down'
+					icon: 'fas fa-volume-down',
 				});
 			}
 
@@ -2164,7 +2170,7 @@ AFRAME.registerComponent('song-controls', {
 					musicSlider.valueAsNumber = 0;
 					this.el.sceneEl.emit('showHotkeyNotification', {
 						text: 'Muted',
-						icon: 'fas fa-volume-mute'
+						icon: 'fas fa-volume-mute',
 					});
 				} else if (this.lastVolume) {
 					volumeSlider.valueAsNumber = this.lastVolume;
@@ -2173,7 +2179,7 @@ AFRAME.registerComponent('song-controls', {
 					this.lastVolume = null;
 					this.el.sceneEl.emit('showHotkeyNotification', {
 						text: 'Unmuted',
-						icon: 'fas fa-volume-up'
+						icon: 'fas fa-volume-up',
 					});
 				}
 				volumeHandler();
@@ -2186,13 +2192,13 @@ AFRAME.registerComponent('song-controls', {
 					document.body.classList.add('showControls');
 					this.el.sceneEl.emit('showHotkeyNotification', {
 						text: 'Controls: Visible',
-						icon: 'fas fa-eye'
+						icon: 'fas fa-eye',
 					});
 				} else {
 					document.body.classList.remove('showControls');
 					this.el.sceneEl.emit('showHotkeyNotification', {
 						text: 'Controls: Hidden',
-						icon: 'fas fa-eye-slash'
+						icon: 'fas fa-eye-slash',
 					});
 				}
 				this.data.showControls = !this.data.showControls;

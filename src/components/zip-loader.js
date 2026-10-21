@@ -45,10 +45,15 @@ AFRAME.registerComponent('zip-loader', {
 				if (pageReplay && this.data.mapLink) {
 					this.fetchZip(this.data.mapLink.replace('https://cdn.discordapp.com/attachments/', 'https://discord.beatleader.pro/'));
 				} else if (e.detail.hash.length >= 40) {
-					this.fetchData(e.detail.hash.replace(CUSTOM_LEVEL_PREFIX, '').substring(0, 40).toLowerCase(), true);
+					this.fetchData(e.detail.hash.replace(CUSTOM_LEVEL_PREFIX, '').substring(0, 40).toLowerCase(), true, e.detail.mapFolderUrl);
 				} else {
 					this.el.sceneEl.emit('songFetched', {leaderboardId: this.leaderboardId, metadata: e.detail.metadata});
-					this.fetchZip(`https://cdn.songs.beatleader.xyz/${e.detail.hash}.zip`);
+					const zipUrl = `https://cdn.songs.beatleader.xyz/${e.detail.hash}.zip`;
+					if (e.detail.mapFolderUrl) {
+						this.fetchFolder(e.detail.mapFolderUrl, [zipUrl]);
+					} else {
+						this.fetchZip(zipUrl);
+					}
 				}
 			}
 		};
@@ -73,6 +78,7 @@ AFRAME.registerComponent('zip-loader', {
 
 		this.el.sceneEl.addEventListener('replayInfofetched', fetchCallback);
 		this.el.sceneEl.addEventListener('replayfetched', fetchCallback);
+		this.el.sceneEl.addEventListener('mapprefetch', e => this.prefetchFolder(e.detail));
 	},
 
 	update: function (oldData) {
@@ -92,7 +98,7 @@ AFRAME.registerComponent('zip-loader', {
 		this.loadingIndicator = document.getElementById('challengeLoadingIndicator');
 	},
 
-	processFiles: async function (files, info, loadId) {
+	processFiles: async function (files, info, loadId, partial) {
 		const objectUrls = [];
 		const event = {
 			audio: '',
@@ -135,14 +141,7 @@ AFRAME.registerComponent('zip-loader', {
 		if (!event.info._difficultyBeatmapSets) return;
 
 		// Index beatmaps (modes + difficulties).
-		const beatmapSets = event.info._difficultyBeatmapSets.reduce((acc, curr) => {
-			const existing = acc.find(x => x._beatmapCharacteristicName === curr._beatmapCharacteristicName);
-			if (!existing || curr._difficultyBeatmaps.length > existing._difficultyBeatmaps.length) {
-				const filtered = acc.filter(x => x._beatmapCharacteristicName !== curr._beatmapCharacteristicName);
-				return [...filtered, curr];
-			}
-			return acc;
-		}, []);
+		const beatmapSets = uniqueBeatmapSets(event.info);
 
 		try {
 			for (let index = 0; index < beatmapSets.length; index++) {
@@ -161,9 +160,11 @@ AFRAME.registerComponent('zip-loader', {
 				const diffBeatmaps = set._difficultyBeatmaps.sort(d => d._difficultyRank);
 				for (let index = 0; index < diffBeatmaps.length; index++) {
 					const diff = diffBeatmaps[index];
-					const fileArray = await files[Object.keys(files).find(f => f.toLowerCase() == diff._beatmapFilename.toLowerCase())].async(
-						'uint8array'
-					);
+					const fileName = Object.keys(files).find(f => f.toLowerCase() == diff._beatmapFilename.toLowerCase());
+					if (partial && !fileName) {
+						continue;
+					}
+					const fileArray = await files[fileName].async('uint8array');
 
 					var mapJson;
 					try {
@@ -222,6 +223,9 @@ AFRAME.registerComponent('zip-loader', {
 		};
 
 		let extractAudioAsBlobUrl = async name => {
+			if (files[name].url) {
+				return files[name].url;
+			}
 			const buffer = await files[name].async('arraybuffer');
 			const type = detectAudioMimeType(new Uint8Array(buffer.slice(0, 16)), name);
 			return createObjectUrl(new Blob([buffer], {type}));
@@ -279,68 +283,7 @@ AFRAME.registerComponent('zip-loader', {
 			if (filename.toLowerCase().endsWith('info.dat')) {
 				processed = true;
 				files[filename].async('string').then(function (fileData) {
-					let info = jsonParseClean(fileData);
-
-					if (info.version && info.version.startsWith('4')) {
-						let v2Info = {
-							_version: '2.1.0',
-							_songName: info.song.title,
-							_songSubName: info.song.subTitle || '',
-							_songAuthorName: info.song.author,
-							_levelAuthorName: info.difficultyBeatmaps[0].beatmapAuthors.mappers[0],
-							_beatsPerMinute: info.audio.bpm,
-							_audioDataFile: info.audio.audioDataFilename,
-							_songTimeOffset: 0,
-							_shuffle: 0,
-							_shufflePeriod: 0,
-							_previewStartTime: info.audio.previewStartTime,
-							_previewDuration: info.audio.previewDuration,
-							_songFilename: info.audio.songFilename,
-							_coverImageFilename: info.coverImageFilename,
-							_environmentName: info.environmentNames[0],
-							_allDirectionsEnvironmentName: info.environmentNames[1],
-							_environmentNames: info.environmentNames,
-							_colorSchemes: info.colorSchemes,
-							_difficultyBeatmapSets: info.difficultyBeatmaps.reduce((sets, diff) => {
-								const characteristic = diff.characteristic || 'Standard';
-								const existingSet = sets.find(set => set._beatmapCharacteristicName === characteristic);
-
-								const beatmap = {
-									_difficulty: diff.difficulty,
-									_difficultyRank:
-										diff.difficulty === 'Easy'
-											? 1
-											: diff.difficulty === 'Normal'
-											? 3
-											: diff.difficulty === 'Hard'
-											? 5
-											: diff.difficulty === 'Expert'
-											? 7
-											: diff.difficulty === 'ExpertPlus'
-											? 9
-											: 1,
-									_beatmapFilename: diff.beatmapDataFilename,
-									_noteJumpMovementSpeed: diff.noteJumpMovementSpeed,
-									_noteJumpStartBeatOffset: diff.noteJumpStartBeatOffset,
-									_beatmapColorSchemeIdx: diff.beatmapColorSchemeIdx,
-									_environmentNameIdx: diff.environmentNameIdx,
-								};
-
-								if (existingSet) {
-									existingSet._difficultyBeatmaps.push(beatmap);
-								} else {
-									sets.push({
-										_beatmapCharacteristicName: characteristic,
-										_difficultyBeatmaps: [beatmap],
-									});
-								}
-								return sets;
-							}, []),
-						};
-						captureSelf.processFiles(files, v2Info, loadId);
-					} else {
-						captureSelf.processFiles(files, info, loadId);
-					}
+					captureSelf.processFiles(files, normalizeInfo(jsonParseClean(fileData)), loadId);
 				});
 			}
 		});
@@ -767,7 +710,7 @@ AFRAME.registerComponent('zip-loader', {
 	/**
 	 * Read API first to get hash and URLs.
 	 */
-	fetchData: async function (id, byHash) {
+	fetchData: async function (id, byHash, mapFolderUrl) {
 		const loadId = this.loadId;
 		this.fetched = true;
 		document.cookie = 'aprilFools=1; expires=Sat, 03 Apr 2022 00:00:00 UTC; path=/';
@@ -779,11 +722,18 @@ AFRAME.registerComponent('zip-loader', {
 			}
 		}
 
+		const folder = Promise.resolve(byHash && (mapFolderUrl === undefined ? lookupMapFolderUrl(id) : mapFolderUrl));
+		folder.then(folderUrl => {
+			if (folderUrl && loadId === this.loadId) {
+				this.fetchFolder(folderUrl, ['r2cdn', 'cdn'].map(prefix => 'https://' + prefix + '.beatsaver.com/' + id + '.zip'));
+			}
+		});
+
 		return fetch(`/cors/beat-saver2/api/maps/${byHash ? 'hash' : 'id'}/${id}`, {
 			signal: AbortSignal.timeout ? AbortSignal.timeout(5000) : null,
 		})
 			.then(res => {
-				res.json().then(data => {
+				res.json().then(async data => {
 					if (loadId !== this.loadId) {
 						return;
 					}
@@ -798,6 +748,9 @@ AFRAME.registerComponent('zip-loader', {
 							this.data.hash = hash;
 
 							this.el.sceneEl.emit('songFetched', data);
+							if (await folder) {
+								return;
+							}
 
 							const localLookupResult = await this.tryLoadFromCustomLevels(hash, {requestPermission: false});
 							if (localLookupResult.loaded || loadId !== this.loadId) {
@@ -811,18 +764,101 @@ AFRAME.registerComponent('zip-loader', {
 							let urls = ['r2cdn', 'cdn'].map(prefix => 'https://' + prefix + '.beatsaver.com/' + desiredHash.toLowerCase() + '.zip');
 							callback(desiredHash, currentVersion.coverURL, urls[0], [urls[1], currentVersion.downloadURL]);
 						}
-					} else {
+					} else if (!(await folder)) {
 						this.postchallengeloaderror(id);
 					}
 				});
 			})
-			.catch(_ => {
-				if (loadId !== this.loadId) {
+			.catch(async _ => {
+				if (loadId !== this.loadId || (await folder)) {
 					return;
 				}
 				let urls = ['r2cdn', 'cdn'].map(prefix => 'https://' + prefix + '.beatsaver.com/' + id.toLowerCase() + '.zip');
 				this.fetchZip(urls[0], [urls[1]]);
 			});
+	},
+
+	fetchFolder: async function (folderUrl, fallbackUrls) {
+		if (this.isFetching === folderUrl) {
+			return;
+		}
+
+		this.el.emit('challengeloadstart', this.data.id, false);
+		this.isFetching = folderUrl;
+
+		const loadId = this.loadId;
+		const downloadFirst = this.downloadFilesFirst();
+		const requests = {};
+		const request = path => {
+			if (!requests[path]) {
+				requests[path] = fetchMapFile(folderUrl + path, 'arrayBuffer');
+				requests[path].catch(() => {});
+			}
+			return requests[path];
+		};
+		request(mapFolderDifficultyPath(playedCharacteristic(this.data.mode), this.data.difficulty));
+		if (downloadFirst) {
+			request('song');
+		} else {
+			this.el.sceneEl.emit('songpreload', {src: folderUrl + 'song'}, false);
+		}
+
+		const files = {};
+		let info;
+		try {
+			info = normalizeInfo(jsonParseClean(await fetchMapFile(folderUrl + 'info.dat', 'text')));
+			const paths = mapFolderPaths(info, this.data.difficulty, this.data.mode);
+			if (downloadFirst) {
+				paths[info._songFilename || 'song.egg'] = 'song';
+			}
+			await Promise.all(
+				Object.entries(paths).map(async ([name, path]) => {
+					const fileArray = new Uint8Array(await request(path));
+					files[name] = {async: async () => fileArray};
+				})
+			);
+		} catch (e) {
+			if (loadId !== this.loadId) {
+				return;
+			}
+			console.warn('Could not load the mirrored map, falling back to the zip', e);
+			this.isFetching = '';
+			if (fallbackUrls && fallbackUrls.length) {
+				this.fetchZip(fallbackUrls.shift(), fallbackUrls);
+			} else {
+				this.postchallengeloaderror(this.data.hash);
+			}
+			return;
+		}
+		if (loadId !== this.loadId) {
+			return;
+		}
+
+		if (!downloadFirst) {
+			files[info._songFilename || 'song.egg'] = {url: folderUrl + 'song'};
+		}
+		this.fetchedZip = this.data.id;
+		this.fetchedZipUrl = folderUrl;
+		this.processFiles(files, info, loadId, true);
+	},
+
+	prefetchFolder: function ({mapFolderUrl, mode, difficulty}) {
+		if (!mapFolderUrl) {
+			return;
+		}
+		if (!this.downloadFilesFirst()) {
+			this.el.sceneEl.emit('songpreload', {src: mapFolderUrl + 'song'}, false);
+		}
+		fetchMapFile(mapFolderUrl + 'info.dat', 'text')
+			.then(text => {
+				const paths = mapFolderPaths(normalizeInfo(jsonParseClean(text)), difficulty, mode);
+				return Promise.all(Object.values(paths).map(path => fetchMapFile(mapFolderUrl + path, 'arrayBuffer')));
+			})
+			.catch(() => {});
+	},
+
+	downloadFilesFirst: function () {
+		return this.el.sceneEl.components.settings.settings.downloadFilesFirst;
 	},
 
 	fetchZip: function (zipUrl, fallbackUrls) {
@@ -893,6 +929,129 @@ AFRAME.registerComponent('zip-loader', {
 		}
 	},
 });
+
+function normalizeInfo(info) {
+	if (!info.version || !info.version.startsWith('4')) {
+		return info;
+	}
+
+	return {
+		_version: '2.1.0',
+		_songName: info.song.title,
+		_songSubName: info.song.subTitle || '',
+		_songAuthorName: info.song.author,
+		_levelAuthorName: info.difficultyBeatmaps[0].beatmapAuthors.mappers[0],
+		_beatsPerMinute: info.audio.bpm,
+		_audioDataFile: info.audio.audioDataFilename,
+		_songTimeOffset: 0,
+		_shuffle: 0,
+		_shufflePeriod: 0,
+		_previewStartTime: info.audio.previewStartTime,
+		_previewDuration: info.audio.previewDuration,
+		_songFilename: info.audio.songFilename,
+		_coverImageFilename: info.coverImageFilename,
+		_environmentName: info.environmentNames[0],
+		_allDirectionsEnvironmentName: info.environmentNames[1],
+		_environmentNames: info.environmentNames,
+		_colorSchemes: info.colorSchemes,
+		_difficultyBeatmapSets: info.difficultyBeatmaps.reduce((sets, diff) => {
+			const characteristic = diff.characteristic || 'Standard';
+			const existingSet = sets.find(set => set._beatmapCharacteristicName === characteristic);
+
+			const beatmap = {
+				_difficulty: diff.difficulty,
+				_difficultyRank:
+					diff.difficulty === 'Easy'
+						? 1
+						: diff.difficulty === 'Normal'
+						? 3
+						: diff.difficulty === 'Hard'
+						? 5
+						: diff.difficulty === 'Expert'
+						? 7
+						: diff.difficulty === 'ExpertPlus'
+						? 9
+						: 1,
+				_beatmapFilename: diff.beatmapDataFilename,
+				_noteJumpMovementSpeed: diff.noteJumpMovementSpeed,
+				_noteJumpStartBeatOffset: diff.noteJumpStartBeatOffset,
+				_beatmapColorSchemeIdx: diff.beatmapColorSchemeIdx,
+				_environmentNameIdx: diff.environmentNameIdx,
+			};
+
+			if (existingSet) {
+				existingSet._difficultyBeatmaps.push(beatmap);
+			} else {
+				sets.push({
+					_beatmapCharacteristicName: characteristic,
+					_difficultyBeatmaps: [beatmap],
+				});
+			}
+			return sets;
+		}, []),
+	};
+}
+
+function uniqueBeatmapSets(info) {
+	return info._difficultyBeatmapSets.reduce((acc, curr) => {
+		const existing = acc.find(x => x._beatmapCharacteristicName === curr._beatmapCharacteristicName);
+		if (!existing || curr._difficultyBeatmaps.length > existing._difficultyBeatmaps.length) {
+			const filtered = acc.filter(x => x._beatmapCharacteristicName !== curr._beatmapCharacteristicName);
+			return [...filtered, curr];
+		}
+		return acc;
+	}, []);
+}
+
+const MIRROR_CHARACTERISTICS = ['Standard', 'OneSaber', 'NoArrows', '90Degree', '360Degree', 'Lightshow', 'Lawless', 'Legacy'];
+const MIRROR_DIFFICULTIES = ['Easy', 'Normal', 'Hard', 'Expert', 'ExpertPlus'];
+
+function mirrorName(names, name) {
+	return names.find(n => n.toLowerCase() === (name || '').toLowerCase()) || name;
+}
+
+function playedCharacteristic(mode) {
+	return chiralityModes.includes(mode) ? 'Standard' : mode;
+}
+
+function mapFolderDifficultyPath(characteristic, difficulty) {
+	return `${mirrorName(MIRROR_CHARACTERISTICS, characteristic)}/${mirrorName(MIRROR_DIFFICULTIES, difficulty)}.dat`;
+}
+
+function mapFolderPaths(info, difficulty, mode) {
+	const paths = {};
+	if (info._audioDataFile) {
+		paths[info._audioDataFile] = 'audiodata.dat';
+	}
+	const sets = uniqueBeatmapSets(info);
+	const played = sets.filter(set => set._beatmapCharacteristicName === playedCharacteristic(mode));
+	// generateMode builds a mode the map lacks from one of the others.
+	(played.length ? played : sets).forEach(set => {
+		set._difficultyBeatmaps.forEach(diff => {
+			if (diff._difficulty === difficulty) {
+				paths[diff._beatmapFilename] = mapFolderDifficultyPath(set._beatmapCharacteristicName, diff._difficulty);
+			}
+		});
+	});
+	return paths;
+}
+
+function lookupMapFolderUrl(hash) {
+	return fetch(`${utils.getApiUrl()}/map/hash/${hash}`, {
+		signal: AbortSignal.timeout ? AbortSignal.timeout(3000) : null,
+	})
+		.then(res => (res.ok ? res.json() : null))
+		.then(song => (song && song.mapFolderUrl) || '')
+		.catch(() => '');
+}
+
+async function fetchMapFile(url, type) {
+	const res = await fetch(url);
+	if (!res.ok) {
+		throw new Error(`${res.status} ${url}`);
+	}
+	return res[type]();
+}
 
 /**
  * Beatsaver JSON sometimes have weird characters in front of JSON in utf16le encoding.

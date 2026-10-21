@@ -7,6 +7,7 @@ const AUTOPLAY_DELAY = 5;
 const MAX_AUTOPLAY_FAILURES = 3;
 const MAX_SKIPPED_MAPS = 30;
 const ENTRY_BATCH = 3;
+const HOVER_PREFETCH_DELAY = 150;
 const RENDER_STEP = 200;
 const REFRESH_INTERVAL = 30000;
 const VOTE_POLL_INTERVAL = 30000;
@@ -82,6 +83,7 @@ AFRAME.registerComponent('playlist', {
 		sceneEl.addEventListener('replayfetched', e => this.matchMapItem(e.detail.hash));
 		sceneEl.addEventListener('finishgame', () => this.startCountdown());
 		sceneEl.addEventListener('replayloaded', () => (this.autoplayFailures = 0));
+		sceneEl.addEventListener('songstartaudio', () => this.prefetchNext());
 		sceneEl.addEventListener('replayloadfailed', () => this.onLoadFailed());
 		sceneEl.addEventListener('challengeloaderror', () => this.onLoadFailed());
 		sceneEl.addEventListener('settingsChanged', () => this.onPickSettingsChanged());
@@ -196,6 +198,29 @@ AFRAME.registerComponent('playlist', {
 				this.playFirst(item);
 			}
 		});
+
+		let hovered = null;
+		let hoverTimeout = null;
+		const prefetchTarget = target => {
+			const item = target && rowItem(target.closest('.playlistItem'));
+			if (item) {
+				this.prefetchEntry(item, target.dataset.entry);
+			}
+		};
+		itemsEl.addEventListener('mouseover', e => {
+			const target = e.target.closest('[data-entry], .playlistItem');
+			if (target === hovered) return;
+			hovered = target;
+			clearTimeout(hoverTimeout);
+			if (target) {
+				hoverTimeout = setTimeout(() => prefetchTarget(target), HOVER_PREFETCH_DELAY);
+			}
+		});
+		itemsEl.addEventListener('mouseleave', () => {
+			hovered = null;
+			clearTimeout(hoverTimeout);
+		});
+		itemsEl.addEventListener('pointerdown', e => prefetchTarget(e.target.closest('[data-entry], .playlistItem')));
 
 		let dragged = null;
 		let dropTarget = null;
@@ -555,11 +580,11 @@ AFRAME.registerComponent('playlist', {
 		return false;
 	},
 
-	find: async function (direction) {
+	find: async function (direction, navigate = true) {
 		const withinItem = this.stepWithinItem(direction);
 		if (withinItem) return withinItem;
 
-		const navigationId = ++this.navigationId;
+		const navigationId = navigate ? ++this.navigationId : this.navigationId;
 		let skipped = 0;
 		for (let i = this.nextIndex(direction); i >= 0 && i < this.items.length && skipped < MAX_SKIPPED_MAPS; i += direction) {
 			const item = this.items[i];
@@ -585,6 +610,25 @@ AFRAME.registerComponent('playlist', {
 			this.flash(ownScores ? 'Log in on BeatLeader to watch your own scores.' : "Couldn't load the scores for this map.", true);
 		}
 		return false;
+	},
+
+	prefetchNext: async function () {
+		const current = `${this.currentId}/${this.currentEntry}`;
+		if (!this.active || !this.playlist || this.prefetchedAfter === current) return;
+		this.prefetchedAfter = current;
+		const target = await this.find(1, false).catch(() => null);
+		if (target && target.entry.scoreId && this.prefetchedAfter === current) {
+			this.replayLoader.prefetch(target.entry.scoreId);
+		}
+	},
+
+	prefetchEntry: async function (item, key) {
+		if (item.hidden || (!key && item.id === this.currentId)) return;
+		const entries = await this.loadEntries(item).catch(() => []);
+		const entry = key ? entries.find(entry => entryKey(entry) === key) : entries.find(isPlayable);
+		if (entry && isPlayable(entry) && entry.scoreId) {
+			this.replayLoader.prefetch(entry.scoreId);
+		}
 	},
 
 	next: function (options) {

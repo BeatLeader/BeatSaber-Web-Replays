@@ -204,9 +204,13 @@ AFRAME.registerComponent('song', {
 				resolve(this.source);
 			};
 			data.analyserEl.addEventListener('audioanalysersource', this.audioSourceListener, ONCE);
+			const sameSong = this.audioAnalyser.data.src === this.data.audio;
 			this.analyserSetter.src = this.data.audio;
 			this.analyserSetter.speed = this.speed;
 			data.analyserEl.setAttribute('audioanalyser', this.analyserSetter);
+			if (sameSong) {
+				this.audioAnalyser.refreshSource(this.speed);
+			}
 		});
 	},
 
@@ -487,13 +491,36 @@ AFRAME.registerComponent('song', {
 			newCurrent = (currentTime - this.songStartTime) * this.speed;
 		}
 
-		newCurrent = this.syncToMedia(newCurrent, newCurrent - (lastCurrentTime || 0), nowSeconds);
+		const streamPosition = this.streamPosition(currentTime);
+		if (streamPosition !== null) {
+			newCurrent = streamPosition;
+			this.songStartTime = currentTime - newCurrent / (this.speed > 0.01 ? this.speed : 0.01);
+			this.mediaSync.pending = 0;
+			this.holdMediaSync();
+		} else {
+			newCurrent = this.syncToMedia(newCurrent, newCurrent - (lastCurrentTime || 0), nowSeconds);
+		}
 
 		this.lastCurrentTime = newCurrent;
 		this.lastContextTime = currentTime;
 		this.lastFrameNow = nowSeconds;
 
 		return Math.max(0, newCurrent + parseFloat(this.settings.settings.soundDelay));
+	},
+
+	streamPosition: function (contextTime) {
+		if (!this.isPlaying || !this.source) {
+			return null;
+		}
+		if (this.source === this.mediaSource) {
+			const waiting = !this.audio.paused && this.audio.readyState < HTMLMediaElement.HAVE_FUTURE_DATA;
+			return waiting ? this.audio.currentTime : null;
+		}
+		if (this.source.stalledAt != null) {
+			return this.source.stalledAt;
+		}
+		const resumed = this.source.takeResume && this.source.takeResume();
+		return resumed ? resumed.position + Math.max(0, contextTime - resumed.time) * this.speed : null;
 	},
 
 	resetMediaSync: function () {

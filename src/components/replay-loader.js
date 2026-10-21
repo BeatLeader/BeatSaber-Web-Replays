@@ -1,5 +1,5 @@
 const dragDrop = require('drag-drop');
-import {checkBSOR, NoteEventType} from '../open-replay-decoder';
+import {checkBSOR, prefetchBSOR, NoteEventType} from '../open-replay-decoder';
 import {checkSS} from '../ss-replay-decoder';
 import {Mirror_Horizontal, Mirror_Horizontal_Note} from '../utils/chirality-support';
 import {MultiplierCounter} from '../utils/MultiplierCounter';
@@ -57,6 +57,13 @@ function replayUrl(source) {
 	return location.pathname + (query ? '?' + query : '');
 }
 
+const PREFETCH_MAX_AGE = 10 * 60 * 1000;
+const MAX_PREFETCHED = 3;
+
+function requestScore(path) {
+	return fetch(getApiUrl() + '/score/' + path).then(response => (response.status == 200 ? response.json() : null));
+}
+
 function assignNote(replaynote, mapnote) {
 	const scoringType = mapnote._scoringType ? mapnote._scoringType + 2 : 3;
 	replaynote.index = mapnote._index;
@@ -84,6 +91,7 @@ AFRAME.registerComponent('replay-loader', {
 		this.replay = null;
 		this.user = null;
 		this.loadId = 0;
+		this.prefetchedScores = new Map();
 		this.countWatch = true;
 		this.historyIndex = (history.state && history.state.replayIndex) || 0;
 		this.historyLength = this.historyIndex + 1;
@@ -216,14 +224,10 @@ AFRAME.registerComponent('replay-loader', {
 		this.el.sceneEl.emit('replayloadstart', null);
 		this.challenge = null;
 		this.notes = null;
-		fetch(
-			getApiUrl() +
-				'/score/' +
-				(scoreId
-					? `${scoreId}?fallbackToRedirect=true`
-					: `${this.data.context}/${this.data.playerID}/${hash}/${this.data.difficulty}/${this.data.mode}`)
-		).then(async response => {
-			let data = response.status == 200 ? await response.json() : null;
+		const request = scoreId
+			? this.fetchScore(scoreId)
+			: requestScore(`${this.data.context}/${this.data.playerID}/${hash}/${this.data.difficulty}/${this.data.mode}`);
+		request.then(data => {
 			if (loadId !== this.loadId) {
 				return;
 			}
@@ -238,6 +242,7 @@ AFRAME.registerComponent('replay-loader', {
 					'replayInfofetched',
 					{
 						hash: data.song.hash,
+						mapFolderUrl: data.song.mapFolderUrl,
 						leaderboardId: data.leaderboardId,
 						difficulty: data.difficulty.value,
 						mode: data.difficulty.modeName,
@@ -252,36 +257,41 @@ AFRAME.registerComponent('replay-loader', {
 					null
 				);
 
-				checkBSOR(replaceCdnUrl(data.replay), true, replay => {
-					if (loadId !== this.loadId) {
-						return;
-					}
-					if (replay && replay.frames) {
-						if (replay.frames.length == 0) {
-							this.el.sceneEl.emit('replayloadfailed', {error: 'Replay broken, redownload and reinstall mod, please'}, null);
-						} else {
-							replay.leaderboardContexts = data.validContexts;
-							this.replay = replay;
-							const jd = replay.info.jumpDistance > 5 ? replay.info.jumpDistance : undefined;
-							this.el.sceneEl.emit(
-								'replayfetched',
-								{
-									hash: replay.info.hash,
-									difficulty: difficultyFromName(replay.info.difficulty),
-									mode: replay.info.mode,
-									jd,
-									playerId: data.playerId,
-								},
-								null
-							);
-							if (this.challenge) {
-								this.processScores();
-							}
+				checkBSOR(
+					replaceCdnUrl(data.replay),
+					true,
+					replay => {
+						if (loadId !== this.loadId) {
+							return;
 						}
-					} else {
-						this.el.sceneEl.emit('replayloadfailed', {error: replay.errorMessage}, null);
-					}
-				});
+						if (replay && replay.frames) {
+							if (replay.frames.length == 0) {
+								this.el.sceneEl.emit('replayloadfailed', {error: 'Replay broken, redownload and reinstall mod, please'}, null);
+							} else {
+								replay.leaderboardContexts = data.validContexts;
+								this.replay = replay;
+								const jd = replay.info.jumpDistance > 5 ? replay.info.jumpDistance : undefined;
+								this.el.sceneEl.emit(
+									'replayfetched',
+									{
+										hash: replay.info.hash,
+										difficulty: difficultyFromName(replay.info.difficulty),
+										mode: replay.info.mode,
+										jd,
+										playerId: data.playerId,
+									},
+									null
+								);
+								if (this.challenge) {
+									this.processScores();
+								}
+							}
+						} else {
+							this.el.sceneEl.emit('replayloadfailed', {error: replay.errorMessage}, null);
+						}
+					},
+					this.replayStreamOptions(data.offsets)
+				);
 				this.user = data.player;
 				this.el.sceneEl.emit(
 					'userloaded',
@@ -319,39 +329,104 @@ AFRAME.registerComponent('replay-loader', {
 		});
 	},
 
+	fetchScore: function (scoreId) {
+		const prefetched = this.prefetchedScores.get(scoreId);
+		this.prefetchedScores.delete(scoreId);
+		if (prefetched && Date.now() - prefetched.at < PREFETCH_MAX_AGE) {
+			return prefetched.request.catch(() => requestScore(`${scoreId}?fallbackToRedirect=true`));
+		}
+		return requestScore(`${scoreId}?fallbackToRedirect=true`);
+	},
+
+	prefetch: function (scoreId) {
+		scoreId = String(scoreId);
+		if (this.prefetchedScores.has(scoreId) || (this.source && this.source.scoreId === scoreId)) {
+			return;
+		}
+		const request = requestScore(`${scoreId}?fallbackToRedirect=true`);
+		this.prefetchedScores.set(scoreId, {request, at: Date.now()});
+		if (this.prefetchedScores.size > MAX_PREFETCHED) {
+			this.prefetchedScores.delete(this.prefetchedScores.keys().next().value);
+		}
+		request.then(
+			data => {
+				if (!data || !data.playerId || !data.replay) {
+					return;
+				}
+				if (!this.downloadFilesFirst()) {
+					prefetchBSOR(replaceCdnUrl(data.replay), data.offsets);
+				}
+				this.el.sceneEl.emit(
+					'mapprefetch',
+					{mapFolderUrl: data.song.mapFolderUrl, mode: data.difficulty.modeName, difficulty: data.difficulty.difficultyName},
+					false
+				);
+			},
+			() => {}
+		);
+	},
+
 	fetchByFile: function (file, itsLink) {
 		const loadId = this.loadId;
 		this.el.sceneEl.emit('replayloadstart', null);
 		this.challenge = null;
 		this.notes = null;
-		checkBSOR(itsLink ? replaceCdnUrl(file) : file, itsLink, replay => {
-			if (loadId !== this.loadId) {
-				return;
-			}
-			if (replay && replay.frames) {
-				this.replay = replay;
-				this.fetchPlayer(replay.info.playerID);
-				this.el.sceneEl.emit(
-					'replayfetched',
-					{
-						hash: replay.info.hash,
-						difficulty: difficultyFromName(replay.info.difficulty),
-						mode: replay.info.mode,
-						jd: replay.info.jumpDistance,
-					},
-					null
-				);
-			} else {
-				var replayError = replay;
-				if (replayError == null) {
-					replayError = 'Error: please check the replay file or link';
+		checkBSOR(
+			itsLink ? replaceCdnUrl(file) : file,
+			itsLink,
+			replay => {
+				if (loadId !== this.loadId) {
+					return;
 				}
-				if (itsLink && file.includes('discordapp')) {
-					replayError = 'Error: please provide full Discord file url (with params)';
+				if (replay && replay.frames) {
+					this.replay = replay;
+					this.fetchPlayer(replay.info.playerID);
+					this.el.sceneEl.emit(
+						'replayfetched',
+						{
+							hash: replay.info.hash,
+							difficulty: difficultyFromName(replay.info.difficulty),
+							mode: replay.info.mode,
+							jd: replay.info.jumpDistance,
+						},
+						null
+					);
+				} else {
+					var replayError = replay;
+					if (replayError == null) {
+						replayError = 'Error: please check the replay file or link';
+					}
+					if (itsLink && file.includes('discordapp')) {
+						replayError = 'Error: please provide full Discord file url (with params)';
+					}
+					this.el.sceneEl.emit('replayloadfailed', {error: replayError}, null);
 				}
-				this.el.sceneEl.emit('replayloadfailed', {error: replayError}, null);
-			}
-		});
+			},
+			this.replayStreamOptions()
+		);
+	},
+
+	replayStreamOptions: function (offsets) {
+		if (this.replayStream) {
+			this.replayStream.abort();
+		}
+		const loadId = this.loadId;
+		this.replayStream = new AbortController();
+		return {
+			stream: !this.downloadFilesFirst(),
+			offsets,
+			startTime: queryParams.time || 0,
+			signal: this.replayStream.signal,
+			onFramesLoaded: () => {
+				if (loadId === this.loadId) {
+					this.el.sceneEl.emit('replayframesloaded', null, false);
+				}
+			},
+		};
+	},
+
+	downloadFilesFirst: function () {
+		return this.el.sceneEl.components.settings.settings.downloadFilesFirst;
 	},
 
 	fetchPlayer: function (playerID) {

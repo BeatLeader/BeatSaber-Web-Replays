@@ -76,7 +76,7 @@ AFRAME.registerComponent('song-controls', {
 		});
 
 		this.el.sceneEl.addEventListener('replayloaded', event => {
-			if (this.song.getDuration() && !this.timelineFilter) {
+			if (this.song.source && !this.timelineFilter) {
 				this.makeTimelineOverlay(event.detail, this.song.getDuration(), this);
 			}
 			this.replayData = event.detail;

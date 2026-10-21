@@ -2,7 +2,26 @@ if (typeof AFRAME === 'undefined') {
 	throw new Error('Component attempted to register before AFRAME was available.');
 }
 
+const {StreamedSong, supportsStreamedSong} = require('../utils/streamed-song');
+
 var audioBufferCache = {};
+
+const MAX_PRELOADED_SONGS = 3;
+
+function createSongElement(src) {
+	const audio = document.createElement('audio');
+	audio.crossOrigin = 'anonymous';
+	audio.preload = 'metadata';
+	audio.setAttribute('src', src);
+	return audio;
+}
+
+function whenPlaying(audio) {
+	if (!audio.paused && audio.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
+		return Promise.resolve();
+	}
+	return new Promise(resolve => audio.addEventListener('playing', resolve, {once: true}));
+}
 
 /**
  * Audio visualizer component for A-Frame using AnalyserNode.
@@ -15,6 +34,7 @@ AFRAME.registerComponent('audioanalyser', {
 		beatDetectionMinVolume: {default: 15},
 		beatDetectionThrottle: {default: 250},
 		cache: {default: false},
+		downloadFilesFirst: {default: false},
 		enabled: {default: true},
 		enableBeatDetection: {default: true},
 		enableLevels: {default: true},
@@ -44,8 +64,10 @@ AFRAME.registerComponent('audioanalyser', {
 		this.waveform = null;
 		this.volume = 0;
 		this.xhr = null;
+		this.preloadedSongs = new Map();
 
 		this.initContext();
+		this.el.sceneEl.addEventListener('songpreload', e => this.preloadSong(e.detail.src));
 	},
 
 	update: function (oldData) {
@@ -75,6 +97,10 @@ AFRAME.registerComponent('audioanalyser', {
 		if (this.xhr) {
 			this.xhr.abort();
 			this.xhr = null;
+		}
+		if (this.streamedSong) {
+			this.streamedSong.release();
+			this.streamedSong = null;
 		}
 		if (this.audioSource) {
 			this.audioSource.disconnect();
@@ -193,27 +219,28 @@ AFRAME.registerComponent('audioanalyser', {
 			this.getMediaSource().then(source => {
 				if (isStale()) return;
 				if (this.audio && this.audio.duration && this.audio.duration > 0 && this.audio.duration <= 1800) {
-					if (this.data.pitchCompensation && speed >= this.data.pitchCompensationTreshold) {
+					const mediaFirst = this.data.pitchCompensation && speed >= this.data.pitchCompensationTreshold;
+					if (mediaFirst) {
 						this.el.emit(
 							'audioanalysersource',
 							{source: source, mediaSource: source, audio: this.audio, duration: this.audio.duration},
 							false
 						);
 					}
-					this.getBufferSource().then(bufferSource => {
+					const streaming = mediaFirst && !/^(blob|data):/.test(src);
+					(streaming ? whenPlaying(this.audio) : Promise.resolve()).then(() => {
 						if (isStale()) return;
-						if (!this.data.pitchCompensation || speed < this.data.pitchCompensationTreshold) {
-							this.mediaGainNode.gain.value = 0;
-						} else {
-							this.mediaGainNode.gain.value = 1;
-						}
-						if (!this.data.pitchCompensation || speed < this.data.pitchCompensationTreshold) {
-							this.el.emit(
-								'audioanalysersource',
-								{source: bufferSource, mediaSource: source, audio: this.audio, duration: bufferSource.buffer.duration},
-								false
-							);
-						}
+						this.getBufferSource().then(bufferSource => {
+							if (isStale()) return;
+							this.mediaGainNode.gain.value = mediaFirst ? 1 : 0;
+							if (!mediaFirst) {
+								this.el.emit(
+									'audioanalysersource',
+									{source: bufferSource, mediaSource: source, audio: this.audio, duration: bufferSource.buffer.duration},
+									false
+								);
+							}
+						});
 					});
 				} else {
 					this.el.emit('audioanalysersource', {source, mediaSource: source, audio: this.audio, duration: this.audio.duration}, false);
@@ -336,12 +363,21 @@ AFRAME.registerComponent('audioanalyser', {
 		if (this.audioSource) {
 			this.audioSource.disconnect();
 		}
-		return this.fetchAudioBuffer(data.src)
-			.then(() => {
-				var source = this.audioSource;
-
-				source = this.context.createBufferSource();
-				source.buffer = audioBufferCache[data.src];
+		const src = data.src;
+		const decodeWhole = () => this.fetchAudioBuffer(src).then(() => this.createFullBufferSource(src));
+		const song = this.getStreamedSong(src);
+		const ready = song
+			? song.playable.then(
+					() => song.createSource(),
+					error => {
+						console.warn('Could not stream the song', error);
+						this.streamedSongFailed = src;
+						return decodeWhole();
+					}
+				)
+			: decodeWhole();
+		return ready
+			.then(source => {
 				this.audioSource = source;
 				if (this.bufferConnected) {
 					source.connect(this.gainNode);
@@ -350,6 +386,47 @@ AFRAME.registerComponent('audioanalyser', {
 				return source;
 			})
 			.catch(console.error);
+	},
+
+	createFullBufferSource: function (src) {
+		const source = this.context.createBufferSource();
+		source.buffer = audioBufferCache[src];
+		return source;
+	},
+
+	getStreamedSong: function (src) {
+		// Safari decodes Ogg with oggdec, which only takes whole files.
+		const canStream = !this.data.isSafari && !this.data.downloadFilesFirst && supportsStreamedSong(this.context);
+		if (!canStream || this.streamedSongFailed === src) {
+			return null;
+		}
+		if (!this.streamedSong || this.streamedSong.src !== src) {
+			if (this.streamedSong) {
+				this.streamedSong.release();
+			}
+			this.streamedSong = new StreamedSong(this.context, src, this.audio && isFinite(this.audio.duration) ? this.audio.duration : 0);
+		}
+		return this.streamedSong;
+	},
+
+	preloadSong: function (src) {
+		const preloaded = this.preloadedSongs;
+		if (preloaded.has(src) || (this.mediaNodeCache && this.mediaNodeCache[src])) {
+			return;
+		}
+		preloaded.set(src, createSongElement(src));
+		if (preloaded.size > MAX_PRELOADED_SONGS) {
+			const [oldest, audio] = preloaded.entries().next().value;
+			preloaded.delete(oldest);
+			audio.removeAttribute('src');
+			audio.load();
+		}
+	},
+
+	takePreloadedSong: function (src) {
+		const audio = this.preloadedSongs.get(src);
+		this.preloadedSongs.delete(src);
+		return audio;
 	},
 
 	getMediaSource: function (onlySource = false) {
@@ -371,10 +448,7 @@ AFRAME.registerComponent('audioanalyser', {
 			}
 
 			if (captureThis.data.src.constructor === String) {
-				captureThis.audio = document.createElement('audio');
-				captureThis.audio.crossOrigin = 'anonymous';
-				captureThis.audio.preload = 'metadata';
-				captureThis.audio.setAttribute('src', captureThis.data.src);
+				captureThis.audio = captureThis.takePreloadedSong(src) || createSongElement(src);
 			} else {
 				captureThis.audio = captureThis.data.src;
 			}

@@ -180,6 +180,7 @@ AFRAME.registerComponent('settings', {
 			loopReplays: false,
 			pitchCompensation: true,
 			pitchCompensationTreshold: 0.1,
+			downloadFilesFirst: false,
 			customLevelsFolderName: '',
 			customLevelsFolderPath: '',
 

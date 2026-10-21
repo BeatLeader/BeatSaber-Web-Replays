@@ -7,32 +7,210 @@ function getApiUrl() {
 	return 'https://api.beatleader.com';
 }
 
-function checkBSOR(file, isLink, completion) {
+function checkBSOR(file, isLink, completion, options = {}) {
 	if (isLink) {
 		const filename = file.split('?')[0];
 		if (filename.split('.').pop() == 'bsor' || filename.split('.').pop() == 'bsortemp') {
-			file = file.replace('https://cdn.discordapp.com/attachments/', 'https://discord.beatleader.pro/');
-			file = file.replace('https://api.beatleader.com', getApiUrl());
-			file = file.replace('https://api.beatleader.xyz', getApiUrl());
-			file = file.replace('https://api.beatleader.net', getApiUrl());
-			var xhr = new XMLHttpRequest();
-			xhr.open('GET', file, true);
-			xhr.withCredentials = file.includes('/otherreplays/');
-			xhr.responseType = 'blob';
-
-			xhr.onload = function () {
-				if (xhr.status == 200) {
-					checkBSORFile(xhr.response, completion);
-				} else {
-					completion('Error: failed to download replay');
-				}
-			};
-			xhr.send();
+			file = normalizeLink(file);
+			if (options.stream && !file.includes('/otherreplays/')) {
+				streamBSOR(file, completion, options);
+			} else {
+				downloadBSOR(file, completion, options.signal);
+			}
 		} else {
 			completion('Error: wrong file format');
 		}
 	} else {
 		checkBSORFile(file, completion);
+	}
+}
+
+function normalizeLink(file) {
+	file = file.replace('https://cdn.discordapp.com/attachments/', 'https://discord.beatleader.pro/');
+	file = file.replace('https://api.beatleader.com', getApiUrl());
+	file = file.replace('https://api.beatleader.xyz', getApiUrl());
+	return file.replace('https://api.beatleader.net', getApiUrl());
+}
+
+function downloadBSOR(file, completion, signal) {
+	var xhr = new XMLHttpRequest();
+	xhr.open('GET', file, true);
+	xhr.withCredentials = file.includes('/otherreplays/');
+	xhr.responseType = 'blob';
+
+	xhr.onload = function () {
+		if (xhr.status == 200) {
+			checkBSORFile(xhr.response, completion);
+		} else {
+			completion('Error: failed to download replay');
+		}
+	};
+	if (signal) {
+		signal.addEventListener('abort', () => xhr.abort());
+	}
+	xhr.send();
+}
+
+const FRAME_SIZE = 92;
+const HEAD_SIZE = 8192;
+const READY_AHEAD = 5;
+const PREFETCH_FRAMES = 1500;
+const MAX_PREFETCHED = 3;
+
+const prefetchedReplays = new Map();
+
+function layoutFromOffsets(offsets) {
+	return offsets && offsets.frames > 0 && offsets.notes > offsets.frames ? {framesAt: offsets.frames, framesEnd: offsets.notes - 1} : null;
+}
+
+async function fetchRange(url, from, to, signal) {
+	const response = await fetch(url, {headers: {Range: `bytes=${from}-${to ? to - 1 : ''}`}, signal});
+	if (response.status != 206) {
+		throw new Error(`Range request answered with ${response.status}`);
+	}
+	return response;
+}
+
+function fetchBytes(url, from, to, signal) {
+	const request = fetchRange(url, from, to, signal).then(response => response.arrayBuffer());
+	request.catch(() => {});
+	return request;
+}
+
+function prefetchBSOR(file, offsets) {
+	const url = normalizeLink(file);
+	const layout = layoutFromOffsets(offsets);
+	if (!layout || prefetchedReplays.has(url) || url.includes('/otherreplays/')) {
+		return;
+	}
+	const framesFrom = layout.framesAt + 4;
+	const parts = Promise.all([
+		fetchBytes(url, 0, framesFrom),
+		fetchBytes(url, layout.framesEnd),
+		fetchBytes(url, framesFrom, Math.min(framesFrom + PREFETCH_FRAMES * FRAME_SIZE, layout.framesEnd)),
+	]).then(([head, tail, frames]) => ({head, tail, frames}));
+	parts.catch(() => {});
+	prefetchedReplays.set(url, parts);
+	if (prefetchedReplays.size > MAX_PREFETCHED) {
+		prefetchedReplays.delete(prefetchedReplays.keys().next().value);
+	}
+}
+
+async function takePrefetchedBSOR(url) {
+	const parts = prefetchedReplays.get(url);
+	prefetchedReplays.delete(url);
+	return parts ? parts.catch(() => null) : null;
+}
+
+function decodeHead(buffer) {
+	const head = new DataView(buffer);
+	head.pointer = 0;
+	if (DecodeInt(head) != 0x442d3d69 || DecodeUint8(head) != 1 || DecodeUint8(head) != StructType.info) {
+		throw new Error('Not a BSOR replay');
+	}
+	const info = DecodeInfo(head);
+	if (DecodeUint8(head) != StructType.frames) {
+		throw new Error('Frames are not after the info');
+	}
+	const framesAt = head.pointer;
+	return {info, layout: {framesAt, framesEnd: framesAt + 4 + DecodeInt(head) * FRAME_SIZE}};
+}
+
+function requestTailAndFrames(url, layout, signal, prefetched) {
+	const framesFrom = layout.framesAt + 4 + (prefetched ? prefetched.frames.byteLength : 0);
+	const frames = framesFrom < layout.framesEnd ? fetchRange(url, framesFrom, layout.framesEnd, signal) : Promise.resolve(null);
+	frames.catch(() => {});
+	return {
+		tail: prefetched ? Promise.resolve(prefetched.tail) : fetchBytes(url, layout.framesEnd, null, signal),
+		framesPrefix: prefetched ? prefetched.frames : null,
+		frames,
+	};
+}
+
+function frameReader(replay, onFrames) {
+	let pending = new Uint8Array(0);
+	return bytes => {
+		if (pending.length) {
+			const merged = new Uint8Array(pending.length + bytes.length);
+			merged.set(pending);
+			merged.set(bytes, pending.length);
+			pending = merged;
+		} else {
+			pending = bytes;
+		}
+		const whole = pending.length - (pending.length % FRAME_SIZE);
+		const frames = new DataView(pending.buffer, pending.byteOffset, whole);
+		frames.pointer = 0;
+		while (frames.pointer < whole) {
+			PushFrame(replay.frames, DecodeFrame(frames));
+		}
+		pending = pending.subarray(whole);
+		onFrames();
+	};
+}
+
+async function streamBSOR(url, completion, {offsets, startTime = 0, signal, onFramesLoaded}) {
+	const controller = new AbortController();
+	if (signal) {
+		signal.addEventListener('abort', () => controller.abort());
+	}
+
+	let ready = false;
+	try {
+		const knownLayout = layoutFromOffsets(offsets);
+		const prefetched = knownLayout && (await takePrefetchedBSOR(url));
+		const head = prefetched ? prefetched.head : fetchBytes(url, 0, knownLayout ? knownLayout.framesAt + 4 : HEAD_SIZE, controller.signal);
+		const requested = knownLayout && requestTailAndFrames(url, knownLayout, controller.signal, prefetched);
+
+		const {info, layout} = decodeHead(await head);
+		if (knownLayout && (layout.framesAt != knownLayout.framesAt || layout.framesEnd != knownLayout.framesEnd)) {
+			throw new Error('Replay offsets do not match the file');
+		}
+		const tailAndFrames = requested || requestTailAndFrames(url, layout, controller.signal);
+
+		const replay = {info, frames: []};
+		const tail = new DataView(await tailAndFrames.tail);
+		tail.pointer = 0;
+		DecodeSections(tail, replay);
+
+		const addFrames = frameReader(replay, () => {
+			const lastFrame = replay.frames[replay.frames.length - 1];
+			if (!ready && lastFrame && lastFrame.time >= startTime + READY_AHEAD) {
+				ready = true;
+				completion(replay);
+			}
+		});
+		if (tailAndFrames.framesPrefix) {
+			addFrames(new Uint8Array(tailAndFrames.framesPrefix));
+		}
+		const frames = await tailAndFrames.frames;
+		if (frames) {
+			const reader = frames.body.getReader();
+			while (true) {
+				const {done, value} = await reader.read();
+				if (done) {
+					break;
+				}
+				addFrames(value);
+			}
+		}
+		ApplyTricks(replay);
+		if (ready) {
+			onFramesLoaded();
+		} else {
+			completion(replay);
+		}
+	} catch (e) {
+		controller.abort();
+		if (signal && signal.aborted) {
+			return;
+		}
+		if (ready) {
+			console.warn('Replay frames stopped loading', e);
+			return;
+		}
+		console.warn('Could not stream the replay, downloading it whole', e);
+		downloadBSOR(url, completion, signal);
 	}
 }
 
@@ -75,41 +253,44 @@ function decode(arrayBuffer, completion) {
 
 	if (version == 1 && magic == 0x442d3d69) {
 		var replay = {};
-
-		for (var a = 0; a < StructType.customData + 1 && dataView.pointer < dataView.byteLength; a++) {
-			const type = DecodeUint8(dataView);
-			switch (type) {
-				case StructType.info:
-					replay.info = DecodeInfo(dataView);
-					break;
-				case StructType.frames:
-					replay.frames = DecodeFrames(dataView);
-					break;
-				case StructType.notes:
-					replay.notes = DecodeNotes(dataView);
-					break;
-				case StructType.walls:
-					replay.walls = DecodeWalls(dataView);
-					break;
-				case StructType.heights:
-					replay.heights = DecodeHeight(dataView);
-					break;
-				case StructType.pauses:
-					replay.pauses = DecodePauses(dataView);
-					break;
-				case StructType.offset:
-					replay.offset = DecodeOffsets(dataView);
-					break;
-				case StructType.customData:
-					replay.customData = DecodeCustomData(dataView);
-					ParseKnownCustomData(replay);
-					break;
-			}
-		}
-
+		DecodeSections(dataView, replay);
+		ApplyTricks(replay);
 		completion(replay);
 	} else {
 		completion('Error: failed to decode replay');
+	}
+}
+
+function DecodeSections(dataView, replay) {
+	for (var a = 0; a < StructType.customData + 1 && dataView.pointer < dataView.byteLength; a++) {
+		const type = DecodeUint8(dataView);
+		switch (type) {
+			case StructType.info:
+				replay.info = DecodeInfo(dataView);
+				break;
+			case StructType.frames:
+				replay.frames = DecodeFrames(dataView);
+				break;
+			case StructType.notes:
+				replay.notes = DecodeNotes(dataView);
+				break;
+			case StructType.walls:
+				replay.walls = DecodeWalls(dataView);
+				break;
+			case StructType.heights:
+				replay.heights = DecodeHeight(dataView);
+				break;
+			case StructType.pauses:
+				replay.pauses = DecodePauses(dataView);
+				break;
+			case StructType.offset:
+				replay.offset = DecodeOffsets(dataView);
+				break;
+			case StructType.customData:
+				replay.customData = DecodeCustomData(dataView);
+				ParseKnownCustomData(replay);
+				break;
+		}
 	}
 }
 
@@ -152,12 +333,15 @@ function DecodeFrames(dataView) {
 	const length = DecodeInt(dataView);
 	var result = [];
 	for (var i = 0; i < length; i++) {
-		var frame = DecodeFrame(dataView);
-		if (frame.time != 0 && (result.length == 0 || frame.time != result[result.length - 1].time)) {
-			result.push(frame);
-		}
+		PushFrame(result, DecodeFrame(dataView));
 	}
 	return result;
+}
+
+function PushFrame(frames, frame) {
+	if (frame.time != 0 && (frames.length == 0 || frame.time != frames[frames.length - 1].time)) {
+		frames.push(frame);
+	}
 }
 
 function DecodeFrame(dataView) {
@@ -276,10 +460,15 @@ function ParseKnownCustomData(replay) {
 				result.right = DecodeHandReplay(dataView);
 
 				replay.parsedCustomData['reesabers:tricks-replay'] = result;
-
-				AddTricksToReplay(replay, result);
 			}
 		}
+	}
+}
+
+function ApplyTricks(replay) {
+	const tricks = replay.parsedCustomData && replay.parsedCustomData['reesabers:tricks-replay'];
+	if (tricks) {
+		AddTricksToReplay(replay, tricks);
 	}
 }
 
@@ -500,4 +689,5 @@ function DecodeTrickFrame(dataView) {
 }
 
 module.exports.checkBSOR = checkBSOR;
+module.exports.prefetchBSOR = prefetchBSOR;
 module.exports.NoteEventType = NoteEventType;

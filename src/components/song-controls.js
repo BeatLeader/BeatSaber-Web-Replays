@@ -479,12 +479,24 @@ AFRAME.registerComponent('song-controls', {
 			}
 		});
 
-		// Pop-outs (Opera GX, Firefox picture-in-picture) only offer playing <video> elements, so the canvas is mirrored into a hidden one.
+		// Pop-outs (Opera GX, Firefox picture-in-picture) only offer playing <video> elements, so the canvas is mirrored into an invisible one.
 		const isOpera = /OPR\//.test(navigator.userAgent);
 		const isFirefox = utils.isFirefox();
 
-		// Hidden tabs neither run requestAnimationFrame nor composite. While a pop-out shows the canvas,
-		// render through setTimeout and push every frame into its stream.
+		const pushFrame = video => {
+			const stream = video && video.srcObject;
+			if (!stream) return;
+			const track = stream.getVideoTracks()[0];
+			if (track && track.requestFrame) {
+				track.requestFrame();
+			} else if (stream.requestFrame) {
+				stream.requestFrame();
+			}
+		};
+
+		const decoyPoppedOut = () =>
+			!!this.popoutVideo &&
+			(document.pictureInPictureElement === this.popoutVideo || (isFirefox && document.hidden && !this.popoutVideo.paused));
 		let pendingRenderFrame = null;
 		const installBackgroundRenderLoop = () => {
 			if (this.renderLoopInstalled) return;
@@ -492,19 +504,13 @@ AFRAME.registerComponent('song-controls', {
 			const sceneEl = this.el.sceneEl;
 			const mainRenderer = sceneEl.mainRenderer;
 
-			// Firefox doesn't expose its picture-in-picture state to pages.
-			const backgroundRenderingActive = () =>
-				document.hidden && !!(document.pictureInPictureElement || (isFirefox && this.popoutVideo && !this.popoutVideo.paused));
+			const backgroundRenderingActive = () => document.hidden && !!(document.pictureInPictureElement || decoyPoppedOut());
 
-			const pushFrame = video => {
-				const stream = video && video.srcObject;
-				if (!stream) return;
-				const track = stream.getVideoTracks()[0];
-				if (track && track.requestFrame) {
-					track.requestFrame();
-				} else if (stream.requestFrame) {
-					stream.requestFrame();
-				}
+			let nextPushAt = 0;
+			const pushPopoutFrame = now => {
+				if (!decoyPoppedOut() || now < nextPushAt) return;
+				nextPushAt = (now - nextPushAt < 1000 / 30 ? nextPushAt : now) + 1000 / 30;
+				pushFrame(this.popoutVideo);
 			};
 
 			const scheduleRenderFrame = () => {
@@ -520,9 +526,10 @@ AFRAME.registerComponent('song-controls', {
 				} else {
 					pendingRenderFrame = {
 						hidden: false,
-						id: window.requestAnimationFrame(() => {
+						id: window.requestAnimationFrame(now => {
 							pendingRenderFrame = null;
 							sceneEl.render();
+							pushPopoutFrame(now);
 						}),
 					};
 				}
@@ -556,8 +563,9 @@ AFRAME.registerComponent('song-controls', {
 			video.playsInline = true;
 			video.disableRemotePlayback = true;
 			video.autoPictureInPicture = true;
-			video.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none';
-			video.srcObject = document.getElementById('main-canvas').captureStream(30);
+			video.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; opacity: 0';
+			video.srcObject = document.getElementById('main-canvas').captureStream(0);
+			pushFrame(video);
 			installBackgroundRenderLoop();
 
 			// Media events can arrive stale after quick play/pause pairs, so compare current states instead of trusting the event.

@@ -370,6 +370,9 @@ AFRAME.registerComponent('audioanalyser', {
 			? song.playable.then(
 					() => song.createSource(),
 					error => {
+						if (song.controller.signal.aborted) {
+							throw error;
+						}
 						console.warn('Could not stream the song', error);
 						this.streamedSongFailed = src;
 						return decodeWhole();
@@ -385,7 +388,7 @@ AFRAME.registerComponent('audioanalyser', {
 
 				return source;
 			})
-			.catch(console.error);
+			.catch(error => error.name !== 'AbortError' && console.error(error));
 	},
 
 	createFullBufferSource: function (src) {

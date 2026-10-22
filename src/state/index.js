@@ -230,7 +230,6 @@ AFRAME.registerState({
 		replayloaded: (state, payload) => {
 			state.replay.isLoading = false;
 			state.notes = payload.notes;
-			console.log(state.challenge);
 			if (state.challenge.mode == 'OneSaber') {
 				state.hiddenSaber = payload.leftHanded ? 'right' : 'left';
 			}

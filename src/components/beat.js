@@ -647,12 +647,12 @@ AFRAME.registerComponent('beat', {
 
 		this.updatePosition();
 
-		if (this.hitboxObject && this.hitboxReplay !== replay) {
+		if (this.hitboxObject && this.hitboxReplayInfo !== replay.info) {
 			this.removeHitboxes();
 		}
 
 		if (!this.hitboxObject && (!this.replayNote.cutPoint || settings.settings.showHitboxes || !settings.settings.reducedDebris)) {
-			this.hitboxReplay = replay;
+			this.hitboxReplayInfo = replay.info;
 			const hitbox = new THREE.WireframeGeometry(itsMine ? new THREE.SphereGeometry(0.18, 16, 8) : this.toBigBox(boxSettings));
 			const material = new THREE.LineBasicMaterial({
 				color: 0xff0000,

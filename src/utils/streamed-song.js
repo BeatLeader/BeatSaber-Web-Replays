@@ -17,6 +17,16 @@ class StreamedSongProcessor extends AudioWorkletProcessor {
 	}
 
 	receive({chunk, complete, start, stop, release}) {
+		if (this.released) return;
+		if (release) {
+			// The node can outlive its song (worklet nodes aren't reliably collected), so the samples go now.
+			this.released = true;
+			this.chunks = [];
+			this.voice = null;
+			this.port.onmessage = null;
+			this.port.close();
+			return;
+		}
 		if (chunk) {
 			this.chunks.push({start: this.length, channels: chunk});
 			this.length += chunk[0].length;
@@ -32,9 +42,6 @@ class StreamedSongProcessor extends AudioWorkletProcessor {
 		}
 		if (stop && this.voice && this.voice.id === stop.id) {
 			this.voice.until = Math.round(stop.when * sampleRate);
-		}
-		if (release) {
-			this.released = true;
 		}
 	}
 
@@ -141,6 +148,7 @@ class StreamedSong {
 		});
 		loadProcessor(context)
 			.then(() => {
+				this.controller.signal.throwIfAborted();
 				this.node = new AudioWorkletNode(context, 'streamed-song', {numberOfInputs: 0, outputChannelCount: [2]});
 				this.node.port.onmessage = ({data}) => this.receive(data);
 				return this.load();
@@ -207,6 +215,9 @@ class StreamedSong {
 			buffer = await this.context.decodeAudioData(bytes.slice(0, end).buffer);
 		} catch (error) {
 			if (final) throw error;
+			return;
+		}
+		if (this.controller.signal.aborted) {
 			return;
 		}
 		const usable = final ? buffer.length : buffer.length - SAFE_TAIL;
@@ -288,6 +299,7 @@ class StreamedSong {
 		this.controller.abort();
 		if (this.node) {
 			this.node.port.postMessage({release: true});
+			this.node.port.onmessage = null;
 			try {
 				this.node.disconnect();
 			} catch (e) {}

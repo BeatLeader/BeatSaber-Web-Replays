@@ -269,7 +269,6 @@ AFRAME.registerComponent('zip-loader', {
 		this.objectUrls = objectUrls;
 
 		this.isFetching = '';
-		console.log(event);
 		this.el.emit('challengeloadend', event, false);
 	},
 

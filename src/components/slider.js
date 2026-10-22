@@ -151,6 +151,7 @@ AFRAME.registerComponent('slider', {
 
 		if (this.splineObject) {
 			this.el.object3D.remove(this.splineObject);
+			this.splineObject.geometry.dispose();
 		}
 
 		const data = this.data;

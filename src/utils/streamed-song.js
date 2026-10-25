@@ -16,8 +16,14 @@ class StreamedSongProcessor extends AudioWorkletProcessor {
 		this.port.onmessage = ({data}) => this.receive(data);
 	}
 
-	receive({chunk, complete, start, stop, release}) {
+	receive({chunk, complete, start, stop, read, release}) {
 		if (this.released) return;
+		if (read) {
+			const samples = new Float32Array(read.length);
+			const filled = this.copyMono(read.from, samples);
+			this.port.postMessage({read: read.id, samples: filled ? samples : null}, filled ? [samples.buffer] : []);
+			return;
+		}
 		if (release) {
 			// The node can outlive its song (worklet nodes aren't reliably collected), so the samples go now.
 			this.released = true;
@@ -43,6 +49,22 @@ class StreamedSongProcessor extends AudioWorkletProcessor {
 		if (stop && this.voice && this.voice.id === stop.id) {
 			this.voice.until = Math.round(stop.when * sampleRate);
 		}
+	}
+
+	copyMono(from, out) {
+		if (from < 0 || from + out.length > this.length) return false;
+		let written = 0;
+		for (const chunk of this.chunks) {
+			const length = chunk.channels[0].length;
+			if (chunk.start + length <= from + written) continue;
+			const left = chunk.channels[0];
+			const right = chunk.channels[1] || left;
+			for (let i = from + written - chunk.start; i < length && written < out.length; i++, written++) {
+				out[written] = (left[i] + right[i]) / 2;
+			}
+			if (written === out.length) break;
+		}
+		return written === out.length;
 	}
 
 	chunkAt(voice, index) {
@@ -128,6 +150,35 @@ function lastOggPage(bytes, length) {
 	return 0;
 }
 
+function boxType(bytes, i) {
+	return String.fromCharCode(bytes[i + 4], bytes[i + 5], bytes[i + 6], bytes[i + 7]);
+}
+
+// The moov box, ahead of the audio data in a faststart MP4, has arrived whole.
+function mp4IndexArrived(bytes, length) {
+	let moov = false;
+	for (let i = 0; i + 8 <= length; ) {
+		const type = boxType(bytes, i);
+		if (type === 'mdat') {
+			return moov;
+		}
+		moov = moov || type === 'moov';
+		const size = ((bytes[i] << 24) | (bytes[i + 1] << 16) | (bytes[i + 2] << 8) | bytes[i + 3]) >>> 0;
+		if (size < 8) {
+			return false;
+		}
+		i += size;
+	}
+	return false;
+}
+
+function decodableLength(bytes, length) {
+	if (isOggPage(bytes, 0)) {
+		return lastOggPage(bytes, length);
+	}
+	return boxType(bytes, 0) === 'ftyp' && mp4IndexArrived(bytes, length) ? length : 0;
+}
+
 class StreamedSong {
 	constructor(context, src, mediaDuration) {
 		this.context = context;
@@ -141,6 +192,8 @@ class StreamedSong {
 		this.voice = 0;
 		this.stalledAt = null;
 		this.resumed = null;
+		this.reads = new Map();
+		this.lastRead = 0;
 		this.controller = new AbortController();
 		this.playable = new Promise((resolve, reject) => {
 			this.onPlayable = resolve;
@@ -191,7 +244,7 @@ class StreamedSong {
 			const due =
 				received >= Math.max(FIRST_DECODE, this.decodedBytes * 2) ||
 				(this.stalledAt !== null && received >= this.bytesUntil(this.stalledAt + 2, total));
-			if (due && !decoding && isOggPage(bytes, 0)) {
+			if (due && !decoding) {
 				decoding = this.decode(bytes, received, false).finally(() => (decoding = null));
 			}
 		}
@@ -205,7 +258,7 @@ class StreamedSong {
 	}
 
 	async decode(bytes, length, final) {
-		const end = final ? length : lastOggPage(bytes, length);
+		const end = final ? length : decodableLength(bytes, length);
 		if (!end) {
 			return;
 		}
@@ -237,7 +290,24 @@ class StreamedSong {
 		}
 	}
 
-	receive({loaded, complete, stalled, playing, position, time}) {
+	read(from, length) {
+		if (!this.node || from + length > this.loadedFrames) {
+			return Promise.resolve(null);
+		}
+		const id = ++this.lastRead;
+		return new Promise(resolve => {
+			this.reads.set(id, resolve);
+			this.node.port.postMessage({read: {id, from, length}});
+		});
+	}
+
+	receive({loaded, complete, stalled, playing, position, time, read, samples}) {
+		if (read !== undefined) {
+			const resolve = this.reads.get(read);
+			this.reads.delete(read);
+			if (resolve) resolve(samples);
+			return;
+		}
 		if (loaded !== undefined) {
 			this.loadedFrames = loaded;
 			this.complete = complete;
@@ -297,6 +367,8 @@ class StreamedSong {
 
 	release() {
 		this.controller.abort();
+		this.reads.forEach(resolve => resolve(null));
+		this.reads.clear();
 		if (this.node) {
 			this.node.port.postMessage({release: true});
 			this.node.port.onmessage = null;

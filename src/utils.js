@@ -569,6 +569,13 @@ function isFirefox() {
 	return navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
 }
 
+const AAC_SONG = 'song-aac';
+const MAX_SPARE_DECODE = 600;
+
+function isAacSong(src) {
+	return typeof src === 'string' && src.endsWith('/' + AAC_SONG);
+}
+
 function createSilence(seconds = 1) {
 	const sampleRate = 8000;
 	const numChannels = 1;
@@ -655,5 +662,8 @@ module.exports.setCookie = setCookie;
 module.exports.getCookie = getCookie;
 module.exports.checkAutoplay = checkAutoplay;
 module.exports.isFirefox = isFirefox;
+module.exports.AAC_SONG = AAC_SONG;
+module.exports.isAacSong = isAacSong;
+module.exports.MAX_SPARE_DECODE = MAX_SPARE_DECODE;
 module.exports.createSilence = createSilence;
 module.exports.DEFAULT_COLORS = DEFAULT_COLORS;

@@ -248,7 +248,10 @@ AFRAME.registerComponent('zip-loader', {
 			const filename = keys[index];
 			const lowerFilename = filename.toLowerCase();
 			// Fallback: scan for any audio file if it could not be resolved from the map info.
-			if (!event.audio && (lowerFilename.endsWith('egg') || lowerFilename.endsWith('ogg') || lowerFilename.endsWith('wav') || lowerFilename.endsWith('mp3'))) {
+			if (
+				!event.audio &&
+				(lowerFilename.endsWith('egg') || lowerFilename.endsWith('ogg') || lowerFilename.endsWith('wav') || lowerFilename.endsWith('mp3'))
+			) {
 				event.audio = await extractAudioAsBlobUrl(filename);
 			}
 			if (!event.image) {
@@ -724,7 +727,10 @@ AFRAME.registerComponent('zip-loader', {
 		const folder = Promise.resolve(byHash && (mapFolderUrl === undefined ? lookupMapFolderUrl(id) : mapFolderUrl));
 		folder.then(folderUrl => {
 			if (folderUrl && loadId === this.loadId) {
-				this.fetchFolder(folderUrl, ['r2cdn', 'cdn'].map(prefix => 'https://' + prefix + '.beatsaver.com/' + id + '.zip'));
+				this.fetchFolder(
+					folderUrl,
+					['r2cdn', 'cdn'].map(prefix => 'https://' + prefix + '.beatsaver.com/' + id + '.zip')
+				);
 			}
 		});
 
@@ -796,10 +802,11 @@ AFRAME.registerComponent('zip-loader', {
 			return requests[path];
 		};
 		request(mapFolderDifficultyPath(playedCharacteristic(this.data.mode), this.data.difficulty));
+		const songPath = downloadFirst ? Promise.resolve('song') : mirrorSongPath(folderUrl);
 		if (downloadFirst) {
 			request('song');
 		} else {
-			this.el.sceneEl.emit('songpreload', {src: folderUrl + 'song'}, false);
+			this.preloadMirrorSong(folderUrl, songPath);
 		}
 
 		const files = {};
@@ -829,12 +836,13 @@ AFRAME.registerComponent('zip-loader', {
 			}
 			return;
 		}
+		const song = await songPath;
 		if (loadId !== this.loadId) {
 			return;
 		}
 
 		if (!downloadFirst) {
-			files[info._songFilename || 'song.egg'] = {url: folderUrl + 'song'};
+			files[info._songFilename || 'song.egg'] = {url: folderUrl + song};
 		}
 		this.fetchedZip = this.data.id;
 		this.fetchedZipUrl = folderUrl;
@@ -846,7 +854,7 @@ AFRAME.registerComponent('zip-loader', {
 			return;
 		}
 		if (!this.downloadFilesFirst()) {
-			this.el.sceneEl.emit('songpreload', {src: mapFolderUrl + 'song'}, false);
+			this.preloadMirrorSong(mapFolderUrl, mirrorSongPath(mapFolderUrl));
 		}
 		fetchMapFile(mapFolderUrl + 'info.dat', 'text')
 			.then(text => {
@@ -858,6 +866,12 @@ AFRAME.registerComponent('zip-loader', {
 
 	downloadFilesFirst: function () {
 		return this.el.sceneEl.components.settings.settings.downloadFilesFirst;
+	},
+
+	preloadMirrorSong: function (folderUrl, songPath) {
+		const likely = PREFERS_AAC ? utils.AAC_SONG : 'song';
+		this.el.sceneEl.emit('songpreload', {src: folderUrl + likely}, false);
+		songPath.then(path => path !== likely && this.el.sceneEl.emit('songpreload', {src: folderUrl + path}, false));
 	},
 
 	fetchZip: function (zipUrl, fallbackUrls) {
@@ -963,14 +977,14 @@ function normalizeInfo(info) {
 					diff.difficulty === 'Easy'
 						? 1
 						: diff.difficulty === 'Normal'
-						? 3
-						: diff.difficulty === 'Hard'
-						? 5
-						: diff.difficulty === 'Expert'
-						? 7
-						: diff.difficulty === 'ExpertPlus'
-						? 9
-						: 1,
+							? 3
+							: diff.difficulty === 'Hard'
+								? 5
+								: diff.difficulty === 'Expert'
+									? 7
+									: diff.difficulty === 'ExpertPlus'
+										? 9
+										: 1,
 				_beatmapFilename: diff.beatmapDataFilename,
 				_noteJumpMovementSpeed: diff.noteJumpMovementSpeed,
 				_noteJumpStartBeatOffset: diff.noteJumpStartBeatOffset,
@@ -1050,6 +1064,27 @@ async function fetchMapFile(url, type) {
 		throw new Error(`${res.status} ${url}`);
 	}
 	return res[type]();
+}
+
+const PREFERS_AAC = document.createElement('audio').canPlayType('audio/mp4; codecs="mp4a.40.2"') !== '' && !utils.isFirefox();
+const MAX_SONG_PROBES = 50;
+const songProbes = new Map();
+
+function mirrorSongPath(folderUrl) {
+	if (!PREFERS_AAC) {
+		return Promise.resolve('song');
+	}
+	if (!songProbes.has(folderUrl)) {
+		const probe = fetch(folderUrl + utils.AAC_SONG, {headers: {Range: 'bytes=0-0'}}).then(
+			res => (res.ok ? utils.AAC_SONG : 'song'),
+			() => 'song'
+		);
+		songProbes.set(folderUrl, probe);
+		if (songProbes.size > MAX_SONG_PROBES) {
+			songProbes.delete(songProbes.keys().next().value);
+		}
+	}
+	return songProbes.get(folderUrl);
 }
 
 /**

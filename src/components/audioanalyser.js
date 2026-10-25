@@ -3,17 +3,42 @@ if (typeof AFRAME === 'undefined') {
 }
 
 const {StreamedSong, supportsStreamedSong} = require('../utils/streamed-song');
+const {MediaCapture} = require('../utils/media-capture');
+const {isAacSong, MAX_SPARE_DECODE} = require('../utils');
 
 var audioBufferCache = {};
 
 const MAX_PRELOADED_SONGS = 3;
 
+const SPARE_ELEMENTS = MAX_PRELOADED_SONGS + 2;
+const spareElements = [];
+const unlockedElements = new WeakSet();
+const mediaNodes = new WeakMap();
+
+function unlockSpareElements() {
+	while (spareElements.length < SPARE_ELEMENTS) {
+		const audio = document.createElement('audio');
+		audio.play().catch(() => {});
+		audio.pause();
+		unlockedElements.add(audio);
+		spareElements.push(audio);
+	}
+}
+
 function createSongElement(src) {
-	const audio = document.createElement('audio');
+	const audio = spareElements.pop() || document.createElement('audio');
 	audio.crossOrigin = 'anonymous';
 	audio.preload = 'metadata';
 	audio.setAttribute('src', src);
 	return audio;
+}
+
+function recycleSongElement(audio) {
+	audio.removeAttribute('src');
+	audio.load();
+	if (unlockedElements.has(audio) && spareElements.length < SPARE_ELEMENTS) {
+		spareElements.push(audio);
+	}
 }
 
 function whenPlaying(audio) {
@@ -68,6 +93,11 @@ AFRAME.registerComponent('audioanalyser', {
 
 		this.initContext();
 		this.el.sceneEl.addEventListener('songpreload', e => this.preloadSong(e.detail.src));
+		const onGesture = () => {
+			this.hadGesture = true;
+			unlockSpareElements();
+		};
+		['click', 'touchend', 'keydown'].forEach(type => document.addEventListener(type, onGesture, true));
 	},
 
 	update: function (oldData) {
@@ -123,8 +153,7 @@ AFRAME.registerComponent('audioanalyser', {
 
 	releaseRetiredAudio: function () {
 		if (this.retiredAudio) {
-			this.retiredAudio.removeAttribute('src');
-			this.retiredAudio.load();
+			recycleSongElement(this.retiredAudio);
 			this.retiredAudio = null;
 		}
 	},
@@ -206,7 +235,7 @@ AFRAME.registerComponent('audioanalyser', {
 		const src = this.data.src;
 		const isStale = () => this.data.src !== src;
 
-		if (this.data.isSafari) {
+		if (this.isSafariOgg(src)) {
 			this.getBufferSource().then(bufferSource => {
 				if (isStale()) return;
 				this.el.emit(
@@ -218,8 +247,9 @@ AFRAME.registerComponent('audioanalyser', {
 		} else {
 			this.getMediaSource().then(source => {
 				if (isStale()) return;
-				if (this.audio && this.audio.duration && this.audio.duration > 0 && this.audio.duration <= 1800) {
-					const mediaFirst = this.data.pitchCompensation && speed >= this.data.pitchCompensationTreshold;
+				const mediaFirst = this.data.pitchCompensation && speed >= this.data.pitchCompensationTreshold;
+				const duration = this.audio ? this.audio.duration : 0;
+				if (duration > 0 && duration <= (mediaFirst && this.data.isSafari ? MAX_SPARE_DECODE : 1800)) {
 					if (mediaFirst) {
 						this.el.emit(
 							'audioanalysersource',
@@ -345,8 +375,9 @@ AFRAME.registerComponent('audioanalyser', {
 					audioBufferCache[src] = audioBuffer;
 					resolve(audioBuffer);
 				}
-				var res = this.context[this.data.isSafari ? 'decodeOggData' : 'decodeAudioData'](xhr.response, cb);
-				if (!res && this.data.isSafari) {
+				const ogg = this.isSafariOgg(src);
+				var res = this.context[ogg ? 'decodeOggData' : 'decodeAudioData'](xhr.response, cb);
+				if (!res && ogg) {
 					res = this.context['decodeAudioData'](xhr.response, cb);
 				}
 				if (res && res.constructor === Promise) {
@@ -397,6 +428,36 @@ AFRAME.registerComponent('audioanalyser', {
 		return source;
 	},
 
+	captureMedia: function (length) {
+		if (!this.mediaCapture) {
+			this.mediaCapture = new MediaCapture(this.context, this.mediaGainNode);
+		}
+		return this.mediaCapture.capture(length);
+	},
+
+	readSong: function (from, length) {
+		const src = this.data.src;
+		const start = Math.round(from * this.context.sampleRate);
+		if (this.streamedSong && this.streamedSong.src === src && this.streamedSongFailed !== src) {
+			return this.streamedSong.read(start, length);
+		}
+		const buffer = audioBufferCache[src];
+		if (!buffer || buffer.constructor === Promise || start + length > buffer.length) {
+			return Promise.resolve(null);
+		}
+		const left = buffer.getChannelData(0);
+		const right = buffer.numberOfChannels > 1 ? buffer.getChannelData(1) : left;
+		const samples = new Float32Array(length);
+		for (let i = 0; i < length; i++) {
+			samples[i] = (left[start + i] + right[start + i]) / 2;
+		}
+		return Promise.resolve(samples);
+	},
+
+	isSafariOgg: function (src) {
+		return this.data.isSafari && !isAacSong(src);
+	},
+
 	getStreamedSong: function (src) {
 		// Safari decodes Ogg with oggdec, which only takes whole files.
 		const canStream = !this.data.isSafari && !this.data.downloadFilesFirst && supportsStreamedSong(this.context);
@@ -414,21 +475,24 @@ AFRAME.registerComponent('audioanalyser', {
 
 	preloadSong: function (src) {
 		const preloaded = this.preloadedSongs;
-		if (preloaded.has(src) || (this.mediaNodeCache && this.mediaNodeCache[src])) {
+		if ((this.hadGesture && !spareElements.length) || preloaded.has(src) || (this.mediaNodeCache && this.mediaNodeCache[src])) {
 			return;
 		}
 		preloaded.set(src, createSongElement(src));
 		if (preloaded.size > MAX_PRELOADED_SONGS) {
 			const [oldest, audio] = preloaded.entries().next().value;
 			preloaded.delete(oldest);
-			audio.removeAttribute('src');
-			audio.load();
+			recycleSongElement(audio);
 		}
 	},
 
 	takePreloadedSong: function (src) {
 		const audio = this.preloadedSongs.get(src);
 		this.preloadedSongs.delete(src);
+		if (audio && this.hadGesture && !unlockedElements.has(audio) && spareElements.length) {
+			recycleSongElement(audio);
+			return null;
+		}
 		return audio;
 	},
 
@@ -456,7 +520,8 @@ AFRAME.registerComponent('audioanalyser', {
 				captureThis.audio = captureThis.data.src;
 			}
 			captureThis.audio.addEventListener('playing', () => captureThis.releaseRetiredAudio(), {once: true});
-			const node = captureThis.context.createMediaElementSource(captureThis.audio);
+			const node = mediaNodes.get(captureThis.audio) || captureThis.context.createMediaElementSource(captureThis.audio);
+			mediaNodes.set(captureThis.audio, node);
 
 			captureThis.mediaSource = node;
 			captureThis.mediaSource.connect(captureThis.mediaGainNode);

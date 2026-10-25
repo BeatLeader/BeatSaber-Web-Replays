@@ -1,15 +1,30 @@
 const utils = require('../utils');
 var {queryParams} = require('../query-params');
+const {locate} = require('../utils/media-capture');
 
 const GAME_OVER_LENGTH = 3.5;
 const ONCE = {once: true};
 const BASE_VOLUME = 0.35;
 const isSafari = navigator.userAgent.toLowerCase().indexOf('safari') !== -1 && navigator.userAgent.toLowerCase().indexOf('chrome') === -1;
 
-const MEDIA_SYNC_SETTLE = 0.3; // s, <audio> position is unreliable this long after a (re)start or rate change
+const MEDIA_SEEKED_LAG = isSafari ? 0.25 : 0;
+const MEDIA_START_LAG = isSafari ? 0.3 : 0;
+const MEDIA_SEEK_TIMEOUT = 3;
+const MEDIA_RESUME_RETRY = 1;
+// First guess of how far ahead of currentTime WebAudio receives the element's audio, until checkMedia measures it.
+const MEDIA_LEAD = isSafari ? 0.095 : utils.isFirefox() ? 0.02 : 0;
+const MEDIA_SYNC_SETTLE = isSafari ? 1 : 0.3; // s, <audio> position is unreliable this long after a (re)start or rate change
 const MEDIA_SYNC_WINDOW = 0.5; // s of song time to average over, Firefox moves <audio> currentTime in ~40 ms steps
 const MEDIA_SYNC_TOLERANCE = 0.005;
 const MEDIA_SYNC_SLEW = 0.25; // max share of song progress used to absorb a correction
+const MEDIA_CHECK_DELAY = 0.4;
+const MEDIA_CHECK_INTERVAL = 2;
+const MEDIA_CHECK_RANGE = 0.5;
+const MEDIA_CAPTURE = 8192;
+const MEDIA_MATCH = 0.85;
+const MEDIA_SAMPLES = 5;
+const MEDIA_MAX_STALL = 0.06;
+const BUFFER_START_AHEAD = 0.04;
 
 let skipDebug = AFRAME.utils.getUrlParameter('skip');
 if (!!skipDebug) {
@@ -63,11 +78,15 @@ AFRAME.registerComponent('song', {
 		this.songLoadingIndicator = document.getElementById('songLoadingIndicator');
 		this.speed = songSpeed;
 		this.hasReceivedUserGesture = false;
-		this.audio = document.createElement('audio');
+		this.silentAudio = this.audio = document.createElement('audio');
 		this.audio.volume = utils.isFirefox() ? 0.0001 : 0; // Firefox really does not like zeros
 		this.settings = this.el.sceneEl.components.settings;
 
 		this.audioAnalyser.gainNode.gain.value = this.settings.settings.volume || BASE_VOLUME;
+		this.mediaLead = MEDIA_LEAD;
+		this.leadSamples = [MEDIA_LEAD];
+		this.seekLag = MEDIA_SEEKED_LAG;
+		this.seekLagSamples = [MEDIA_SEEKED_LAG];
 		this.resetMediaSync();
 
 		this.el.addEventListener('gamemenurestart', this.onRestart.bind(this));
@@ -95,6 +114,16 @@ AFRAME.registerComponent('song', {
 		};
 
 		this.el.addEventListener('usergesturereceive', gestureListener);
+
+		const resume = () => this.resumeStoppedAudio();
+		['click', 'touchend', 'keydown'].forEach(type => document.addEventListener(type, resume, true));
+		this.context.addEventListener('statechange', resume);
+	},
+
+	resumeStoppedAudio: function () {
+		if (this.isPlaying && !this.data.isPaused && this.audio.paused && !this.audio.ended) {
+			this.playMediaSession();
+		}
 	},
 
 	pauseAudio: function () {
@@ -118,7 +147,7 @@ AFRAME.registerComponent('song', {
 			return;
 		}
 
-		this.isBufferSource = isSafari || !data.pitchCompensation;
+		this.isBufferSource = (isSafari && !utils.isAacSong(data.audio)) || !data.pitchCompensation;
 
 		// Resume.
 		if (oldData.isPaused && !data.isPaused) {
@@ -192,15 +221,7 @@ AFRAME.registerComponent('song', {
 		return new Promise(resolve => {
 			this.audioSourceListener = evt => {
 				this.audioSourceListener = null;
-				this.source = evt.detail.source;
-				this.mediaSource = evt.detail.mediaSource;
-				this.duration = evt.detail.duration;
-				if (evt.detail.audio) {
-					this.audio = evt.detail.audio;
-				}
-				if (isSafari) {
-					this.setSilence();
-				}
+				this.takeSource(evt.detail);
 				resolve(this.source);
 			};
 			data.analyserEl.addEventListener('audioanalysersource', this.audioSourceListener, ONCE);
@@ -248,12 +269,7 @@ AFRAME.registerComponent('song', {
 		this.data.analyserEl.addEventListener(
 			'audioanalysersource',
 			evt => {
-				this.source = evt.detail.source;
-				this.mediaSource = evt.detail.mediaSource;
-				this.duration = evt.detail.duration;
-				if (isSafari) {
-					this.setSilence();
-				}
+				this.takeSource(evt.detail);
 
 				if (this.data.isPlaying) {
 					this.startAudio();
@@ -287,11 +303,22 @@ AFRAME.registerComponent('song', {
 		this.lastCurrentTime = null;
 		this.lastContextTime = null;
 		this.lastFrameNow = null;
+		this.mediaSeek = null;
 		this.resetMediaSync();
 
 		const gain = this.audioAnalyser.gainNode.gain;
 		gain.cancelScheduledValues(0);
 		gain.value = this.settings.settings.volume;
+	},
+
+	takeSource: function ({source, mediaSource, duration, audio}) {
+		this.source = source;
+		this.mediaSource = mediaSource;
+		this.duration = duration;
+		this.audio = audio || this.silentAudio;
+		if (!audio) {
+			this.setSilence();
+		}
 	},
 
 	setSilence: function () {
@@ -343,18 +370,13 @@ AFRAME.registerComponent('song', {
 		this.isPlaying = true;
 		const playTime = time || skipDebug || 0;
 
-		const duration = this.getDuration();
-		const canUseBuffer = duration > 0 ? duration <= 1800 : true;
-		if ((this.isBufferSource || this.speed < this.settings.settings.pitchCompensationTreshold) && canUseBuffer) {
-			this.source = this.audioAnalyser.activateBufferSource();
-		} else {
-			this.source = this.audioAnalyser.activateMediaSource();
-		}
+		this.source = this.activateSource();
 
-		this.songStartTime = (this.context.currentTime * this.speed - playTime) / (this.speed > 0.01 ? this.speed : 0.01);
+		const startAt = this.context.currentTime + (this.source === this.mediaSource ? 0 : BUFFER_START_AHEAD);
+		this.songStartTime = (startAt * this.speed - playTime) / (this.speed > 0.01 ? this.speed : 0.01);
 		if (this.source.start) {
 			try {
-				this.source.start(0, playTime);
+				this.source.start(startAt, playTime);
 			} catch (e) {
 				console.log(e);
 			}
@@ -396,26 +418,64 @@ AFRAME.registerComponent('song', {
 	// Chrome can land Ogg seeks up to a second early in parts of the file it already played, while
 	// currentTime reports the target. Reloading the element first makes the seek exact.
 	seekAudio: function (time) {
-		if (this.source === this.mediaSource && this.audio.src && this.audio.played.length) {
+		if (this.source === this.mediaSource && this.audio.src && this.audio.played.length && !utils.isAacSong(this.audio.src)) {
 			this.playRequest = null;
 			this.metadataAudioLoading = false;
 			this.audio.load();
 		}
+		this.holdUntilSeeked(time);
 		this.audio.currentTime = time;
+	},
+
+	holdUntilSeeked: function (time) {
+		if (MEDIA_SEEKED_LAG && this.source === this.mediaSource) {
+			this.seekHeld = true;
+			const seek = (this.mediaSeek = {position: time - this.seekLag, until: performance.now() / 1000 + MEDIA_SEEK_TIMEOUT});
+			this.audio.addEventListener('seeked', () => this.mediaSeek === seek && (this.mediaSeek = null), ONCE);
+		}
+	},
+
+	// Safari's <audio> ignores playbackRate once routed through WebAudio, so other speeds play the decoded copy there.
+	wantsBufferSource: function () {
+		const duration = this.getDuration();
+		const canUseBuffer = duration > 0 ? duration <= (this.isBufferSource || !isSafari ? 1800 : utils.MAX_SPARE_DECODE) : true;
+		const speed = this.speed;
+		return canUseBuffer && (this.isBufferSource || speed < this.settings.settings.pitchCompensationTreshold || (isSafari && speed !== 1));
+	},
+
+	activateSource: function () {
+		const buffer = this.wantsBufferSource() && this.audioAnalyser.activateBufferSource();
+		if (buffer) {
+			return buffer;
+		}
+		if (this.wantsBufferSource() && this.awaitedCopy !== this.data.audio) {
+			this.switchToCopyWhenDecoded(this.data.audio);
+		}
+		return this.audioAnalyser.activateMediaSource();
+	},
+
+	switchToCopyWhenDecoded: function (src) {
+		this.awaitedCopy = src;
+		this.audioAnalyser.getBufferSource().then(() => {
+			this.awaitedCopy = null;
+			const stillWanted = this.data.audio === src && this.isPlaying && this.source === this.mediaSource && this.wantsBufferSource();
+			if (stillWanted && this.audioAnalyser.audioSource) {
+				this.setPlaybackRate(this.speed);
+			}
+		});
 	},
 
 	setPlaybackRate: function (rate) {
 		const rateChanged = rate !== this.speed;
+		const now = this.context.currentTime;
+		if (this.lastContextTime && now > this.lastContextTime) {
+			this.lastCurrentTime += (now - this.lastContextTime) * this.speed;
+			this.lastContextTime = now;
+			this.lastFrameNow = performance.now() / 1000;
+		}
 		this.speed = rate;
 
-		const duration = this.getDuration();
-		const canUseBuffer = duration > 0 ? duration <= 1800 : true;
-		var newSource = null;
-		if ((this.isBufferSource || this.speed < this.settings.settings.pitchCompensationTreshold) && canUseBuffer) {
-			newSource = this.audioAnalyser.activateBufferSource();
-		} else {
-			newSource = this.audioAnalyser.activateMediaSource();
-		}
+		const newSource = this.activateSource();
 
 		if (newSource != this.source) {
 			if (this.source && this.source.stop) {
@@ -427,10 +487,12 @@ AFRAME.registerComponent('song', {
 			}
 
 			this.source = newSource;
+			const startAt = now + (this.source === this.mediaSource ? 0 : BUFFER_START_AHEAD);
+			const position = Math.max(0, (this.lastCurrentTime || 0) + (startAt - now) * rate);
 
 			if (this.source.start) {
 				try {
-					this.source.start(0, this.lastCurrentTime);
+					this.source.start(startAt, position);
 				} catch (e) {
 					console.log(e);
 				}
@@ -438,14 +500,15 @@ AFRAME.registerComponent('song', {
 
 			if (this.source != this.mediaSource && this.mediaSource && this.mediaSource.start) {
 				try {
-					this.mediaSource.start(0, this.lastCurrentTime);
+					this.mediaSource.start(0, position);
 				} catch (e) {
 					console.log(e);
 				}
 			}
 
 			if (this.lastCurrentTime !== undefined) {
-				this.audio.currentTime = this.lastCurrentTime;
+				this.holdUntilSeeked(position);
+				this.audio.currentTime = position;
 			}
 
 			this.resetMediaSync();
@@ -500,6 +563,11 @@ AFRAME.registerComponent('song', {
 		} else {
 			newCurrent = this.syncToMedia(newCurrent, newCurrent - (lastCurrentTime || 0), nowSeconds);
 		}
+		const clock = this.mediaClock;
+		if (clock && (!clock.length || currentTime > clock[clock.length - 1][0])) {
+			clock.push([currentTime, newCurrent, this.audio.currentTime]);
+		}
+		this.checkMedia(nowSeconds);
 
 		this.lastCurrentTime = newCurrent;
 		this.lastContextTime = currentTime;
@@ -513,8 +581,20 @@ AFRAME.registerComponent('song', {
 			return null;
 		}
 		if (this.source === this.mediaSource) {
-			const waiting = !this.audio.paused && this.audio.readyState < HTMLMediaElement.HAVE_FUTURE_DATA;
-			return waiting ? this.audio.currentTime : null;
+			if (this.mediaSeek && performance.now() / 1000 < this.mediaSeek.until) {
+				return this.mediaSeek.position;
+			}
+			this.mediaSeek = null;
+			const stopped = this.audio.paused && !this.audio.ended;
+			if (stopped && performance.now() / 1000 > (this.resumeRetryAt || 0)) {
+				this.resumeRetryAt = performance.now() / 1000 + MEDIA_RESUME_RETRY;
+				this.resumeStoppedAudio();
+			}
+			if (!stopped && this.audio.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
+				return null;
+			}
+			this.seekHeld = false;
+			return this.audio.currentTime - (stopped ? 0 : MEDIA_START_LAG);
 		}
 		if (this.source.stalledAt != null) {
 			return this.source.stalledAt;
@@ -524,17 +604,21 @@ AFRAME.registerComponent('song', {
 	},
 
 	resetMediaSync: function () {
-		this.mediaSync = {ref: null, pending: 0};
+		this.mediaSync = {pending: 0, holds: 0, nextCheckAt: 0};
 		this.holdMediaSync();
 	},
 
 	holdMediaSync: function () {
-		this.mediaSync.sum = this.mediaSync.count = 0;
-		this.mediaSync.settleAt = performance.now() / 1000 + MEDIA_SYNC_SETTLE;
+		const sync = this.mediaSync;
+		const now = performance.now() / 1000;
+		sync.sum = sync.count = 0;
+		sync.settleAt = now + MEDIA_SYNC_SETTLE;
+		sync.checkAt = now + MEDIA_CHECK_DELAY;
+		sync.holds++;
 	},
 
-	// The <audio> element loses a bit of position on playbackRate changes and resumes, while song time
-	// follows the AudioContext clock. Keep their offset at what it was after start, slewing corrections in.
+	// The <audio> element loses a bit of position on starts, seeks, playbackRate changes and resumes, while song time
+	// follows the AudioContext clock. Keep their offset at the element's lead, slewing corrections in.
 	syncToMedia: function (current, advanced, now) {
 		const sync = this.mediaSync;
 		if (!this.isPlaying || this.source !== this.mediaSource || this.audio.paused) return current;
@@ -551,8 +635,64 @@ AFRAME.registerComponent('song', {
 
 		const offset = sync.sum / sync.count;
 		sync.sum = sync.count = 0;
-		if (sync.ref === null) sync.ref = offset;
-		else if (Math.abs(offset - sync.ref) > MEDIA_SYNC_TOLERANCE) sync.pending += offset - sync.ref;
+		if (Math.abs(offset - this.mediaLead) > MEDIA_SYNC_TOLERANCE) sync.pending += offset - this.mediaLead;
 		return current;
 	},
+
+	checkMedia: function (now) {
+		const sync = this.mediaSync;
+		const playing = this.isPlaying && this.source === this.mediaSource && !this.audio.paused && this.speed === 1;
+		const early = sync.checkAt !== null && now >= sync.checkAt;
+		if (this.mediaCheck || !playing || !(early || (now >= sync.settleAt && now >= sync.nextCheckAt))) return;
+		sync.checkAt = null;
+		sync.nextCheckAt = now + MEDIA_CHECK_INTERVAL;
+		const audio = this.audio;
+		const holds = sync.holds;
+		this.mediaCheck = this.measureMedia()
+			.then(result => {
+				if (this.audio !== audio || this.mediaSync !== sync || sync.holds !== holds) return;
+				if (!result) {
+					if (early) sync.checkAt = performance.now() / 1000 + MEDIA_CHECK_DELAY;
+				} else if (early) {
+					sync.pending = result.song - result.real;
+					if (this.seekHeld) {
+						this.seekHeld = false;
+						this.seekLag = learn(this.seekLagSamples, this.seekLag - (result.real - result.song));
+					}
+				} else {
+					this.mediaLead = learn(this.leadSamples, result.real - result.element);
+				}
+			})
+			.catch(console.error)
+			.finally(() => (this.mediaCheck = null));
+	},
+
+	measureMedia: async function () {
+		const clock = (this.mediaClock = []);
+		const capture = await this.audioAnalyser.captureMedia(MEDIA_CAPTURE);
+		this.mediaClock = null;
+		const song = capture && clock.length > 1 ? clockAt(clock, capture.time, 1) : null;
+		if (song === null) return null;
+		const rate = this.context.sampleRate;
+		const from = Math.max(0, Math.round((song - MEDIA_CHECK_RANGE) * rate));
+		const reference = await this.audioAnalyser.readSong(from / rate, MEDIA_CAPTURE + Math.round(2 * MEDIA_CHECK_RANGE * rate));
+		if (!reference) return null;
+		const {lag, match} = locate(reference, capture.samples);
+		return match < MEDIA_MATCH ? null : {real: (from + lag) / rate, song, element: clockAt(clock, capture.time, 2)};
+	},
 });
+
+function learn(samples, value) {
+	samples.push(value);
+	if (samples.length > MEDIA_SAMPLES) samples.shift();
+	const sorted = [...samples].sort((a, b) => a - b);
+	return sorted[sorted.length >> 1];
+}
+
+function clockAt(rows, t, column) {
+	let i = 0;
+	while (i < rows.length - 2 && rows[i + 1][0] < t) i++;
+	const [a, b] = [rows[i], rows[i + 1]];
+	if (b[0] - a[0] > MEDIA_MAX_STALL || t < a[0] - MEDIA_MAX_STALL || t > b[0] + MEDIA_MAX_STALL) return null;
+	return a[column] + ((t - a[0]) / (b[0] - a[0])) * (b[column] - a[column]);
+}

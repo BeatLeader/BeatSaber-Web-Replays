@@ -91,6 +91,11 @@ AFRAME.registerComponent('playlist', {
 			if (!document.hidden) this.refreshIfStale();
 		});
 
+		checkLogin().then(loggedIn => {
+			this.isLoggedIn = loggedIn;
+			if (this.playlist) this.renderHeader();
+		});
+
 		const playlistId = getUrlParameter('playlist');
 		if (playlistId) {
 			this.open(playlistId);
@@ -150,6 +155,8 @@ AFRAME.registerComponent('playlist', {
 				this.playlist.description = description;
 			});
 		});
+
+		document.getElementById('playlistCopy').addEventListener('click', () => this.copyPlaylist());
 
 		document.getElementById('playlistVisibility').addEventListener('click', () => {
 			const isPublic = !this.playlist.isPublic;
@@ -377,6 +384,19 @@ AFRAME.registerComponent('playlist', {
 		});
 		this.mutations = result;
 		return result;
+	},
+
+	copyPlaylist: async function () {
+		const button = document.getElementById('playlistCopy');
+		button.disabled = true;
+		try {
+			const copy = await api(this.readPath() + '/copy', {method: 'POST'});
+			const skipped = copy.skipped ? ` ${plural(copy.skipped, 'replay')} you can't watch were left out.` : '';
+			this.flash('Copied to your playlists.' + skipped, false, {text: 'Open the copy', href: `${getWebsiteUrl()}/playlist/${copy.id}`});
+		} catch (error) {
+			this.flash(error.status === 401 ? 'Log in on BeatLeader to copy playlists.' : errorText(error, "Couldn't copy the playlist."), true);
+		}
+		button.disabled = false;
 	},
 
 	moveItem: function (item, target, after) {
@@ -734,15 +754,21 @@ AFRAME.registerComponent('playlist', {
 		this.panel.classList.remove('countingDown');
 	},
 
-	setStatus: function (text, isError) {
+	setStatus: function (text, isError, link) {
 		clearTimeout(this.statusTimeout);
 		this.statusEl.textContent = text;
 		this.statusEl.classList.toggle('error', !!isError);
+		if (link) {
+			const anchor = element('a', '', link.text);
+			anchor.href = link.href;
+			anchor.target = '_blank';
+			this.statusEl.append(' ', anchor);
+		}
 	},
 
-	flash: function (text, isError) {
-		this.setStatus(text, isError);
-		this.statusTimeout = setTimeout(() => this.setStatus(''), 6000);
+	flash: function (text, isError, link) {
+		this.setStatus(text, isError, link);
+		this.statusTimeout = setTimeout(() => this.setStatus(''), link ? 15000 : 6000);
 	},
 
 	syncVote: function () {
@@ -930,6 +956,7 @@ AFRAME.registerComponent('playlist', {
 		visibility.disabled = !isOwner;
 		visibility.title = isOwner ? (playlist.isPublic ? 'Make private' : 'Make public') : '';
 		document.getElementById('playlistRole').style.display = playlist.role === 'editor' ? '' : 'none';
+		document.getElementById('playlistCopy').style.display = this.isLoggedIn ? '' : 'none';
 
 		document.getElementById('playlistDescription').textContent = playlist.description || '';
 	},

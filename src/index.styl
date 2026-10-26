@@ -1939,9 +1939,14 @@ $voteAccent=#9b6dff
 #playlistRole
   background #1f6fb2
 
+#playlistHeaderButtons
+  display flex
+  flex-direction column
+  gap 2px
+  flex none
+
 #playlistEditInfo
   display none
-  flex none
 
   .editable &
     display block
@@ -1968,7 +1973,7 @@ $voteAccent=#9b6dff
     display flex
 
 .editingInfo
-  #playlistHeader .playlistBadge, #playlistEditInfo, #playlistDescription
+  #playlistHeader .playlistBadge, #playlistHeaderButtons, #playlistDescription
     display none
 
 .playlistFormButtons
@@ -2055,6 +2060,9 @@ $voteAccent=#9b6dff
 
   &.error
     color #ff6b6b
+
+  a
+    color $white
 
 #playlistVote
   display flex

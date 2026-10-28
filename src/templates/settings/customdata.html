@@ -7,6 +7,30 @@
 		><td><nobr>Show Heartrate (HeartBeat mod)</nobr></td></label
 	>
 </div>
+<div id="EyeTracking" style="display: none">
+	<div class="toggleButton" title="Show where the player was looking, recorded by BeatLeader on headsets with eye tracking">
+		<label class="switch">
+			<input type="checkbox" id="showEyeTracking" />
+			<span class="slider round"></span>
+		</label>
+		<label class="toggleButtonLabel"
+			><td><nobr>Show Eye Tracking</nobr></td></label
+		>
+	</div>
+	<div
+		class="toggleButton"
+		title="Averages the gaze over this time window to calm tracker jitter, saccades get slower. 0 shows every sample.">
+		<label>
+			<div class="toggleButtonContainer">
+				<label class="toggleButtonLabel" style="margin-left: 5px"
+					><td><nobr>Eye tracking smoothing:</nobr></td></label
+				>
+				<label id="eyeTrackingSmoothingLabel" class="toggleButtonLabel" style="margin-left: 87px">40</label>
+			</div>
+			<input id="eyeTrackingSmoothing" class="settingRange" type="range" min="0" max="100" step="5" value="40" />
+		</label>
+	</div>
+</div>
 <div id="reesabers:tricks-replay" class="toggleButton" style="display: none" title="Show sabers tricks recorded by ReeSabers mod">
 	<label class="switch">
 		<input type="checkbox" id="showTreecks" />

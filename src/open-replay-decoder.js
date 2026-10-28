@@ -60,7 +60,11 @@ const MAX_PREFETCHED = 3;
 const prefetchedReplays = new Map();
 
 function layoutFromOffsets(offsets) {
-	return offsets && offsets.frames > 0 && offsets.notes > offsets.frames ? {framesAt: offsets.frames, framesEnd: offsets.notes - 1} : null;
+	if (!offsets || !(offsets.frames > 0) || !(offsets.notes > offsets.frames)) {
+		return null;
+	}
+	const customDataAt = offsets.customData > offsets.notes ? offsets.customData - 1 : null;
+	return {framesAt: offsets.frames, framesEnd: offsets.notes - 1, customDataAt};
 }
 
 async function fetchRange(url, from, to, signal) {
@@ -86,7 +90,7 @@ function prefetchBSOR(file, offsets) {
 	const framesFrom = layout.framesAt + 4;
 	const parts = Promise.all([
 		fetchBytes(url, 0, framesFrom),
-		fetchBytes(url, layout.framesEnd),
+		fetchBytes(url, layout.framesEnd, layout.customDataAt),
 		fetchBytes(url, framesFrom, Math.min(framesFrom + PREFETCH_FRAMES * FRAME_SIZE, layout.framesEnd)),
 	]).then(([head, tail, frames]) => ({head, tail, frames}));
 	parts.catch(() => {});
@@ -121,7 +125,7 @@ function requestTailAndFrames(url, layout, signal, prefetched) {
 	const frames = framesFrom < layout.framesEnd ? fetchRange(url, framesFrom, layout.framesEnd, signal) : Promise.resolve(null);
 	frames.catch(() => {});
 	return {
-		tail: prefetched ? Promise.resolve(prefetched.tail) : fetchBytes(url, layout.framesEnd, null, signal),
+		tail: prefetched ? Promise.resolve(prefetched.tail) : fetchBytes(url, layout.framesEnd, layout.customDataAt, signal),
 		framesPrefix: prefetched ? prefetched.frames : null,
 		frames,
 	};
@@ -149,7 +153,17 @@ function frameReader(replay, onFrames) {
 	};
 }
 
-async function streamBSOR(url, completion, {offsets, startTime = 0, signal, onFramesLoaded}) {
+async function loadCustomData(url, replay, from, signal) {
+	const customData = new DataView(await fetchBytes(url, from, null, signal));
+	customData.pointer = 0;
+	if (DecodeUint8(customData) != StructType.customData) {
+		throw new Error('Custom data offset does not match the file');
+	}
+	replay.customData = DecodeCustomData(customData);
+	ParseKnownCustomData(replay);
+}
+
+async function streamBSOR(url, completion, {offsets, startTime = 0, signal, onFramesLoaded, onCustomDataLoaded}) {
 	const controller = new AbortController();
 	if (signal) {
 		signal.addEventListener('abort', () => controller.abort());
@@ -173,11 +187,37 @@ async function streamBSOR(url, completion, {offsets, startTime = 0, signal, onFr
 		tail.pointer = 0;
 		DecodeSections(tail, replay);
 
+		const customDataAt = knownLayout && knownLayout.customDataAt;
+		let framesLoaded = false;
+		let customDataLoaded = !customDataAt;
+		const applyTricksWhenLoaded = () => {
+			if (framesLoaded && customDataLoaded) {
+				ApplyTricks(replay);
+			}
+		};
+		const start = () => {
+			ready = true;
+			completion(replay);
+			if (!customDataLoaded) {
+				loadCustomData(url, replay, customDataAt, signal).then(
+					() => {
+						customDataLoaded = true;
+						applyTricksWhenLoaded();
+						onCustomDataLoaded();
+					},
+					e => {
+						if (!signal || !signal.aborted) {
+							console.warn('Could not load the replay custom data', e);
+						}
+					}
+				);
+			}
+		};
+
 		const addFrames = frameReader(replay, () => {
 			const lastFrame = replay.frames[replay.frames.length - 1];
 			if (!ready && lastFrame && lastFrame.time >= startTime + READY_AHEAD) {
-				ready = true;
-				completion(replay);
+				start();
 			}
 		});
 		if (tailAndFrames.framesPrefix) {
@@ -194,11 +234,12 @@ async function streamBSOR(url, completion, {offsets, startTime = 0, signal, onFr
 				addFrames(value);
 			}
 		}
-		ApplyTricks(replay);
+		framesLoaded = true;
+		applyTricksWhenLoaded();
 		if (ready) {
 			onFramesLoaded();
 		} else {
-			completion(replay);
+			start();
 		}
 	} catch (e) {
 		controller.abort();
@@ -446,6 +487,16 @@ function ParseKnownCustomData(replay) {
 				replay.parsedCustomData['HeartBeatQuest'] = result;
 			}
 		}
+		if (replay.customData['EyeTracking']) {
+			try {
+				const eyeTracking = DecodeEyeTracking(replay.customData['EyeTracking']);
+				if (eyeTracking) {
+					replay.parsedCustomData['EyeTracking'] = eyeTracking;
+				}
+			} catch (e) {
+				console.warn('Failed to decode eye tracking', e);
+			}
+		}
 		if (replay.customData['reesabers:tricks-replay']) {
 			var result = {};
 			const dataView = new DataView(replay.customData['reesabers:tricks-replay'].buffer);
@@ -470,6 +521,66 @@ function ApplyTricks(replay) {
 	if (tricks) {
 		AddTricksToReplay(replay, tricks);
 	}
+}
+
+const EyeTrackingFlags = {
+	gaze: 1,
+	leftEyeClosed: 2,
+	rightEyeClosed: 4,
+	gazeFromOpenXR: 8,
+};
+
+// SteamVR eye tracker data (both OpenXR and Steam Link OSC) arrives ~60 ms after the head pose it belongs to.
+const EyeTrackingLatency = 0.06;
+const EyeTrackingVersion = 2;
+const EyeTrackingSampleSize = 4 + 1 + 3 * 4 + 2 * 4;
+
+function DecodeEyeTracking(data) {
+	const dataView = new DataView(data.buffer);
+	dataView.pointer = 0;
+
+	if (DecodeUint8(dataView) != EyeTrackingVersion) return null;
+
+	const result = {
+		source: DecodeString(dataView),
+		runtime: DecodeString(dataView),
+		gazePosePrediction: DecodeFloat(dataView),
+		gaze: [],
+		eyelids: [],
+	};
+	const count = DecodeInt(dataView);
+	if (count < 0 || count * EyeTrackingSampleSize > dataView.byteLength - dataView.pointer) return null;
+
+	for (var i = 0; i < count; i++) {
+		const time = DecodeFloat(dataView);
+		const flags = DecodeUint8(dataView);
+		const gaze = DecodeVector3(dataView);
+		const leftEyeClosed = DecodeFloat(dataView);
+		const rightEyeClosed = DecodeFloat(dataView);
+
+		if (flags & EyeTrackingFlags.gaze) {
+			const fromOpenXR = (flags & EyeTrackingFlags.gazeFromOpenXR) != 0;
+			result.gaze.push({
+				time: time - EyeTrackingLatency,
+				x: gaze.x,
+				y: gaze.y,
+				z: gaze.z,
+				fromOpenXR,
+			});
+		}
+
+		const hasLeft = (flags & EyeTrackingFlags.leftEyeClosed) != 0;
+		const hasRight = (flags & EyeTrackingFlags.rightEyeClosed) != 0;
+		if (hasLeft || hasRight) {
+			result.eyelids.push({
+				time: time - EyeTrackingLatency,
+				left: hasLeft ? leftEyeClosed : rightEyeClosed,
+				right: hasRight ? rightEyeClosed : leftEyeClosed,
+			});
+		}
+	}
+
+	return result;
 }
 
 function AddTricksToReplay(replay, tricksReplay) {

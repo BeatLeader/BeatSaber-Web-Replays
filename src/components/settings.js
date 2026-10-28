@@ -129,6 +129,8 @@ AFRAME.registerComponent('settings', {
 			fov: 60,
 			forceForwardLookDirection: false,
 			cameraXRotation: 0,
+			cameraPositionSmoothing: 10,
+			cameraRotationSmoothing: 4,
 			orthographicBackEnabled: document.body.clientWidth > 600,
 			orthographicBackFrustum: 1.4,
 			orthographicBackFar: 25,
@@ -196,6 +198,7 @@ AFRAME.registerComponent('settings', {
 			// Saber
 			showSaberAxes: false,
 			saberOffset: 0,
+			movementSmoothing: 0,
 
 			autoSkipIntro: false,
 			autoSkipOutro: false,
@@ -203,6 +206,8 @@ AFRAME.registerComponent('settings', {
 			// Extensions (custom data)
 			showHeartrate: true,
 			showTreecks: true,
+			showEyeTracking: true,
+			eyeTrackingSmoothing: 40,
 
 			// Misses slow-mode
 			autoSpeedControls: false,
@@ -221,6 +226,8 @@ AFRAME.registerComponent('settings', {
 			cameraZPosition: 'm',
 			fov: '°',
 			cameraXRotation: '°',
+			movementSmoothing: ' ms',
+			eyeTrackingSmoothing: ' ms',
 		};
 
 		try {

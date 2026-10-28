@@ -422,6 +422,11 @@ AFRAME.registerComponent('replay-loader', {
 					this.el.sceneEl.emit('replayframesloaded', null, false);
 				}
 			},
+			onCustomDataLoaded: () => {
+				if (loadId === this.loadId) {
+					this.el.sceneEl.emit('replaycustomdataloaded', {replay: this.replay}, false);
+				}
+			},
 		};
 	},
 

@@ -22,6 +22,20 @@
 	</label>
 </div>
 
+<div
+	class="toggleButton"
+	title="Averages head and saber movements over this time window, looking as far ahead as behind so they don't lag. Visual only, hitboxes stay exact. Large values soften fast swings.">
+	<label>
+		<div class="toggleButtonContainer">
+			<label class="toggleButtonLabel" style="margin-left: 5px"
+				><td><nobr>Movement smoothing:</nobr></td></label
+			>
+			<label id="movementSmoothingLabel" class="toggleButtonLabel" style="margin-left: 78px">0</label>
+		</div>
+		<input id="movementSmoothing" class="settingRange" type="range" min="0" max="200" step="5" value="0" />
+	</label>
+</div>
+
 <div class="toggleButton" title="How saber trails will appear">
 	<label>
 		<div class="toggleButtonContainer">

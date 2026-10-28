@@ -150,17 +150,9 @@ AFRAME.registerComponent('song-controls', {
 				}
 			}
 
-			if (replay.parsedCustomData) {
-				document.getElementById('extensionsTab').style.display = 'block';
-				Object.keys(replay.parsedCustomData).forEach(key => {
-					var toggle = document.getElementById(key);
-					if (toggle) {
-						toggle.style.display = 'block';
-						this.customDataToggles.push(toggle);
-					}
-				});
-			}
+			this.showCustomDataToggles(replay);
 		});
+		this.el.sceneEl.addEventListener('replaycustomdataloaded', event => this.showCustomDataToggles(event.detail.replay));
 
 		this.customDataToggles = [];
 		this.environmentOverrides = {};
@@ -1951,6 +1943,18 @@ AFRAME.registerComponent('song-controls', {
 				position: Math.min(this.song.getCurrentTime(), this.song.getDuration()),
 			});
 		}
+	},
+
+	showCustomDataToggles: function (replay) {
+		if (!replay || !replay.parsedCustomData) return;
+		document.getElementById('extensionsTab').style.display = 'block';
+		Object.keys(replay.parsedCustomData).forEach(key => {
+			var toggle = document.getElementById(key);
+			if (toggle && !this.customDataToggles.includes(toggle)) {
+				toggle.style.display = 'block';
+				this.customDataToggles.push(toggle);
+			}
+		});
 	},
 
 	computeMissWindows: function () {

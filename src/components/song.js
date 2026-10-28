@@ -121,7 +121,7 @@ AFRAME.registerComponent('song', {
 	},
 
 	resumeStoppedAudio: function () {
-		if (this.isPlaying && !this.data.isPaused && this.audio.paused && !this.audio.ended) {
+		if (this.isPlaying && this.source && !this.data.isPaused && this.audio.paused && !this.audio.ended) {
 			this.playMediaSession();
 		}
 	},

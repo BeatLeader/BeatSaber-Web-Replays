@@ -440,7 +440,9 @@ AFRAME.registerComponent('song', {
 		const duration = this.getDuration();
 		const canUseBuffer = duration > 0 ? duration <= (this.isBufferSource || !isSafari ? 1800 : utils.MAX_SPARE_DECODE) : true;
 		const speed = this.speed;
-		return canUseBuffer && (this.isBufferSource || speed < this.settings.settings.pitchCompensationTreshold || (isSafari && speed !== 1));
+		// Back at 1x Safari stays on the copy until the next seek, switching to <audio> would hold song time back by seekLag.
+		const safariCopy = isSafari && (speed !== 1 || (!!this.source && this.source === this.audioAnalyser.audioSource));
+		return canUseBuffer && (this.isBufferSource || speed < this.settings.settings.pitchCompensationTreshold || safariCopy);
 	},
 
 	activateSource: function () {

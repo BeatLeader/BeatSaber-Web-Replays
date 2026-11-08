@@ -242,6 +242,7 @@ AFRAME.registerComponent('song', {
 		}
 		if (this.source && this.source.stop) {
 			this.source.stop();
+			if (this.source === this.audioAnalyser.audioSource) this.audioAnalyser.renewBufferSource();
 			this.source = null;
 		}
 		if (this.source != this.mediaSource && this.mediaSource && this.mediaSource.stop) {

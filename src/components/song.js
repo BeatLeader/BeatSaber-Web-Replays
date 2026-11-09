@@ -25,6 +25,7 @@ const MEDIA_MATCH = 0.85;
 const MEDIA_SAMPLES = 5;
 const MEDIA_MAX_STALL = 0.06;
 const BUFFER_START_AHEAD = 0.04;
+const MAX_CLOCK_LEAD = 0.1;
 
 let skipDebug = AFRAME.utils.getUrlParameter('skip');
 if (!!skipDebug) {
@@ -544,9 +545,10 @@ AFRAME.registerComponent('song', {
 
 		const nowSeconds = performance.now() / 1000;
 		const frameDelta = this.lastFrameNow != null ? Math.max(0, nowSeconds - this.lastFrameNow) : 0;
+		const clockMoving = this.isClockMoving(currentTime);
 
 		if (this.lastContextTime && currentTime - this.lastContextTime < 1e-6) {
-			currentTime = this.lastContextTime + (this.source && this.source.context.state === 'running' ? frameDelta : 0);
+			currentTime = Math.min(this.lastContextTime + (clockMoving ? frameDelta : 0), currentTime + MAX_CLOCK_LEAD);
 		}
 
 		var newCurrent;
@@ -576,6 +578,17 @@ AFRAME.registerComponent('song', {
 		this.lastFrameNow = nowSeconds;
 
 		return Math.max(0, newCurrent + parseFloat(this.settings.settings.soundDelay));
+	},
+
+	// Around suspend() and resume() Safari reports 'running' for ~40 ms while the clock stands still, so song time runs
+	// ahead of the clock only once it has moved while playing.
+	isClockMoving: function (time) {
+		if (!this.isPlaying || this.context.state !== 'running') {
+			this.stillClockTime = time;
+		} else if (time !== this.stillClockTime) {
+			this.stillClockTime = null;
+		}
+		return this.stillClockTime === null;
 	},
 
 	streamPosition: function (contextTime) {

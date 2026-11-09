@@ -281,7 +281,8 @@ AFRAME.registerComponent('audioanalyser', {
 		}
 	},
 
-	activateBufferSource: function () {
+	activateBufferSource: function (inUse) {
+		if (this.audioSource !== inUse) this.renewBufferSource();
 		// Disconnect media if connected, connect buffer source
 		if (this.mediaSource && this.mediaConnected) {
 			try {

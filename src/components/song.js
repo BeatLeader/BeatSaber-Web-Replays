@@ -446,7 +446,7 @@ AFRAME.registerComponent('song', {
 	},
 
 	activateSource: function () {
-		const buffer = this.wantsBufferSource() && this.audioAnalyser.activateBufferSource();
+		const buffer = this.wantsBufferSource() && this.audioAnalyser.activateBufferSource(this.source);
 		if (buffer) {
 			return buffer;
 		}

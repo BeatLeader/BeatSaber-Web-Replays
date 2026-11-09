@@ -258,10 +258,12 @@ AFRAME.registerComponent('audioanalyser', {
 						);
 					}
 					const streaming = mediaFirst && !/^(blob|data):/.test(src);
+					// The song may already play the decoded copy (Safari at other speeds), keep it and the muted <audio> as they are.
+					const copyInUse = () => mediaFirst && this.bufferConnected;
 					(streaming ? whenPlaying(this.audio) : Promise.resolve()).then(() => {
-						if (isStale()) return;
+						if (isStale() || copyInUse()) return;
 						this.getBufferSource().then(bufferSource => {
-							if (isStale()) return;
+							if (isStale() || copyInUse()) return;
 							this.mediaGainNode.gain.value = mediaFirst ? 1 : 0;
 							if (!mediaFirst) {
 								this.el.emit(
@@ -279,7 +281,8 @@ AFRAME.registerComponent('audioanalyser', {
 		}
 	},
 
-	activateBufferSource: function () {
+	activateBufferSource: function (inUse) {
+		if (this.audioSource !== inUse) this.renewBufferSource();
 		// Disconnect media if connected, connect buffer source
 		if (this.mediaSource && this.mediaConnected) {
 			try {
@@ -299,6 +302,16 @@ AFRAME.registerComponent('audioanalyser', {
 			this.bufferConnected = true;
 		}
 		return this.audioSource;
+	},
+
+	// An AudioBufferSourceNode plays only once, so a stopped copy is swapped for a fresh one on the same buffer.
+	renewBufferSource: function () {
+		const old = this.audioSource;
+		if (!(old instanceof AudioBufferSourceNode)) return;
+		const source = (this.audioSource = this.context.createBufferSource());
+		source.buffer = old.buffer;
+		old.disconnect();
+		if (this.bufferConnected) source.connect(this.gainNode);
 	},
 
 	activateMediaSource: function () {
